@@ -9,6 +9,7 @@ import CalendarEventCard, {
 import ChannelCard from "./tv/ChannelCard";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
+import RecentReplays from "./tv/RecentReplays";
 import { A, TabNav } from "./common";
 import {
   getNextUpcomingEvent,
@@ -56,6 +57,7 @@ type State = {
 
 export default class TvScreen extends Component<Props, State> {
   _refreshTimer: ?IntervalID;
+  _replayRef: ?HTMLElement;
   _mounted: boolean = false;
   state = {
     activeTabId: this.props.tvReplayGameId ? "replay" : "live",
@@ -264,15 +266,24 @@ export default class TvScreen extends Component<Props, State> {
         id: "replay",
         label: "Nachspielen",
         content: (
-          <SgfReplayView
-            key={
-              replayTree
-                ? "game-" + String(tvReplayGameId)
-                : replayUrl || "manual"
-            }
-            initialUrl={replayTree ? null : replayUrl}
-            initialTree={replayTree}
-          />
+          <div className="TvScreen-replay">
+            <div ref={this._setReplayRef}>
+              <SgfReplayView
+                key={
+                  replayTree
+                    ? "game-" + String(tvReplayGameId)
+                    : replayUrl || "manual"
+                }
+                initialUrl={replayTree ? null : replayUrl}
+                initialTree={replayTree}
+              />
+            </div>
+            <RecentReplays
+              events={tvEvents}
+              now={this.state.now}
+              onOpenReplay={this._onOpenReplay}
+            />
+          </div>
         ),
       },
     ];
@@ -322,7 +333,17 @@ export default class TvScreen extends Component<Props, State> {
     this.setState({ activeTabId: "calendar" });
   };
 
+  _setReplayRef = (ref: HTMLElement | null) => {
+    this._replayRef = ref;
+  };
+
   _onOpenReplay = (url: string) => {
-    this.setState({ activeTabId: "replay", replayUrl: url });
+    this.setState({ activeTabId: "replay", replayUrl: url }, () => {
+      // The board sits above the game lists: bring it into view.
+      let ref: any = this._replayRef;
+      if (ref && typeof ref.scrollIntoView === "function") {
+        ref.scrollIntoView({ block: "start" });
+      }
+    });
   };
 }

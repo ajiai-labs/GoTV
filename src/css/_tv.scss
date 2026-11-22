@@ -1058,3 +1058,103 @@ $cinema-bar-height: 44px;
     height: 8px;
   }
 }
+
+// Finished tournament games to replay (no results - nothing is spoiled).
+.ReplayGameList {
+  margin-top: 6px;
+
+  &-note {
+    padding: 6px 0;
+    color: $semi-muted;
+    font-size: 13px;
+  }
+
+  &-error {
+    color: #c0392b;
+  }
+
+  &-retry {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $link-color;
+    cursor: pointer;
+  }
+
+  &-games {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &-game {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 6px 10px;
+    border: 1px solid $very-muted;
+    border-radius: 3px;
+    background: $content-bg;
+    color: $content-fg;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $link-color;
+      background: $hover-bg;
+    }
+  }
+
+  &-number {
+    min-width: 28px;
+    font-weight: bold;
+    color: $link-color;
+  }
+
+  &-players {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-time {
+    color: $semi-muted;
+    font-size: 12px;
+  }
+}
+
+.RecentReplays {
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 2px solid $very-muted;
+
+  &-title {
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  &-event {
+    padding: 8px 0 10px;
+    border-bottom: 1px solid $very-muted;
+
+    &-name {
+      font-weight: bold;
+    }
+
+    &-date {
+      color: $semi-muted;
+      font-size: 13px;
+    }
+  }
+
+  &-empty {
+    color: $muted;
+  }
+}

@@ -23,6 +23,10 @@ import {
   REMOTE_EVENTS_URL,
   hasOgsBoard,
   isWatchable,
+  hasOgsReplay,
+  getOgsReplayIds,
+  dropImportedDuplicates,
+  REPLAY_KEEP_DAYS,
 } from "./tv";
 
 function makeUser(name, rankVal) {
@@ -466,6 +470,55 @@ describe("getEmbedUrlForChannel", () => {
   });
 });
 
+describe("dropImportedDuplicates", () => {
+  let twitch = {
+    platform: "twitch",
+    stream_url: "https://www.twitch.tv/europeangofederation",
+    channel: { platform: "twitch", id: "europeangofederation" },
+    date_start: "2026-11-22",
+  };
+
+  it("drops an imported entry for the same broadcast as a hand entry", () => {
+    let hand = {
+      ...twitch,
+      id: "hand",
+      name: "Hand",
+      start: "2026-11-22T18:00:00+01:00",
+    };
+    let imported = {
+      ...twitch,
+      id: "twitch-egf-1",
+      name: "Import",
+      start: "2026-11-22T17:00:00Z",
+      channel: { platform: "twitch", id: "EuropeanGoFederation" },
+      source: "twitch-egf",
+    };
+    let otherTime = {
+      ...imported,
+      id: "twitch-egf-2",
+      start: "2026-11-22T20:00:00+01:00",
+    };
+    let noStart = { ...imported, id: "twitch-egf-3", start: undefined };
+    expect(
+      dropImportedDuplicates([imported, hand, otherTime, noStart]).map(
+        (e) => e.id
+      )
+    ).toEqual(["hand", "twitch-egf-2", "twitch-egf-3"]);
+  });
+
+  it("never drops hand entries or imports without a matching hand entry", () => {
+    let a = { ...twitch, id: "a", name: "A", start: "2026-11-22T18:00:00Z" };
+    let b = { ...a, id: "b" };
+    let imported = { ...a, id: "i", source: "twitch-egf", stream_url: "x" };
+    delete imported.channel;
+    expect(dropImportedDuplicates([a, b, imported]).map((e) => e.id)).toEqual([
+      "a",
+      "b",
+      "i",
+    ]);
+  });
+});
+
 describe("groupEventsByTime", () => {
   let events = [
     validateTvEvent({
@@ -543,6 +596,25 @@ describe("groupEventsByTime", () => {
     let now = new Date("2026-06-25T12:00:00");
     let groups = groupEventsByTime(withSgf, now);
     expect(groups.archive.map((e) => e.id)).toEqual(["recorded-sgf"]);
+  });
+
+  it("keeps a tournament with OGS games replayable for three months", () => {
+    let withGames = [
+      validateTvEvent({
+        id: "ogs-games",
+        name: "Speed Go",
+        date_start: "2026-06-01",
+        platform: "twitch",
+        stream_url: "https://www.twitch.tv/egf",
+        ogs_players: ["a", "b"],
+      }),
+    ];
+    let archived = (date) =>
+      groupEventsByTime(withGames, new Date(date)).archive.map((e) => e.id);
+    expect(REPLAY_KEEP_DAYS).toBe(90);
+    expect(archived("2026-06-25T12:00:00")).toEqual(["ogs-games"]);
+    expect(archived("2026-08-29T12:00:00")).toEqual(["ogs-games"]);
+    expect(archived("2026-09-01T12:00:00")).toEqual([]);
   });
 
   it("keeps a recent past event with a video_id out of the archive", () => {
@@ -858,6 +930,23 @@ describe("validateTvEvent kgs fields", () => {
     expect(isWatchable(validateTvEvent({ ...noVideo, ogs_game_id: 5 }))).toBe(
       true
     );
+  });
+
+  it("keeps OGS game numbers to replay and rejects malformed lists", () => {
+    let event = validateTvEvent({ ...base, ogs_game_ids: [3, 4] });
+    expect(event.ogs_game_ids).toEqual([3, 4]);
+    expect(getOgsReplayIds(event)).toEqual([3, 4]);
+    expect(hasOgsReplay(event)).toBe(true);
+    expect(validateTvEvent({ ...base, ogs_game_ids: [3, "4"] })).toBe(null);
+    expect(validateTvEvent({ ...base, ogs_game_ids: [0] })).toBe(null);
+    expect(validateTvEvent({ ...base, ogs_game_ids: 3 })).toBe(null);
+    expect(
+      getOgsReplayIds(validateTvEvent({ ...base, ogs_game_id: 9 }))
+    ).toEqual([9]);
+    expect(
+      hasOgsReplay(validateTvEvent({ ...base, ogs_players: ["a", "b"] }))
+    ).toBe(true);
+    expect(hasOgsReplay(validateTvEvent(base))).toBe(false);
   });
 
   it("knows whether a broadcast is linked to an OGS board", () => {

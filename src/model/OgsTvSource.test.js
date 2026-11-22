@@ -597,6 +597,93 @@ describe("OgsTvSource anonymous polling", () => {
     });
   });
 
+  describe("finished games of an event for replay", () => {
+    let event = {
+      id: "series",
+      name: "Series",
+      date_start: "2026-11-22",
+      start: "2026-11-22T18:00:00+01:00",
+      platform: "twitch",
+      stream_url: "https://www.twitch.tv/egf",
+    };
+    let listed = (id, black, white, started, extra = {}) => ({
+      id,
+      started,
+      ended: "2026-11-22T19:00:00Z",
+      annulled: false,
+      outcome: "Resignation",
+      players: { black: { username: black }, white: { username: white } },
+      ...extra,
+    });
+    let json = (data) =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+
+    it("finds the players' games inside the event window, oldest first", async () => {
+      let fetchMock = jest.fn((url) => {
+        if (url.includes("/players/?username=")) {
+          return json({ results: [{ id: 7, username: "Surma" }] });
+        }
+        return json({
+          results: [
+            listed(12, "Surma", "Ovsi", "2026-11-22T17:40:00Z"),
+            listed(11, "Ovsi", "Surma", "2026-11-22T16:50:00Z"),
+            listed(10, "Ovsi", "Surma", "2026-11-22T16:46:00Z", {
+              outcome: "Cancellation",
+              annulled: true,
+            }),
+          ],
+        });
+      });
+      let source = new OgsTvSource(fetchMock);
+      let games = await source.fetchEventGames({
+        ...event,
+        ogs_players: ["Surma", "Ovsi"],
+      });
+      expect(games.map((game) => game.id)).toEqual([11, 12]);
+      expect(fetchMock.mock.calls[1][0]).toBe(
+        "https://online-go.com/api/v1/players/7/games/?ordering=-id&page_size=50" +
+          "&started__gte=2026-11-22T16%3A45%3A00.000Z" +
+          "&started__lte=2026-11-22T21%3A00%3A00.000Z"
+      );
+      await source.fetchEventGames({
+        ...event,
+        ogs_players: ["Surma", "Ovsi"],
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("loads listed game numbers and skips the ones OGS cannot deliver", async () => {
+      let fetchMock = jest.fn((url) =>
+        url.endsWith("/3")
+          ? Promise.resolve({ ok: false, status: 404 })
+          : json(
+              listed(
+                Number(url.split("/").pop()),
+                "a",
+                "b",
+                url.endsWith("/2")
+                  ? "2026-11-22T17:00:00Z"
+                  : "2026-11-22T18:00:00Z"
+              )
+            )
+      );
+      let source = new OgsTvSource(fetchMock);
+      let games = await source.fetchEventGames({
+        ...event,
+        ogs_game_ids: [1, 2, 3],
+      });
+      expect(games.map((game) => game.id)).toEqual([2, 1]);
+    });
+
+    it("reports when OGS delivers none of the listed games", async () => {
+      let source = new OgsTvSource(() => Promise.reject(new Error("offline")));
+      await expect(
+        source.fetchEventGames({ ...event, ogs_game_ids: [1] })
+      ).rejects.toThrow("OGS nicht erreichbar");
+      expect(await source.fetchEventGames(event)).toEqual([]);
+    });
+  });
+
   it("reports request errors without inventing a board", async () => {
     let fetchMock = jest.fn(() => Promise.resolve({ ok: false, status: 404 }));
     let source = new OgsTvSource(fetchMock, 1000);

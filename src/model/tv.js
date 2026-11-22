@@ -60,6 +60,9 @@ export type TvEvent = {
   // exactly these players that started during the broadcast (see
   // OgsGameFinder) - for series whose game ids exist only once a game starts.
   ogs_players?: Array<string>,
+  // Finished OGS games of this event to replay (e.g. from the tournament
+  // page), for when the players' OGS names are not known.
+  ogs_game_ids?: Array<number>,
   // With "start": how long the broadcast runs (default LIVE_DEFAULT_MINUTES).
   duration_minutes?: number,
 };
@@ -180,6 +183,18 @@ export function validateTvEvent(value: Object): ?TvEvent {
     return null;
   }
   if (
+    value.ogs_game_ids !== undefined &&
+    value.ogs_game_ids !== null &&
+    !(
+      Array.isArray(value.ogs_game_ids) &&
+      value.ogs_game_ids.every(
+        (gameId) => Number.isInteger(gameId) && gameId > 0
+      )
+    )
+  ) {
+    return null;
+  }
+  if (
     value.duration_minutes !== undefined &&
     value.duration_minutes !== null &&
     (typeof value.duration_minutes !== "number" ||
@@ -231,6 +246,9 @@ export function validateTvEvent(value: Object): ?TvEvent {
   if (value.ogs_players && value.ogs_players.length) {
     event.ogs_players = value.ogs_players.map((name) => name.trim());
   }
+  if (value.ogs_game_ids && value.ogs_game_ids.length) {
+    event.ogs_game_ids = value.ogs_game_ids.slice();
+  }
   if (value.duration_minutes) {
     event.duration_minutes = value.duration_minutes;
   }
@@ -253,6 +271,24 @@ export function hasVideoStream(event: TvEvent): boolean {
     event.platform === "youtube" ||
     event.platform === "twitch" ||
     !!event.channel
+  );
+}
+
+// The OGS games to replay for an event, if they are listed by number
+// (ogs_game_ids, or the single linked ogs_game_id). null: none listed.
+export function getOgsReplayIds(event: TvEvent): ?Array<number> {
+  if (event.ogs_game_ids && event.ogs_game_ids.length) {
+    return event.ogs_game_ids;
+  }
+  return event.ogs_game_id ? [event.ogs_game_id] : null;
+}
+
+// Whether finished OGS games of this event can be replayed: listed by
+// number, or found through the players' names (see OgsTvSource).
+export function hasOgsReplay(event: TvEvent): boolean {
+  return !!(
+    getOgsReplayIds(event) ||
+    (event.ogs_players && event.ogs_players.length)
   );
 }
 
@@ -349,6 +385,34 @@ type TvData = { events: Array<TvEvent>, channels: Array<TvChannel> };
 
 let _tvDataCache: ?{ data: TvData, fetchedAt: number } = null;
 
+// An imported entry (e.g. the daily Twitch schedule import) that describes
+// the same broadcast as a hand-maintained entry - same start time on the
+// same channel - is dropped: the hand entry carries the boards and games
+// and is kept after the import forgets the date.
+export function dropImportedDuplicates(events: Array<TvEvent>): Array<TvEvent> {
+  let broadcastKey = (event: TvEvent) => {
+    let start = event.start ? Date.parse(event.start) : NaN;
+    if (isNaN(start)) {
+      return null;
+    }
+    let where = event.channel
+      ? event.channel.platform + "/" + event.channel.id.toLowerCase()
+      : event.stream_url.toLowerCase();
+    return start + "@" + where;
+  };
+  let handKeys = {};
+  for (let event of events) {
+    let key = broadcastKey(event);
+    if (!event.source && key) {
+      handKeys[key] = true;
+    }
+  }
+  return events.filter((event) => {
+    let key = broadcastKey(event);
+    return !event.source || !key || !handKeys[key];
+  });
+}
+
 function fetchAndValidateTvData(url: string): Promise<TvData> {
   return fetch(url)
     .then((res) => {
@@ -368,6 +432,7 @@ function fetchAndValidateTvData(url: string): Promise<TvData> {
           console.log("[tv] Skipping invalid calendar entry:", raw);
         }
       }
+      events = dropImportedDuplicates(events);
       // "channels" is a newer, second top-level array. An older
       // events.json (e.g. the remote copy before this field existed) has
       // none at all - that's an empty list, not an error.
@@ -594,7 +659,11 @@ export function getEmbedUrlForChannel(
   );
 }
 
-const ARCHIVE_AFTER_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ARCHIVE_AFTER_MS = 14 * DAY_MS;
+// Tournaments with OGS games stay replayable for about three months.
+export const REPLAY_KEEP_DAYS = 90;
+export const REPLAY_KEEP_MS = REPLAY_KEEP_DAYS * DAY_MS;
 
 // Groups events by time relative to now:
 // today: live now (see getLiveWindow); upcoming: starts later;
@@ -630,10 +699,15 @@ export function groupEventsByTime(
     let ageMs = nowTime - window.end.getTime();
     if (ageMs < ARCHIVE_AFTER_MS) {
       groups.past.push(event);
-    } else if (event.video_id || event.sgf_url) {
+    } else if (
+      event.video_id ||
+      event.sgf_url ||
+      (hasOgsReplay(event) && ageMs < REPLAY_KEEP_MS)
+    ) {
       groups.archive.push(event);
     }
-    // else: past its 14-day window with nothing recorded - drop it
+    // else: past its 14-day window with nothing recorded (or OGS games
+    // older than REPLAY_KEEP_DAYS) - drop it
   }
   for (let key of ["today", "upcoming", "past", "archive"]) {
     groups[(key: any)].sort(

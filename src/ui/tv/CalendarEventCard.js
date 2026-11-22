@@ -1,10 +1,12 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import StreamEmbed from "./StreamEmbed";
+import ReplayGameList from "./ReplayGameList";
 import { formatLocaleDate, formatLocaleTime } from "../../util/date";
 import {
   getLiveWindow,
   hasOgsBoard,
+  hasOgsReplay,
   hasVideoStream,
   isWatchable,
 } from "../../model/tv";
@@ -45,7 +47,9 @@ function getBoardStatus(
     return "SGF-Brett zum Nachspielen verfügbar";
   }
   if (getLiveWindow(event).end.getTime() < now) {
-    return "Termin vorbei · kein Live-Brett verfügbar";
+    return hasOgsReplay(event)
+      ? "Termin vorbei · Partien zum Nachspielen"
+      : "Termin vorbei · kein Live-Brett verfügbar";
   }
   let hasKgs = !!(
     event.kgs_room ||
@@ -99,6 +103,11 @@ export function formatEventDateRange(event: TvEvent): string {
 export default class CalendarEventCard extends Component<Props> {
   render() {
     let { event, onOpenReplay, boardCount, ogsBoardCount, now } = this.props;
+    // Finished games can be replayed once the event has begun.
+    let canReplayOgs =
+      hasOgsReplay(event) &&
+      getLiveWindow(event).start.getTime() <=
+        (now === undefined ? Date.now() : now);
     return (
       <div className="CalendarEvent">
         <div className="CalendarEvent-header">
@@ -139,6 +148,11 @@ export default class CalendarEventCard extends Component<Props> {
             loaded={this.props.videoLoaded}
           />
         )}
+        {onOpenReplay && canReplayOgs ? (
+          <div className="CalendarEvent-replay">
+            <ReplayGameList event={event} onOpenReplay={onOpenReplay} />
+          </div>
+        ) : null}
         {event.sgf_url && onOpenReplay ? (
           <div className="CalendarEvent-replay">
             <button

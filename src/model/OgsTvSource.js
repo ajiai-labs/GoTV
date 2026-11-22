@@ -7,11 +7,14 @@ import {
   parseOgsClocks,
 } from "./OgsGameData";
 import { OgsRealtime } from "./OgsRealtime";
+import { pickReplayGames } from "./OgsReplay";
+import type { ReplayGame } from "./OgsReplay";
 import { pickOgsGameId } from "./OgsGameFinder";
 import {
   getLiveEvents,
   getLiveGames as getActiveLiveGames,
   getLiveWindow,
+  getOgsReplayIds,
   hasOgsBoard,
   hasVideoStream,
 } from "./tv";
@@ -39,6 +42,10 @@ const LIVE_REST_EVERY_N_POLLS = 12;
 const LIVE_CHAT_CHANNELS = ["main", "spectator"];
 const UNKNOWN_PLAYER = "Unknown";
 const FIND_PAGE_SIZE = 10;
+// A best of five plus cancelled attempts fits easily.
+const REPLAY_PAGE_SIZE = 50;
+// While an event is running new games appear; reuse a lookup this long.
+const REPLAY_CACHE_MS = 60000;
 // One anonymous request per poll while a game runs (see fetchGame).
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 
@@ -234,6 +241,9 @@ export class OgsTvSource implements TvSource {
   _entries: { [number]: OgsEntry } = {};
   _gamesById: { [number]: GameChannel } = {};
   _playerIds: { [name: string]: Promise<number> } = {};
+  _replayCache: {
+    [key: string]: { at: number, games: Promise<Array<ReplayGame>> },
+  } = {};
   _realtime: ?OgsRealtime;
 
   // realtime: pushes moves, clocks and chat of observed games. Without it
@@ -376,6 +386,71 @@ export class OgsTvSource implements TvSource {
           windowStartMs
         )
       );
+  }
+
+  // The finished OGS games of an event, in playing order: the listed
+  // ogs_game_ids, or the games between its ogs_players that started during
+  // the event (OGS filters the player's games by start time, so this still
+  // works months later).
+  fetchEventGames(event: TvEvent): Promise<Array<ReplayGame>> {
+    let ids = getOgsReplayIds(event);
+    let players = event.ogs_players;
+    let window = getLiveWindow(event);
+    let key =
+      event.id +
+      "|" +
+      (ids ? ids.join(",") : (players || []).join(",")) +
+      "|" +
+      window.start.getTime();
+    let cached = this._replayCache[key];
+    if (cached && Date.now() - cached.at < REPLAY_CACHE_MS) {
+      return cached.games;
+    }
+    let games;
+    if (ids) {
+      let gameIds = ids;
+      games = Promise.all(
+        gameIds.map((gameId) =>
+          this._fetchJson(OGS_API_URL + gameId).catch(() => null)
+        )
+      ).then((raw) => {
+        if (raw.every((game) => !game)) {
+          throw new Error("OGS nicht erreichbar");
+        }
+        return pickReplayGames(raw);
+      });
+    } else if (players && players.length) {
+      let names = players;
+      games = this._resolvePlayerId(names[0])
+        .then((playerId) =>
+          this._fetchJson(
+            OGS_PLAYERS_URL +
+              playerId +
+              "/games/?ordering=-id&page_size=" +
+              REPLAY_PAGE_SIZE +
+              "&started__gte=" +
+              encodeURIComponent(window.start.toISOString()) +
+              "&started__lte=" +
+              encodeURIComponent(window.end.toISOString())
+          )
+        )
+        .then((data) =>
+          pickReplayGames(
+            Array.isArray(data.results) ? data.results : [],
+            names
+          )
+        );
+    } else {
+      return Promise.resolve([]);
+    }
+    let entry = { at: Date.now(), games };
+    this._replayCache[key] = entry;
+    games.catch(() => {
+      if (this._replayCache[key] === entry) {
+        delete this._replayCache[key];
+      }
+    });
+    return games;
   }
 
   // Observes the OGS board of a calendar broadcast: a fixed ogs_game_id
