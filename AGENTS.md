@@ -249,6 +249,9 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Ergebnis in der Liste (kein Spoiler); geladen wird das OGS-SGF, das anonym verfügbar
   ist, sobald die Partie beendet ist. Events mit OGS-Partien bleiben 90 Tage
   (`REPLAY_KEEP_DAYS`) im Archiv statt 14.
+  Unter Live steht ein Turnier nach Ende seines Live-Fensters noch 24 Stunden als
+  "Gerade zu Ende – Partien nachspielen" (Partien sofort aufgelistet), sonst wäre es
+  ab Fensterende nur noch unten im Nachspielen-Tab zu finden.
 - Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
   importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
   Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien

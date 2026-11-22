@@ -162,6 +162,32 @@ describe("replaying finished tournament games", () => {
     expect(onOpenReplay).toHaveBeenCalledWith("https://example.org/g.sgf");
   });
 
+  it("shows a tournament that just ended under Live with its games listed", () => {
+    let render = (now) =>
+      act(() => {
+        ReactDOM.render(
+          <RecentReplays
+            events={[EVENT]}
+            now={now}
+            onOpenReplay={jest.fn()}
+            justEnded
+          />,
+          container
+        );
+      });
+    // Still running (18:00-22:00 CET): a live broadcast, not "ended".
+    render(Date.parse("2026-11-22T20:00:00Z"));
+    expect(container.innerHTML).toBe("");
+    render(Date.parse("2026-11-22T21:30:00Z"));
+    expect(container.textContent).toContain(
+      "Gerade zu Ende – Partien nachspielen"
+    );
+    expect(container.textContent).toContain("Partien werden bei OGS gesucht");
+    // A day later it is only in the Nachspielen tab.
+    render(Date.parse("2026-11-23T21:30:00Z"));
+    expect(container.innerHTML).toBe("");
+  });
+
   it("offers the games on the card once the event has begun", () => {
     let render = (now) =>
       act(() => {

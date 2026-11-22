@@ -196,12 +196,24 @@ export default class TvScreen extends Component<Props, State> {
             {hasLive ? (
               <div className="TvScreen-live-content">
                 {broadcasts.map(this._renderBroadcast)}
+                <RecentReplays
+                  events={tvEvents}
+                  now={this.state.now}
+                  onOpenReplay={this._onOpenReplay}
+                  justEnded
+                />
               </div>
             ) : (
               <div className="TvScreen-live-empty">
                 <div className="TvScreen-live-empty-title">
                   Gerade keine Übertragung.
                 </div>
+                <RecentReplays
+                  events={tvEvents}
+                  now={this.state.now}
+                  onOpenReplay={this._onOpenReplay}
+                  justEnded
+                />
                 {nextEvent ? (
                   <div className="TvScreen-live-empty-next">
                     <div className="TvScreen-live-empty-next-text">
