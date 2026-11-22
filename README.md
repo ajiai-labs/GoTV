@@ -33,7 +33,8 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 - **Watch without a KGS login:** "Go TV ohne Anmeldung ansehen" on the
   login screen, or open `/tv` directly.
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
-  daily, and SGF replay move by move.
+  daily, and SGF replay move by move - including the finished OGS games of
+  tournaments from the last three months.
 
 Streams are embedded only through the official players, and only after a
 click (two-click solution).
@@ -198,6 +199,12 @@ Each entry:
 | `kgs_room` / `kgs_players` | no | KGS room name and/or KGS player names whose broadcast games belong to this event. |
 | `ogs_game_id` | no | Number of one game on online-go.com (`https://online-go.com/game/<id>`) to show as the board. |
 | `ogs_players` | no | OGS user names of the players. The board is the game between exactly these players that started during the event; a series moves on to the next game by itself. |
+| `ogs_game_ids` | no | Numbers of finished OGS games of this event (e.g. from the tournament page), for replay when the players' OGS names are unknown. |
+
+Finished OGS games of an event (`ogs_game_ids`, or found through
+`ogs_players`) can be replayed: "Partien nachspielen" on the card, and
+"Turnierpartien der letzten 3 Monate" in the Nachspielen tab. The list
+shows players and start time only - no results, nothing is spoiled.
 
 An event appears under **Live** while it runs and there is something to
 watch: a YouTube/Twitch stream, a linked board (`kgs_*`/`ogs_*`), or both.

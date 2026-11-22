@@ -233,9 +233,26 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   den `notes`, die sieht der Zuschauer): `berliner-kranich-2026` ist von Hand
   eingetragen, weil der DGoB-Importer die Kategorie 'deutschlandpokal' nicht zieht.
   `speed-go-championship-2026-11-22-surma-ovsiienko` ist bestätigt per
-  speedgochampionship.com/bracket; findet der tägliche twitch-egf-Import den Termin
-  selbst, entsteht ein Duplikat - dann zusammenführen. OGS-Brett: `ogs_players` oder
-  Link an der Karte, sobald die OGS-Namen bekannt sind.
+  speedgochampionship.com/bracket; den gleichzeitigen twitch-egf-Import blendet
+  `dropImportedDuplicates` aus. OGS-Namen: `mateusz.surma1995`, `OvsiienkoVsevolod`.
+  Die Speed-Go-Einträge vom 01.11. und 08.11. tragen `ogs_game_ids` aus den
+  "online-go: G1 G2 G3"-Links der Bracket-Seite (OGS-Konten dort: artem92/RemiC bzw.
+  Avtikh/Welvang).
+- Turnierpartien nachspielen (`src/model/OgsReplay.js`, `OgsTvSource.fetchEventGames`,
+  `src/ui/tv/ReplayGameList.js`, `src/ui/tv/RecentReplays.js`): Für Events mit
+  `ogs_game_ids` (Partienummern, z. B. von der Turnierseite) oder `ogs_players` listet die
+  App die beendeten OGS-Partien als G1, G2, … — an der Karte, sobald das Event begonnen
+  hat, und im Nachspielen-Tab unter "Turnierpartien der letzten 3 Monate". Bei
+  `ogs_players` filtert OGS die Partieliste des ersten Spielers per
+  `started__gte/started__lte` auf das Live-Fenster (geprüft 22.11.2026), daher klappt das
+  auch Wochen später. Abgebrochene/annullierte Partien fallen weg. Bewusst OHNE
+  Ergebnis in der Liste (kein Spoiler); geladen wird das OGS-SGF, das anonym verfügbar
+  ist, sobald die Partie beendet ist. Events mit OGS-Partien bleiben 90 Tage
+  (`REPLAY_KEEP_DAYS`) im Archiv statt 14.
+- Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
+  importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
+  Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien
+  trägt und nicht verschwindet, wenn der Import den Termin vergisst.
 - `src/ui/tv/TvSourceBadge.js` — Badge "KGS"/"OGS" an jedem Brett der TV-Brettliste
   (`GameList` mit `showSource`) und im Kopf von `TvGamePanel`. Watch bleibt ohne Badge.
 - `src/ui/tv/TvGamePanel.js` — KGS-/OGS-Brett mit lokaler BoardNav und denselben
