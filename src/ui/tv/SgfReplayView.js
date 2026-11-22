@@ -12,6 +12,20 @@ import {
 import { computeGameNodeStates, getGameLine } from "../../model/game/tree";
 import type { GameTree } from "../../model";
 
+// OGS writes chat lines it cannot serialise as "name: [object Object]" into
+// its SGF export; those lines carry no text and are left out.
+const BROKEN_CHAT_LINE_RE = /\[object Object\]\s*$/;
+
+export function getReadableComment(text: mixed): ?string {
+  if (typeof text !== "string") {
+    return null;
+  }
+  let lines = text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() && !BROKEN_CHAT_LINE_RE.test(line));
+  return lines.length ? lines.join("\n") : null;
+}
+
 type Props = {
   initialUrl?: ?string,
   initialTree?: ?GameTree,
@@ -182,6 +196,7 @@ export default class SgfReplayView extends Component<Props, State> {
         : "?";
     let currentNodeProps = tree.nodes[currentNode].props;
     let commentProp = currentNodeProps.find((p) => p.name === "COMMENT");
+    let comment = commentProp ? getReadableComment(commentProp.text) : null;
     // BoardContainer only reads game.tree - the rest of GameChannel is unused
     let game: any = {
       type: "review",
@@ -196,7 +211,9 @@ export default class SgfReplayView extends Component<Props, State> {
               {playerNames.black} (B) vs. {playerNames.white} (W)
             </span>
           ) : null}
-          {result && (!this.props.compact || moveNum === line.length - 1) ? (
+          {/* The result only at the last move - replaying must not be
+              spoiled from the first move on. */}
+          {result && moveNum === line.length - 1 ? (
             <span className="SgfReplay-result"> · {result}</span>
           ) : null}
           <span className="SgfReplay-size">
@@ -226,10 +243,10 @@ export default class SgfReplayView extends Component<Props, State> {
             </span>
           ) : null}
         </div>
-        {commentProp && typeof commentProp.text === "string" ? (
+        {comment ? (
           <div className="SgfReplay-comment">
             <div className="SgfReplay-comment-title">Kommentar:</div>
-            <div className="SgfReplay-comment-text">{commentProp.text}</div>
+            <div className="SgfReplay-comment-text">{comment}</div>
           </div>
         ) : null}
       </div>
