@@ -385,6 +385,44 @@
       "notes": "EGF Grand Prix Circuit · Level C · Velika Gorica, Croatia"
     },
     {
+      "id": "speed-go-championship-2026-11-01-kachanovskyi-campagnie",
+      "name": "Speed Go Championship: Artem Kachanovskyi 3p – Rémi Campagnie 6d",
+      "date_start": "2026-11-01",
+      "start": "2026-11-01T18:00:00+01:00",
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien liefen auf online-go.com (OGS).",
+      "ogs_game_ids": [
+        92121029,
+        92122355,
+        92123450
+      ]
+    },
+    {
+      "id": "speed-go-championship-2026-11-08-jabarin-le-calve",
+      "name": "Speed Go Championship: Ali Jabarin 3p – Tanguy Le Calvé 2p",
+      "date_start": "2026-11-08",
+      "start": "2026-11-08T18:00:00+01:00",
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien liefen auf online-go.com (OGS).",
+      "ogs_game_ids": [
+        92321249,
+        92322676,
+        92323382
+      ]
+    },
+    {
       "id": "speed-go-championship-2026-11-22-surma-ovsiienko",
       "name": "Speed Go Championship: Mateusz Surma 4p – Vsevolod Ovsiienko 6d",
       "date_start": "2026-11-22",
@@ -396,7 +434,11 @@
         "id": "europeangofederation"
       },
       "region": "intl",
-      "notes": "Achtelfinale, Best of five, eskalierendes Zeitlimit (jede Partie 1 Min/1 Sek schneller). Die Bretter laufen auf online-go.com (OGS)."
+      "notes": "Achtelfinale, Best of five, eskalierendes Zeitlimit (jede Partie 1 Min/1 Sek schneller). Die Bretter laufen auf online-go.com (OGS).",
+      "ogs_players": [
+        "mateusz.surma1995",
+        "OvsiienkoVsevolod"
+      ]
     }
   ],
   "channels": [
