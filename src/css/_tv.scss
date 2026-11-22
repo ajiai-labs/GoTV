@@ -930,6 +930,11 @@ $cinema-bar-height: 44px;
     &-video::before {
       background: $accent !important;
     }
+
+    // Text only, no colour box: the ▶ is the marker.
+    &-replay::before {
+      display: none !important;
+    }
   }
 
   &-grid {

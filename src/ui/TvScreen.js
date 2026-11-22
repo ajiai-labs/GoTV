@@ -240,7 +240,7 @@ export default class TvScreen extends Component<Props, State> {
           <CalendarView
             events={this.props.events ? tvEvents : undefined}
             onOpenReplay={this._onOpenReplay}
-            renderEvent={(event) => {
+            renderEvent={(event, options) => {
               let broadcast = kgsTvSource.getLiveBroadcasts(
                 activeGames,
                 [event],
@@ -254,6 +254,7 @@ export default class TvScreen extends Component<Props, State> {
                   event={event}
                   onOpenReplay={this._onOpenReplay}
                   now={this.state.now}
+                  openGames={!!options && options.openGames}
                 />
               );
             }}

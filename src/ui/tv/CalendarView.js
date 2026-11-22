@@ -24,7 +24,7 @@ type Props = {
   events?: ?Array<TvEvent>,
   channels?: ?Array<TvChannel>,
   onOpenReplay?: (string) => any,
-  renderEvent?: (TvEvent) => Node,
+  renderEvent?: (TvEvent, options?: { openGames: boolean }) => Node,
   renderChannel?: (TvChannel) => Node,
 };
 

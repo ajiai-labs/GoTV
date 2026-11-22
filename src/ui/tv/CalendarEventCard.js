@@ -21,6 +21,8 @@ type Props = {
   now?: number,
   showVideo?: boolean,
   videoLoaded?: boolean,
+  // List the finished games right away (a day picked in the month sheet).
+  openGames?: boolean,
 };
 
 function getBoardStatus(
@@ -150,7 +152,11 @@ export default class CalendarEventCard extends Component<Props> {
         )}
         {onOpenReplay && canReplayOgs ? (
           <div className="CalendarEvent-replay">
-            <ReplayGameList event={event} onOpenReplay={onOpenReplay} />
+            <ReplayGameList
+              event={event}
+              onOpenReplay={onOpenReplay}
+              defaultOpen={this.props.openGames}
+            />
           </div>
         ) : null}
         {event.sgf_url && onOpenReplay ? (

@@ -229,6 +229,9 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Klick auf einen Tag zeigt dessen Turnierkarten). `CalendarView` schaltet zwischen
   "Monat" (Standard) und "Liste" (Regionen, Sender, Archiv) um, gemerkt in
   `gotv.calendarView`.
+  Turniere mit Partien zum Nachspielen (begonnen + `ogs_*`/`sgf_url`) tragen im
+  Monatsblatt ein "▶" vor dem Namen; ein Klick auf den Tag scrollt zu dessen Karten
+  und öffnet die Partieliste sofort (`renderEvent(event, {openGames: true})`).
 - Pflegehinweise zu Hand-Einträgen in `public/tv/events.json` (stehen bewusst NICHT in
   den `notes`, die sieht der Zuschauer): `berliner-kranich-2026` ist von Hand
   eingetragen, weil der DGoB-Importer die Kategorie 'deutschlandpokal' nicht zieht.

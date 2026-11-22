@@ -1,7 +1,7 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import CalendarEventCard from "./CalendarEventCard";
-import { hasVideoStream } from "../../model/tv";
+import { getLiveWindow, hasOgsReplay, hasVideoStream } from "../../model/tv";
 import {
   buildMonth,
   getEventsOnDay,
@@ -16,7 +16,8 @@ type Props = {
   events: Array<TvEvent>,
   now: number,
   onOpenReplay?: (string) => any,
-  renderEvent?: (TvEvent) => Node,
+  // options.openGames: the card should list its finished games right away.
+  renderEvent?: (TvEvent, options?: { openGames: boolean }) => Node,
 };
 
 type State = {
@@ -46,9 +47,19 @@ function formatDay(dayKey: string): string {
   });
 }
 
+// A tournament that has begun and has games to replay (OGS or SGF).
+function canReplay(event: TvEvent, now: number): boolean {
+  return (
+    (hasOgsReplay(event) || !!event.sgf_url) &&
+    getLiveWindow(event).start.getTime() <= now
+  );
+}
+
 // Month sheet of the tournament calendar: a multi-day tournament runs as one
 // bar across its days; clicking a day lists that day's tournaments below.
 export default class CalendarMonth extends Component<Props, State> {
+  _selectedRef: ?HTMLElement;
+
   constructor(props: Props) {
     super(props);
     let today = new Date(props.now);
@@ -77,7 +88,20 @@ export default class CalendarMonth extends Component<Props, State> {
   };
 
   _onSelectDay = (e: Object) => {
-    this.setState({ selectedKey: e.currentTarget.getAttribute("data-day") });
+    this.setState(
+      { selectedKey: e.currentTarget.getAttribute("data-day") },
+      () => {
+        // The day's cards sit below the sheet: bring them into view.
+        let ref: any = this._selectedRef;
+        if (ref && typeof ref.scrollIntoView === "function") {
+          ref.scrollIntoView({ block: "start", behavior: "smooth" });
+        }
+      }
+    );
+  };
+
+  _setSelectedRef = (ref: HTMLElement | null) => {
+    this._selectedRef = ref;
   };
 
   _renderCell(cell: MonthCell, todayKey: string, isWeekStart: boolean) {
@@ -98,10 +122,16 @@ export default class CalendarMonth extends Component<Props, State> {
           className={
             "CalendarMonth-bar" +
             (hasVideoStream(entry.event) ? " CalendarMonth-bar-video" : "") +
+            (canReplay(entry.event, this.props.now)
+              ? " CalendarMonth-bar-replay"
+              : "") +
             (entry.isStart ? " CalendarMonth-bar-start" : "") +
             (entry.isEnd ? " CalendarMonth-bar-end" : "")
           }>
-          {showName ? entry.event.name : " "}
+          {showName
+            ? (canReplay(entry.event, this.props.now) ? "▶ " : "") +
+              entry.event.name
+            : "\u00a0"}
         </div>
       );
     }
@@ -161,6 +191,9 @@ export default class CalendarMonth extends Component<Props, State> {
           <div className="CalendarMonth-legend">
             <span className="CalendarMonth-legend-video">mit Stream</span>
             <span className="CalendarMonth-legend-plain">ohne Stream</span>
+            <span className="CalendarMonth-legend-replay">
+              ▶ Partien zum Nachspielen
+            </span>
           </div>
         </div>
         <div className="CalendarMonth-grid">
@@ -175,7 +208,7 @@ export default class CalendarMonth extends Component<Props, State> {
             )
           )}
         </div>
-        <div className="CalendarMonth-selected">
+        <div className="CalendarMonth-selected" ref={this._setSelectedRef}>
           <div className="CalendarMonth-selected-title">
             {formatDay(selectedKey)}
           </div>
@@ -183,7 +216,7 @@ export default class CalendarMonth extends Component<Props, State> {
             dayEvents.map((event) =>
               renderEvent ? (
                 <React.Fragment key={event.id}>
-                  {renderEvent(event)}
+                  {renderEvent(event, { openGames: true })}
                 </React.Fragment>
               ) : (
                 <CalendarEventCard
@@ -191,6 +224,7 @@ export default class CalendarMonth extends Component<Props, State> {
                   event={event}
                   onOpenReplay={onOpenReplay}
                   now={now}
+                  openGames
                 />
               )
             )

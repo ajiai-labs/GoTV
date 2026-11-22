@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import CalendarMonth from "./CalendarMonth";
 import CalendarView from "./CalendarView";
+import { ogsTvSource } from "../../model/OgsTvSource";
 
 const NOW = new Date(2026, 10, 17, 12).getTime(); // 17 November 2026
 
@@ -85,6 +86,49 @@ describe("CalendarMonth", () => {
     expect(text(".CalendarMonth-title")).toBe("Oktober 2026");
     act(() => container.querySelector(".CalendarMonth-today").click());
     expect(text(".CalendarMonth-title")).toBe("November 2026");
+  });
+
+  it("marks tournaments with games and lists them when the day is picked", async () => {
+    let fetchGames = jest.spyOn(ogsTvSource, "fetchEventGames").mockReturnValue(
+      Promise.resolve([
+        {
+          id: 1,
+          black: "Ovsi",
+          white: "Surma",
+          started: 0,
+          sgfUrl: "https://online-go.com/api/v1/games/1/sgf",
+        },
+      ])
+    );
+    let onOpenReplay = jest.fn();
+    let events = [
+      event("Speed Go", "2026-11-15", undefined, {
+        platform: "twitch",
+        ogs_players: ["Surma", "Ovsi"],
+      }),
+      event("Später", "2026-11-29", undefined, { ogs_players: ["a", "b"] }),
+    ];
+    render(
+      <CalendarMonth events={events} now={NOW} onOpenReplay={onOpenReplay} />
+    );
+    let bar = (key) => day(key).querySelector(".CalendarMonth-bar");
+    expect(bar("2026-11-15").textContent).toBe("▶ Speed Go");
+    expect(bar("2026-11-15").className).toContain("CalendarMonth-bar-replay");
+    // Not begun yet: no games to replay, no marker.
+    expect(bar("2026-11-29").textContent).toBe("Später");
+    expect(fetchGames).not.toHaveBeenCalled();
+    await act(async () => {
+      day("2026-11-15").click();
+      for (let i = 0; i < 5; i++) {
+        await Promise.resolve();
+      }
+    });
+    expect(fetchGames).toHaveBeenCalledTimes(1);
+    act(() => container.querySelector(".ReplayGameList-game").click());
+    expect(onOpenReplay).toHaveBeenCalledWith(
+      "https://online-go.com/api/v1/games/1/sgf"
+    );
+    fetchGames.mockRestore();
   });
 
   it("says how many tournaments a full day hides", () => {
