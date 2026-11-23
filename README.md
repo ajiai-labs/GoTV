@@ -61,6 +61,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   for next time and save everything as an SGF file ("Als SGF speichern"), continue a game where you stopped,
   and set bookmarks with a note. The result stays hidden until the game's
   last move.
+- **Offline on the tablet:** the web version keeps itself and KataGo on the
+  device. Without a connection you can still open it, replay games you
+  have opened before (also tournament games) and analyse them with KataGo.
 - **Meine Daten:** save stars, replays (with bookmarks and variations) and
   settings as one file and load it on another device - desktop to tablet
   and back. Loading only adds; nothing already there is deleted.

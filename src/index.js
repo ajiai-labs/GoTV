@@ -9,6 +9,7 @@ import SgfReplayView from "./ui/tv/SgfReplayView";
 import { getGermanClock } from "./model/tvChannels";
 import ChatMessages from "./ui/chat/ChatMessages";
 import { isTouchDevice } from "./util/dom";
+import { registerOfflineSupport } from "./util/offline";
 import { parseSgf } from "./model/sgf";
 import "./css/index.scss";
 import "font-awesome/css/font-awesome.css";
@@ -463,4 +464,6 @@ if (
   ReactDOM.render(<TvDevHarness />, document.getElementById("root"));
 } else {
   ReactDOM.render(<App />, document.getElementById("root"));
+  // Web version only (see util/offline.js): replaying and KataGo offline.
+  registerOfflineSupport();
 }

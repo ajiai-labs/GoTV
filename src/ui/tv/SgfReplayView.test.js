@@ -189,6 +189,34 @@ describe("SgfReplayView", () => {
     window.localStorage.clear();
   });
 
+  it("lists a game from an address as soon as it is opened", async () => {
+    window.localStorage.clear();
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        text: () => Promise.resolve("(;SZ[9]PB[Ann]PW[Bob];B[aa])"),
+      })
+    );
+    await act(async () => {
+      ReactDOM.render(
+        <SgfReplayView initialUrl="https://online-go.com/api/v1/games/1/sgf" />,
+        container
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    let stored = JSON.parse(window.localStorage.getItem("gotv.replays"));
+    expect(
+      stored["url:https://online-go.com/api/v1/games/1/sgf"]
+    ).toMatchObject({
+      move: 0,
+      title: "Ann – Bob",
+      url: "https://online-go.com/api/v1/games/1/sgf",
+    });
+    delete global.fetch;
+    window.localStorage.clear();
+  });
+
   it("continues where the viewer stopped and keeps bookmarks", () => {
     window.localStorage.clear();
     let sgf = "(;SZ[9]PB[a]PW[b];B[aa];W[bb];B[cc])";

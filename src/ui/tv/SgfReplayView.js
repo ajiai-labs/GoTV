@@ -203,6 +203,19 @@ export default class SgfReplayView extends Component<Props, State> {
       bookmarks: progress ? progress.bookmarks : [],
       bookmarkDraft: null,
     });
+    // A game from an address goes straight into "Zuletzt nachgespielt",
+    // so it can be found again (also offline) before a move was played.
+    if (key && url && !this.props.compact) {
+      let names = getSgfPlayerNames(shown);
+      saveReplayMove(
+        key,
+        resumeMove || 0,
+        names.black && names.white
+          ? names.black + " – " + names.white
+          : "SGF-Partie",
+        url
+      );
+    }
   }
 
   _loadUrl = (url: string) => {

@@ -10,6 +10,7 @@ import ChannelCard from "./tv/ChannelCard";
 import ChannelsView from "./tv/ChannelsView";
 import MyGoTv from "./tv/MyGoTv";
 import BackupPanel from "./tv/BackupPanel";
+import OfflineNotice from "./tv/OfflineNotice";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
 import RecentReplays from "./tv/RecentReplays";
@@ -534,6 +535,7 @@ export default class TvScreen extends Component<Props, State> {
             )}
           </div>
         ) : null}
+        <OfflineNotice />
         <TabNav
           tabs={tabs}
           activeTabId={activeTabId}

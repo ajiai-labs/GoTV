@@ -341,6 +341,25 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Twitch-Kanälen und laufenden Twitch-Events; YouTube per `youtube.com/live_chat?v=<id>&
   embed_domain=<host>` nur bei Events mit `video_id` - für einen YouTube-Kanal kennt
   GoTV die Nummer der laufenden Sendung ohne YouTube-API nicht.
+- Offline (Web-Version, 23.11.2026): eigener Service Worker `public/gotv-sw.js`, registriert
+  von `src/util/offline.js` NUR im Production-Build mit `REACT_APP_GUEST_ONLY=true`
+  (GitHub Pages) - nicht in der Desktop-App (läuft lokal) und nicht im Dev-Server. Die von
+  CRA zusätzlich erzeugte `service-worker.js` (lädt Workbox von einem Google-CDN) bleibt
+  unbenutzt. Registriert als `gotv-sw.js?v=<Hash von main.*.chunk.js>`: jeder neue Build
+  installiert einen neuen Worker, der alte App-Cache wird beim Aktivieren gelöscht.
+  Beim Installieren gespeichert: alle Dateien aus `asset-manifest.json` plus index.html,
+  manifest, Icons, tv/events.json, das EM-Finale und KataGo komplett (Worker, WASM, Netz).
+  Doppelte Adressen werden vorher entfernt (`cache.addAll` scheitert sonst still).
+  Strategien: Seitenaufrufe und events.json (lokal + raw.githubusercontent) zuerst Netz
+  (6 s), sonst letzter Stand; /static/ und /katago/ aus dem Speicher; OGS-SGF
+  (`/api/v1/games/<id>/sgf`) einmal geladen -> gespeichert (laufende Partien liefert OGS mit
+  403, die werden nie gespeichert); OGS-Details und Spielerlisten zuerst Netz OHNE
+  Zeitlimit (Live-Brett pollt sie, ein langsames Netz darf keinen alten Stand zeigen),
+  nur bei Netzfehler der letzte Stand; Daten-Cache max. 300 Einträge. Streams, Live-Bretter,
+  KGS nie. `OfflineNotice` zeigt ohne Netz, was weiter geht. Eine Partie aus einer Adresse
+  steht jetzt schon beim Öffnen unter "Zuletzt nachgespielt" (vorher erst nach dem ersten
+  Zug), damit man sie offline wiederfindet. Geprüft 23.11.2026 mit Playwright
+  (`setOffline`): App lädt, Turnierpartie Ovsiienko - Surma öffnet, KataGo rechnet.
 - "Meine Daten" (`src/model/Backup.js`, `src/ui/tv/BackupPanel.js`, unten im TV-Tab,
   23.11.2026): "Sicherung speichern" lädt alle `gotv.*`-Schlüssel als JSON-Datei herunter
   (`{format: "gotv-backup", version: 1, createdAt, data}`, ohne `gotv.notified`, damit das
@@ -562,12 +581,11 @@ Policy, von dir als "Stufe 1" bezeichnet:
 ## Nächste Schritte (Stand 23.11.2026, vom Nutzer so abgelegt)
 
 Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
-Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer, Sicherungsdatei "Meine Daten"
-(siehe oben). Offen, in dieser Reihenfolge:
+Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer, Sicherungsdatei "Meine Daten",
+Offline-Nutzung der Web-Version (siehe oben). Offen, in dieser Reihenfolge:
 
-1. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
-   und gespeicherte Partien); Erinnerungen bei geschlossener App bräuchten Web-Push mit
-   Server.
+1. **Erinnerungen bei geschlossener App** (Rest von "Tablet vervollständigen"): bräuchte
+   Web-Push mit einem Server, der die Nachrichten verschickt - Architekturentscheidung.
 2. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
    Erkennung braucht die YouTube Data API (Schlüssel gehört auf einen Server, nicht in den
    Client) - damit ginge auch der YouTube-Chat für Kanäle wie JuppTube.
