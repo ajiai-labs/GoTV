@@ -20,8 +20,12 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
 ## Regeln
 
 - Branch `feature/go-tv`, ein Commit pro abgeschlossenem Schritt, Conventional Commits.
-  **Nicht pushen.**
-- Nach jedem Schritt: `yarn lint && yarn flow && yarn build` müssen grün sein.
+  Pushen: jeden abgeschlossenen Schritt auf `feature/go-tv` UND `master` (Fast-Forward,
+  `git push origin feature/go-tv:master`) - Wunsch des Nutzers seit 23.11.2026 (vorher galt
+  "Nicht pushen"). Ein Push auf master veröffentlicht über die CI die Web-Version.
+- Nach jedem Schritt: `yarn lint && yarn flow && CI=true yarn build` müssen grün sein
+  (mit `CI=true` zählen Build-Warnungen als Fehler - wie in der GitHub-CI), dazu die
+  App-Tests und die Python-Tool-Tests.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -65,7 +69,7 @@ cd ~/Projekte/aktiv/shinkgs && yarn install
 | `desktop/install.sh` | Desktop-App bauen + installieren (siehe Desktop-Abschnitt) |
 | `yarn build:pages` | Web-Version für GitHub Pages: `PUBLIC_URL=/GoTV`, `REACT_APP_GUEST_ONLY=true` (nur Gast-TV, kein Login), `404.html` = `index.html` |
 
-Gate nach jedem Schritt: `yarn lint && yarn flow && yarn build`
+Gate nach jedem Schritt: `yarn lint && yarn flow && CI=true yarn build` plus Tests (siehe Regeln oben)
 
 ## Build-Kette — bekannte Punkte
 
@@ -100,8 +104,8 @@ sudo, kein Electron). Dateien unter `desktop/`:
   `--app=http://127.0.0.1:8788 --user-data-dir=~/.local/share/gotv/profile
   --class=gotv` (eigenes Profil, kein Browser-Chrome).
 - **`gotv.desktop`** — Desktop-Eintrag, `StartupWMClass=gotv` (passend zu
-  `--class`). `Name`/`Icon` sind aktuell Platzhalter "Go TV" — siehe "Offene
-  Entscheidungen" unten, Name/Icon sind noch nicht final.
+  `--class`). `Name=GoTV`, `Icon=gotv` (Icon unter `desktop/icons/`, PNGs in
+  `desktop/icons/png/`).
 - **`install.sh` / `uninstall.sh`** — user-scoped (kein sudo): baut
   `build-desktop/`, installiert Launcher nach `~/.local/bin`, `.desktop` nach
   `~/.local/share/applications`, Icon nach
@@ -156,7 +160,8 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
 ## Architektur — Go-TV-Modul
 
 - `src/model/tv.js` — pure Logik: Sortierung nach Spielstärke, Event-/URL-Parsing-Helfer.
-- `src/ui/TvScreen.js` — TV-Tab mit Bereichen Live / Kalender / Nachspielen (TabNav).
+- `src/ui/TvScreen.js` — TV-Tab mit Bereichen Live / Kalender / Kanäle / Nachspielen
+  (TabNav), darunter "Meine Daten" (BackupPanel) und bei fehlendem Netz der Offline-Hinweis.
 - `src/util/urls.js` — extract_urls/normalize_url (Port von chat_panel.rs).
 - `src/model/sgf.js` — SGF-Parser (Port von sgf.rs, erweitert um Varianten) → GameTree.
   Koordinaten nach SGF-Standard wie in sgf.rs: Buchstabe = Index ab oben links, "i" wird
@@ -501,7 +506,7 @@ Policy, von dir als "Stufe 1" bezeichnet:
 - [x] OGS-Bretter für Kalender-Übertragungen: `ogs_game_id`, anonymer REST-Adapter,
       Live-Polling aus `gamedata` (Züge, Uhren), OGS-Partiechat nach Partieende,
       Quellen-Badge KGS/OGS, Wiederverwendung von BoardContainer/TvGamePanel
-- [ ] App-Name + Icon: Name noch offen, bestimmt Icon-Design und Desktop-Branding
+- [x] App-Name + Icon: GoTV (Repo diebugger-tech/GoTV, Icon `desktop/icons/gotv.svg`)
 
 ## Bestand (Phase 1)
 
@@ -601,10 +606,6 @@ Offline-Nutzung der Web-Version (siehe oben). Offen, in dieser Reihenfolge:
 
 ## Offene Entscheidungen (Produkt, Stand heute)
 
-- **App-Name:** noch nicht entschieden. "Go TV" war nur ein Arbeitstitel. Der Name
-  bestimmt Icon-Design, `gotv.desktop`-Beschriftung und (falls gewünscht) den Namen
-  dieses Claude-Projekts.
-- **Icon:** wird entworfen (3 Varianten zur Auswahl), sobald der Name feststeht.
 - **Wöchentlicher Event-Scanner:** Idee, die Quellen EGF-Twitch-Zeitplan, KGS-Events
   und Profi-Turnierseiten wöchentlich automatisch zu prüfen und einen PR mit neuen
   Events auf den Fork zu öffnen. Braucht Schreibzugriff (PR-Rechte) auf den Fork —
