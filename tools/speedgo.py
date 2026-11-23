@@ -184,24 +184,41 @@ def _is_same_pairing(event, match):
     return all(_surname(player) in name for player, _rank in match["players"])
 
 
+def _source_rank(event):
+    """Same order as getSourceRank in src/model/tv.js: the entry the app
+    shows for a broadcast is the one that should carry the games."""
+    if not event.get("source"):
+        return 0
+    return 1 if event.get("source") == SPEEDGO_SOURCE else 2
+
+
 def enrich_with_games(events, matches):
     """Adds the OGS game numbers of played matches to the entry of the same
-    pairing that has none yet. Returns (events, enriched_entries); entries
-    are copied, never changed in place."""
+    pairing - a hand entry first, then a Speed Go import, then any other
+    import - if that entry has none yet. Returns (events, enriched_entries);
+    entries are copied, never changed in place."""
     result = list(events)
     enriched = []
     for match in matches:
         if not match["ogs_game_ids"]:
             continue
-        for index, event in enumerate(result):
-            if event.get("ogs_game_ids") or event.get("ogs_game_id"):
-                continue
-            if not _is_same_pairing(event, match):
-                continue
-            updated = dict(event, ogs_game_ids=list(match["ogs_game_ids"]))
-            result[index] = updated
-            enriched.append(updated)
-            break
+        candidates = sorted(
+            (
+                index
+                for index, event in enumerate(result)
+                if _is_same_pairing(event, match)
+            ),
+            key=lambda index: _source_rank(result[index]),
+        )
+        if not candidates:
+            continue
+        index = candidates[0]
+        event = result[index]
+        if event.get("ogs_game_ids") or event.get("ogs_game_id"):
+            continue  # already linked (by hand or an earlier run)
+        updated = dict(event, ogs_game_ids=list(match["ogs_game_ids"]))
+        result[index] = updated
+        enriched.append(updated)
     return result, enriched
 
 

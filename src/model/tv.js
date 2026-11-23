@@ -415,7 +415,18 @@ let _tvDataPending: ?Promise<TvData> = null;
 // An imported entry (e.g. the daily Twitch schedule import) that describes
 // the same broadcast as a hand-maintained entry - same start time on the
 // same channel - is dropped: the hand entry carries the boards and games
-// and is kept after the import forgets the date.
+// and is kept after the import forgets the date. Between two imports the
+// Speed Go bracket wins over the Twitch schedule (see getSourceRank).
+// Which of several entries for the same broadcast stays: a hand entry
+// first, then the Speed Go bracket import (players and games), then any
+// other import (e.g. the Twitch schedule, which only has a title).
+function getSourceRank(event: TvEvent): number {
+  if (!event.source) {
+    return 0;
+  }
+  return event.source === "speedgo" ? 1 : 2;
+}
+
 export function dropImportedDuplicates(events: Array<TvEvent>): Array<TvEvent> {
   let broadcastKey = (event: TvEvent) => {
     let start = event.start ? Date.parse(event.start) : NaN;
@@ -427,16 +438,17 @@ export function dropImportedDuplicates(events: Array<TvEvent>): Array<TvEvent> {
       : event.stream_url.toLowerCase();
     return start + "@" + where;
   };
-  let handKeys = {};
+  let bestRank: { [key: string]: number } = {};
   for (let event of events) {
     let key = broadcastKey(event);
-    if (!event.source && key) {
-      handKeys[key] = true;
+    if (key) {
+      let rank = getSourceRank(event);
+      bestRank[key] = key in bestRank ? Math.min(bestRank[key], rank) : rank;
     }
   }
   return events.filter((event) => {
     let key = broadcastKey(event);
-    return !event.source || !key || !handKeys[key];
+    return !key || !event.source || getSourceRank(event) <= bestRank[key];
   });
 }
 

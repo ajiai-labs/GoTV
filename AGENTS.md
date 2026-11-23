@@ -245,7 +245,8 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   `dropImportedDuplicates` aus. OGS-Namen: `mateusz.surma1995`, `OvsiienkoVsevolod`.
   Die Speed-Go-Einträge vom 01.11. und 08.11. tragen `ogs_game_ids` aus den
   "online-go: G1 G2 G3"-Links der Bracket-Seite (OGS-Konten dort: artem92/RemiC bzw.
-  Avtikh/Welvang).
+  Avtikh/Welvang); seit 23.11. ergänzt der Speed-Go-Importer solche Nummern selbst
+  (Surma - Ovsiienko: 5 Partien).
 - Turnierpartien nachspielen (`src/model/OgsReplay.js`, `OgsTvSource.fetchEventGames`,
   `src/ui/tv/ReplayGameList.js`, `src/ui/tv/RecentReplays.js`): Für Events mit
   `ogs_game_ids` (Partienummern, z. B. von der Turnierseite) oder `ogs_players` listet die
@@ -358,10 +359,29 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Desktop-App braucht dafür ihren lokalen Proxy. Die History bleibt unter `/GoTV`
   (basename), `404.html` fängt Unterpfade ab. Tägliche Bot-Commits (GITHUB_TOKEN) starten
   keinen Workflow - die Web-Version lädt events.json ohnehin zur Laufzeit von GitHub.
-- Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
-  importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
-  Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien
-  trägt und nicht verschwindet, wenn der Import den Termin vergisst.
+- Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) behält pro Übertragung
+  (gleiche Startzeit, gleicher Kanal) nur den Eintrag mit dem besten Rang
+  (`getSourceRank`): Hand-Eintrag vor Speed-Go-Import vor anderen Importen (z. B.
+  twitch-egf). Der Hand-Eintrag bleibt, weil er Bretter/Partien trägt und nicht
+  verschwindet, wenn der Import den Termin vergisst.
+- Speed-Go-Importer (`tools/speedgo.py`, `--source speedgo` in `tools/update_events.py`,
+  23.11.2026): liest speedgochampionship.com/bracket (robots.txt geprüft: nur
+  Cloudflare-Kommentare, keine Regeln). Kommende Begegnungen mit Datum ("Sunday · 29. 11.
+  6pm CET", Jahr aus der Saisonangabe im Seitenkopf, über Neujahr) -> Einträge
+  `speedgo-<datum>-<nachname>-<nachname>` auf dem EGF-Twitch-Kanal, 18 Uhr, 180 Min.,
+  Runde aus der Bracket-Spalte. Beendete Begegnungen zeigen auf der Seite kein Datum mehr,
+  nur Spieler + "online-go: G1 G2 ..."-Links: diese Partienummern bekommt der Eintrag
+  derselben zwei Spieler (Nachnamen, Akzente egal) als `ogs_game_ids` - Hand-Eintrag
+  zuerst, dann speedgo, dann andere Importe - nur wenn er noch keine hat. Ergebnisse werden
+  NICHT übernommen (Spoiler). Ein Hand-Eintrag derselben Paarung am selben Tag verhindert
+  den Import-Eintrag. Vergangene speedgo-Einträge bleiben 120 Tage. 0 gefundene
+  Begegnungen -> Abbruch ohne Schreiben. Läuft täglich im Workflow (letzter Import-Schritt,
+  `continue-on-error`, Fehler melden sich über das Fehler-Issue) und in
+  `refresh_tv_events.py` (letzte Quelle). Tests: `tools/test_speedgo.py` mit künstlicher
+  Seite `tools/testdata/speedgo-bracket-sample.html`.
+- Link-Check (`tools/check_links.py`) überspringt `*.test.js` (erfundene Test-URLs). Bekannte
+  Restfunde (23.11.2026): Platzhalter `online-go.com/game/…` in `BroadcastCard.js` und
+  go-bundesliga.de (antwortet automatischen Abrufen mit 403).
 - `src/ui/tv/TvSourceBadge.js` — Badge "KGS"/"OGS" an jedem Brett der TV-Brettliste
   (`GameList` mit `showSource`) und im Kopf von `TvGamePanel`. Watch bleibt ohne Badge.
 - `src/ui/tv/TvGamePanel.js` — KGS-/OGS-Brett mit lokaler BoardNav und denselben
@@ -531,34 +551,24 @@ Policy, von dir als "Stufe 1" bezeichnet:
 ## Nächste Schritte (Stand 23.11.2026, vom Nutzer so abgelegt)
 
 Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
-Gesamtauswertung der Partie mit KataGo (siehe oben). Offen, in dieser Reihenfolge:
+Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer (siehe oben). Offen, in dieser
+Reihenfolge:
 
-1. **Speed-Go-Importer fertigstellen** (Rest etwa 45 Min.). Stand 23.11.2026:
-   `tools/speedgo.py` ist geschrieben und gegen die echte Seite geprüft (alle 8
-   Achtelfinals: 5 kommende mit Datum, 3 beendete mit OGS-Partien), aber NOCH NICHT
-   eingebunden und ohne Tests. robots.txt geprüft: nur Cloudflare-Kommentare, keine Regeln.
-   Beendete Begegnungen zeigen kein Datum mehr, nur Spieler + OGS-Links; Ergebnisse werden
-   bewusst nicht übernommen (kein Spoiler). Offen:
-   a) `--source speedgo` in `update_events.main` (Merge mit `_merge_with_retention`,
-      `SPEEDGO_RETENTION_DAYS`, danach `enrich_with_games` über alle Einträge; Abbruch,
-      wenn der Parser 0 Begegnungen findet),
-   b) in `tools/refresh_tv_events.py` (SOURCES) und im Workflow
-      `.github/workflows/update-dgob-events.yml` als weiterer Schritt,
-   c) Tests mit künstlicher Fixture `tools/testdata/speedgo-bracket-sample.html`,
-   d) beim Anreichern Hand-Einträge bevorzugen: heute trifft es auch twitch-egf-Duplikate
-      (die der Twitch-Import ohnehin täglich ersetzt),
-   e) Doppelung prüfen: kommende speedgo-Einträge vs. gleichzeitige twitch-egf-Einträge
-      (z. B. 29.11. Krushelnytskyi - Dobranis) - `dropImportedDuplicates` blendet heute nur
-      Importe gegen Hand-Einträge aus, nicht Import gegen Import.
-2. **Daten zwischen Desktop und Tablet mitnehmen:** Favoriten, Einstellungen, Lesezeichen,
+1. **Daten zwischen Desktop und Tablet mitnehmen:** Favoriten, Einstellungen, Lesezeichen,
    Varianten liegen nur im jeweiligen Browser. Erster Schritt: Sicherungsdatei
    exportieren/importieren (alle `gotv.*`-Schlüssel); Synchronisierung bräuchte Konto/Server.
-3. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
+2. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
    und gespeicherte Partien); Erinnerungen bei geschlossener App bräuchten Web-Push mit
    Server.
-4. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
+3. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
    Erkennung braucht die YouTube Data API (Schlüssel gehört auf einen Server, nicht in den
    Client) - damit ginge auch der YouTube-Chat für Kanäle wie JuppTube.
+4. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
+   AppImage/.deb statt Selbstbauen mit Node/Yarn/Python; erledigt ist nur der
+   cmdtest-Hinweis (README + install.sh). Ebenfalls dort genannt, aber Architektur-
+   entscheidungen: Umstieg von react-scripts 3 auf Vite (beseitigt openssl-legacy-provider
+   und Sass-Warnungen), Web-Formular zum Einreichen von Turnieren/Kanälen, gehosteter Proxy
+   für KGS in der Web-Version (braucht Server + Klärung mit KGS).
 5. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
    IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.

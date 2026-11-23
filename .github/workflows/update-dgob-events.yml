@@ -41,7 +41,7 @@ jobs:
       - name: Run import/link tests
         id: tests
         run: |
-          python3 -m unittest tools.test_update_events tools.test_check_links -v 2>&1 | tee /tmp/dgob-workflow.log
+          python3 -m unittest tools.test_update_events tools.test_check_links tools.test_speedgo -v 2>&1 | tee /tmp/dgob-workflow.log
 
       - name: Import DGoB events
         id: import
@@ -67,6 +67,18 @@ jobs:
         run: |
           python3 tools/update_events.py --source egf-calendar 2>&1 | tee -a /tmp/dgob-workflow.log
 
+      # Speed Go Championship bracket (speedgochampionship.com/bracket, see
+      # tools/speedgo.py): upcoming matches as entries, OGS games of played
+      # matches added to the entry of the same pairing. Last, so it also
+      # reaches entries the Twitch import above has just rewritten.
+      # A website, not an API: if it is down or redesigned, the other
+      # sources still get committed; the failure alarm below reports it.
+      - name: Import Speed Go bracket
+        id: import_speedgo
+        continue-on-error: true
+        run: |
+          python3 tools/update_events.py --source speedgo 2>&1 | tee -a /tmp/dgob-workflow.log
+
       # A broken/dead link must turn this run red, but must never block
       # the events.json update that already happened above - continued
       # below in "Commit and push" regardless of this step's result.
@@ -85,7 +97,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add public/tv/events.json
-            git commit -m "chore(tv): update DGoB/EGF events"
+            git commit -m "chore(tv): update DGoB/EGF/Speed Go events"
             git push
           fi
 
@@ -102,6 +114,7 @@ jobs:
           steps.import.outcome == 'success' &&
           steps.import_twitch.outcome == 'success' &&
           steps.import_egf_calendar.outcome == 'success' &&
+          steps.import_speedgo.outcome == 'success' &&
           steps.commit.outcome == 'success'
         run: |
           issue_number=$(gh issue list --search '"DGoB-Import fehlgeschlagen" in:title' --state open --json number --jq '.[0].number // empty')
@@ -117,6 +130,7 @@ jobs:
            steps.import.outcome == 'failure' ||
            steps.import_twitch.outcome == 'failure' ||
            steps.import_egf_calendar.outcome == 'failure' ||
+           steps.import_speedgo.outcome == 'failure' ||
            steps.commit.outcome == 'failure')
         run: |
           gh label create tv-import --color ededed --description "DGoB-Import-Alarm" 2>/dev/null || true

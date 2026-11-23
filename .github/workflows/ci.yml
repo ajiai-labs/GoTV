@@ -55,7 +55,7 @@ jobs:
           CI: "true"
 
       - name: Unit tests (Python tools)
-        run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events -v
+        run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo -v
 
       - name: Build
         run: |

@@ -175,6 +175,15 @@ class FindUrlsInUiDirTest(unittest.TestCase):
             found = check_links.find_urls_in_ui_dir(ui_dir)
             self.assertIn("https://example.com/fixed-link", found)
 
+    def test_skips_test_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ui_dir = Path(tmp) / "ui" / "tv"
+            ui_dir.mkdir(parents=True)
+            (ui_dir / "Example.test.js").write_text(
+                'const URL = "https://example.org/made-up";\n', encoding="utf-8"
+            )
+            self.assertEqual(check_links.find_urls_in_ui_dir(ui_dir), {})
+
     def test_missing_dir_returns_empty(self):
         self.assertEqual(
             check_links.find_urls_in_ui_dir(Path("/nonexistent/dir")), {}

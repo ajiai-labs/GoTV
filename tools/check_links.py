@@ -84,6 +84,8 @@ def find_urls_in_ui_dir(ui_dir):
     if not ui_dir.exists():
         return found
     for path in sorted(ui_dir.rglob("*.js")):
+        if path.name.endswith(".test.js"):
+            continue  # made-up fixture URLs, never shown to anyone
         text = path.read_text(encoding="utf-8")
         for m in URL_RE.finditer(text):
             try:

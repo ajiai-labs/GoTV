@@ -794,6 +794,39 @@ def merge_egf_bt_events(existing_events, fresh_tv_events, today_date):
     )
 
 
+try:  # as a package (tools.refresh_tv_events) or as a script
+    from tools import speedgo
+except ImportError:  # pragma: no cover - script run from tools/
+    import speedgo
+
+SPEEDGO_SOURCE = speedgo.SPEEDGO_SOURCE
+
+
+def merge_speedgo_events(existing_events, matches, today_date):
+    """Speed Go bracket (--source speedgo, see tools/speedgo.py): dated
+    matches as entries with the usual retention rule (a played match loses
+    its date on the page, so a past entry missing from the fresh parse is
+    normal), then the OGS games of played matches added to the entry of the
+    same pairing. Returns (merged, added, updated, removed)."""
+    fresh = speedgo.fresh_events(matches, existing_events)
+    merged, added, updated, removed = _merge_with_retention(
+        existing_events,
+        fresh,
+        SPEEDGO_SOURCE,
+        speedgo.SPEEDGO_RETENTION_DAYS,
+        today_date,
+    )
+    merged, enriched = speedgo.enrich_with_games(merged, matches)
+    added_ids = {e["id"] for e in added}
+    updated_by_id = {e["id"]: e for e in updated}
+    for event in enriched:
+        if event["id"] in added_ids:
+            added = [event if e["id"] == event["id"] else e for e in added]
+        else:
+            updated_by_id[event["id"]] = event
+    return merged, added, list(updated_by_id.values()), removed
+
+
 def _today_utc_str():
     return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
@@ -804,7 +837,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--source",
-        choices=[SOURCE, DGOB_SOURCE, EGF_CALENDAR_SOURCE],
+        choices=[SOURCE, DGOB_SOURCE, EGF_CALENDAR_SOURCE, SPEEDGO_SOURCE],
         default=SOURCE,
         help="Which source to import from (default: %(default)s)",
     )
@@ -859,6 +892,11 @@ def main(argv=None):
         default=20,
         help="--source " + EGF_CALENDAR_SOURCE + " only: per-request HTTP"
         " timeout in seconds (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--speedgo-html-file",
+        help="--source " + SPEEDGO_SOURCE + " only: path to a local copy of"
+        " the bracket page instead of fetching " + speedgo.SPEEDGO_URL,
     )
     parser.add_argument(
         "--events-file",
@@ -930,6 +968,27 @@ def main(argv=None):
                 file=sys.stderr,
             )
             return 1
+    elif args.source == SPEEDGO_SOURCE:
+        if args.speedgo_html_file:
+            with open(args.speedgo_html_file, "r", encoding="utf-8") as f:
+                html_text = f.read()
+        else:
+            try:
+                html_text = speedgo.fetch_bracket_html()
+            except (urllib.error.URLError, OSError) as err:
+                print("Failed to fetch the Speed Go bracket: %s" % err, file=sys.stderr)
+                return 1
+        matches = speedgo.parse_bracket_html(html_text)
+        if not matches:
+            print(
+                "Refusing to import: no matches found on the Speed Go bracket"
+                " page - looks like a page/parser problem.",
+                file=sys.stderr,
+            )
+            return 1
+        merged, added, updated, removed = merge_speedgo_events(
+            data.get("events", []), matches, datetime.date.today()
+        )
     else:
         year = args.egf_year or datetime.date.today().year
         if args.egf_html_file:

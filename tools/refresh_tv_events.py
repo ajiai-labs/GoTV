@@ -13,7 +13,8 @@ from pathlib import Path
 from tools import update_events
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCES = ("dgob", "twitch-egf", "egf-calendar")
+# speedgo last: it adds OGS games to entries the others may have replaced.
+SOURCES = ("dgob", "twitch-egf", "egf-calendar", "speedgo")
 
 
 def atomic_write(path, content):

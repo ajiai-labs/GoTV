@@ -506,6 +506,32 @@ describe("dropImportedDuplicates", () => {
     ).toEqual(["hand", "twitch-egf-2", "twitch-egf-3"]);
   });
 
+  it("prefers the Speed Go import over the Twitch schedule", () => {
+    let start = "2026-11-29T18:00:00+01:00";
+    let speedgo = {
+      ...twitch,
+      id: "speedgo-1",
+      name: "SG",
+      start,
+      source: "speedgo",
+    };
+    let schedule = {
+      ...twitch,
+      id: "twitch-egf-9",
+      name: "TW",
+      start,
+      source: "twitch-egf",
+    };
+    expect(
+      dropImportedDuplicates([schedule, speedgo]).map((e) => e.id)
+    ).toEqual(["speedgo-1"]);
+    // A hand entry still wins over both.
+    let hand = { ...twitch, id: "hand", name: "Hand", start };
+    expect(
+      dropImportedDuplicates([schedule, speedgo, hand]).map((e) => e.id)
+    ).toEqual(["hand"]);
+  });
+
   it("never drops hand entries or imports without a matching hand entry", () => {
     let a = { ...twitch, id: "a", name: "A", start: "2026-11-22T18:00:00Z" };
     let b = { ...a, id: "b" };
