@@ -225,8 +225,9 @@ def enrich_with_games(events, matches):
 def fresh_events(matches, existing_events):
     """Calendar entries for dated matches, minus pairings someone already
     entered by hand on that day (the hand entry wins, as in
-    dropImportedDuplicates)."""
-    hand = [e for e in existing_events if e.get("source") != SPEEDGO_SOURCE]
+    dropImportedDuplicates). Other imports do not count: against the Twitch
+    schedule the app itself prefers this entry (getSourceRank)."""
+    hand = [e for e in existing_events if not e.get("source")]
     fresh = []
     for match in matches:
         if not match["start"]:

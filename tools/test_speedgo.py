@@ -85,6 +85,14 @@ class EventsTest(unittest.TestCase):
         fresh = speedgo.fresh_events(self.matches, [hand])
         self.assertNotIn("speedgo-2026-11-29-gamma-delta", [e["id"] for e in fresh])
 
+    def test_the_twitch_schedule_does_not_block_an_entry(self):
+        twitch = entry(
+            "tw", "Speed Go Championship | Carla Gamma 7d vs Dario Delta 6d",
+            "2026-11-29", "twitch-egf",
+        )
+        fresh = speedgo.fresh_events(self.matches, [twitch])
+        self.assertIn("speedgo-2026-11-29-gamma-delta", [e["id"] for e in fresh])
+
     def test_games_go_to_the_hand_entry_first(self):
         twitch = entry("tw", "Speed Go Championship | Anna Alpha 3p vs Bruno Le Beta 2p", "2026-11-08", "twitch-egf")
         hand = entry("hand", "Speed Go Championship: Anna Alpha 3p – Bruno Le Bêta 2p", "2026-11-08")
