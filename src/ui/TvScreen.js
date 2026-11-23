@@ -9,6 +9,7 @@ import CalendarEventCard, {
 import ChannelCard from "./tv/ChannelCard";
 import ChannelsView from "./tv/ChannelsView";
 import MyGoTv from "./tv/MyGoTv";
+import BackupPanel from "./tv/BackupPanel";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
 import RecentReplays from "./tv/RecentReplays";
@@ -538,6 +539,7 @@ export default class TvScreen extends Component<Props, State> {
           activeTabId={activeTabId}
           onSelectTab={this._onSelectTab}
         />
+        <BackupPanel />
       </div>
     );
   }

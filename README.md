@@ -61,6 +61,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   for next time and save everything as an SGF file ("Als SGF speichern"), continue a game where you stopped,
   and set bookmarks with a note. The result stays hidden until the game's
   last move.
+- **Meine Daten:** save stars, replays (with bookmarks and variations) and
+  settings as one file and load it on another device - desktop to tablet
+  and back. Loading only adds; nothing already there is deleted.
 - **Mein GoTV:** star channels and tournaments (☆). Starred channels sit at
   the top of the Kanäle tab; at the top of Live, "Mein GoTV" lists what is
   on now and what comes next, with an optional browser reminder ten

@@ -341,6 +341,17 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Twitch-Kanälen und laufenden Twitch-Events; YouTube per `youtube.com/live_chat?v=<id>&
   embed_domain=<host>` nur bei Events mit `video_id` - für einen YouTube-Kanal kennt
   GoTV die Nummer der laufenden Sendung ohne YouTube-API nicht.
+- "Meine Daten" (`src/model/Backup.js`, `src/ui/tv/BackupPanel.js`, unten im TV-Tab,
+  23.11.2026): "Sicherung speichern" lädt alle `gotv.*`-Schlüssel als JSON-Datei herunter
+  (`{format: "gotv-backup", version: 1, createdAt, data}`, ohne `gotv.notified`, damit das
+  andere Gerät seine eigenen Erinnerungen behält). "Sicherung einspielen …" prüft die Datei
+  (fremde/kaputte Einträge fallen weg, neuere Version -> Hinweis), zeigt den Inhalt in
+  Worten und führt erst nach "Einspielen" zusammen, ohne etwas zu löschen: Favoriten
+  vereinigt, `gotv.replays` pro Partie der neuere Stand (`updatedAt`, max. 30 Partien),
+  `ogsLinks`/`boardDelays` pro Eintrag aus der Datei, einfache Einstellungen aus der Datei.
+  Danach lädt GoTV neu, damit alle Teile die Daten neu lesen. Kein Konto, kein Server: die
+  Datei trägt man selbst (z. B. per Cloud-Ordner aufs Tablet). Geprüft mit zwei getrennten
+  Browser-Profilen (Stern + Variante kommen an).
 - "Mein GoTV" (`src/model/TvFavorites.js`, `src/model/MyGoTv.js`, `src/ui/tv/MyGoTv.js`,
   `FavoriteStar.js`): Stern ☆/★ an Kanälen (ChannelCard) und Turnieren (CalendarEventCard,
   damit auch BroadcastCard). Gespeichert nur im Browser (`gotv.favorites`
@@ -551,25 +562,22 @@ Policy, von dir als "Stufe 1" bezeichnet:
 ## Nächste Schritte (Stand 23.11.2026, vom Nutzer so abgelegt)
 
 Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
-Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer (siehe oben). Offen, in dieser
-Reihenfolge:
+Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer, Sicherungsdatei "Meine Daten"
+(siehe oben). Offen, in dieser Reihenfolge:
 
-1. **Daten zwischen Desktop und Tablet mitnehmen:** Favoriten, Einstellungen, Lesezeichen,
-   Varianten liegen nur im jeweiligen Browser. Erster Schritt: Sicherungsdatei
-   exportieren/importieren (alle `gotv.*`-Schlüssel); Synchronisierung bräuchte Konto/Server.
-2. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
+1. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
    und gespeicherte Partien); Erinnerungen bei geschlossener App bräuchten Web-Push mit
    Server.
-3. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
+2. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
    Erkennung braucht die YouTube Data API (Schlüssel gehört auf einen Server, nicht in den
    Client) - damit ginge auch der YouTube-Chat für Kanäle wie JuppTube.
-4. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
+3. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
    AppImage/.deb statt Selbstbauen mit Node/Yarn/Python; erledigt ist nur der
    cmdtest-Hinweis (README + install.sh). Ebenfalls dort genannt, aber Architektur-
    entscheidungen: Umstieg von react-scripts 3 auf Vite (beseitigt openssl-legacy-provider
    und Sass-Warnungen), Web-Formular zum Einreichen von Turnieren/Kanälen, gehosteter Proxy
    für KGS in der Web-Version (braucht Server + Klärung mit KGS).
-5. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
+4. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
    IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.
 

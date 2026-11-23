@@ -1834,3 +1834,61 @@ $cinema-bar-height: 44px;
     cursor: pointer;
   }
 }
+
+.BackupPanel {
+  margin: 24px 0 12px;
+  padding: 10px;
+  border-top: 1px solid $very-muted;
+  font-size: 13px;
+
+  &-header {
+    margin-bottom: 6px;
+  }
+
+  &-title {
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  &-hint {
+    color: $muted;
+  }
+
+  &-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &-load {
+    position: relative;
+    overflow: hidden;
+  }
+
+  // The native file field stays usable (keyboard, screen readers) but
+  // invisible inside its button.
+  &-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &-confirm,
+  &-message,
+  &-error {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-left: 4px solid #2a7ab0;
+    background: #eef6fb;
+  }
+
+  &-confirm .Button {
+    margin-top: 6px;
+  }
+
+  &-error {
+    border-left-color: #c4302b;
+    background: #fdf0ef;
+  }
+}
