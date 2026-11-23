@@ -204,7 +204,9 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   localStorage), Chat einklappbar, Esc beendet. Es wechseln nur CSS-Klassen, das
   Stream-Iframe wird nicht neu geladen. Nach Layoutwechsel wird ein `resize`-Event
   ausgelöst, weil `BoardContainer` seine Größe nur darauf neu misst.
-- Ziehbare Trennkante (`BroadcastCard-splitter`) auch in der Grundansicht:
+- Ziehbare Trennkante (`BroadcastCard-splitter`, `role="slider"` - mit "separator" meldet
+  der CRA-Build eine a11y-Warnung, die in der CI mit `CI=true` als Fehler zählt) auch in
+  der Grundansicht:
   Pointer-Capture hält den Griff beim Ziehen über das Iframe; Pfeiltasten ändern
   die Aufteilung ohne Zugnavigation. Beide Ansichten teilen `gotv.cinemaSplit`.
 - Eingebettetes SGF-Brett (`.SgfReplay-compact`): eigener quadratischer Container
@@ -220,8 +222,10 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Navigation ohne Datei-Eingabe; Ergebnis erst beim letzten Zug.
   Quelle von `public/tv/em-finale-2026.sgf` (unverändert übernommen am 17.11.2026):
   https://eurogofed.org/archives/sgf/egc/2026/ec/8-AndriiKravets-AliJabarin.sgf
-- Brett-Verzögerung (`src/model/DelayBuffer.js`, Regler in `BroadcastCard`, 0-120 s,
-  `gotv.boardDelay` in localStorage): die Karte zeigt jedes Brett so, wie es vor N
+- Brett-Verzögerung (`src/model/DelayBuffer.js`, Regler und Tasten −5 s/+5 s in
+  `BroadcastCard`, 0-120 s; `src/model/BoardDelay.js` merkt den Wert pro Kanal in
+  `gotv.boardDelays` (Schlüssel: `channel` platform/id, sonst stream_url), der zuletzt
+  gesetzte Wert in `gotv.boardDelay` gilt als Vorgabe für Kanäle ohne eigenen Wert): die Karte zeigt jedes Brett so, wie es vor N
   Sekunden war. Verzögert wird der ganze Partie-Schnappschuss, also Züge, Ergebnis,
   Uhren, Chat, Brettliste und Statuszeile gemeinsam — nichts nimmt das Video vorweg.
   Gilt für KGS- und OGS-Bretter; ein 500-ms-Timer läuft nur bei Verzögerung > 0.

@@ -382,7 +382,7 @@ describe("BroadcastCard live status", () => {
       });
       act(() => container.querySelector(".StreamEmbed-actions button").click());
       let root = container.querySelector(".BroadcastCard");
-      let divider = container.querySelector('[role="separator"]');
+      let divider = container.querySelector(".BroadcastCard-splitter");
       expect(divider).not.toBe(null);
       jest
         .spyOn(root, "getBoundingClientRect")
@@ -557,6 +557,31 @@ describe("BroadcastCard live status", () => {
     act(() => deliver({ ...ogsGame, moveNum: 3 }, null));
     expect(boardStatus()).toBe("Partie läuft · Zug 3");
     jest.useRealTimers();
+  });
+
+  it("moves the board 5 s earlier or later and remembers it per channel", () => {
+    window.localStorage.clear();
+    jest.spyOn(ogsTvSource, "observeEvent").mockImplementation(() => jest.fn());
+    render([], {
+      broadcast: { event: { ...event, ogs_game_id: 7 }, games: [] },
+    });
+    act(() => container.querySelector(".StreamEmbed-actions button").click());
+    let value = () =>
+      container.querySelector(".BroadcastCard-delay-value").textContent;
+    let earlier = container.querySelector(".BroadcastCard-delay-earlier");
+    let later = container.querySelector(".BroadcastCard-delay-later");
+    expect(value()).toBe("aus");
+    expect(earlier.disabled).toBe(true);
+    act(() => later.click());
+    act(() => later.click());
+    act(() => later.click());
+    expect(value()).toBe("15 s");
+    act(() => earlier.click());
+    expect(value()).toBe("10 s");
+    expect(
+      JSON.parse(window.localStorage.getItem("gotv.boardDelays"))
+    ).toEqual({ "https://www.twitch.tv/somechannel": 10 });
+    window.localStorage.clear();
   });
 
   it("shows how fresh the OGS board is instead of looking live when it is not", () => {

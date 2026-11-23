@@ -8,6 +8,14 @@ import { ogsTvSource } from "../../model/OgsTvSource";
 import { hasOgsBoard, hasVideoStream } from "../../model/tv";
 import { parseOgsGameLink } from "../../model/OgsLinks";
 import { DelayBuffer } from "../../model/DelayBuffer";
+import {
+  DELAY_MAX_SECONDS,
+  DELAY_STEP_SECONDS,
+  clampDelay,
+  loadDelay,
+  saveDelay,
+  stepDelay,
+} from "../../model/BoardDelay";
 import type { TvBroadcast } from "../../model/tv";
 import type { GameChannel, Room, User, AppActions, Index } from "../../model";
 
@@ -53,22 +61,7 @@ type State = {
   delayTick: number,
 };
 
-const DELAY_KEY = "gotv.boardDelay";
-const DELAY_MAX_SECONDS = 120;
 const DELAY_TICK_MS = 500;
-
-function clampDelay(value: mixed): number {
-  let delay = Math.round(Number(value));
-  return delay > 0 && delay <= DELAY_MAX_SECONDS ? delay : 0;
-}
-
-function loadDelay(): number {
-  try {
-    return clampDelay(window.localStorage.getItem(DELAY_KEY));
-  } catch (err) {
-    return 0; // storage disabled
-  }
-}
 
 const CINEMA_SPLIT_KEY = "gotv.cinemaSplit";
 // Share of the width the stream gets in Kinomodus, in percent.
@@ -159,7 +152,7 @@ export default class BroadcastCard extends Component<Props, State> {
     cinema: false,
     cinemaSplit: loadCinemaSplit(),
     cinemaChatHidden: false,
-    delaySeconds: loadDelay(),
+    delaySeconds: loadDelay(this.props.broadcast.event),
     delayTick: 0,
   };
 
@@ -276,14 +269,22 @@ export default class BroadcastCard extends Component<Props, State> {
     this._setSplit(value);
   };
 
-  _onChangeDelay = (e: Object) => {
-    let delaySeconds = clampDelay(e.target.value);
+  _setDelay(delaySeconds: number) {
     this.setState({ delaySeconds });
-    try {
-      window.localStorage.setItem(DELAY_KEY, String(delaySeconds));
-    } catch (err) {
-      // Not remembered without storage.
-    }
+    saveDelay(this.props.broadcast.event, delaySeconds);
+  }
+
+  _onChangeDelay = (e: Object) => {
+    this._setDelay(clampDelay(e.target.value));
+  };
+
+  // "Brett früher": less delay; "Brett später": more.
+  _onDelayEarlier = () => {
+    this._setDelay(stepDelay(this.state.delaySeconds, -1));
+  };
+
+  _onDelayLater = () => {
+    this._setDelay(stepDelay(this.state.delaySeconds, 1));
   };
 
   // The timer only runs while boards are open and delayed.
@@ -341,6 +342,22 @@ export default class BroadcastCard extends Component<Props, State> {
         <span className="BroadcastCard-delay-value">
           {delaySeconds ? delaySeconds + " s" : "aus"}
         </span>
+        <button
+          type="button"
+          className="Button Button-small Button-secondary BroadcastCard-delay-earlier"
+          title={"Brett " + DELAY_STEP_SECONDS + " Sekunden früher"}
+          disabled={!delaySeconds}
+          onClick={this._onDelayEarlier}>
+          −{DELAY_STEP_SECONDS} s
+        </button>
+        <button
+          type="button"
+          className="Button Button-small Button-secondary BroadcastCard-delay-later"
+          title={"Brett " + DELAY_STEP_SECONDS + " Sekunden später"}
+          disabled={delaySeconds >= DELAY_MAX_SECONDS}
+          onClick={this._onDelayLater}>
+          +{DELAY_STEP_SECONDS} s
+        </button>
       </label>
     );
   }
@@ -665,9 +682,11 @@ export default class BroadcastCard extends Component<Props, State> {
             : undefined
         }>
         {inline && showVideo && (games.length || recordingUrl) ? (
+          // A slider: screen readers announce the split in percent, and the
+          // build's a11y lint accepts aria-value* on it (unlike separator).
           <div
             className="BroadcastCard-splitter"
-            role="separator"
+            role="slider"
             aria-label="Größe von Video und Brett ändern"
             aria-orientation="vertical"
             aria-valuemin={CINEMA_SPLIT_MIN}

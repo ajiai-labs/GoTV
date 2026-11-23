@@ -28,8 +28,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   game the next game of the same players appears automatically.
 - **Kinomodus:** stream and board fill the window side by side, with an
   adjustable split and a collapsible chat.
-- **Brett-Verzögerung:** delay the boards by 0-120 s so moves never get
-  ahead of the video commentary.
+- **Brett-Verzögerung:** delay the boards by 0-120 s (slider or ±5 s
+  buttons) so moves never get ahead of the video commentary; GoTV
+  remembers the delay per channel.
 - **Watch without a KGS login:** "Go TV ohne Anmeldung ansehen" on the
   login screen, or open `/tv` directly.
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
