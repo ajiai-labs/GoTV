@@ -114,6 +114,30 @@ describe("SgfReplayView", () => {
     ).toContain("Zug 1");
   });
 
+  it("explains why a ko retake is not played", () => {
+    let tree = parseSgf("(;SZ[9]AB[ba][ab][bc]AW[bb][ca][db][cc];B[cb])");
+    let view;
+    act(() => {
+      ReactDOM.render(
+        <SgfReplayView
+          ref={(ref) => {
+            view = ref;
+          }}
+          initialTree={tree}
+        />,
+        container
+      );
+    });
+    act(() => container.querySelector(".BoardNav-last").click());
+    act(() => view._onClickPoint(null, { x: 1, y: 1 }, null));
+    expect(container.querySelector(".SgfReplay-move-notice").textContent).toBe(
+      "Ko: sofort zurückschlagen ist verboten – erst woanders spielen."
+    );
+    expect(container.querySelector(".SgfReplay-variation")).toBe(null);
+    act(() => container.querySelector(".BoardNav-prev").click());
+    expect(container.querySelector(".SgfReplay-move-notice")).toBe(null);
+  });
+
   it("continues where the viewer stopped and keeps bookmarks", () => {
     window.localStorage.clear();
     let sgf = "(;SZ[9]PB[a]PW[b];B[aa];W[bb];B[cc])";

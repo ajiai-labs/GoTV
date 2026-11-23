@@ -299,7 +299,8 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Seitenzweig (neuer GameNode, Partie bleibt erstes Kind = Hauptlinie); Schlagen kommt aus
   `computeGameNodeStates`. Upstream-ShinKGS schickt Züge immer an den KGS-Server, ein
   lokales Ausprobieren gab es dort nicht - Baum- und Brettlogik werden aber wiederverwendet.
-  Kein Ko-/Selbstmord-Check. Leiste "Variante ab Zug N · X ist am Zug" mit "Zurück zur
+  Eigene Züge prüfen Selbstmord und einfaches Ko (Stellung vor dem gegnerischen Zug darf
+  nicht wiederkehren; `getMoveError` -> Hinweis unter dem Brett), kein Superko. Leiste "Variante ab Zug N · X ist am Zug" mit "Zurück zur
   Partie" und "Variante löschen" (`removeVariation`, ganzer Zweig ab der Abzweigung); das
   Ergebnis erscheint nur am letzten Zug der Hauptlinie. An jeder Abzweigung "Weiter mit:
   Partie F3 · KataGo C17 · Variante E5" (`getContinuations`/`showContinuation`, Klick

@@ -6,7 +6,7 @@
 // Captures come from the existing board logic (computeGameNodeStates).
 import { GameNode } from "./types";
 import { computeGameNodeStates, getGameLine } from "./game/tree";
-import type { GameTree, Point, PlayerColor } from "./types";
+import type { BoardState, GameTree, Point, PlayerColor } from "./types";
 
 // The game as played: root, then always the first child.
 export function getMainLine(tree: GameTree): Array<number> {
@@ -72,27 +72,77 @@ function findChildWithMove(
   );
 }
 
-// Plays loc after nodeId. Returns the new tree (the old one is untouched)
-// and the node now shown, or null when the point is taken. Playing the
-// game's own next move just follows the game.
-export function playVariationMove(
-  tree: GameTree,
-  nodeId: number,
-  loc: Point
-): ?{ tree: GameTree, nodeId: number } {
+export type MoveError = "occupied" | "suicide" | "ko";
+
+type MoveAttempt =
+  | { ok: true, tree: GameTree, nodeId: number }
+  | { ok: false, error: MoveError };
+
+// Empty points are null or undefined (a fresh board has holes).
+function boardsEqual(a: BoardState, b: BoardState): boolean {
+  for (let y = 0; y < a.length; y++) {
+    for (let x = 0; x < a.length; x++) {
+      if ((a[y][x] || null) !== (b[y][x] || null)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Does the group at loc still have a liberty?
+function hasLiberty(board: BoardState, loc: Point): boolean {
+  let color = board[loc.y][loc.x];
+  let seen = new Set();
+  let stack = [loc];
+  while (stack.length) {
+    let { x, y } = stack.pop();
+    let key = y * board.length + x;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    for (let [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      let nx = x + dx;
+      let ny = y + dy;
+      if (ny < 0 || ny >= board.length || nx < 0 || nx >= board.length) {
+        continue;
+      }
+      let neighbour = board[ny][nx];
+      if (!neighbour) {
+        return true;
+      }
+      if (neighbour === color) {
+        stack.push({ x: nx, y: ny });
+      }
+    }
+  }
+  return false;
+}
+
+function getBoard(tree: GameTree, nodeId: number): BoardState {
   let state = tree.computedState[nodeId];
-  let board = state
+  return state
     ? state.board
     : computeGameNodeStates(tree, nodeId)[nodeId].board;
+}
+
+function tryMove(tree: GameTree, nodeId: number, loc: Point): MoveAttempt {
+  let board = getBoard(tree, nodeId);
   if (!board[loc.y] || board[loc.y][loc.x]) {
-    return null;
+    return { ok: false, error: "occupied" };
   }
   let color = getColorToPlay(tree, nodeId);
   let existing = findChildWithMove(tree, nodeId, loc, color);
   let next: GameTree = { ...tree };
   let childId;
   if (typeof existing === "number") {
-    childId = existing;
+    childId = existing; // the game's own move is always allowed
   } else {
     childId = Math.max(...Object.keys(tree.nodes).map(Number)) + 1;
     let parent = tree.nodes[nodeId];
@@ -111,9 +161,46 @@ export function playVariationMove(
     };
   }
   next.computedState = computeGameNodeStates(next, childId);
+  if (typeof existing !== "number") {
+    let after = next.computedState[childId].board;
+    // Suicide: the own stone has no liberty after captures.
+    if (after[loc.y][loc.x] !== color || !hasLiberty(after, loc)) {
+      return { ok: false, error: "suicide" };
+    }
+    // Ko: the move brings back the position before the opponent's move.
+    let parentId = tree.nodes[nodeId].parent;
+    if (
+      typeof parentId === "number" &&
+      boardsEqual(after, getBoard(tree, parentId))
+    ) {
+      return { ok: false, error: "ko" };
+    }
+  }
   next.currentLine = getGameLine(next, childId);
   next.currentNode = childId;
-  return { tree: next, nodeId: childId };
+  return { ok: true, tree: next, nodeId: childId };
+}
+
+// Why loc cannot be played after nodeId, or null when it can.
+export function getMoveError(
+  tree: GameTree,
+  nodeId: number,
+  loc: Point
+): ?MoveError {
+  let result = tryMove(tree, nodeId, loc);
+  return result.ok ? null : result.error;
+}
+
+// Plays loc after nodeId. Returns the new tree (the old one is untouched)
+// and the node now shown, or null when the move is not allowed (taken
+// point, suicide, ko). Playing the game's own next move follows the game.
+export function playVariationMove(
+  tree: GameTree,
+  nodeId: number,
+  loc: Point
+): ?{ tree: GameTree, nodeId: number } {
+  let result = tryMove(tree, nodeId, loc);
+  return result.ok ? { tree: result.tree, nodeId: result.nodeId } : null;
 }
 
 // Back to the game where the variation left it.

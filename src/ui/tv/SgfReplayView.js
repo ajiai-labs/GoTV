@@ -15,6 +15,7 @@ import {
   getColorToPlay,
   getContinuations,
   getMainLine,
+  getMoveError,
   getNodeMove,
   playVariationLine,
   playVariationMove,
@@ -73,6 +74,14 @@ type State = {
   bookmarkDraft: ?string,
   // KataGo's top moves for the shown position, as board labels 1-5.
   kataGoMoves: ?{ nodeId: number, moves: Array<KataGoMove> },
+  // Why the last click on the board was not played (ko, suicide).
+  moveNotice: ?string,
+};
+
+const MOVE_NOTICE = {
+  ko: "Ko: sofort zurückschlagen ist verboten – erst woanders spielen.",
+  suicide: "Selbstmord: Der Stein hätte keine Freiheit.",
+  occupied: null, // a click on a stone just does nothing
 };
 
 // The position with KataGo's candidates as labels 1-5 (a copy - the game
@@ -121,6 +130,7 @@ export default class SgfReplayView extends Component<Props, State> {
     bookmarks: [],
     bookmarkDraft: null,
     kataGoMoves: null,
+    moveNotice: null,
   };
 
   _fileInput: ?HTMLInputElement;
@@ -343,6 +353,11 @@ export default class SgfReplayView extends Component<Props, State> {
             </span>
           ) : null}
         </div>
+        {this.state.moveNotice ? (
+          <div className="SgfReplay-move-notice" role="status">
+            {this.state.moveNotice}
+          </div>
+        ) : null}
         {/* Right under the board buttons, where it is seen. */}
         {this.props.compact ? null : (
           <KataGoPanel
@@ -561,8 +576,15 @@ export default class SgfReplayView extends Component<Props, State> {
     }
     let played = playVariationMove(tree, currentNode, loc);
     if (played) {
-      this.setState({ tree: played.tree, currentNode: played.nodeId });
+      this.setState({
+        tree: played.tree,
+        currentNode: played.nodeId,
+        moveNotice: null,
+      });
       this._saveProgress(played.tree, played.nodeId);
+    } else {
+      let error = getMoveError(tree, currentNode, loc);
+      this.setState({ moveNotice: error ? MOVE_NOTICE[error] : null });
     }
   };
 
@@ -671,7 +693,7 @@ export default class SgfReplayView extends Component<Props, State> {
       nextTree.currentLine = getGameLine(nextTree, nodeId);
     }
     nextTree.currentNode = nodeId;
-    this.setState({ tree: nextTree, currentNode: nodeId });
+    this.setState({ tree: nextTree, currentNode: nodeId, moveNotice: null });
     this._saveProgress(nextTree, nodeId);
   };
 

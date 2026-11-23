@@ -1,6 +1,7 @@
 import { parseSgf } from "./sgf";
 import {
   getContinuations,
+  getMoveError,
   getNodeMove,
   playVariationLine,
   removeVariation,
@@ -120,5 +121,38 @@ describe("variation lines", () => {
       Object.keys(tree.nodes).length
     );
     expect(getContinuations(removed, mainLine[1])).toEqual([]);
+  });
+});
+
+describe("rules for own moves", () => {
+  it("refuses suicide", () => {
+    // White on B9 and A8: black A9 would have no liberty.
+    let tree = parseSgf("(;SZ[9]AW[ba][ab])");
+    expect(getMoveError(tree, tree.rootNode, { x: 0, y: 0 })).toBe("suicide");
+    expect(playVariationMove(tree, tree.rootNode, { x: 0, y: 0 })).toBe(null);
+  });
+
+  it("allows a move that has no liberty only because it captures", () => {
+    // White A9 in atari (black B9); black A8 takes it.
+    let tree = parseSgf("(;SZ[9]AB[ba]AW[aa][bb][ac])");
+    expect(getMoveError(tree, tree.rootNode, { x: 0, y: 1 })).toBe(null);
+  });
+
+  it("refuses retaking a ko at once, but not after another move", () => {
+    // Black C8 (cb) takes the white stone on B8 (bb).
+    let tree = parseSgf("(;SZ[9]AB[ba][ab][bc]AW[bb][ca][db][cc];B[cb])");
+    let afterCapture = getMainLine(tree)[1];
+    expect(getMoveError(tree, afterCapture, { x: 1, y: 1 })).toBe("ko");
+    // A ko threat elsewhere and an answer: now white may retake.
+    let threat = playVariationMove(tree, afterCapture, { x: 6, y: 6 });
+    let answer = playVariationMove(threat.tree, threat.nodeId, { x: 6, y: 7 });
+    expect(getMoveError(answer.tree, answer.nodeId, { x: 1, y: 1 })).toBe(null);
+  });
+
+  it("names a taken point", () => {
+    let tree = parseSgf(SGF);
+    expect(getMoveError(tree, getMainLine(tree)[1], { x: 2, y: 6 })).toBe(
+      "occupied"
+    );
   });
 });
