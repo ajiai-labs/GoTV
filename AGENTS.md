@@ -533,12 +533,23 @@ Policy, von dir als "Stufe 1" bezeichnet:
 Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
 Gesamtauswertung der Partie mit KataGo (siehe oben). Offen, in dieser Reihenfolge:
 
-1. **Speed-Go-Importer** (etwa 1-1,5 Std., vom Nutzer beauftragt, noch nicht begonnen):
-   speedgochampionship.com/bracket täglich einlesen - Begegnungen mit Datum und nach dem
-   Spiel die "online-go: G1 G2 G3"-Links -> `ogs_game_ids` automatisch (bisher von Hand,
-   siehe Pflegehinweise). Vorher Nutzungsbedingungen/robots.txt der Seite prüfen. Neues
-   Modul in `tools/update_events.py` als weitere Quelle, mit Tests wie die übrigen
-   Importer; Hand-Einträge nicht überschreiben (`dropImportedDuplicates`).
+1. **Speed-Go-Importer fertigstellen** (Rest etwa 45 Min.). Stand 23.11.2026:
+   `tools/speedgo.py` ist geschrieben und gegen die echte Seite geprüft (alle 8
+   Achtelfinals: 5 kommende mit Datum, 3 beendete mit OGS-Partien), aber NOCH NICHT
+   eingebunden und ohne Tests. robots.txt geprüft: nur Cloudflare-Kommentare, keine Regeln.
+   Beendete Begegnungen zeigen kein Datum mehr, nur Spieler + OGS-Links; Ergebnisse werden
+   bewusst nicht übernommen (kein Spoiler). Offen:
+   a) `--source speedgo` in `update_events.main` (Merge mit `_merge_with_retention`,
+      `SPEEDGO_RETENTION_DAYS`, danach `enrich_with_games` über alle Einträge; Abbruch,
+      wenn der Parser 0 Begegnungen findet),
+   b) in `tools/refresh_tv_events.py` (SOURCES) und im Workflow
+      `.github/workflows/update-dgob-events.yml` als weiterer Schritt,
+   c) Tests mit künstlicher Fixture `tools/testdata/speedgo-bracket-sample.html`,
+   d) beim Anreichern Hand-Einträge bevorzugen: heute trifft es auch twitch-egf-Duplikate
+      (die der Twitch-Import ohnehin täglich ersetzt),
+   e) Doppelung prüfen: kommende speedgo-Einträge vs. gleichzeitige twitch-egf-Einträge
+      (z. B. 29.11. Krushelnytskyi - Dobranis) - `dropImportedDuplicates` blendet heute nur
+      Importe gegen Hand-Einträge aus, nicht Import gegen Import.
 2. **Daten zwischen Desktop und Tablet mitnehmen:** Favoriten, Einstellungen, Lesezeichen,
    Varianten liegen nur im jeweiligen Browser. Erster Schritt: Sicherungsdatei
    exportieren/importieren (alle `gotv.*`-Schlüssel); Synchronisierung bräuchte Konto/Server.
