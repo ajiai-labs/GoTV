@@ -272,6 +272,18 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
   aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
   `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
+- Nachspielen untersuchen und fortsetzen (23.11.2026):
+  `src/model/ReplayVariation.js` - Klick auf einen freien Punkt setzt einen eigenen Zug als
+  Seitenzweig (neuer GameNode, Partie bleibt erstes Kind = Hauptlinie); Schlagen kommt aus
+  `computeGameNodeStates`. Upstream-ShinKGS schickt Züge immer an den KGS-Server, ein
+  lokales Ausprobieren gab es dort nicht - Baum- und Brettlogik werden aber wiederverwendet.
+  Kein Ko-/Selbstmord-Check. Leiste "Eigene Variante ab Zug N · X ist am Zug" mit "Zurück
+  zur Partie"; das Ergebnis erscheint nur am letzten Zug der Hauptlinie.
+  `src/model/ReplayProgress.js` (`gotv.replays`, die 30 letzten Partien): Zug pro Partie
+  (Schlüssel `url:<url>`, `game:kgs-<id>`, eingefügtes SGF per Text-Hash), beim Öffnen
+  "Weiter bei Zug N" mit "Von vorn"; Lesezeichen mit Notiz (max. 200 Zeichen) pro Zug.
+  "Zuletzt nachgespielt" (`RecentlyReplayed.js`) im Nachspielen-Tab öffnet Partien mit URL.
+  Kompakte Bretter (Kinobeispiel, Aufzeichnung) merken nichts.
 - Kanäle-Ausbau (23.11.2026): oben im Tab der Wochenplan (`ChannelWeek.js`, Mo-So, feste
   Sendezeiten, heute markiert, laufende rot). Jede Kanalkarte hat "Auf YouTube/Twitch
   öffnen (mit Chat)" (`getChannelLiveUrl`: YouTube `/channel/<UC>/live` führt zur laufenden

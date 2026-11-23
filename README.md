@@ -40,6 +40,10 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
   only its own website; for those, use the desktop app below.
+- **Nachspielen, your way:** click the board to try your own moves (a side
+  line; "Zurück zur Partie" returns), continue a game where you stopped,
+  and set bookmarks with a note. The result stays hidden until the game's
+  last move.
 - **Mein GoTV:** star channels and tournaments (☆). Starred channels sit at
   the top of the Kanäle tab; at the top of Live, "Mein GoTV" lists what is
   on now and what comes next, with an optional browser reminder ten

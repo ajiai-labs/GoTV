@@ -10,7 +10,22 @@ import {
   getSgfRootProp,
 } from "../../model/sgf";
 import { computeGameNodeStates, getGameLine } from "../../model/game/tree";
-import type { GameTree } from "../../model";
+import {
+  getBranchPoint,
+  getColorToPlay,
+  getMainLine,
+  playVariationMove,
+  returnToGame,
+} from "../../model/ReplayVariation";
+import {
+  addReplayBookmark,
+  getSgfTextKey,
+  loadReplayProgress,
+  removeReplayBookmark,
+  saveReplayMove,
+} from "../../model/ReplayProgress";
+import type { ReplayBookmark } from "../../model/ReplayProgress";
+import type { GameTree, Point, PlayerColor } from "../../model";
 
 // OGS writes chat lines it cannot serialise as "name: [object Object]" into
 // its SGF export; those lines carry no text and are left out.
@@ -29,6 +44,9 @@ export function getReadableComment(text: mixed): ?string {
 type Props = {
   initialUrl?: ?string,
   initialTree?: ?GameTree,
+  // Remembers progress and bookmarks of an initialTree game (e.g. a KGS
+  // game id); an URL or pasted text names itself.
+  replayKey?: ?string,
   compact?: boolean,
 };
 
@@ -38,7 +56,16 @@ type State = {
   tree: ?GameTree,
   currentNode: number,
   input: string,
+  // "Nachspielen fortsetzen" (not in compact views).
+  progressKey: ?string,
+  progressUrl: ?string,
+  resumedFrom: ?number,
+  bookmarks: Array<ReplayBookmark>,
+  // Text of a bookmark being written; null while the field is closed.
+  bookmarkDraft: ?string,
 };
+
+const COLOR_LABEL = { black: "Schwarz", white: "Weiß" };
 
 const CORS_ERROR_MESSAGE =
   "SGF konnte nicht geladen werden. Wahrscheinlich blockiert der Server " +
@@ -51,6 +78,11 @@ export default class SgfReplayView extends Component<Props, State> {
     tree: null,
     currentNode: 0,
     input: "",
+    progressKey: null,
+    progressUrl: null,
+    resumedFrom: null,
+    bookmarks: [],
+    bookmarkDraft: null,
   };
 
   _fileInput: ?HTMLInputElement;
@@ -81,13 +113,41 @@ export default class SgfReplayView extends Component<Props, State> {
   // no fetch, no SGF (re-)parsing. Always starts the replay at the root,
   // regardless of where the live view's currentNode happened to be.
   _applyTree = (tree: GameTree) => {
+    let key = this.props.replayKey ? "game:" + this.props.replayKey : null;
+    this._showTree(tree, key, null);
+  };
+
+  // Opens a parsed game, at the move where the viewer stopped last time.
+  _showTree(tree: GameTree, key: ?string, url: ?string) {
+    let progress = key && !this.props.compact ? loadReplayProgress(key) : null;
+    let mainLine = getMainLine(tree);
+    let resumeMove =
+      progress && progress.move > 0 && progress.move < mainLine.length
+        ? progress.move
+        : null;
+    let shown = tree;
+    let currentNode = tree.rootNode;
+    if (resumeMove) {
+      currentNode = mainLine[resumeMove];
+      shown = {
+        ...tree,
+        computedState: computeGameNodeStates(tree, currentNode),
+        currentLine: mainLine,
+        currentNode,
+      };
+    }
     this.setState({
       status: "ready",
       error: null,
-      tree,
-      currentNode: tree.rootNode,
+      tree: shown,
+      currentNode,
+      progressKey: this.props.compact ? null : key,
+      progressUrl: url,
+      resumedFrom: resumeMove,
+      bookmarks: progress ? progress.bookmarks : [],
+      bookmarkDraft: null,
     });
-  };
+  }
 
   _loadUrl = (url: string) => {
     this.setState({ status: "empty", error: null });
@@ -98,7 +158,7 @@ export default class SgfReplayView extends Component<Props, State> {
         }
         return res.text();
       })
-      .then((text) => this._loadSgf(text))
+      .then((text) => this._loadSgf(text, url))
       .catch((err) => {
         console.warn("[tv] Failed to load SGF from " + url + ":", err);
         this.setState({
@@ -110,15 +170,11 @@ export default class SgfReplayView extends Component<Props, State> {
       });
   };
 
-  _loadSgf = (text: string) => {
+  _loadSgf = (text: string, url?: ?string) => {
     try {
       let tree = parseSgf(text);
-      this.setState({
-        status: "ready",
-        error: null,
-        tree,
-        currentNode: tree.rootNode,
-      });
+      let key = url ? "url:" + url : getSgfTextKey(text);
+      this._showTree(tree, key, url);
     } catch (err) {
       if (err instanceof SgfParseError) {
         this.setState({
@@ -194,6 +250,8 @@ export default class SgfReplayView extends Component<Props, State> {
       rulesProp && typeof (rulesProp: any).size === "number"
         ? (rulesProp: any).size
         : "?";
+    let mainLine = getMainLine(tree);
+    let branchPoint = getBranchPoint(tree, currentNode);
     let currentNodeProps = tree.nodes[currentNode].props;
     let commentProp = currentNodeProps.find((p) => p.name === "COMMENT");
     let comment = commentProp ? getReadableComment(commentProp.text) : null;
@@ -211,9 +269,9 @@ export default class SgfReplayView extends Component<Props, State> {
               {playerNames.black} (B) vs. {playerNames.white} (W)
             </span>
           ) : null}
-          {/* The result only at the last move - replaying must not be
-              spoiled from the first move on. */}
-          {result && moveNum === line.length - 1 ? (
+          {/* The result only at the game's last move - replaying must not
+              be spoiled, and an own variation's end is no game end. */}
+          {result && currentNode === mainLine[mainLine.length - 1] ? (
             <span className="SgfReplay-result"> · {result}</span>
           ) : null}
           <span className="SgfReplay-size">
@@ -225,7 +283,7 @@ export default class SgfReplayView extends Component<Props, State> {
           <BoardContainer
             game={game}
             embedded={this.props.compact}
-            onClickPoint={this._noopClick}
+            onClickPoint={this._onClickPoint}
           />
         </div>
         <div className="SgfReplay-nav">
@@ -243,6 +301,13 @@ export default class SgfReplayView extends Component<Props, State> {
             </span>
           ) : null}
         </div>
+        {typeof branchPoint === "number"
+          ? this._renderVariationBar(
+              mainLine.indexOf(branchPoint),
+              getColorToPlay(tree, currentNode)
+            )
+          : null}
+        {this.state.progressKey ? this._renderProgress(moveNum) : null}
         {comment ? (
           <div className="SgfReplay-comment">
             <div className="SgfReplay-comment-title">Kommentar:</div>
@@ -253,7 +318,200 @@ export default class SgfReplayView extends Component<Props, State> {
     );
   }
 
-  _noopClick = () => {};
+  _renderVariationBar(fromMove: number, toPlay: PlayerColor) {
+    return (
+      <div className="SgfReplay-variation">
+        <span>
+          Eigene Variante ab Zug {fromMove} · {COLOR_LABEL[toPlay]} ist am Zug
+        </span>
+        <Button small onClick={this._onReturnToGame}>
+          Zurück zur Partie
+        </Button>
+      </div>
+    );
+  }
+
+  _renderProgress(moveNum: number) {
+    let { resumedFrom, bookmarks, bookmarkDraft } = this.state;
+    return (
+      <div className="SgfReplay-progress">
+        {resumedFrom ? (
+          <div className="SgfReplay-resumed">
+            Weiter bei Zug {resumedFrom} – hier hast du zuletzt aufgehört.{" "}
+            <button
+              type="button"
+              className="SgfReplay-link"
+              onClick={this._onRestart}>
+              Von vorn
+            </button>
+          </div>
+        ) : null}
+        {bookmarks.length ? (
+          <div className="SgfReplay-bookmarks">
+            {bookmarks.map((bookmark) => (
+              <span key={bookmark.move} className="SgfReplay-bookmark">
+                <button
+                  type="button"
+                  className="SgfReplay-bookmark-jump"
+                  data-move={bookmark.move}
+                  onClick={this._onJumpToBookmark}>
+                  Zug {bookmark.move}
+                  {bookmark.note ? ": " + bookmark.note : ""}
+                </button>
+                <button
+                  type="button"
+                  className="SgfReplay-bookmark-remove"
+                  aria-label={
+                    "Lesezeichen bei Zug " + bookmark.move + " löschen"
+                  }
+                  data-move={bookmark.move}
+                  onClick={this._onRemoveBookmark}>
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {bookmarkDraft === null ? (
+          <button
+            type="button"
+            className="Button Button-small Button-secondary SgfReplay-bookmark-add"
+            disabled={moveNum < 1}
+            onClick={this._onOpenBookmark}>
+            Lesezeichen bei Zug {moveNum}
+          </button>
+        ) : (
+          <form
+            className="SgfReplay-bookmark-form"
+            onSubmit={this._onSaveBookmark}>
+            <input
+              type="text"
+              className="SgfReplay-bookmark-input"
+              value={bookmarkDraft}
+              maxLength={200}
+              placeholder="z. B. Hier verstehe ich den Kampf nicht"
+              aria-label={"Notiz zu Zug " + moveNum}
+              onChange={this._onChangeBookmark}
+            />
+            <Button small type="submit">
+              Speichern
+            </Button>
+            <button
+              type="button"
+              className="SgfReplay-link"
+              onClick={this._onCancelBookmark}>
+              Abbrechen
+            </button>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  // A click on an empty point plays an own move (a side branch).
+  _onClickPoint = (game: Object, loc: Point, color?: ?PlayerColor) => {
+    let { tree, currentNode } = this.state;
+    if (!tree || color) {
+      return;
+    }
+    let played = playVariationMove(tree, currentNode, loc);
+    if (played) {
+      this.setState({ tree: played.tree, currentNode: played.nodeId });
+      this._saveProgress(played.tree, played.nodeId);
+    }
+  };
+
+  _onReturnToGame = () => {
+    let { tree, currentNode } = this.state;
+    if (!tree) {
+      return;
+    }
+    let back = returnToGame(tree, currentNode);
+    if (!back.computedState[back.currentNode]) {
+      back.computedState = computeGameNodeStates(back, back.currentNode);
+    }
+    this.setState({ tree: back, currentNode: back.currentNode });
+  };
+
+  // Remembers the move on the game itself (inside a variation: where the
+  // variation left the game).
+  _saveProgress(tree: GameTree, nodeId: number) {
+    let { progressKey, progressUrl } = this.state;
+    if (!progressKey) {
+      return;
+    }
+    let mainLine = getMainLine(tree);
+    let branch = getBranchPoint(tree, nodeId);
+    let move = mainLine.indexOf(typeof branch === "number" ? branch : nodeId);
+    let names = getSgfPlayerNames(tree);
+    let title =
+      names.black && names.white
+        ? names.black + " – " + names.white
+        : "SGF-Partie";
+    saveReplayMove(progressKey, Math.max(0, move), title, progressUrl);
+  }
+
+  _getMoveNode(move: number): ?number {
+    let { tree } = this.state;
+    return tree ? getMainLine(tree)[move] : null;
+  }
+
+  _onRestart = () => {
+    let { tree } = this.state;
+    if (tree) {
+      this.setState({ resumedFrom: null });
+      this._onChangeCurrentNode(tree.rootNode);
+    }
+  };
+
+  _onJumpToBookmark = (e: Object) => {
+    let nodeId = this._getMoveNode(Number(e.currentTarget.dataset.move));
+    if (typeof nodeId === "number") {
+      this._onChangeCurrentNode(nodeId);
+    }
+  };
+
+  _onRemoveBookmark = (e: Object) => {
+    let { progressKey } = this.state;
+    if (progressKey) {
+      this.setState({
+        bookmarks: removeReplayBookmark(
+          progressKey,
+          Number(e.currentTarget.dataset.move)
+        ),
+      });
+    }
+  };
+
+  _onOpenBookmark = () => {
+    this.setState({ bookmarkDraft: "" });
+  };
+
+  _onChangeBookmark = (e: Object) => {
+    this.setState({ bookmarkDraft: e.target.value });
+  };
+
+  _onCancelBookmark = () => {
+    this.setState({ bookmarkDraft: null });
+  };
+
+  _onSaveBookmark = (e: Object) => {
+    e.preventDefault();
+    let { tree, currentNode, progressKey, bookmarkDraft } = this.state;
+    if (!tree || !progressKey) {
+      return;
+    }
+    let mainLine = getMainLine(tree);
+    let branch = getBranchPoint(tree, currentNode);
+    let move = mainLine.indexOf(
+      typeof branch === "number" ? branch : currentNode
+    );
+    this._saveProgress(tree, currentNode);
+    this.setState({
+      bookmarks: addReplayBookmark(progressKey, move, bookmarkDraft || ""),
+      bookmarkDraft: null,
+    });
+  };
 
   _onChangeCurrentNode = (nodeId: number) => {
     let { tree } = this.state;
@@ -269,6 +527,7 @@ export default class SgfReplayView extends Component<Props, State> {
     }
     nextTree.currentNode = nodeId;
     this.setState({ tree: nextTree, currentNode: nodeId });
+    this._saveProgress(nextTree, nodeId);
   };
 
   _setFileInput = (ref: HTMLInputElement | null) => {

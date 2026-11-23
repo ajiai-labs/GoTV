@@ -12,6 +12,7 @@ import MyGoTv from "./tv/MyGoTv";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
 import RecentReplays from "./tv/RecentReplays";
+import RecentlyReplayed from "./tv/RecentlyReplayed";
 import { A, TabNav } from "./common";
 import {
   getNextUpcomingEvent,
@@ -487,8 +488,13 @@ export default class TvScreen extends Component<Props, State> {
                 }
                 initialUrl={replayTree ? null : replayUrl}
                 initialTree={replayTree}
+                replayKey={replayTree ? "kgs-" + String(tvReplayGameId) : null}
               />
             </div>
+            <RecentlyReplayed
+              onOpenReplay={this._onOpenReplay}
+              refreshKey={replayUrl}
+            />
             <RecentReplays
               events={tvEvents}
               now={this.state.now}
