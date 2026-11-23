@@ -194,10 +194,36 @@ export function compareGameMove(
 }
 
 type Pending = {
-  resolve: (KataGoAnalysis) => any,
+  resolve: (any) => any,
   reject: (Error) => any,
   toPlay: PlayerColor,
+  // "background": the whole-game check, not cancelled by moving around.
+  kind: "analyze" | "batch" | "background",
 };
+
+// One position of a whole game, black's view, straight from the network
+// (no search): fast enough for every move of a game.
+export type PositionEval = {
+  nodeId: number,
+  move: number,
+  winRate: number,
+  scoreLead: number,
+};
+
+export type GameMistake = {
+  move: number, // move number of the mistake
+  nodeId: number, // position after the mistake
+  beforeNodeId: number, // position before it (where KataGo shows better)
+  color: PlayerColor,
+  pointsLost: number,
+  winRateLost: number, // 0..1, the player's own chance to win
+};
+
+// Positions per worker request while evaluating a whole game.
+export const GAME_BATCH_SIZE = 24;
+// Candidates re-checked with a search, and its size.
+export const VERIFY_CANDIDATES = 10;
+export const VERIFY_VISITS = 60;
 
 // One worker per page, created on first use (nothing loads before the
 // viewer switches the analysis on).
@@ -237,7 +263,10 @@ export class KataGoEngine {
 
   _onMessage = (ev: Object) => {
     let msg = ev.data || {};
-    if (msg.type !== "katago:analyze_result") {
+    if (
+      msg.type !== "katago:analyze_result" &&
+      msg.type !== "katago:eval_batch_result"
+    ) {
       return; // progress updates and backend notices are not shown
     }
     let pending = this._pending[msg.id];
@@ -248,7 +277,9 @@ export class KataGoEngine {
     if (msg.backend) {
       this.backend = msg.backend;
     }
-    if (msg.ok && msg.analysis) {
+    if (pending.kind === "batch" && msg.ok && Array.isArray(msg.evals)) {
+      pending.resolve(msg.evals);
+    } else if (pending.kind !== "batch" && msg.ok && msg.analysis) {
       pending.resolve(toAnalysis(msg.analysis, pending.toPlay, msg.backend));
     } else {
       pending.reject(
@@ -263,18 +294,26 @@ export class KataGoEngine {
   analyze(
     tree: GameTree,
     nodeId: number,
-    visits: number = DEFAULT_VISITS
+    visits: number = DEFAULT_VISITS,
+    background: boolean = false
   ): Promise<KataGoAnalysis> {
     let worker = this._getWorker();
     let position = getKataGoPosition(tree, nodeId);
-    this.cancel();
+    if (!background) {
+      this.cancel();
+    }
     let id = this._nextId++;
     return new Promise((resolve, reject) => {
-      this._pending[id] = { resolve, reject, toPlay: position.currentPlayer };
+      this._pending[id] = {
+        resolve,
+        reject,
+        toPlay: position.currentPlayer,
+        kind: background ? "background" : "analyze",
+      };
       worker.postMessage({
         type: "katago:analyze",
         id,
-        analysisGroup: "interactive",
+        analysisGroup: background ? "background" : "interactive",
         modelUrl: new URL(this._modelUrl, window.location.href).href,
         backend: "webgpu",
         board: position.board,
@@ -289,9 +328,121 @@ export class KataGoEngine {
     });
   }
 
+  _evalBatch(positions: Array<Object>, rules: string): Promise<Array<Object>> {
+    let worker = this._getWorker();
+    let id = this._nextId++;
+    return new Promise((resolve, reject) => {
+      this._pending[id] = { resolve, reject, toPlay: "black", kind: "batch" };
+      worker.postMessage({
+        type: "katago:eval_batch",
+        id,
+        modelUrl: new URL(this._modelUrl, window.location.href).href,
+        backend: "webgpu",
+        positions,
+        rules,
+      });
+    });
+  }
+
+  // Every position of the game's main line, in batches; onProgress gets
+  // the number of positions done. shouldStop() ends it early (null result).
+  async evaluateGame(
+    tree: GameTree,
+    onProgress: (done: number, total: number) => any,
+    shouldStop: () => boolean
+  ): Promise<?Array<PositionEval>> {
+    let mainLine = getMainLine(tree);
+    let results = [];
+    for (let start = 0; start < mainLine.length; start += GAME_BATCH_SIZE) {
+      if (shouldStop()) {
+        return null;
+      }
+      let nodeIds = mainLine.slice(start, start + GAME_BATCH_SIZE);
+      let positions = nodeIds.map((nodeId) => {
+        let position = getKataGoPosition(tree, nodeId);
+        return {
+          board: position.board,
+          currentPlayer: position.currentPlayer,
+          moveHistory: position.moveHistory,
+          komi: position.komi,
+        };
+      });
+      let rules = getKataGoPosition(tree, tree.rootNode).rules;
+      let evals = await this._evalBatch(positions, rules);
+      nodeIds.forEach((nodeId, index) => {
+        let value = evals[index] || {};
+        results.push({
+          nodeId,
+          move: start + index,
+          winRate: Number(value.rootWinRate),
+          scoreLead: Number(value.rootScoreLead),
+        });
+      });
+      onProgress(results.length, mainLine.length);
+    }
+    return results;
+  }
+
+  // Re-checks the candidates of findMistakes with a real search: the
+  // network alone swings in ko fights. The loss is what the played move
+  // gives up against KataGo's best move in the position before it.
+  async verifyMistakes(
+    tree: GameTree,
+    candidates: Array<GameMistake>,
+    onProgress: (done: number, total: number) => any,
+    shouldStop: () => boolean,
+    visits: number = VERIFY_VISITS
+  ): Promise<?Array<GameMistake>> {
+    let verified = [];
+    for (let i = 0; i < candidates.length; i++) {
+      if (shouldStop()) {
+        return null;
+      }
+      let candidate = candidates[i];
+      try {
+        let before = await this.analyze(
+          tree,
+          candidate.beforeNodeId,
+          visits,
+          true
+        );
+        let played = getGameNextMove(tree, candidate.beforeNodeId);
+        let best = before.moves[0];
+        let listed =
+          played &&
+          before.moves.find(
+            (move) => move.x === played.x && move.y === played.y
+          );
+        let pointsLost;
+        if (!best || (played && best.x === played.x && best.y === played.y)) {
+          pointsLost = 0;
+        } else if (listed) {
+          pointsLost = Math.max(0, listed.pointsLost - best.pointsLost);
+        } else {
+          let after = await this.analyze(tree, candidate.nodeId, visits, true);
+          let change = after.scoreLead - best.scoreLead; // black's view
+          pointsLost = Math.max(
+            0,
+            candidate.color === "black" ? -change : change
+          );
+        }
+        verified.push({ ...candidate, pointsLost });
+      } catch (err) {
+        if (err.message !== "canceled") {
+          throw err;
+        }
+      }
+      onProgress(i + 1, candidates.length);
+    }
+    return verified;
+  }
+
   cancel() {
     let worker = this._worker;
     for (let id of Object.keys(this._pending)) {
+      if (this._pending[Number(id)].kind !== "analyze") {
+        continue; // a running game evaluation finishes its batch
+      }
       if (worker) {
         worker.postMessage({
           type: "katago:cancel",
@@ -300,8 +451,8 @@ export class KataGoEngine {
         });
       }
       this._pending[Number(id)].reject(new Error("canceled"));
+      delete this._pending[Number(id)];
     }
-    this._pending = {};
   }
 }
 
@@ -312,4 +463,53 @@ export function getKataGoEngine(): KataGoEngine {
     sharedEngine = new KataGoEngine();
   }
   return sharedEngine;
+}
+
+// The moves that hurt their player most: ranked by the win chance they
+// gave away (a big point loss in a decided game hardly matters), counted
+// only from minPoints on. Black's view in the evals, so a black move loses
+// what black's values drop, a white move what they rise.
+export function findMistakes(
+  evals: Array<PositionEval>,
+  tree: GameTree,
+  limit: number = 5,
+  minPoints: number = 2
+): Array<GameMistake> {
+  let mistakes = [];
+  for (let i = 1; i < evals.length; i++) {
+    let before = evals[i - 1];
+    let after = evals[i];
+    if (
+      !isFinite(before.scoreLead) ||
+      !isFinite(after.scoreLead) ||
+      !isFinite(before.winRate) ||
+      !isFinite(after.winRate)
+    ) {
+      continue;
+    }
+    let move: any = tree.nodes[after.nodeId].props.find(
+      (prop) => prop.name === "MOVE"
+    );
+    if (!move || (move.color !== "black" && move.color !== "white")) {
+      continue;
+    }
+    let sign = move.color === "black" ? -1 : 1;
+    let pointsLost = sign * (after.scoreLead - before.scoreLead);
+    let winRateLost = sign * (after.winRate - before.winRate);
+    if (pointsLost >= minPoints) {
+      mistakes.push({
+        move: after.move,
+        nodeId: after.nodeId,
+        beforeNodeId: before.nodeId,
+        color: move.color,
+        pointsLost,
+        winRateLost: Math.max(0, winRateLost),
+      });
+    }
+  }
+  return mistakes
+    .sort(
+      (a, b) => b.winRateLost - a.winRateLost || b.pointsLost - a.pointsLost
+    )
+    .slice(0, limit);
 }

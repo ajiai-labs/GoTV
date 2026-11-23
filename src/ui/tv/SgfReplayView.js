@@ -369,10 +369,12 @@ export default class SgfReplayView extends Component<Props, State> {
         {/* Right under the board buttons, where it is seen. */}
         {this.props.compact ? null : (
           <KataGoPanel
+            key={this.state.progressKey || "replay"}
             tree={tree}
             nodeId={currentNode}
             onMoves={this._onKataGoMoves}
             onLayLine={this._onLayLine}
+            onJump={this._onChangeCurrentNode}
           />
         )}
         {typeof branchPoint === "number"

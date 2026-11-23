@@ -9,6 +9,8 @@ import * as engineModule from "../../model/KataGoEngine";
 describe("KataGoPanel", () => {
   let container;
   let analyze;
+  let evaluateGame;
+  let verifyMistakes;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -46,8 +48,25 @@ describe("KataGoPanel", () => {
         ],
       })
     );
+    evaluateGame = jest.fn((tree, onProgress) => {
+      onProgress(3, 3);
+      return Promise.resolve([
+        { nodeId: 0, move: 0, winRate: 0.5, scoreLead: 0.5 },
+        { nodeId: 1, move: 1, winRate: 0.55, scoreLead: 1 },
+        { nodeId: 2, move: 2, winRate: 0.8, scoreLead: 6 },
+      ]);
+    });
+    verifyMistakes = jest.fn((tree, candidates, onProgress) => {
+      onProgress(candidates.length, candidates.length);
+      // The search confirms a smaller loss than the network alone.
+      return Promise.resolve(
+        candidates.map((candidate) => ({ ...candidate, pointsLost: 4.2 }))
+      );
+    });
     jest.spyOn(engineModule, "getKataGoEngine").mockReturnValue({
       analyze,
+      evaluateGame,
+      verifyMistakes,
       cancel: jest.fn(),
       setModelUrl: jest.fn(),
     });
@@ -109,5 +128,37 @@ describe("KataGoPanel", () => {
       ],
       "KataGo-Variante: E5 · Schwarz 68 % · Weiß führt mit 2,4 Punkten"
     );
+  });
+
+  it("evaluates the whole game: curve and biggest mistakes", async () => {
+    window.localStorage.setItem("gotv.katago", "1");
+    let tree = parseSgf("(;GM[1]SZ[9];B[cc];W[gg])");
+    let line = getMainLine(tree);
+    let onJump = jest.fn();
+    act(() => {
+      ReactDOM.render(
+        <KataGoPanel
+          tree={tree}
+          nodeId={line[0]}
+          onMoves={jest.fn()}
+          onJump={onJump}
+        />,
+        container
+      );
+    });
+    await act(async () => {
+      container.querySelector(".KataGoPanel-game-start").click();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(evaluateGame).toHaveBeenCalled();
+    expect(verifyMistakes.mock.calls[0][1].map((c) => c.move)).toEqual([2]);
+    expect(container.querySelector(".GameGraph-line")).not.toBe(null);
+    // W G3 let black's lead go from 1 to 6: white lost 5 points there.
+    let mistake = container.querySelector(".GameGraph-mistake-button");
+    expect(mistake.textContent).toBe("Zug 2 · Weiß G3: −25 % · −4,2 Punkte");
+    act(() => mistake.click());
+    expect(onJump).toHaveBeenCalledWith(1);
   });
 });

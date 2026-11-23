@@ -294,6 +294,17 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   direktes Laden geht nicht). Gemessen 23.11.2026, headless-Chromium ohne GPU (WASM):
   100 Visits auf 19x19 in rund 1-3 s. Desktop-Server liefert `.wasm` als
   `application/wasm`.
+- Ganze Partie auswerten (23.11.2026, `KataGoEngine.evaluateGame`/`verifyMistakes`,
+  `src/ui/tv/GameGraph.js`): Knopf "Ganze Partie auswerten" im KataGo-Feld. Schritt 1:
+  jede Stellung der Hauptlinie per `katago:eval_batch` (Netz ohne Suche, 24 je Anfrage;
+  236 Züge in ~5 s, WASM). Schritt 2: die 10 auffälligsten Züge (`findMistakes`, sortiert
+  nach verlorener Gewinnchance, ab 2 Punkten) mit echter Suche (60 Visits, Gruppe
+  "background", wird beim Blättern nicht abgebrochen) nachgerechnet: Verlust = Partiezug
+  gegen KataGos besten Zug in der Stellung davor. Grund: Das Netz allein schwankt im
+  Ko-Kampf stark. Anzeige: Gewinnkurve (Klick springt zum Zug, gelb = aktueller Zug, rote
+  Striche = Fehler) und "Partieentscheidende Fehler" (max. 5; Klick zeigt die Stellung
+  vor dem Fehler). Gesamtdauer echte Turnierpartie: ~25 s. Hinweis in der App: das kleine
+  Netz ist im Ko-Kampf ungenau.
 - Nachspielen untersuchen und fortsetzen (23.11.2026):
   `src/model/ReplayVariation.js` - Klick auf einen freien Punkt setzt einen eigenen Zug als
   Seitenzweig (neuer GameNode, Partie bleibt erstes Kind = Hauptlinie); Schlagen kommt aus
@@ -516,6 +527,30 @@ Policy, von dir als "Stufe 1" bezeichnet:
   (welche Daten werden abgefragt und wo verarbeitet?).
 - [x] **(c) KataGo-Analyse:** umgesetzt im Browser (WebGPU/WASM, kein
   Backend-Dienst), nur beim Nachspielen - siehe "KataGo im Browser" oben.
+
+## Nächste Schritte (Stand 23.11.2026, vom Nutzer so abgelegt)
+
+Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
+Gesamtauswertung der Partie mit KataGo (siehe oben). Offen, in dieser Reihenfolge:
+
+1. **Speed-Go-Importer** (etwa 1-1,5 Std., vom Nutzer beauftragt, noch nicht begonnen):
+   speedgochampionship.com/bracket täglich einlesen - Begegnungen mit Datum und nach dem
+   Spiel die "online-go: G1 G2 G3"-Links -> `ogs_game_ids` automatisch (bisher von Hand,
+   siehe Pflegehinweise). Vorher Nutzungsbedingungen/robots.txt der Seite prüfen. Neues
+   Modul in `tools/update_events.py` als weitere Quelle, mit Tests wie die übrigen
+   Importer; Hand-Einträge nicht überschreiben (`dropImportedDuplicates`).
+2. **Daten zwischen Desktop und Tablet mitnehmen:** Favoriten, Einstellungen, Lesezeichen,
+   Varianten liegen nur im jeweiligen Browser. Erster Schritt: Sicherungsdatei
+   exportieren/importieren (alle `gotv.*`-Schlüssel); Synchronisierung bräuchte Konto/Server.
+3. **Tablet vervollständigen:** Offline-Nachspielen (Service Worker für App, KataGo-Dateien
+   und gespeicherte Partien); Erinnerungen bei geschlossener App bräuchten Web-Push mit
+   Server.
+4. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
+   Erkennung braucht die YouTube Data API (Schlüssel gehört auf einen Server, nicht in den
+   Client) - damit ginge auch der YouTube-Chat für Kanäle wie JuppTube.
+5. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
+   Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
+   IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.
 
 ## Offene Entscheidungen (Produkt, Stand heute)
 

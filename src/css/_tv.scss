@@ -1757,3 +1757,80 @@ $cinema-bar-height: 44px;
   background: #fdf0ef;
   font-size: 13px;
 }
+
+.KataGoPanel-game {
+  margin: 6px 0;
+}
+
+.GameGraph {
+  margin: 8px 0;
+
+  &-svg {
+    display: block;
+    width: 100%;
+    height: 90px;
+    border: 1px solid $very-muted;
+    cursor: crosshair;
+  }
+
+  &-black {
+    fill: #e8e8e8;
+  }
+
+  &-white {
+    fill: #fff;
+  }
+
+  &-middle {
+    stroke: #bbb;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &-line {
+    fill: none;
+    stroke: #2a7ab0;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &-mistake {
+    stroke: #c4302b;
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &-current {
+    stroke: #d4a017;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &-legend {
+    margin-top: 2px;
+    font-size: 11px;
+    color: $muted;
+  }
+
+  &-mistakes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+
+    &-title {
+      font-weight: bold;
+    }
+  }
+
+  &-mistake-button {
+    padding: 2px 8px;
+    border: 1px solid #c4302b;
+    border-radius: 12px;
+    background: #fff;
+    color: #8a1f1b;
+    font: inherit;
+    cursor: pointer;
+  }
+}

@@ -42,6 +42,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
   only its own website; for those, use the desktop app below.
+- **Whole-game review:** "Ganze Partie auswerten" draws the win-chance
+  curve of the game and lists the game-deciding mistakes, checked with a
+  KataGo search; a click jumps to the position before the mistake.
 - **KataGo analysis in the browser:** while replaying, switch on
   "KataGo-Analyse" for the win chance, the score and KataGo's five best
   moves on the board, and how the game's move compares ("Die Partie

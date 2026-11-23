@@ -1,4 +1,6 @@
 import {
+  KataGoEngine,
+  findMistakes,
   getPvPoints,
   parseGtpMove,
   compareGameMove,
@@ -131,5 +133,124 @@ describe("KataGo results", () => {
       color: "white",
     });
     expect(getGameNextMove(tree, line[2])).toBe(null);
+  });
+});
+
+describe("findMistakes", () => {
+  it("ranks moves by the win chance their player gave away", () => {
+    let tree = parseSgf("(;SZ[9];B[cc];W[gg];B[cg];W[gc])");
+    let line = getMainLine(tree);
+    let leads = [0.5, 1.0, 4.0, -3.5, -3.0]; // black's view
+    let wins = [0.5, 0.52, 0.7, 0.3, 0.32];
+    let evals = line.map((nodeId, move) => ({
+      nodeId,
+      move,
+      winRate: wins[move],
+      scoreLead: leads[move],
+    }));
+    let mistakes = findMistakes(evals, tree);
+    // B C3 (move 3) gave away 40 %, W G3 (move 2) 18 %.
+    expect(
+      mistakes.map((m) => [
+        m.move,
+        m.color,
+        m.beforeNodeId,
+        m.pointsLost,
+        Math.round(m.winRateLost * 100),
+      ])
+    ).toEqual([
+      [3, "black", line[2], 7.5, 40],
+      [2, "white", line[1], 3, 18],
+    ]);
+    expect(findMistakes(evals, tree, 1)).toHaveLength(1);
+    expect(findMistakes(evals, tree, 5, 10)).toEqual([]);
+  });
+
+  it("puts a game-deciding loss before a bigger one in a decided game", () => {
+    let tree = parseSgf("(;SZ[9];B[cc];W[gg];B[cg])");
+    let line = getMainLine(tree);
+    let evals = [
+      { nodeId: line[0], move: 0, winRate: 0.5, scoreLead: 0 },
+      { nodeId: line[1], move: 1, winRate: 0.2, scoreLead: -4 }, // B: -30 %
+      { nodeId: line[2], move: 2, winRate: 0.2, scoreLead: -4 },
+      { nodeId: line[3], move: 3, winRate: 0.19, scoreLead: -24 }, // B: -20 pts
+    ];
+    expect(findMistakes(evals, tree).map((m) => m.move)).toEqual([1, 3]);
+  });
+});
+
+describe("verifyMistakes", () => {
+  // Game: B C7 (cc), W G3 (gg), B C3 (cg).
+  let tree = parseSgf("(;SZ[9];B[cc];W[gg];B[cg])");
+  let line = getMainLine(tree);
+  let candidate = (move) => ({
+    move,
+    nodeId: line[move],
+    beforeNodeId: line[move - 1],
+    color: move % 2 ? "black" : "white",
+    pointsLost: 9,
+  });
+  let move = (x, y, scoreLead, pointsLost) => ({
+    x,
+    y,
+    scoreLead,
+    pointsLost,
+    winRate: 0.5,
+    visits: 10,
+    order: 0,
+    pv: [],
+  });
+
+  it("measures the played move against KataGo's best with a search", async () => {
+    let engine = new KataGoEngine();
+    let analyses = {
+      // Before W G3: G3 listed, 3.5 points worse than E5.
+      [line[1]]: {
+        scoreLead: 1,
+        moves: [move(4, 4, 1, 0), move(6, 6, 4.5, 3.5)],
+      },
+      // Before B C3: the game's move is KataGo's best.
+      [line[2]]: { scoreLead: 0, moves: [move(2, 6, 0, 0)] },
+    };
+    engine.analyze = jest.fn((t, nodeId) => Promise.resolve(analyses[nodeId]));
+    let onProgress = jest.fn();
+    let verified = await engine.verifyMistakes(
+      tree,
+      [candidate(2), candidate(3)],
+      onProgress,
+      () => false
+    );
+    expect(verified.map((m) => [m.move, m.pointsLost])).toEqual([
+      [2, 3.5],
+      [3, 0],
+    ]);
+    expect(onProgress).toHaveBeenLastCalledWith(2, 2);
+  });
+
+  it("compares the position after an unlisted move", async () => {
+    let engine = new KataGoEngine();
+    engine.analyze = jest.fn((t, nodeId) =>
+      Promise.resolve(
+        nodeId === line[1]
+          ? { scoreLead: 1, moves: [move(4, 4, 1, 0)] }
+          : { scoreLead: 7, moves: [] } // after W G3: black leads by 7
+      )
+    );
+    let verified = await engine.verifyMistakes(
+      tree,
+      [candidate(2)],
+      () => {},
+      () => false
+    );
+    // White gave up 6 points (black's lead 1 -> 7).
+    expect(verified[0].pointsLost).toBe(6);
+    expect(
+      await engine.verifyMistakes(
+        tree,
+        [candidate(2)],
+        () => {},
+        () => true
+      )
+    ).toBe(null);
   });
 });

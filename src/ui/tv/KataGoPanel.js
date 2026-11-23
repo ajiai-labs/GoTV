@@ -8,7 +8,16 @@ import {
   getKataGoEngine,
   DEFAULT_VISITS,
 } from "../../model/KataGoEngine";
-import type { KataGoAnalysis, KataGoMove } from "../../model/KataGoEngine";
+import type {
+  GameMistake,
+  KataGoAnalysis,
+  KataGoMove,
+  PositionEval,
+} from "../../model/KataGoEngine";
+import { findMistakes, VERIFY_CANDIDATES } from "../../model/KataGoEngine";
+
+import { getBranchPoint, getMainLine } from "../../model/ReplayVariation";
+import GameGraph from "./GameGraph";
 import type { GameTree } from "../../model";
 
 type Props = {
@@ -16,6 +25,8 @@ type Props = {
   nodeId: number,
   // Top moves for the board labels (null: none to show).
   onMoves: (nodeId: number, moves: ?Array<KataGoMove>) => any,
+  // Shows a position of the game (curve and mistake list).
+  onJump?: (nodeId: number) => any,
   // "Variante legen": KataGo's expected line into the game tree.
   onLayLine?: (points: Array<{ x: number, y: number }>, comment: string) => any,
 };
@@ -31,9 +42,33 @@ type State = {
   error: ?string,
   visits: number,
   modelName: ?string,
+  // "Ganze Partie auswerten"
+  game: {
+    status: "idle" | "running" | "ready" | "error",
+    // running: "curve" (network) or "check" (search on the candidates)
+    step: "curve" | "check",
+    done: number,
+    total: number,
+    evals: Array<PositionEval>,
+    mistakes: Array<GameMistake>,
+    error: ?string,
+  },
+};
+
+const NO_GAME = {
+  status: "idle",
+  step: "curve",
+  done: 0,
+  total: 0,
+  evals: [],
+  mistakes: [],
+  error: null,
 };
 
 const ENABLED_KEY = "gotv.katago";
+// The mistake list: losses from this size, at most this many.
+const MIN_MISTAKE_POINTS = 2;
+const SHOWN_MISTAKES = 5;
 const VISIT_OPTIONS = [50, 100, 400, 1000];
 // Wait for the viewer to stop clicking through moves before analysing.
 const DEBOUNCE_MS = 250;
@@ -91,7 +126,10 @@ export default class KataGoPanel extends Component<Props, State> {
     error: null,
     visits: DEFAULT_VISITS,
     modelName: null,
+    game: NO_GAME,
   };
+
+  _stopGame: boolean = false;
 
   componentDidMount() {
     this._mounted = true;
@@ -112,6 +150,7 @@ export default class KataGoPanel extends Component<Props, State> {
 
   componentWillUnmount() {
     this._mounted = false;
+    this._stopGame = true;
     if (this._timer) {
       clearTimeout(this._timer);
     }
@@ -266,7 +305,130 @@ export default class KataGoPanel extends Component<Props, State> {
     );
   }
 
+  // 1. every position from the network alone (seconds), 2. the most
+  // suspicious moves again with a real search, because the network alone
+  // swings in ko fights - only losses that hold up are listed.
+  _onEvaluateGame = async () => {
+    let { tree } = this.props;
+    let engine = getKataGoEngine();
+    let stop = () => this._stopGame || !this._mounted;
+    let progress = (step) => (done, total) => {
+      if (this._mounted) {
+        this.setState((state) => ({
+          game: { ...state.game, step, done, total },
+        }));
+      }
+    };
+    this._stopGame = false;
+    this.setState({ game: { ...NO_GAME, status: "running", step: "curve" } });
+    try {
+      let evals = await engine.evaluateGame(tree, progress("curve"), stop);
+      if (!evals) {
+        this.setState({ game: NO_GAME });
+        return;
+      }
+      this.setState((state) => ({
+        game: { ...state.game, evals, step: "check", done: 0 },
+      }));
+      let candidates = findMistakes(evals, tree, VERIFY_CANDIDATES);
+      let verified = await engine.verifyMistakes(
+        tree,
+        candidates,
+        progress("check"),
+        stop
+      );
+      if (!verified || !this._mounted) {
+        if (this._mounted) {
+          this.setState({ game: NO_GAME });
+        }
+        return;
+      }
+      let mistakes = verified
+        .filter((mistake) => mistake.pointsLost >= MIN_MISTAKE_POINTS)
+        .slice(0, SHOWN_MISTAKES); // keeps the win-chance order
+      this.setState({
+        game: { ...NO_GAME, status: "ready", evals, mistakes },
+      });
+    } catch (err) {
+      if (this._mounted) {
+        this.setState({
+          game: { ...NO_GAME, status: "error", error: err.message },
+        });
+      }
+    }
+  };
+
+  _onStopGame = () => {
+    this._stopGame = true;
+  };
+
+  _renderGame() {
+    let { game } = this.state;
+    let { tree, nodeId, onJump } = this.props;
+    if (game.status === "running") {
+      return (
+        <div className="KataGoPanel-game">
+          {game.step === "curve"
+            ? "Partie wird ausgewertet … Zug " +
+              game.done +
+              " von " +
+              (game.total || "?")
+            : "Auffällige Züge werden mit KataGo-Suche geprüft … " +
+              game.done +
+              " von " +
+              (game.total || "?")}{" "}
+          <button
+            type="button"
+            className="SgfReplay-link"
+            onClick={this._onStopGame}>
+            Abbrechen
+          </button>
+        </div>
+      );
+    }
+    if (game.status === "ready" && onJump) {
+      let mainLine = getMainLine(tree);
+      let branch = getBranchPoint(tree, nodeId);
+      let currentMove = mainLine.indexOf(
+        typeof branch === "number" ? branch : nodeId
+      );
+      return (
+        <GameGraph
+          tree={tree}
+          evals={game.evals}
+          mistakes={game.mistakes}
+          currentMove={Math.max(0, currentMove)}
+          onJump={onJump}
+        />
+      );
+    }
+    return (
+      <div className="KataGoPanel-game">
+        <button
+          type="button"
+          className="Button Button-small Button-secondary KataGoPanel-game-start"
+          onClick={this._onEvaluateGame}>
+          Ganze Partie auswerten
+        </button>{" "}
+        <span className="KataGoPanel-hint">
+          {game.status === "error"
+            ? "Auswertung fehlgeschlagen: " + (game.error || "")
+            : "Gewinnkurve und die größten Fehler; zeigt den Partieverlauf"}
+        </span>
+      </div>
+    );
+  }
+
   _renderBody() {
+    return (
+      <div>
+        {this._renderGame()}
+        {this._renderPosition()}
+      </div>
+    );
+  }
+
+  _renderPosition() {
     let { status, analysis, analysedNode, error } = this.state;
     let { tree, nodeId } = this.props;
     if (status === "error") {
