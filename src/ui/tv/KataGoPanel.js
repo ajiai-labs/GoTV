@@ -1,6 +1,8 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import {
+  formatPoint,
+  getPvPoints,
   compareGameMove,
   getGameNextMove,
   getKataGoEngine,
@@ -14,7 +16,12 @@ type Props = {
   nodeId: number,
   // Top moves for the board labels (null: none to show).
   onMoves: (nodeId: number, moves: ?Array<KataGoMove>) => any,
+  // "Variante legen": KataGo's expected line into the game tree.
+  onLayLine?: (points: Array<{ x: number, y: number }>, comment: string) => any,
 };
+
+// How many moves of the expected line the list spells out.
+const PV_SHOWN = 6;
 
 type State = {
   enabled: boolean,
@@ -30,11 +37,8 @@ const ENABLED_KEY = "gotv.katago";
 const VISIT_OPTIONS = [50, 100, 400, 1000];
 // Wait for the viewer to stop clicking through moves before analysing.
 const DEBOUNCE_MS = 250;
-const COLUMNS = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
 
-export function formatPoint(x: number, y: number, size: number): string {
-  return (COLUMNS[x] || "?") + String(size - y);
-}
+export { formatPoint };
 
 function formatPercent(value: number): string {
   return Math.round(value * 100) + " %";
@@ -190,6 +194,26 @@ export default class KataGoPanel extends Component<Props, State> {
     });
   };
 
+  _onLayLine = (e: Object) => {
+    let { analysis } = this.state;
+    let { tree, nodeId, onLayLine } = this.props;
+    let move =
+      analysis && analysis.moves[Number(e.currentTarget.dataset.index)];
+    if (!move || !onLayLine) {
+      return;
+    }
+    let size = getBoardSize(tree, nodeId);
+    onLayLine(
+      getPvPoints(move, size),
+      "KataGo-Variante: " +
+        formatPoint(move.x, move.y, size) +
+        " · Schwarz " +
+        formatPercent(move.winRate) +
+        " · " +
+        formatLead(move.scoreLead)
+    );
+  };
+
   render() {
     let { enabled } = this.state;
     return (
@@ -280,6 +304,22 @@ export default class KataGoPanel extends Component<Props, State> {
               <strong>{formatPoint(move.x, move.y, size)}</strong> · Schwarz{" "}
               {formatPercent(move.winRate)} · {move.scoreLead >= 0 ? "+" : "−"}
               {formatPoints(move.scoreLead)} · {move.visits} Visits
+              {move.pv.length > 1 ? (
+                <span className="KataGoPanel-pv">
+                  {" "}
+                  · erwartet {move.pv.slice(0, PV_SHOWN).join(" ")}
+                  {move.pv.length > PV_SHOWN ? " …" : ""}
+                </span>
+              ) : null}
+              {this.props.onLayLine ? (
+                <button
+                  type="button"
+                  className="KataGoPanel-lay"
+                  data-index={analysis.moves.indexOf(move)}
+                  onClick={this._onLayLine}>
+                  Variante legen
+                </button>
+              ) : null}
             </li>
           ))}
         </ol>

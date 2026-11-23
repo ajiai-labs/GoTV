@@ -1692,3 +1692,47 @@ $cinema-bar-height: 44px;
     color: $semi-muted;
   }
 }
+
+.SgfReplay-continuations {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+  font-size: 13px;
+
+  &-title {
+    color: $semi-muted;
+  }
+}
+
+.SgfReplay-continuation {
+  padding: 2px 10px;
+  border: 1px solid $very-muted;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+
+  &-shown {
+    border-color: #2a7ab0;
+    background: #eef6fb;
+    font-weight: bold;
+  }
+}
+
+.KataGoPanel-pv {
+  color: $muted;
+}
+
+.KataGoPanel-lay {
+  margin-left: 8px;
+  padding: 0 8px;
+  border: 1px solid #2a7ab0;
+  border-radius: 10px;
+  background: #fff;
+  color: #2a7ab0;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

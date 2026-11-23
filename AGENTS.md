@@ -299,8 +299,15 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Seitenzweig (neuer GameNode, Partie bleibt erstes Kind = Hauptlinie); Schlagen kommt aus
   `computeGameNodeStates`. Upstream-ShinKGS schickt Züge immer an den KGS-Server, ein
   lokales Ausprobieren gab es dort nicht - Baum- und Brettlogik werden aber wiederverwendet.
-  Kein Ko-/Selbstmord-Check. Leiste "Eigene Variante ab Zug N · X ist am Zug" mit "Zurück
-  zur Partie"; das Ergebnis erscheint nur am letzten Zug der Hauptlinie.
+  Kein Ko-/Selbstmord-Check. Leiste "Variante ab Zug N · X ist am Zug" mit "Zurück zur
+  Partie" und "Variante löschen" (`removeVariation`, ganzer Zweig ab der Abzweigung); das
+  Ergebnis erscheint nur am letzten Zug der Hauptlinie. An jeder Abzweigung "Weiter mit:
+  Partie F3 · KataGo C17 · Variante E5" (`getContinuations`/`showContinuation`, Klick
+  springt auf den ersten Zug der Fortsetzung). KataGo-Vorschläge haben "Variante legen":
+  die erwartete Folge (`pv`, GTP "Q16", bis zum ersten Passen, max. 12 Züge,
+  `getPvPoints`) wird per `playVariationLine` als Zweig gelegt, der erste Zug trägt den
+  Kommentar "KataGo-Variante: C17 · Schwarz 50 % · …"; durchgehen mit BoardNav. KataGo
+  analysiert auch innerhalb von Varianten.
   `src/model/ReplayProgress.js` (`gotv.replays`, die 30 letzten Partien): Zug pro Partie
   (Schlüssel `url:<url>`, `game:kgs-<id>`, eingefügtes SGF per Text-Hash), beim Öffnen
   "Weiter bei Zug N" mit "Von vorn"; Lesezeichen mit Notiz (max. 200 Zeichen) pro Zug.

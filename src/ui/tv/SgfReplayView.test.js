@@ -49,7 +49,7 @@ describe("SgfReplayView", () => {
     act(() => view._onClickPoint(null, { x: 4, y: 4 }, null));
     expect(
       container.querySelector(".SgfReplay-variation").textContent
-    ).toContain("Eigene Variante ab Zug 1 · Schwarz ist am Zug");
+    ).toContain("Variante ab Zug 1 · Schwarz ist am Zug");
     // The end of the own line is not the end of the game: no result.
     expect(container.querySelector(".SgfReplay-result")).toBe(null);
     // An occupied point does nothing.
@@ -60,6 +60,58 @@ describe("SgfReplayView", () => {
     expect(container.querySelector(".SgfReplay-result").textContent).toBe(
       " · B+R"
     );
+  });
+
+  it("lays a line as a variation, switches to it and removes it", () => {
+    let tree = parseSgf("(;SZ[9]PB[a]PW[b];B[aa];W[bb];B[cc])");
+    let view;
+    act(() => {
+      ReactDOM.render(
+        <SgfReplayView
+          ref={(ref) => {
+            view = ref;
+          }}
+          initialTree={tree}
+        />,
+        container
+      );
+    });
+    act(() => container.querySelector(".BoardNav-next").click());
+    act(() =>
+      view._onLayLine(
+        [
+          { x: 4, y: 4 },
+          { x: 5, y: 5 },
+        ],
+        "KataGo-Variante: E5"
+      )
+    );
+    expect(container.querySelector(".SgfReplay-comment-text").textContent).toBe(
+      "KataGo-Variante: E5"
+    );
+    act(() => container.querySelector(".BoardNav-prev").click());
+    let labels = () =>
+      Array.from(container.querySelectorAll(".SgfReplay-continuation")).map(
+        (button) => button.textContent
+      );
+    expect(labels()).toEqual(["Partie B8", "KataGo E5"]);
+    expect(
+      container.querySelector(".SgfReplay-continuation-shown").textContent
+    ).toBe("KataGo E5");
+    act(() => container.querySelectorAll(".SgfReplay-continuation")[0].click());
+    expect(container.querySelector(".SgfReplay-variation")).toBe(null);
+    // One move back is the fork again, now following the game.
+    act(() => container.querySelector(".BoardNav-prev").click());
+    expect(
+      container.querySelector(".SgfReplay-continuation-shown").textContent
+    ).toBe("Partie B8");
+    act(() => container.querySelectorAll(".SgfReplay-continuation")[1].click());
+    expect(container.querySelector(".SgfReplay-variation")).not.toBe(null);
+    act(() => container.querySelector(".SgfReplay-variation-remove").click());
+    expect(container.querySelector(".SgfReplay-continuations")).toBe(null);
+    expect(
+      container.querySelector(".SgfReplay-captures").textContent
+    ).toContain("Zug 1");
   });
 
   it("continues where the viewer stopped and keeps bookmarks", () => {

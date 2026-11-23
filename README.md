@@ -50,7 +50,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   be loaded from disk. Engine: [Web KaTrain](https://github.com/Sir-Teo/web-katrain)
   (MIT), see `public/katago/NOTICE.txt`.
 - **Nachspielen, your way:** click the board to try your own moves (a side
-  line; "Zurück zur Partie" returns), continue a game where you stopped,
+  line; "Zurück zur Partie" returns), lay KataGo's expected line as a
+  variation ("Variante legen") and step through it, switch between game
+  and variations where they part, delete a variation, continue a game where you stopped,
   and set bookmarks with a note. The result stays hidden until the game's
   last move.
 - **Mein GoTV:** star channels and tournaments (☆). Starred channels sit at

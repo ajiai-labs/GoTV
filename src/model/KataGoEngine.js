@@ -24,7 +24,48 @@ export type KataGoMove = {
   visits: number,
   pointsLost: number,
   order: number,
+  // The line KataGo expects after this move, this move first ("Q16").
+  pv: Array<string>,
 };
+
+// Longest expected line taken over as a variation.
+export const MAX_PV_MOVES = 12;
+const COLUMNS = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
+
+// Board point as on the board labels: no "I" column, row 1 at the bottom.
+export function formatPoint(x: number, y: number, size: number): string {
+  return (COLUMNS[x] || "?") + String(size - y);
+}
+
+// "Q16" -> {x, y}; null for "pass" or anything off the board.
+export function parseGtpMove(
+  text: string,
+  size: number
+): ?{ x: number, y: number } {
+  let match = /^([A-HJ-Z])(\d{1,2})$/i.exec(String(text).trim());
+  if (!match) {
+    return null;
+  }
+  let x = COLUMNS.indexOf(match[1].toUpperCase());
+  let y = size - Number(match[2]);
+  return x >= 0 && x < size && y >= 0 && y < size ? { x, y } : null;
+}
+
+// The expected line as board points, up to the first pass.
+export function getPvPoints(
+  move: KataGoMove,
+  size: number
+): Array<{ x: number, y: number }> {
+  let points = [];
+  for (let text of move.pv.slice(0, MAX_PV_MOVES)) {
+    let point = parseGtpMove(text, size);
+    if (!point) {
+      break;
+    }
+    points.push(point);
+  }
+  return points.length ? points : [{ x: move.x, y: move.y }];
+}
 
 export type KataGoAnalysis = {
   winRate: number, // black's chance to win, 0..1
@@ -102,6 +143,7 @@ export function toAnalysis(
       visits: move.visits,
       pointsLost: move.pointsLost,
       order: move.order,
+      pv: Array.isArray(move.pv) ? move.pv.map(String) : [],
     }));
   return {
     winRate: payload.rootWinRate,

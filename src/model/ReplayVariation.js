@@ -126,3 +126,143 @@ export function returnToGame(tree: GameTree, nodeId: number): GameTree {
     currentLine: getMainLine(tree),
   };
 }
+
+// Plays a sequence of moves after nodeId (e.g. KataGo's expected line),
+// stopping at a taken point. The first new node can carry a comment.
+// Returns null when not even the first move fits.
+export function playVariationLine(
+  tree: GameTree,
+  nodeId: number,
+  points: Array<Point>,
+  comment?: string
+): ?{ tree: GameTree, firstNodeId: number } {
+  let current = tree;
+  let cursor = nodeId;
+  let firstNodeId = null;
+  for (let point of points) {
+    let played = playVariationMove(current, cursor, point);
+    if (!played) {
+      break;
+    }
+    current = played.tree;
+    cursor = played.nodeId;
+    if (firstNodeId === null) {
+      firstNodeId = cursor;
+    }
+  }
+  if (firstNodeId === null) {
+    return null;
+  }
+  if (comment && !isOnMainLine(current, firstNodeId)) {
+    let first = current.nodes[firstNodeId];
+    if (!first.props.some((prop) => prop.name === "COMMENT")) {
+      current = {
+        ...current,
+        nodes: {
+          ...current.nodes,
+          [firstNodeId]: new GameNode(
+            [...first.props, { name: "COMMENT", text: comment }],
+            first.children,
+            first.parent
+          ),
+        },
+      };
+    }
+  }
+  return {
+    tree: {
+      ...current,
+      currentNode: firstNodeId,
+      currentLine: getGameLine(current, firstNodeId),
+    },
+    firstNodeId,
+  };
+}
+
+// The continuations after nodeId when there is more than one: the game's
+// own move first, then the variations in the order they were laid.
+export function getContinuations(
+  tree: GameTree,
+  nodeId: number
+): Array<{ nodeId: number, isGame: boolean, comment: ?string }> {
+  let children = tree.nodes[nodeId].children;
+  if (children.length < 2) {
+    return [];
+  }
+  let mainLine = getMainLine(tree);
+  return children.map((childId) => {
+    let commentProp: any = tree.nodes[childId].props.find(
+      (prop) => prop.name === "COMMENT"
+    );
+    return {
+      nodeId: childId,
+      isGame: mainLine.includes(childId),
+      comment: commentProp ? String(commentProp.text) : null,
+    };
+  });
+}
+
+// The move a node plays, for labels ("E5"), or null.
+export function getNodeMove(tree: GameTree, nodeId: number): ?Point {
+  let move: any = tree.nodes[nodeId].props.find((prop) => prop.name === "MOVE");
+  return move && move.loc && move.loc !== "PASS" ? move.loc : null;
+}
+
+// Shows a continuation: the line through childId to its end.
+export function showContinuation(tree: GameTree, childId: number): GameTree {
+  let next = {
+    ...tree,
+    currentNode: childId,
+    currentLine: getGameLine(tree, childId),
+  };
+  if (!next.computedState[childId]) {
+    next.computedState = computeGameNodeStates(next, childId);
+  }
+  return next;
+}
+
+// Removes the own variation nodeId belongs to (from where it left the game,
+// with everything after it) and returns to the game there.
+export function removeVariation(tree: GameTree, nodeId: number): GameTree {
+  let branch = getBranchPoint(tree, nodeId);
+  if (typeof branch !== "number") {
+    return tree;
+  }
+  // The first node of the variation: the child of the branch point on the
+  // way to nodeId.
+  let start = nodeId;
+  while (tree.nodes[start].parent !== branch) {
+    start = Number(tree.nodes[start].parent);
+  }
+  let removed = new Set();
+  let stack = [start];
+  while (stack.length) {
+    let id = stack.pop();
+    removed.add(id);
+    stack.push(...tree.nodes[id].children);
+  }
+  let nodes = {};
+  let computedState = {};
+  for (let key of Object.keys(tree.nodes)) {
+    let id = Number(key);
+    if (!removed.has(id)) {
+      nodes[id] = tree.nodes[id];
+      if (tree.computedState[id]) {
+        computedState[id] = tree.computedState[id];
+      }
+    }
+  }
+  let parent = tree.nodes[branch];
+  nodes[branch] = new GameNode(
+    parent.props,
+    parent.children.filter((id) => id !== start),
+    parent.parent
+  );
+  return {
+    ...tree,
+    nodes,
+    computedState,
+    currentNode: branch,
+    currentLine: getMainLine({ ...tree, nodes }),
+  };
+}

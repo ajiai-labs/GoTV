@@ -13,10 +13,16 @@ import { computeGameNodeStates, getGameLine } from "../../model/game/tree";
 import {
   getBranchPoint,
   getColorToPlay,
+  getContinuations,
   getMainLine,
+  getNodeMove,
+  playVariationLine,
   playVariationMove,
+  removeVariation,
   returnToGame,
+  showContinuation,
 } from "../../model/ReplayVariation";
+import { formatPoint } from "../../model/KataGoEngine";
 import {
   addReplayBookmark,
   getSgfTextKey,
@@ -343,12 +349,14 @@ export default class SgfReplayView extends Component<Props, State> {
               getColorToPlay(tree, currentNode)
             )
           : null}
+        {this._renderContinuations(tree, currentNode)}
         {this.state.progressKey ? this._renderProgress(moveNum) : null}
         {this.props.compact ? null : (
           <KataGoPanel
             tree={tree}
             nodeId={currentNode}
             onMoves={this._onKataGoMoves}
+            onLayLine={this._onLayLine}
           />
         )}
         {comment ? (
@@ -365,14 +373,103 @@ export default class SgfReplayView extends Component<Props, State> {
     return (
       <div className="SgfReplay-variation">
         <span>
-          Eigene Variante ab Zug {fromMove} · {COLOR_LABEL[toPlay]} ist am Zug
+          Variante ab Zug {fromMove} · {COLOR_LABEL[toPlay]} ist am Zug
         </span>
         <Button small onClick={this._onReturnToGame}>
           Zurück zur Partie
         </Button>
+        <button
+          type="button"
+          className="SgfReplay-link SgfReplay-variation-remove"
+          onClick={this._onRemoveVariation}>
+          Variante löschen
+        </button>
       </div>
     );
   }
+
+  // Where the game and own variations part: switch between them.
+  _renderContinuations(tree: GameTree, nodeId: number) {
+    let continuations = getContinuations(tree, nodeId);
+    if (!continuations.length) {
+      return null;
+    }
+    let size = tree.computedState[nodeId]
+      ? tree.computedState[nodeId].board.length
+      : 19;
+    let shownNext = tree.currentLine[tree.currentLine.indexOf(nodeId) + 1];
+    return (
+      <div className="SgfReplay-continuations">
+        <span className="SgfReplay-continuations-title">Weiter mit:</span>
+        {continuations.map((continuation) => {
+          let move = getNodeMove(tree, continuation.nodeId);
+          let point = move ? formatPoint(move.x, move.y, size) : "Passen";
+          let label = continuation.isGame
+            ? "Partie " + point
+            : (continuation.comment &&
+              continuation.comment.indexOf("KataGo") === 0
+                ? "KataGo "
+                : "Variante ") + point;
+          return (
+            <button
+              type="button"
+              key={continuation.nodeId}
+              className={
+                "SgfReplay-continuation" +
+                (continuation.nodeId === shownNext
+                  ? " SgfReplay-continuation-shown"
+                  : "")
+              }
+              aria-pressed={continuation.nodeId === shownNext}
+              data-node={continuation.nodeId}
+              onClick={this._onShowContinuation}>
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  _onShowContinuation = (e: Object) => {
+    let { tree } = this.state;
+    if (!tree) {
+      return;
+    }
+    let next = showContinuation(tree, Number(e.currentTarget.dataset.node));
+    this.setState({ tree: next, currentNode: next.currentNode });
+    this._saveProgress(next, next.currentNode);
+  };
+
+  // KataGo's expected line as a variation, shown from its first move: the
+  // normal move buttons then step through it.
+  _onLayLine = (points: Array<{ x: number, y: number }>, comment: string) => {
+    let { tree, currentNode } = this.state;
+    if (!tree) {
+      return;
+    }
+    let laid = playVariationLine(tree, currentNode, points, comment);
+    if (laid) {
+      this.setState({ tree: laid.tree, currentNode: laid.firstNodeId });
+      this._saveProgress(laid.tree, laid.firstNodeId);
+    }
+  };
+
+  _onRemoveVariation = () => {
+    let { tree, currentNode } = this.state;
+    if (!tree) {
+      return;
+    }
+    let next = removeVariation(tree, currentNode);
+    if (!next.computedState[next.currentNode]) {
+      next.computedState = computeGameNodeStates(next, next.currentNode);
+    }
+    this.setState({
+      tree: next,
+      currentNode: next.currentNode,
+      kataGoMoves: null,
+    });
+  };
 
   _renderProgress(moveNum: number) {
     let { resumedFrom, bookmarks, bookmarkDraft } = this.state;

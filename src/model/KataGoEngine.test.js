@@ -1,4 +1,6 @@
 import {
+  getPvPoints,
+  parseGtpMove,
   compareGameMove,
   getGameNextMove,
   getKataGoPosition,
@@ -36,6 +38,25 @@ describe("KataGo position", () => {
     let position = getKataGoPosition(played.tree, played.nodeId);
     expect(position.moveHistory[1]).toEqual({ x: 4, y: 4, player: "white" });
     expect(getGameNextMove(played.tree, played.nodeId)).toBe(null);
+  });
+});
+
+describe("KataGo lines", () => {
+  it("reads GTP moves like the board labels", () => {
+    expect(parseGtpMove("Q16", 19)).toEqual({ x: 15, y: 3 });
+    expect(parseGtpMove("j1", 19)).toEqual({ x: 8, y: 18 });
+    expect(parseGtpMove("pass", 19)).toBe(null);
+    expect(parseGtpMove("T20", 19)).toBe(null);
+    expect(parseGtpMove("I5", 19)).toBe(null);
+  });
+
+  it("turns the expected line into points up to a pass", () => {
+    let move = { x: 15, y: 3, pv: ["Q16", "D4", "pass", "Q4"] };
+    expect(getPvPoints(move, 19)).toEqual([
+      { x: 15, y: 3 },
+      { x: 3, y: 15 },
+    ]);
+    expect(getPvPoints({ x: 2, y: 2, pv: [] }, 9)).toEqual([{ x: 2, y: 2 }]);
   });
 });
 

@@ -31,6 +31,7 @@ describe("KataGoPanel", () => {
             visits: 70,
             pointsLost: 0,
             order: 0,
+            pv: ["E5", "F4", "pass"],
           },
           {
             x: 6,
@@ -40,6 +41,7 @@ describe("KataGoPanel", () => {
             visits: 20,
             pointsLost: 1.2,
             order: 1,
+            pv: ["G3"],
           },
         ],
       })
@@ -68,9 +70,15 @@ describe("KataGoPanel", () => {
     let tree = parseSgf("(;GM[1]SZ[9];B[cc];W[gg])");
     let nodeId = getMainLine(tree)[1];
     let onMoves = jest.fn();
+    let onLayLine = jest.fn();
     act(() => {
       ReactDOM.render(
-        <KataGoPanel tree={tree} nodeId={nodeId} onMoves={onMoves} />,
+        <KataGoPanel
+          tree={tree}
+          nodeId={nodeId}
+          onMoves={onMoves}
+          onLayLine={onLayLine}
+        />,
         container
       );
     });
@@ -91,5 +99,15 @@ describe("KataGoPanel", () => {
     );
     expect(onMoves).toHaveBeenLastCalledWith(nodeId, expect.any(Array));
     expect(window.localStorage.getItem("gotv.katago")).toBe("1");
+    // KataGo's expected line becomes a variation.
+    expect(container.textContent).toContain("erwartet E5 F4 pass");
+    act(() => container.querySelector(".KataGoPanel-lay").click());
+    expect(onLayLine).toHaveBeenCalledWith(
+      [
+        { x: 4, y: 4 },
+        { x: 5, y: 5 },
+      ],
+      "KataGo-Variante: E5 · Schwarz 68 % · Weiß führt mit 2,4 Punkten"
+    );
   });
 });

@@ -1,5 +1,10 @@
 import { parseSgf } from "./sgf";
 import {
+  getContinuations,
+  getNodeMove,
+  playVariationLine,
+  removeVariation,
+  showContinuation,
   getBranchPoint,
   getColorToPlay,
   getMainLine,
@@ -66,5 +71,54 @@ describe("ReplayVariation", () => {
     let back = returnToGame(second.tree, second.nodeId);
     expect(back.currentNode).toBe(mainLine[1]);
     expect(back.currentLine).toEqual(mainLine);
+  });
+});
+
+describe("variation lines", () => {
+  it("lays a whole line and stops at a taken point", () => {
+    let tree = parseSgf(SGF);
+    let start = getMainLine(tree)[1];
+    let laid = playVariationLine(
+      tree,
+      start,
+      [
+        { x: 4, y: 4 },
+        { x: 5, y: 5 },
+        { x: 4, y: 4 }, // taken: the line ends before it
+      ],
+      "KataGo-Variante"
+    );
+    let first = laid.firstNodeId;
+    expect(laid.tree.currentNode).toBe(first);
+    expect(laid.tree.currentLine).toHaveLength(4); // root, B, own W, own B
+    expect(laid.tree.nodes[first].props).toContainEqual({
+      name: "COMMENT",
+      text: "KataGo-Variante",
+    });
+    expect(getContinuations(laid.tree, start)).toEqual([
+      { nodeId: getMainLine(tree)[2], isGame: true, comment: null },
+      { nodeId: first, isGame: false, comment: "KataGo-Variante" },
+    ]);
+    expect(getNodeMove(laid.tree, first)).toEqual({ x: 4, y: 4 });
+    expect(playVariationLine(tree, start, [{ x: 2, y: 6 }])).toBe(null);
+  });
+
+  it("switches between game and variation and removes the variation", () => {
+    let tree = parseSgf(SGF);
+    let mainLine = getMainLine(tree);
+    let laid = playVariationLine(tree, mainLine[1], [
+      { x: 4, y: 4 },
+      { x: 5, y: 5 },
+    ]);
+    let shown = showContinuation(laid.tree, mainLine[2]);
+    expect(shown.currentLine).toEqual(mainLine);
+    let deepest = laid.tree.currentLine[laid.tree.currentLine.length - 1];
+    let removed = removeVariation(laid.tree, deepest);
+    expect(removed.currentNode).toBe(mainLine[1]);
+    expect(removed.nodes[mainLine[1]].children).toEqual([mainLine[2]]);
+    expect(Object.keys(removed.nodes)).toHaveLength(
+      Object.keys(tree.nodes).length
+    );
+    expect(getContinuations(removed, mainLine[1])).toEqual([]);
   });
 });
