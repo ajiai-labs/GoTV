@@ -26,6 +26,9 @@ type Props = {
   hasManualOgsLink?: boolean,
   // An archived board that needs no KGS/OGS session.
   recordingUrl?: string,
+  // "Mein GoTV" star, passed to the card header.
+  favorite?: boolean,
+  onToggleFavorite?: (eventId: string) => any,
 };
 
 type State = {
@@ -724,6 +727,8 @@ export default class BroadcastCard extends Component<Props, State> {
           now={this.props.now}
           showVideo={!streamLoaded || videoVisible}
           videoLoaded={streamLoaded}
+          favorite={this.props.favorite}
+          onToggleFavorite={this.props.onToggleFavorite}
         />
         <div className="BroadcastCard-boards">
           {streamLoaded ? (

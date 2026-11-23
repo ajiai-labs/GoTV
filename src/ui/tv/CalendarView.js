@@ -19,6 +19,7 @@ type Props = {
   events?: ?Array<TvEvent>,
   onOpenReplay?: (string) => any,
   renderEvent?: (TvEvent, options?: { openGames: boolean }) => Node,
+  favoriteEventIds?: Array<string>,
 };
 
 type CalendarViewMode = "month" | "list";
@@ -216,6 +217,7 @@ export default class CalendarView extends Component<Props, State> {
             now={this.state.now}
             onOpenReplay={this.props.onOpenReplay}
             renderEvent={this.props.renderEvent}
+            favoriteEventIds={this.props.favoriteEventIds}
           />
         </div>
       );

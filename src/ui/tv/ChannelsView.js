@@ -14,6 +14,9 @@ type Props = {
   // Lets TvScreen show a channel as a full broadcast (with board) while a
   // calendar event uses it; otherwise a plain ChannelCard.
   renderChannel?: (TvChannel, onAir: boolean) => Node,
+  // Starred channel ids ("Mein GoTV"), in the order they were starred.
+  favoriteIds?: Array<string>,
+  onToggleFavorite?: (channelId: string) => any,
 };
 
 const GROUPS = [
@@ -22,8 +25,9 @@ const GROUPS = [
 ];
 
 // The "Kanäle" tab: internet channels, kept apart from the tournament
-// calendar. Players' channels first, then federations and tournaments; a
-// channel inside its fixed air time moves to the top of its group.
+// calendar. Starred channels ("Favoriten") on top, then players' channels,
+// then federations and tournaments; a channel inside its fixed air time
+// moves to the top of its group.
 export default class ChannelsView extends Component<Props> {
   _renderChannel(channel: TvChannel, now: Date) {
     let onAir = isChannelOnAir(channel, now);
@@ -32,7 +36,12 @@ export default class ChannelsView extends Component<Props> {
         {this.props.renderChannel ? (
           this.props.renderChannel(channel, onAir)
         ) : (
-          <ChannelCard channel={channel} onAir={onAir} />
+          <ChannelCard
+            channel={channel}
+            onAir={onAir}
+            favorite={(this.props.favoriteIds || []).includes(channel.id)}
+            onToggleFavorite={this.props.onToggleFavorite}
+          />
         )}
       </React.Fragment>
     );
@@ -64,9 +73,26 @@ export default class ChannelsView extends Component<Props> {
       );
     }
     let now = new Date(this.props.now);
-    let groups = groupChannels(channels, now);
+    let favoriteIds = this.props.favoriteIds || [];
+    let groups = groupChannels(
+      channels.filter((channel) => !favoriteIds.includes(channel.id)),
+      now
+    );
+    let starred = channels
+      .filter((channel) => favoriteIds.includes(channel.id))
+      .sort(
+        (a, b) =>
+          Number(isChannelOnAir(b, now)) - Number(isChannelOnAir(a, now)) ||
+          favoriteIds.indexOf(a.id) - favoriteIds.indexOf(b.id)
+      );
     return (
       <div className="ChannelsView">
+        {starred.length ? (
+          <div className="ChannelsView-group ChannelsView-favorites">
+            <div className="ChannelsView-group-title">★ Favoriten</div>
+            {starred.map((channel) => this._renderChannel(channel, now))}
+          </div>
+        ) : null}
         {GROUPS.map(({ key, title }) =>
           groups[key].length ? (
             <div className="ChannelsView-group" key={key}>

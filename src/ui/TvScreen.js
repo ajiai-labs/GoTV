@@ -8,6 +8,7 @@ import CalendarEventCard, {
 } from "./tv/CalendarEventCard";
 import ChannelCard from "./tv/ChannelCard";
 import ChannelsView from "./tv/ChannelsView";
+import MyGoTv from "./tv/MyGoTv";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
 import RecentReplays from "./tv/RecentReplays";
@@ -21,6 +22,21 @@ import {
   getBroadcastForStream,
 } from "../model/tv";
 import { getChannelsOnAir } from "../model/tvChannels";
+import {
+  loadFavorites,
+  saveFavorites,
+  toggleFavorite,
+  loadRemindersEnabled,
+  saveRemindersEnabled,
+  loadNotifiedKeys,
+  saveNotifiedKeys,
+} from "../model/TvFavorites";
+import type { FavoriteKind, TvFavorites } from "../model/TvFavorites";
+import {
+  getMyGoTvItems,
+  getDueReminders,
+  getReminderKey,
+} from "../model/MyGoTv";
 import { kgsTvSource } from "../model/TvSource";
 import type { TvEvent, TvBroadcast, TvChannel } from "../model/tv";
 import { applyOgsLinks, loadOgsLinks, saveOgsLinks } from "../model/OgsLinks";
@@ -61,7 +77,17 @@ type State = {
   // OGS boards the viewer assigned to events by hand (this browser only).
   ogsLinks: OgsLinks,
   now: number,
+  // "Mein GoTV" stars and reminders (this browser only).
+  favorites: TvFavorites,
+  remindersEnabled: boolean,
+  notificationPermission: ?string,
 };
+
+function getNotificationPermission(): ?string {
+  return typeof window.Notification === "function"
+    ? window.Notification.permission
+    : null;
+}
 
 export default class TvScreen extends Component<Props, State> {
   _refreshTimer: ?IntervalID;
@@ -76,6 +102,9 @@ export default class TvScreen extends Component<Props, State> {
     tvChannels: [],
     ogsLinks: loadOgsLinks(),
     now: Date.now(),
+    favorites: loadFavorites(),
+    remindersEnabled: loadRemindersEnabled(),
+    notificationPermission: getNotificationPermission(),
   };
 
   componentDidMount() {
@@ -85,6 +114,7 @@ export default class TvScreen extends Component<Props, State> {
     this._refreshTimer = setInterval(() => {
       this.setState({ now: Date.now() });
       this._loadEvents();
+      this._checkReminders();
     }, 60000);
   }
 
@@ -159,6 +189,77 @@ export default class TvScreen extends Component<Props, State> {
       });
   };
 
+  _onToggleFavorite = (kind: FavoriteKind, id: string) => {
+    let favorites = toggleFavorite(this.state.favorites, kind, id);
+    saveFavorites(favorites);
+    this.setState({ favorites });
+  };
+
+  _onToggleChannelFavorite = (id: string) =>
+    this._onToggleFavorite("channels", id);
+
+  _onToggleEventFavorite = (id: string) => this._onToggleFavorite("events", id);
+
+  _onToggleReminders = () => {
+    let enabled = !(
+      this.state.remindersEnabled &&
+      this.state.notificationPermission === "granted"
+    );
+    saveRemindersEnabled(enabled);
+    this.setState({ remindersEnabled: enabled });
+    if (enabled && this.state.notificationPermission === "default") {
+      Promise.resolve(window.Notification.requestPermission()).then(
+        (permission) => {
+          if (this._mounted) {
+            this.setState({ notificationPermission: permission });
+          }
+        }
+      );
+    }
+  };
+
+  // Browser notification shortly before a starred channel or tournament
+  // begins - only while GoTV is open (no server sends push messages).
+  _checkReminders = () => {
+    if (
+      !this.state.remindersEnabled ||
+      getNotificationPermission() !== "granted"
+    ) {
+      return;
+    }
+    let now = new Date();
+    let items = getMyGoTvItems(
+      this.state.favorites,
+      this.state.tvChannels,
+      this.state.tvEvents,
+      now
+    );
+    let notified = loadNotifiedKeys();
+    let due = getDueReminders(items, now, notified);
+    for (let item of due) {
+      let time = item.start
+        ? item.start.toLocaleTimeString("de-DE", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "";
+      try {
+        // eslint-disable-next-line no-new
+        new window.Notification("GoTV: " + item.name, {
+          body: item.planned
+            ? "Feste Sendezeit " + time + " Uhr (geplant)"
+            : "Beginnt um " + time + " Uhr",
+          tag: getReminderKey(item),
+        });
+      } catch (err) {
+        console.warn("[tv] Reminder could not be shown:", err);
+      }
+    }
+    if (due.length) {
+      saveNotifiedKeys([...notified, ...due.map(getReminderKey)]);
+    }
+  };
+
   _onAssignOgsLink = (eventId: string, gameId: ?number) => {
     let ogsLinks = { ...this.state.ogsLinks };
     if (gameId) {
@@ -190,6 +291,8 @@ export default class TvScreen extends Component<Props, State> {
         actions={actions}
         now={this.state.now}
         onAssignOgsLink={this._onAssignOgsLink}
+        favorite={this.state.favorites.events.includes(broadcast.event.id)}
+        onToggleFavorite={this._onToggleEventFavorite}
         hasManualOgsLink={!!this.state.ogsLinks[broadcast.event.id]}
         connectionKey={
           clientState ? clientState.status + "/" + clientState.network : ""
@@ -251,6 +354,17 @@ export default class TvScreen extends Component<Props, State> {
         label: "Live",
         content: (
           <div className="TvScreen-live">
+            <MyGoTv
+              favorites={this.state.favorites}
+              channels={this.state.tvChannels}
+              events={tvEvents}
+              now={this.state.now}
+              remindersEnabled={this.state.remindersEnabled}
+              notificationPermission={this.state.notificationPermission}
+              onToggleReminders={this._onToggleReminders}
+              onShowChannels={this._onShowChannelsTab}
+              onShowCalendar={this._onShowCalendarTab}
+            />
             {hasLive ? (
               <div className="TvScreen-live-content">
                 {broadcasts.map(this._renderBroadcast)}
@@ -299,6 +413,7 @@ export default class TvScreen extends Component<Props, State> {
         content: (
           <CalendarView
             events={this.props.events ? tvEvents : undefined}
+            favoriteEventIds={this.state.favorites.events}
             onOpenReplay={this._onOpenReplay}
             renderEvent={(event, options) => {
               let broadcast = kgsTvSource.getLiveBroadcasts(
@@ -315,6 +430,8 @@ export default class TvScreen extends Component<Props, State> {
                   onOpenReplay={this._onOpenReplay}
                   now={this.state.now}
                   openGames={!!options && options.openGames}
+                  favorite={this.state.favorites.events.includes(event.id)}
+                  onToggleFavorite={this._onToggleEventFavorite}
                 />
               );
             }}
@@ -330,6 +447,8 @@ export default class TvScreen extends Component<Props, State> {
             channels={this.state.tvChannels}
             now={this.state.now}
             onRetry={this._loadChannels}
+            favoriteIds={this.state.favorites.channels}
+            onToggleFavorite={this._onToggleChannelFavorite}
             renderChannel={(channel, onAir) => {
               // A calendar event running on this channel right now: show
               // it with its board instead of the bare channel.
@@ -343,7 +462,12 @@ export default class TvScreen extends Component<Props, State> {
               return broadcast ? (
                 this._renderBroadcast(broadcast)
               ) : (
-                <ChannelCard channel={channel} onAir={onAir} />
+                <ChannelCard
+                  channel={channel}
+                  onAir={onAir}
+                  favorite={this.state.favorites.channels.includes(channel.id)}
+                  onToggleFavorite={this._onToggleChannelFavorite}
+                />
               );
             }}
           />

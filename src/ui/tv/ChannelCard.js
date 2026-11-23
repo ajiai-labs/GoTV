@@ -1,6 +1,7 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import StreamEmbed from "./StreamEmbed";
+import FavoriteStar from "./FavoriteStar";
 import { formatChannelSchedule } from "../../model/tvChannels";
 import type { TvChannel } from "../../model/tv";
 
@@ -8,6 +9,9 @@ type Props = {
   channel: TvChannel,
   // One of the channel's fixed air times is running right now.
   onAir?: boolean,
+  // "Mein GoTV" star; without onToggleFavorite there is no star.
+  favorite?: boolean,
+  onToggleFavorite?: (channelId: string) => any,
 };
 
 const PLATFORM_LABEL = {
@@ -21,12 +25,21 @@ const PLATFORM_LABEL = {
 // always attempted.
 export default class ChannelCard extends Component<Props> {
   render() {
-    let { channel, onAir } = this.props;
+    let { channel, onAir, favorite, onToggleFavorite } = this.props;
     let schedule = formatChannelSchedule(channel);
     return (
       <div className={"ChannelCard" + (onAir ? " ChannelCard-on-air" : "")}>
         <div className="ChannelCard-header">
-          <div className="ChannelCard-name">{channel.name}</div>
+          <div className="ChannelCard-name">
+            {onToggleFavorite ? (
+              <FavoriteStar
+                active={!!favorite}
+                name={channel.name}
+                onToggle={() => onToggleFavorite(channel.id)}
+              />
+            ) : null}
+            {channel.name}
+          </div>
           <div
             className={
               "ChannelCard-badge ChannelCard-badge-" + channel.platform

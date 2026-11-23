@@ -190,3 +190,97 @@ export function getChannelsOnAir(
 ): Array<TvChannel> {
   return channels.filter((channel) => isChannelOnAir(channel, now));
 }
+
+// Offset of German time from UTC at the given instant, in minutes.
+function getGermanOffsetMinutes(at: number): number {
+  let parts = {};
+  for (let part of new Intl.DateTimeFormat("en-US", {
+    timeZone: CHANNEL_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(at))) {
+    parts[part.type] = part.value;
+  }
+  let asUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour) % 24,
+    Number(parts.minute)
+  );
+  return Math.round((asUtc - Math.floor(at / 60000) * 60000) / 60000);
+}
+
+// The instant of a wall-clock time in German time (year/month 0-based/day
+// may overflow, as with Date.UTC).
+function germanWallTime(
+  year: number,
+  month: number,
+  day: number,
+  minute: number
+): number {
+  let guess = Date.UTC(year, month, day, 0, minute);
+  let offset = getGermanOffsetMinutes(guess);
+  let at = guess - offset * 60000;
+  // Across a DST switch the offset at the result can differ: once more.
+  let corrected = getGermanOffsetMinutes(at);
+  return corrected === offset ? at : guess - corrected * 60000;
+}
+
+function getGermanDate(
+  now: Date
+): { year: number, month: number, day: number } {
+  let parts = {};
+  for (let part of new Intl.DateTimeFormat("en-US", {
+    timeZone: CHANNEL_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now)) {
+    parts[part.type] = part.value;
+  }
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month) - 1,
+    day: Number(parts.day),
+  };
+}
+
+// The air time running now, else the next one within a week; null for a
+// channel without fixed air times.
+export function getNextAirTime(
+  channel: TvChannel,
+  now: Date
+): ?{ start: Date, end: Date } {
+  let schedule = channel.schedule || [];
+  if (!schedule.length) {
+    return null;
+  }
+  let today = getGermanDate(now);
+  let best = null;
+  // From yesterday (a slot running past midnight) to a week ahead.
+  for (let offset = -1; offset <= 7; offset++) {
+    let date = new Date(Date.UTC(today.year, today.month, today.day + offset));
+    let weekday = date.getUTCDay() || 7;
+    for (let slot of schedule) {
+      if (slot.weekday !== weekday) {
+        continue;
+      }
+      let start = germanWallTime(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        toMinutes(slot.time)
+      );
+      let end = start + slot.duration_minutes * 60000;
+      if (end > now.getTime() && (!best || start < best.start)) {
+        best = { start, end };
+      }
+    }
+  }
+  return best ? { start: new Date(best.start), end: new Date(best.end) } : null;
+}

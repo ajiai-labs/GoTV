@@ -35,6 +35,10 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
   daily, and SGF replay move by move - including the finished OGS games of
   tournaments from the last three months.
+- **Mein GoTV:** star channels and tournaments (☆). Starred channels sit at
+  the top of the Kanäle tab; at the top of Live, "Mein GoTV" lists what is
+  on now and what comes next, with an optional browser reminder ten
+  minutes before (while GoTV is open). Stars stay in this browser.
 - **Kanäle:** internet channels of players (e.g. JuppTube) and of
   federations and tournaments, kept apart from the tournament calendar.
   A channel with fixed weekly air times shows them, is marked "läuft

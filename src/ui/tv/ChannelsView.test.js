@@ -74,6 +74,24 @@ describe("ChannelsView", () => {
     expect(texts(".ChannelCard-name")).toEqual(["Dojang", "JuppTube", "EGF"]);
   });
 
+  it("puts starred channels on top and toggles the star", () => {
+    let onToggleFavorite = jest.fn();
+    render({
+      now: new Date("2026-11-23T10:00:00Z").getTime(),
+      favoriteIds: ["EGF"],
+      onToggleFavorite,
+    });
+    expect(texts(".ChannelsView-group-title")).toEqual([
+      "★ Favoriten",
+      "Spieler",
+    ]);
+    expect(texts(".ChannelCard-name")[0]).toContain("EGF");
+    let star = container.querySelector(".FavoriteStar-active");
+    expect(star.getAttribute("aria-pressed")).toBe("true");
+    act(() => star.click());
+    expect(onToggleFavorite).toHaveBeenCalledWith("EGF");
+  });
+
   it("says so when the roster cannot be loaded", () => {
     let onRetry = jest.fn();
     render({ status: "error", channels: [], now: SUNDAY_MORNING, onRetry });

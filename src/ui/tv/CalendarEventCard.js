@@ -2,6 +2,7 @@
 import React, { PureComponent as Component } from "react";
 import StreamEmbed from "./StreamEmbed";
 import ReplayGameList from "./ReplayGameList";
+import FavoriteStar from "./FavoriteStar";
 import { formatLocaleDate, formatLocaleTime } from "../../util/date";
 import {
   getLiveWindow,
@@ -23,6 +24,9 @@ type Props = {
   videoLoaded?: boolean,
   // List the finished games right away (a day picked in the month sheet).
   openGames?: boolean,
+  // "Mein GoTV" star; without onToggleFavorite there is no star.
+  favorite?: boolean,
+  onToggleFavorite?: (eventId: string) => any,
 };
 
 function getBoardStatus(
@@ -103,6 +107,12 @@ export function formatEventDateRange(event: TvEvent): string {
 // shortcut when the event carries a recorded SGF. Used by both CalendarView
 // (Kalender tab) and TvScreen's Live tab (currently-live entries).
 export default class CalendarEventCard extends Component<Props> {
+  _onToggleFavorite = () => {
+    if (this.props.onToggleFavorite) {
+      this.props.onToggleFavorite(this.props.event.id);
+    }
+  };
+
   render() {
     let { event, onOpenReplay, boardCount, ogsBoardCount, now } = this.props;
     // Finished games can be replayed once the event has begun.
@@ -113,7 +123,16 @@ export default class CalendarEventCard extends Component<Props> {
     return (
       <div className="CalendarEvent">
         <div className="CalendarEvent-header">
-          <div className="CalendarEvent-name">{event.name}</div>
+          <div className="CalendarEvent-name">
+            {this.props.onToggleFavorite ? (
+              <FavoriteStar
+                active={!!this.props.favorite}
+                name={event.name}
+                onToggle={this._onToggleFavorite}
+              />
+            ) : null}
+            {event.name}
+          </div>
           {PLATFORM_LABEL[event.platform] ? (
             <div
               className={

@@ -18,6 +18,8 @@ type Props = {
   onOpenReplay?: (string) => any,
   // options.openGames: the card should list its finished games right away.
   renderEvent?: (TvEvent, options?: { openGames: boolean }) => Node,
+  // Starred tournaments ("Mein GoTV") get a "★" in front of their bar.
+  favoriteEventIds?: Array<string>,
 };
 
 type State = {
@@ -115,6 +117,9 @@ export default class CalendarMonth extends Component<Props, State> {
       }
       // The name shows where the bar begins: first day, or Monday.
       let showName = entry.isStart || isWeekStart;
+      let starred = (this.props.favoriteEventIds || []).includes(
+        entry.event.id
+      );
       slots.push(
         <div
           key={slot}
@@ -125,11 +130,13 @@ export default class CalendarMonth extends Component<Props, State> {
             (canReplay(entry.event, this.props.now)
               ? " CalendarMonth-bar-replay"
               : "") +
+            (starred ? " CalendarMonth-bar-favorite" : "") +
             (entry.isStart ? " CalendarMonth-bar-start" : "") +
             (entry.isEnd ? " CalendarMonth-bar-end" : "")
           }>
           {showName
-            ? (canReplay(entry.event, this.props.now) ? "▶ " : "") +
+            ? (starred ? "★ " : "") +
+              (canReplay(entry.event, this.props.now) ? "▶ " : "") +
               entry.event.name
             : "\u00a0"}
         </div>

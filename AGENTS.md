@@ -267,6 +267,16 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
   aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
   `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
+- "Mein GoTV" (`src/model/TvFavorites.js`, `src/model/MyGoTv.js`, `src/ui/tv/MyGoTv.js`,
+  `FavoriteStar.js`): Stern ☆/★ an Kanälen (ChannelCard) und Turnieren (CalendarEventCard,
+  damit auch BroadcastCard). Gespeichert nur im Browser (`gotv.favorites`
+  {channels, events}). Favoriten-Kanäle stehen im Kanäle-Tab ganz oben ("★ Favoriten"),
+  Favoriten-Turniere tragen im Monatsblatt "★". Oben unter Live listet "Mein GoTV" die
+  Favoriten: läuft gerade / nächster Termin (Kanal: nächste feste Sendezeit, "(geplant)";
+  Turnier: Kalendertermin), vorbei Turniere fallen weg. Erinnerung 10 Min. vor Beginn per
+  Browser-Notification (`gotv.reminders`, schon gemeldete in `gotv.notified`), geprüft im
+  60-s-Takt von TvScreen und nur solange GoTV offen ist; ganztägige Turniere ohne `start`
+  bekommen keine Erinnerung.
 - Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
   importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
   Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien

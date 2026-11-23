@@ -1223,3 +1223,115 @@ $cinema-bar-height: 44px;
   background: $content-bg;
   text-align: left;
 }
+
+.FavoriteStar {
+  margin-right: 6px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: $muted;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: -1px;
+
+  &:hover,
+  &:focus {
+    color: #d4a017;
+  }
+
+  &-active {
+    color: #d4a017;
+  }
+}
+
+.ChannelsView-favorites .ChannelsView-group-title {
+  color: #8a6a00;
+}
+
+.MyGoTv {
+  margin: 10px 0;
+  border: 1px solid $very-muted;
+  border-radius: 4px;
+  background: $off-white;
+  text-align: left;
+
+  &-empty {
+    padding: 8px 10px;
+    color: $semi-muted;
+    font-size: 13px;
+  }
+
+  &-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid $very-muted;
+  }
+
+  &-title {
+    font-weight: bold;
+    margin-right: 6px;
+  }
+
+  &-reminder,
+  &-reminder-note {
+    font-size: 12px;
+    color: $semi-muted;
+  }
+
+  &-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 1px solid $very-muted;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover,
+    &:focus {
+      background: #fff;
+    }
+
+    &-now {
+      border-left: 4px solid #c4302b;
+    }
+
+    &-star {
+      color: #d4a017;
+    }
+
+    &-name {
+      font-weight: bold;
+    }
+
+    &-kind {
+      font-size: 11px;
+      color: $muted;
+    }
+
+    &-when {
+      margin-left: auto;
+      font-size: 13px;
+      color: $semi-muted;
+    }
+  }
+}
+
+.CalendarMonth-bar-favorite {
+  font-weight: bold;
+}

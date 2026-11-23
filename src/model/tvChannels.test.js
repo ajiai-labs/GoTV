@@ -3,6 +3,7 @@ import {
   getChannelKind,
   getChannelsOnAir,
   getGermanClock,
+  getNextAirTime,
   groupChannels,
   isChannelOnAir,
   validateChannelSchedule,
@@ -166,5 +167,32 @@ describe("groupChannels", () => {
     expect(
       getChannelsOnAir([egf, dojang, jupp], now).map((c) => c.id)
     ).toEqual(["jupptube-youtube"]);
+  });
+});
+
+describe("getNextAirTime", () => {
+  let channel = validateTvChannel(SUNDAY_MORNING);
+
+  it("returns the running air time", () => {
+    let next = getNextAirTime(channel, new Date("2026-11-22T10:00:00Z"));
+    expect(next.start.toISOString()).toBe("2026-11-22T09:30:00.000Z");
+    expect(next.end.toISOString()).toBe("2026-11-22T12:00:00.000Z");
+  });
+
+  it("returns next week's air time once this one is over", () => {
+    let next = getNextAirTime(channel, new Date("2026-11-22T12:00:00Z"));
+    expect(next.start.toISOString()).toBe("2026-11-29T09:30:00.000Z");
+  });
+
+  it("follows German summer time", () => {
+    // Saturday 28.03.2026; summer time starts on Sunday 29.03.
+    let next = getNextAirTime(channel, new Date("2026-03-28T12:00:00Z"));
+    expect(next.start.toISOString()).toBe("2026-03-29T08:30:00.000Z");
+  });
+
+  it("has no air time without a schedule", () => {
+    expect(
+      getNextAirTime(validateTvChannel(BASE), new Date("2026-11-22T10:00:00Z"))
+    ).toBe(null);
   });
 });
