@@ -111,20 +111,22 @@ export default class StreamEmbed extends Component<Props, State> {
           </div>
           {this.props.channel ? (
             <div className="StreamEmbed-placeholder-hint">
-              Dauerhafter Sender-Link, kein geplanter Termin: sendet der Kanal
-              gerade nicht live, zeigt der Player „Gerade keine
-              Übertragung&rdquo;. Extern öffnen bleibt in jedem Fall verfügbar.
+              Sendet der Kanal gerade nicht live, zeigt der Player „Gerade keine
+              Übertragung&rdquo;.
             </div>
           ) : null}
           <div className="StreamEmbed-actions">
             <Button onClick={this._onLoad}>Stream laden</Button>
-            <a
-              className="Button Button-secondary"
-              href={info.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer">
-              Extern öffnen
-            </a>
+            {/* A channel card has its own "Auf YouTube/Twitch öffnen". */}
+            {this.props.channel ? null : (
+              <a
+                className="Button Button-secondary"
+                href={info.externalUrl}
+                target="_blank"
+                rel="noopener noreferrer">
+                Extern öffnen
+              </a>
+            )}
           </div>
         </div>
       );

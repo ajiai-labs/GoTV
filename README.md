@@ -48,6 +48,9 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   federations and tournaments, kept apart from the tournament calendar.
   A channel with fixed weekly air times shows them, is marked "läuft
   gerade (geplant)" while one runs, and is then also named under Live.
+  A week plan shows all fixed air times; each channel links straight to
+  its live page on YouTube/Twitch (chat, likes), and Twitch chats can be
+  opened inside GoTV.
 
 Streams are embedded only through the official players, and only after a
 click (two-click solution).

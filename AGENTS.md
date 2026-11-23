@@ -272,6 +272,15 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
   aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
   `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
+- Kanäle-Ausbau (23.11.2026): oben im Tab der Wochenplan (`ChannelWeek.js`, Mo-So, feste
+  Sendezeiten, heute markiert, laufende rot). Jede Kanalkarte hat "Auf YouTube/Twitch
+  öffnen (mit Chat)" (`getChannelLiveUrl`: YouTube `/channel/<UC>/live` führt zur laufenden
+  Sendung) - Like, Abo und Schreiben im Chat gibt es nur auf der Plattform selbst.
+  Chat in GoTV (`src/model/StreamChat.js`, `src/ui/tv/StreamChat.js`, Zwei-Klick):
+  Twitch per offiziellem Chat-Embed `twitch.tv/embed/<login>/chat?parent=<host>` an
+  Twitch-Kanälen und laufenden Twitch-Events; YouTube per `youtube.com/live_chat?v=<id>&
+  embed_domain=<host>` nur bei Events mit `video_id` - für einen YouTube-Kanal kennt
+  GoTV die Nummer der laufenden Sendung ohne YouTube-API nicht.
 - "Mein GoTV" (`src/model/TvFavorites.js`, `src/model/MyGoTv.js`, `src/ui/tv/MyGoTv.js`,
   `FavoriteStar.js`): Stern ☆/★ an Kanälen (ChannelCard) und Turnieren (CalendarEventCard,
   damit auch BroadcastCard). Gespeichert nur im Browser (`gotv.favorites`

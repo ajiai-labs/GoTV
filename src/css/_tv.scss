@@ -1335,3 +1335,89 @@ $cinema-bar-height: 44px;
 .CalendarMonth-bar-favorite {
   font-weight: bold;
 }
+
+.ChannelCard-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+
+  &-hint {
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+.StreamChat {
+  margin-top: 8px;
+
+  &-hint {
+    margin-left: 8px;
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &-frame {
+    display: block;
+    width: 100%;
+    height: 420px;
+    margin-top: 6px;
+    border: 1px solid $very-muted;
+  }
+}
+
+.ChannelWeek {
+  padding: 10px;
+  border-bottom: 1px solid $very-muted;
+
+  &-title {
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+
+  &-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &-day {
+    min-height: 54px;
+    padding: 4px 6px;
+    border: 1px solid $very-muted;
+    border-radius: 4px;
+    font-size: 12px;
+
+    &-today {
+      border-color: #d4a017;
+      background: #fffbea;
+    }
+
+    &-label {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+  }
+
+  &-entry {
+    overflow-wrap: anywhere;
+
+    &-now {
+      color: #c4302b;
+      font-weight: bold;
+    }
+
+    &-time {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &-empty {
+    color: $muted;
+  }
+}

@@ -3,6 +3,8 @@ import React, { PureComponent as Component } from "react";
 import StreamEmbed from "./StreamEmbed";
 import ReplayGameList from "./ReplayGameList";
 import FavoriteStar from "./FavoriteStar";
+import StreamChat from "./StreamChat";
+import { getEventChat } from "../../model/StreamChat";
 import { formatLocaleDate, formatLocaleTime } from "../../util/date";
 import {
   getLiveWindow,
@@ -113,6 +115,20 @@ export default class CalendarEventCard extends Component<Props> {
     }
   };
 
+  // The stream's own chat, once the event is running (or about to).
+  _renderChat() {
+    let { event, now } = this.props;
+    let chat = getEventChat(event, window.location.hostname);
+    if (!chat || !now) {
+      return null;
+    }
+    let liveWindow = getLiveWindow(event);
+    if (now < liveWindow.start.getTime() || now > liveWindow.end.getTime()) {
+      return null;
+    }
+    return <StreamChat chat={chat} title={event.name} />;
+  }
+
   render() {
     let { event, onOpenReplay, boardCount, ogsBoardCount, now } = this.props;
     // Finished games can be replayed once the event has begun.
@@ -169,6 +185,7 @@ export default class CalendarEventCard extends Component<Props> {
             loaded={this.props.videoLoaded}
           />
         )}
+        {this.props.showVideo === false ? null : this._renderChat()}
         {onOpenReplay && canReplayOgs ? (
           <div className="CalendarEvent-replay">
             <ReplayGameList

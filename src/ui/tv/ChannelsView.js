@@ -1,6 +1,7 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import ChannelCard from "./ChannelCard";
+import ChannelWeek from "./ChannelWeek";
 import { Spinner } from "../common";
 import { groupChannels, isChannelOnAir } from "../../model/tvChannels";
 import type { TvChannel } from "../../model/tv";
@@ -87,6 +88,11 @@ export default class ChannelsView extends Component<Props> {
       );
     return (
       <div className="ChannelsView">
+        <ChannelWeek
+          channels={channels}
+          now={this.props.now}
+          favoriteIds={favoriteIds}
+        />
         {starred.length ? (
           <div className="ChannelsView-group ChannelsView-favorites">
             <div className="ChannelsView-group-title">★ Favoriten</div>

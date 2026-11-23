@@ -32,6 +32,8 @@ const WEEKDAY_PLURAL = [
   "sonntags",
 ];
 
+const WEEKDAY_SHORT = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
 const SHORT_WEEKDAYS = {
   Mon: 1,
   Tue: 2,
@@ -283,4 +285,48 @@ export function getNextAirTime(
     }
   }
   return best ? { start: new Date(best.start), end: new Date(best.end) } : null;
+}
+
+// Where a viewer watches the channel with its own chat (and can like the
+// stream): YouTube's /live address leads to the running broadcast.
+export function getChannelLiveUrl(channel: TvChannel): string {
+  if (channel.platform === "youtube") {
+    return "https://www.youtube.com/channel/" + channel.channel_id + "/live";
+  }
+  return "https://www.twitch.tv/" + channel.channel_id;
+}
+
+export type WeekPlanEntry = {
+  channel: TvChannel,
+  time: string,
+  duration_minutes: number,
+};
+
+// The fixed air times of all channels as a week, Monday first, each day
+// sorted by time.
+export function getWeekPlan(
+  channels: Array<TvChannel>
+): Array<{ weekday: number, label: string, entries: Array<WeekPlanEntry> }> {
+  let days = WEEKDAY_SHORT.map((label, index) => ({
+    weekday: index + 1,
+    label,
+    entries: [],
+  }));
+  for (let channel of channels) {
+    for (let slot of channel.schedule || []) {
+      days[slot.weekday - 1].entries.push({
+        channel,
+        time: slot.time,
+        duration_minutes: slot.duration_minutes,
+      });
+    }
+  }
+  for (let day of days) {
+    day.entries.sort(
+      (a, b) =>
+        a.time.localeCompare(b.time) ||
+        a.channel.name.localeCompare(b.channel.name)
+    );
+  }
+  return days;
 }

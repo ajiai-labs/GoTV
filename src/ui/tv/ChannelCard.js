@@ -2,7 +2,12 @@
 import React, { PureComponent as Component } from "react";
 import StreamEmbed from "./StreamEmbed";
 import FavoriteStar from "./FavoriteStar";
-import { formatChannelSchedule } from "../../model/tvChannels";
+import StreamChat from "./StreamChat";
+import {
+  formatChannelSchedule,
+  getChannelLiveUrl,
+} from "../../model/tvChannels";
+import { getChannelChat } from "../../model/StreamChat";
 import type { TvChannel } from "../../model/tv";
 
 type Props = {
@@ -27,6 +32,7 @@ export default class ChannelCard extends Component<Props> {
   render() {
     let { channel, onAir, favorite, onToggleFavorite } = this.props;
     let schedule = formatChannelSchedule(channel);
+    let chat = getChannelChat(channel, window.location.hostname);
     return (
       <div className={"ChannelCard" + (onAir ? " ChannelCard-on-air" : "")}>
         <div className="ChannelCard-header">
@@ -59,6 +65,21 @@ export default class ChannelCard extends Component<Props> {
           <div className="ChannelCard-notes">{channel.notes}</div>
         ) : null}
         <StreamEmbed channel={channel} />
+        <div className="ChannelCard-links">
+          <a
+            className="Button Button-small ChannelCard-open"
+            href={getChannelLiveUrl(channel)}
+            target="_blank"
+            rel="noopener noreferrer">
+            Auf {PLATFORM_LABEL[channel.platform]} öffnen (mit Chat)
+          </a>
+          {channel.platform === "youtube" ? (
+            <span className="ChannelCard-links-hint">
+              Chat, Like und Abo gibt es direkt auf YouTube.
+            </span>
+          ) : null}
+        </div>
+        {chat ? <StreamChat chat={chat} title={channel.name} /> : null}
       </div>
     );
   }

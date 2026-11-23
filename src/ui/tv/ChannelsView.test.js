@@ -92,6 +92,38 @@ describe("ChannelsView", () => {
     expect(onToggleFavorite).toHaveBeenCalledWith("EGF");
   });
 
+  it("shows the week plan, links to the platform and offers the Twitch chat", () => {
+    render({
+      now: SUNDAY_MORNING,
+      channels: [
+        ...CHANNELS,
+        channel("egftwitch", {
+          platform: "twitch",
+          url: "https://www.twitch.tv/europeangofederation",
+          channel_id: "europeangofederation",
+        }),
+      ],
+    });
+    expect(texts(".ChannelWeek-day-label")).toHaveLength(7);
+    expect(texts(".ChannelWeek-entry-now")).toEqual(["10:30 JuppTube"]);
+    let links = Array.from(container.querySelectorAll(".ChannelCard-open"));
+    expect(links[0].getAttribute("href")).toBe(
+      "https://www.youtube.com/channel/UCJuppTube/live"
+    );
+    expect(links[0].textContent).toBe("Auf YouTube öffnen (mit Chat)");
+    expect(links[0].getAttribute("rel")).toBe("noopener noreferrer");
+    // Only the Twitch channel gets an embedded chat, and only after a click.
+    let toggles = container.querySelectorAll(".StreamChat-toggle");
+    expect(toggles).toHaveLength(1);
+    expect(container.querySelector(".StreamChat-frame")).toBe(null);
+    act(() => toggles[0].click());
+    expect(
+      container.querySelector(".StreamChat-frame").getAttribute("src")
+    ).toBe(
+      "https://www.twitch.tv/embed/europeangofederation/chat?parent=localhost"
+    );
+  });
+
   it("says so when the roster cannot be loaded", () => {
     let onRetry = jest.fn();
     render({ status: "error", channels: [], now: SUNDAY_MORNING, onRetry });
