@@ -227,7 +227,7 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
 - Kalender-Tab: `src/ui/tv/CalendarMonth.js` + `src/model/tvCalendar.js` — Monatsblatt
   (Montag zuerst, mehrtägige Turniere als durchgehender Balken, "Heute", Blättern,
   Klick auf einen Tag zeigt dessen Turnierkarten). `CalendarView` schaltet zwischen
-  "Monat" (Standard) und "Liste" (Regionen, Sender, Archiv) um, gemerkt in
+  "Monat" (Standard) und "Liste" (Regionen, Archiv) um, gemerkt in
   `gotv.calendarView`.
   Turniere mit Partien zum Nachspielen (begonnen + `ogs_*`/`sgf_url`) tragen im
   Monatsblatt ein "▶" vor dem Namen; ein Klick auf den Tag scrollt zu dessen Karten
@@ -255,6 +255,18 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Unter Live steht ein Turnier nach Ende seines Live-Fensters noch 24 Stunden als
   "Gerade zu Ende – Partien nachspielen" (Partien sofort aufgelistet), sonst wäre es
   ab Fensterende nur noch unten im Nachspielen-Tab zu finden.
+- Kanäle-Tab (`src/ui/tv/ChannelsView.js`, `src/model/tvChannels.js`, Wunsch 23.11.2026:
+  Kanäle sauber getrennt vom Turnierkalender): `channels[]` aus events.json, gruppiert in
+  "Spieler" (`kind: "player"`) und "Verbände und Turniere" (Standard). Optional
+  `schedule: [{weekday 1-7, time "HH:MM", duration_minutes}]` in deutscher Zeit
+  (Europe/Berlin, per `Intl` umgerechnet, Sommer-/Winterzeit egal): die Karte zeigt
+  "Feste Sendezeit: sonntags 10:30 Uhr", während der Zeit "läuft gerade (geplant)" und
+  steht oben in ihrer Gruppe; unter Live erscheint ein Hinweis "Jetzt auf den Kanälen
+  (geplant)" mit Sprung in den Tab. Ob wirklich gesendet wird, weiß die App ohne
+  YouTube-API nicht - daher "(geplant)". JuppTube (Franz-Josef Dickhut): sonntags 10:30,
+  150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
+  aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
+  `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
 - Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
   importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
   Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien

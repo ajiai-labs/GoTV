@@ -7,6 +7,7 @@ import CalendarEventCard, {
   formatEventDateRange,
 } from "./tv/CalendarEventCard";
 import ChannelCard from "./tv/ChannelCard";
+import ChannelsView from "./tv/ChannelsView";
 import StreamEmbed from "./tv/StreamEmbed";
 import SgfReplayView from "./tv/SgfReplayView";
 import RecentReplays from "./tv/RecentReplays";
@@ -14,11 +15,14 @@ import { A, TabNav } from "./common";
 import {
   getNextUpcomingEvent,
   fetchTvEvents,
+  fetchTvChannels,
   validateTvEvent,
+  validateTvChannel,
   getBroadcastForStream,
 } from "../model/tv";
+import { getChannelsOnAir } from "../model/tvChannels";
 import { kgsTvSource } from "../model/TvSource";
-import type { TvEvent, TvBroadcast } from "../model/tv";
+import type { TvEvent, TvBroadcast, TvChannel } from "../model/tv";
 import { applyOgsLinks, loadOgsLinks, saveOgsLinks } from "../model/OgsLinks";
 import type { OgsLinks } from "../model/OgsLinks";
 import type {
@@ -43,6 +47,8 @@ type Props = {
   // Optional injected calendar (dev harness/tests) - raw events.json
   // entries, validated here; skips the fetch (same as CalendarView).
   events?: Array<Object>,
+  // Same for the channel roster (events.json's "channels").
+  channels?: Array<Object>,
 };
 
 type State = {
@@ -50,6 +56,8 @@ type State = {
   replayUrl: ?string,
   tvEventsStatus: "loading" | "ready" | "error",
   tvEvents: Array<TvEvent>,
+  tvChannelsStatus: "loading" | "ready" | "error",
+  tvChannels: Array<TvChannel>,
   // OGS boards the viewer assigned to events by hand (this browser only).
   ogsLinks: OgsLinks,
   now: number,
@@ -64,6 +72,8 @@ export default class TvScreen extends Component<Props, State> {
     replayUrl: null,
     tvEventsStatus: "loading",
     tvEvents: [],
+    tvChannelsStatus: "loading",
+    tvChannels: [],
     ogsLinks: loadOgsLinks(),
     now: Date.now(),
   };
@@ -95,6 +105,7 @@ export default class TvScreen extends Component<Props, State> {
   }
 
   _loadEvents = () => {
+    this._loadChannels();
     if (this.props.events) {
       // Raw entries, validated like events.json (as in CalendarView).
       let tvEvents = [];
@@ -117,6 +128,33 @@ export default class TvScreen extends Component<Props, State> {
         console.warn("[tv] Failed to load live calendar events:", err);
         if (this._mounted && !this.state.tvEvents.length) {
           this.setState({ tvEventsStatus: "error" });
+        }
+      });
+  };
+
+  _loadChannels = () => {
+    if (this.props.channels || this.props.events) {
+      // Injected data (dev harness/tests): no network fetch.
+      let tvChannels = [];
+      for (let raw of this.props.channels || []) {
+        let channel = validateTvChannel(raw);
+        if (channel) {
+          tvChannels.push(channel);
+        }
+      }
+      this.setState({ tvChannelsStatus: "ready", tvChannels });
+      return;
+    }
+    fetchTvChannels()
+      .then((tvChannels) => {
+        if (this._mounted) {
+          this.setState({ tvChannelsStatus: "ready", tvChannels });
+        }
+      })
+      .catch((err) => {
+        console.warn("[tv] Failed to load channels:", err);
+        if (this._mounted && !this.state.tvChannels.length) {
+          this.setState({ tvChannelsStatus: "error" });
         }
       });
   };
@@ -160,6 +198,25 @@ export default class TvScreen extends Component<Props, State> {
     );
   };
 
+  // Channels inside a fixed air time, as a pointer to the Kanäle tab: they
+  // are no tournament broadcast, so Live itself stays for those.
+  _renderOnAirChannels(onAirChannels: Array<TvChannel>) {
+    if (!onAirChannels.length) {
+      return null;
+    }
+    return (
+      <div className="TvScreen-on-air">
+        <span className="TvScreen-on-air-text">
+          Jetzt auf den Kanälen (geplant):{" "}
+          <strong>{onAirChannels.map((c) => c.name).join(", ")}</strong>
+        </span>
+        <A button onClick={this._onShowChannelsTab}>
+          Zu den Kanälen
+        </A>
+      </div>
+    );
+  }
+
   render() {
     let {
       activeGames,
@@ -180,6 +237,7 @@ export default class TvScreen extends Component<Props, State> {
       now
     );
     let hasLive = broadcasts.length > 0;
+    let onAirChannels = getChannelsOnAir(this.state.tvChannels, now);
     let nextEvent = getNextUpcomingEvent(tvEvents, now);
     let replayGame = tvReplayGameId ? gamesById[tvReplayGameId] : null;
     let replayTree = replayGame ? replayGame.tree : null;
@@ -196,6 +254,7 @@ export default class TvScreen extends Component<Props, State> {
             {hasLive ? (
               <div className="TvScreen-live-content">
                 {broadcasts.map(this._renderBroadcast)}
+                {this._renderOnAirChannels(onAirChannels)}
                 <RecentReplays
                   events={tvEvents}
                   now={this.state.now}
@@ -208,6 +267,7 @@ export default class TvScreen extends Component<Props, State> {
                 <div className="TvScreen-live-empty-title">
                   Gerade keine Übertragung.
                 </div>
+                {this._renderOnAirChannels(onAirChannels)}
                 <RecentReplays
                   events={tvEvents}
                   now={this.state.now}
@@ -258,7 +318,21 @@ export default class TvScreen extends Component<Props, State> {
                 />
               );
             }}
-            renderChannel={(channel) => {
+          />
+        ),
+      },
+      {
+        id: "channels",
+        label: "Kanäle",
+        content: (
+          <ChannelsView
+            status={this.state.tvChannelsStatus}
+            channels={this.state.tvChannels}
+            now={this.state.now}
+            onRetry={this._loadChannels}
+            renderChannel={(channel, onAir) => {
+              // A calendar event running on this channel right now: show
+              // it with its board instead of the bare channel.
               let broadcast = broadcasts.find(
                 ({ event }) =>
                   event.stream_url === channel.url ||
@@ -269,7 +343,7 @@ export default class TvScreen extends Component<Props, State> {
               return broadcast ? (
                 this._renderBroadcast(broadcast)
               ) : (
-                <ChannelCard channel={channel} />
+                <ChannelCard channel={channel} onAir={onAir} />
               );
             }}
           />
@@ -344,6 +418,10 @@ export default class TvScreen extends Component<Props, State> {
 
   _onShowCalendarTab = () => {
     this.setState({ activeTabId: "calendar" });
+  };
+
+  _onShowChannelsTab = () => {
+    this.setState({ activeTabId: "channels" });
   };
 
   _setReplayRef = (ref: HTMLElement | null) => {

@@ -143,15 +143,17 @@ describe("CalendarMonth", () => {
   });
 
   it("opens the calendar as a month sheet and remembers a switch to the list", () => {
-    render(<CalendarView events={EVENTS} channels={[]} />);
+    render(<CalendarView events={EVENTS} />);
     expect(container.querySelector(".CalendarMonth")).not.toBe(null);
     act(() =>
       container.querySelector('.CalendarView-switch [data-view="list"]').click()
     );
     expect(container.querySelector(".CalendarMonth")).toBe(null);
-    expect(container.textContent).toContain("Sender");
+    expect(container.textContent).toContain("International");
+    // The channel roster lives in the Kanäle tab now, not in the calendar.
+    expect(container.textContent).not.toContain("Sender");
     ReactDOM.unmountComponentAtNode(container);
-    render(<CalendarView events={EVENTS} channels={[]} />);
+    render(<CalendarView events={EVENTS} />);
     expect(container.querySelector(".CalendarMonth")).toBe(null);
   });
 });

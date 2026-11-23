@@ -435,21 +435,24 @@
       "platform": "youtube",
       "url": "https://www.youtube.com/@BadukTV",
       "channel_id": "UCDDpGwSirMEje8H0fI7wM_A",
-      "notes": "Koreanische Profiturniere (LG Cup u. a.)"
+      "notes": "Koreanische Profiturniere (LG Cup u. a.)",
+      "kind": "organization"
     },
     {
       "id": "egf-youtube",
       "name": "European Go Federation",
       "platform": "youtube",
       "url": "https://www.youtube.com/@EuropeanGoFederation",
-      "channel_id": "UC5Y4xN0IWkZrmMp7bE0CtSw"
+      "channel_id": "UC5Y4xN0IWkZrmMp7bE0CtSw",
+      "kind": "organization"
     },
     {
       "id": "egf-twitch",
       "name": "European Go Federation (Twitch)",
       "platform": "twitch",
       "url": "https://www.twitch.tv/europeangofederation",
-      "channel_id": "europeangofederation"
+      "channel_id": "europeangofederation",
+      "kind": "organization"
     },
     {
       "id": "aga-youtube",
@@ -457,14 +460,16 @@
       "platform": "youtube",
       "url": "https://www.youtube.com/@USGOWeb",
       "channel_id": "UCR3qjXCiYEokW7bW3HkFzfg",
-      "notes": "US Go Congress (Masters, Girls Cup, Daily Recap), Partie-Reviews mit Michael Redmond 9p"
+      "notes": "US Go Congress (Masters, Girls Cup, Daily Recap), Partie-Reviews mit Michael Redmond 9p",
+      "kind": "organization"
     },
     {
       "id": "aga-twitch",
       "name": "American Go Association (Twitch)",
       "platform": "twitch",
       "url": "https://www.twitch.tv/usgoweb",
-      "channel_id": "usgoweb"
+      "channel_id": "usgoweb",
+      "kind": "organization"
     },
     {
       "id": "nihonkiin-youtube",
@@ -472,7 +477,8 @@
       "platform": "youtube",
       "url": "https://www.youtube.com/@nihonkiin_ch",
       "channel_id": "UCl4UWklKYTaUOZAhSJAprWQ",
-      "notes": "Offizielle japanische Profiturniere (Kisei, Honinbo, Oza u. a.), japanischer Kommentar"
+      "notes": "Offizielle japanische Profiturniere (Kisei, Honinbo, Oza u. a.), japanischer Kommentar",
+      "kind": "organization"
     },
     {
       "id": "jupptube-youtube",
@@ -480,7 +486,15 @@
       "platform": "youtube",
       "url": "https://www.youtube.com/@JuppTube",
       "channel_id": "UCtIzNu7cS3h9DqOckBXU5wg",
-      "notes": "Sonntags gegen 10:30 live: eigene Partien auf Fox, auf Deutsch kommentiert. Dazu Go-Bundesliga, deutsche Meisterschaften, Team-EM (DGoB-Nationalmannschaft)"
+      "notes": "Franz-Josef Dickhut: sonntags live eigene Partien auf Fox, auf Deutsch kommentiert. Dazu Go-Bundesliga, deutsche Meisterschaften, Team-EM (DGoB-Nationalmannschaft)",
+      "kind": "player",
+      "schedule": [
+        {
+          "weekday": 7,
+          "time": "10:30",
+          "duration_minutes": 150
+        }
+      ]
     },
     {
       "id": "yunguseng-dojang-youtube",
@@ -488,14 +502,16 @@
       "platform": "youtube",
       "url": "https://www.youtube.com/@YungusengDojang",
       "channel_id": "UCEpsC_-9indqRsOjYuFStBQ",
-      "notes": "Lehrkanal von In-seong Hwang 8d, Live-Partien-Kommentar auf Englisch (kein Turnierveranstalter)"
+      "notes": "Lehrkanal von In-seong Hwang 8d, Live-Partien-Kommentar auf Englisch (kein Turnierveranstalter)",
+      "kind": "player"
     },
     {
       "id": "yunguseng-dojang-twitch",
       "name": "Yunguseng Dojang (Twitch)",
       "platform": "twitch",
       "url": "https://www.twitch.tv/yungusengdojang",
-      "channel_id": "yungusengdojang"
+      "channel_id": "yungusengdojang",
+      "kind": "player"
     }
   ]
 }

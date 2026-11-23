@@ -2,6 +2,8 @@
 import { startOfDay, endOfDay } from "date-fns";
 import { normalizeUrl } from "../util/urls";
 import type { GameChannel, Room, Index } from "./types";
+import { validateChannelKind, validateChannelSchedule } from "./tvChannels";
+import type { ChannelKind, ChannelSlot } from "./tvChannels";
 
 // All games from the received game lists that are actually in progress:
 // not over and with both a black and a white player
@@ -318,7 +320,7 @@ export function getEventRegion(event: TvEvent): "de" | "intl" {
 // ---------------------------------------------------------------------------
 // TV channels: a standing roster of YouTube/Twitch channels, independent of
 // any specific event's dates (events.json's "channels" array). Shown in the
-// Kalender tab's always-visible "Sender" section - see ChannelCard.
+// "Kanäle" tab, apart from the tournament calendar - see ChannelsView.
 // ---------------------------------------------------------------------------
 
 export type TvChannel = {
@@ -328,6 +330,10 @@ export type TvChannel = {
   url: string,
   channel_id: string,
   notes?: string,
+  // "player": a player's own channel; otherwise a federation/tournament.
+  kind?: ChannelKind,
+  // Fixed weekly air times in German time - see tvChannels.js.
+  schedule?: Array<ChannelSlot>,
 };
 
 // Returns a valid TvChannel, or null if the entry is unusable (caller logs
@@ -358,6 +364,17 @@ export function validateTvChannel(value: Object): ?TvChannel {
   ) {
     return null;
   }
+  let kind = null;
+  if (value.kind !== undefined && value.kind !== null) {
+    kind = validateChannelKind(value.kind);
+    if (!kind) {
+      return null;
+    }
+  }
+  let schedule = validateChannelSchedule(value.schedule);
+  if (!schedule) {
+    return null;
+  }
   let channel: TvChannel = {
     id: value.id,
     name: value.name,
@@ -367,6 +384,12 @@ export function validateTvChannel(value: Object): ?TvChannel {
   };
   if (value.notes) {
     channel.notes = value.notes;
+  }
+  if (kind) {
+    channel.kind = kind;
+  }
+  if (schedule.length) {
+    channel.schedule = schedule;
   }
   return channel;
 }
@@ -384,6 +407,9 @@ const EVENTS_CACHE_MS = 60 * 60 * 1000; // 1 hour
 type TvData = { events: Array<TvEvent>, channels: Array<TvChannel> };
 
 let _tvDataCache: ?{ data: TvData, fetchedAt: number } = null;
+// Events and channels are asked for at the same moment (TvScreen loads
+// both): they share one request instead of fetching the file twice.
+let _tvDataPending: ?Promise<TvData> = null;
 
 // An imported entry (e.g. the daily Twitch schedule import) that describes
 // the same broadcast as a hand-maintained entry - same start time on the
@@ -465,7 +491,12 @@ function fetchTvData(): Promise<TvData> {
   if (_tvDataCache && Date.now() - _tvDataCache.fetchedAt < cacheMs) {
     return Promise.resolve(_tvDataCache.data);
   }
-  return fetchAndValidateTvData(desktop ? LOCAL_EVENTS_URL : REMOTE_EVENTS_URL)
+  if (_tvDataPending) {
+    return _tvDataPending;
+  }
+  let pending = fetchAndValidateTvData(
+    desktop ? LOCAL_EVENTS_URL : REMOTE_EVENTS_URL
+  )
     .catch((err) => {
       console.log(
         "[tv] Primary events.json unavailable, trying fallback:",
@@ -475,10 +506,19 @@ function fetchTvData(): Promise<TvData> {
         desktop ? REMOTE_EVENTS_URL : LOCAL_EVENTS_URL
       );
     })
-    .then((data) => {
-      _tvDataCache = { data, fetchedAt: Date.now() };
-      return data;
-    });
+    .then(
+      (data) => {
+        _tvDataCache = { data, fetchedAt: Date.now() };
+        _tvDataPending = null;
+        return data;
+      },
+      (err) => {
+        _tvDataPending = null;
+        throw err;
+      }
+    );
+  _tvDataPending = pending;
+  return pending;
 }
 
 export function fetchTvEvents(): Promise<Array<TvEvent>> {
@@ -495,6 +535,7 @@ export function fetchTvChannels(): Promise<Array<TvChannel>> {
 // tests (and between e.g. repeated dev-harness reloads in the same tab).
 export function _resetTvEventsCache() {
   _tvDataCache = null;
+  _tvDataPending = null;
 }
 
 // Extract a YouTube video id from a watch/share/embed/live/shorts URL.

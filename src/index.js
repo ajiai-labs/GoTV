@@ -6,6 +6,7 @@ import TvScreen from "./ui/TvScreen";
 import CalendarView from "./ui/tv/CalendarView";
 import StreamEmbed from "./ui/tv/StreamEmbed";
 import SgfReplayView from "./ui/tv/SgfReplayView";
+import { getGermanClock } from "./model/tvChannels";
 import ChatMessages from "./ui/chat/ChatMessages";
 import { isTouchDevice } from "./util/dom";
 import { parseSgf } from "./model/sgf";
@@ -236,9 +237,31 @@ if (
   ];
 
   // Standing channel roster (independent of any event date, unlike the
-  // events above) - shown in the Kalender tab's always-visible "Sender"
-  // section.
+  // events above) - shown in the Kanäle tab. The player channel's air time
+  // starts 10 minutes ago, so "läuft gerade (geplant)" and the Live hint
+  // show up whenever the harness is opened.
+  const devClock = getGermanClock(new Date());
+  const devAirMinute = Math.max(0, devClock.minute - 10);
   const DEV_SYNTHETIC_CHANNELS = [
+    {
+      id: "dev-channel-player",
+      name: "Dev-Test: Spielerkanal",
+      platform: "youtube",
+      kind: "player",
+      url: "https://www.youtube.com/@examplechannel",
+      channel_id: "UCdevExampleChannelId000",
+      schedule: [
+        {
+          weekday: devClock.weekday,
+          time:
+            String(Math.floor(devAirMinute / 60)).padStart(2, "0") +
+            ":" +
+            String(devAirMinute % 60).padStart(2, "0"),
+          duration_minutes: 60,
+        },
+      ],
+      notes: "Synthetischer Spielerkanal mit fester Sendezeit.",
+    },
     {
       id: "dev-channel-youtube",
       name: "Dev-Test: YouTube-Sender",
@@ -366,16 +389,16 @@ if (
               actions={this._actions}
               tvStreamUrl={tvStreamUrl}
               events={DEV_SYNTHETIC_EVENTS}
+              channels={DEV_SYNTHETIC_CHANNELS}
             />
           </div>
           <div style={DEV_HARNESS_SECTION_STYLE}>
             <div style={DEV_HARNESS_TITLE_STYLE}>
               2. Kalender-Gruppen (synthetische Events:
-              heute/demnächst/vergangen) + Sender-Liste
+              heute/demnächst/vergangen)
             </div>
             <CalendarView
               events={DEV_SYNTHETIC_EVENTS}
-              channels={DEV_SYNTHETIC_CHANNELS}
               onOpenReplay={this._onOpenReplay}
             />
           </div>

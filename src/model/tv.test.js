@@ -1225,6 +1225,12 @@ describe("fetchTvChannels", () => {
     expect(channels.map((c) => c.id)).toEqual(["baduk-tv"]);
   });
 
+  it("shares one request when events and channels are asked for together", async () => {
+    global.fetch = jest.fn(() => okResponse({ events: [], channels: [] }));
+    await Promise.all([fetchTvEvents(), fetchTvChannels()]);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("defaults to an empty list when the file has no channels field", async () => {
     global.fetch = jest.fn(() => okResponse({ events: [] }));
     let channels = await fetchTvChannels();

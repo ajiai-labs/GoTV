@@ -1,0 +1,93 @@
+import React from "react";
+import ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
+import ChannelsView from "./ChannelsView";
+import { validateTvChannel } from "../../model/tv";
+
+// Sunday 22.11.2026, 11:00 German time.
+const SUNDAY_MORNING = new Date("2026-11-22T10:00:00Z").getTime();
+
+function channel(id, extra = {}) {
+  return validateTvChannel({
+    id,
+    name: id,
+    platform: "youtube",
+    url: "https://www.youtube.com/@" + id,
+    channel_id: "UC" + id,
+    ...extra,
+  });
+}
+
+const CHANNELS = [
+  channel("EGF"),
+  channel("Dojang", { kind: "player" }),
+  channel("JuppTube", {
+    kind: "player",
+    schedule: [{ weekday: 7, time: "10:30", duration_minutes: 150 }],
+  }),
+];
+
+describe("ChannelsView", () => {
+  let container;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(container);
+    container.remove();
+  });
+
+  function render(props) {
+    act(() => {
+      ReactDOM.render(
+        <ChannelsView status="ready" channels={CHANNELS} {...props} />,
+        container
+      );
+    });
+  }
+
+  function texts(selector) {
+    return Array.from(container.querySelectorAll(selector)).map(
+      (node) => node.textContent
+    );
+  }
+
+  it("lists players apart from federations, the one on air first", () => {
+    render({ now: SUNDAY_MORNING });
+    expect(texts(".ChannelsView-group-title")).toEqual([
+      "Spieler",
+      "Verbände und Turniere",
+    ]);
+    expect(texts(".ChannelCard-name")).toEqual(["JuppTube", "Dojang", "EGF"]);
+    expect(texts(".ChannelCard-live")).toEqual(["läuft gerade (geplant)"]);
+    expect(texts(".ChannelCard-schedule")[0]).toContain(
+      "Feste Sendezeit: sonntags 10:30 Uhr (deutsche Zeit)"
+    );
+  });
+
+  it("shows the air time without the live mark outside of it", () => {
+    render({ now: new Date("2026-11-23T10:00:00Z").getTime() });
+    expect(texts(".ChannelCard-live")).toEqual([]);
+    expect(texts(".ChannelCard-name")).toEqual(["Dojang", "JuppTube", "EGF"]);
+  });
+
+  it("says so when the roster cannot be loaded", () => {
+    let onRetry = jest.fn();
+    render({ status: "error", channels: [], now: SUNDAY_MORNING, onRetry });
+    expect(container.textContent).toContain(
+      "Kanäle konnten nicht geladen werden"
+    );
+    act(() => {
+      container.querySelector("button").click();
+    });
+    expect(onRetry).toHaveBeenCalled();
+  });
+
+  it("names an empty roster", () => {
+    render({ channels: [], now: SUNDAY_MORNING });
+    expect(container.textContent).toContain("Keine Kanäle eingetragen.");
+  });
+});

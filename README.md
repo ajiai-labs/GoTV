@@ -35,6 +35,10 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
   daily, and SGF replay move by move - including the finished OGS games of
   tournaments from the last three months.
+- **Kanäle:** internet channels of players (e.g. JuppTube) and of
+  federations and tournaments, kept apart from the tournament calendar.
+  A channel with fixed weekly air times shows them, is marked "läuft
+  gerade (geplant)" while one runs, and is then also named under Live.
 
 Streams are embedded only through the official players, and only after a
 click (two-click solution).
@@ -45,7 +49,7 @@ click (two-click solution).
 
 <img src="./docs/screenshots/tv-live.png" width="700">
 
-**Kalender** — upcoming and recent tournaments grouped by region, plus a standing channel roster:
+**Kalender** — upcoming and recent tournaments as a month sheet or grouped by region:
 
 <img src="./docs/screenshots/tv-kalender.png" width="700">
 
@@ -230,23 +234,26 @@ Past events are shown for 14 days after they end, then dropped from the
 calendar - unless they have a `video_id` or `sgf_url`, in which case they
 move to an "Archiv" section instead of disappearing.
 
-### Sender eintragen
+### Kanäle eintragen
 
 Alongside the date-bound events above, `public/tv/events.json` has a
 second, standing list: `channels`. A channel has no event date - it
-always shows up in the Kalender tab's "Sender" section (above
-"Archiv"), not just while something specific is scheduled.
+always shows up in the "Kanäle" tab, apart from the tournament calendar:
+players' channels under "Spieler", the rest under "Verbände und
+Turniere".
 
 Each entry:
 
 | Field | Required | Description |
 |---|---|---|
 | `id` | yes | Stable, unique string (used as the React key). |
-| `name` | yes | Channel name shown in the "Sender" section. |
+| `name` | yes | Channel name shown in the Kanäle tab. |
 | `platform` | yes | `"youtube"` or `"twitch"` (no `"other"` - both need a known, official embed shape). |
 | `url` | yes | The channel's page; used for "Extern öffnen" and as the starting point to find a YouTube `channel_id` (see below). |
 | `channel_id` | yes | YouTube: the `UC...` channel id, *not* the `@handle`. Twitch: the channel login (the last path segment of its URL). |
 | `notes` | no | Short free-text shown under the name. |
+| `kind` | no | `"player"` for a player's own channel; `"organization"` (the default) for federations and tournaments. |
+| `schedule` | no | Fixed weekly air times in German time (Europe/Berlin): a list of `{"weekday": 1-7 (1 = Monday, 7 = Sunday), "time": "HH:MM", "duration_minutes": 120}`; `duration_minutes` defaults to 120. While one runs, the card says "läuft gerade (geplant)" and Live names the channel. |
 
 Example entry:
 
@@ -257,7 +264,9 @@ Example entry:
   "platform": "youtube",
   "url": "https://www.youtube.com/@ExampleGoChannel",
   "channel_id": "UCxxxxxxxxxxxxxxxxxxxxxx",
-  "notes": "Example only - replace with a real channel."
+  "notes": "Example only - replace with a real channel.",
+  "kind": "player",
+  "schedule": [{ "weekday": 7, "time": "10:30", "duration_minutes": 150 }]
 }
 ```
 
@@ -267,14 +276,15 @@ the channel page, view its page source (`Strg`+`U` in the browser, or
 it is the channel id. A Twitch `channel_id` needs no lookup: it's
 just the channel's login, the last segment of `twitch.tv/<login>`.
 
-Each Sender entry always tries to embed the channel's current live
+Each channel entry always tries to embed the channel's current live
 stream (`youtube-nocookie.com/embed/live_stream?channel=...` /
 `player.twitch.tv/?channel=...` - the same official embeds Events use
 for their `channel` field). There is no way to know in advance,
 without an API key, whether a channel is actually broadcasting right
 now; if it isn't, the official player itself shows its own "offline"
 state once loaded ("Gerade keine Übertragung"), and "Extern öffnen"
-stays available either way.
+stays available either way. A `schedule` is therefore a plan, not a
+live check - hence "(geplant)".
 
 ## Code Overview
 
