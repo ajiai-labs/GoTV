@@ -18,7 +18,9 @@ fi
 if command -v yarn > /dev/null 2>&1; then
   :
 else
-  echo "yarn fehlt. Setup siehe AGENTS.md (corepack + Shim)."
+  echo "yarn fehlt. Mit Node.js 18 oder neuer: 'corepack enable' (oder 'npm install -g yarn')."
+  echo "Nicht 'sudo apt install cmdtest' - das schlägt Ubuntu vor, ist aber ein anderes Programm."
+  echo "Details: README.md, Abschnitt 'Quick start'."
   exit 1
 fi
 if command -v curl > /dev/null 2>&1; then

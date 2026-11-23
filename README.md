@@ -36,8 +36,10 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 - **Watch without a KGS login:** "Go TV ohne Anmeldung ansehen" on the
   login screen, or open `/tv` directly.
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
-  daily, and SGF replay move by move - including the finished OGS games of
-  tournaments from the last three months.
+  daily (DGoB, EGF Grand Prix, the EGF Twitch schedule and the Speed Go
+  Championship bracket, whose OGS games are linked automatically), and SGF
+  replay move by move - including the finished OGS games of tournaments
+  from the last three months.
 - **In any browser, also on a tablet:** https://diebugger-tech.github.io/GoTV/
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
@@ -144,7 +146,12 @@ Prerequisites:
 
 <img src="./desktop/icons/png/gotv-64.png" width="48" align="right" alt="GoTV icon">
 
-```
+You need Node.js 18 or newer, Python 3 and yarn. Get yarn with
+`corepack enable` (part of Node.js) or `npm install -g yarn`. **Do not**
+install the `cmdtest` package that Ubuntu suggests when `yarn` is
+missing - it is a different program with the same command name.
+
+```bash
 git clone https://github.com/diebugger-tech/GoTV.git
 cd GoTV
 yarn install
