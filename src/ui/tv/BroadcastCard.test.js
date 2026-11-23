@@ -149,7 +149,7 @@ describe("BroadcastCard live status", () => {
       actions,
     });
     act(() => container.querySelector(".StreamEmbed-actions button").click());
-    act(() => container.querySelectorAll(".GameList-item")[1].click());
+    act(() => container.querySelectorAll(".BoardPreview")[1].click());
     expect(releases[0]).toHaveBeenCalledTimes(1);
     expect(actions.onObserveTvGame.mock.calls).toEqual([[42], [43]]);
     expect(onJoinGame).not.toHaveBeenCalled();
@@ -708,12 +708,12 @@ describe("BroadcastCard live status", () => {
     act(() => container.querySelector(".StreamEmbed-actions button").click());
     expect(observe).toHaveBeenCalledWith(123, expect.any(Function));
     expect(container.querySelector(".TvGamePanel")).toBe(null);
-    act(() => container.querySelectorAll(".GameList-item")[1].click());
+    act(() => container.querySelectorAll(".BoardPreview")[1].click());
     expect(container.querySelector(".TvGamePanel")).not.toBe(null);
     expect(container.textContent).toContain("OGS-Partiechat");
     expect(
       Array.from(
-        container.querySelectorAll(".GameList-item .TvSourceBadge")
+        container.querySelectorAll(".BoardPreview .TvSourceBadge")
       ).map((badge) => badge.textContent)
     ).toEqual(["KGS", "OGS"]);
     expect(

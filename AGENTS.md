@@ -272,6 +272,12 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
   aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
   `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
+- Turnierübersicht mit Brettvorschau (`src/ui/tv/BoardPreviewGrid.js`, 23.11.2026): ab zwei
+  Brettern einer Übertragung Kacheln statt der Textliste - kleines SVG-Brett (Stellung am
+  `activeNode`, also der letzte Zug), Spieler mit Rang, Zugnummer, KGS/OGS; Klick holt die
+  Partie groß neben den Stream (`_onSelectBoard`). Die Kacheln bekommen dieselben
+  verzögerten Schnappschüsse wie das große Brett; beendete Partien zeigen "beendet" ohne
+  Ergebnis. KGS-Listeneinträge ohne Züge: "Brett nach Klick".
 - KataGo im Browser (23.11.2026, `src/model/KataGoEngine.js`, `src/ui/tv/KataGoPanel.js`):
   Engine von Web KaTrain (MIT, github.com/Sir-Teo/web-katrain, Commit a6a67d6) als
   fertiger Web Worker in `public/katago/` (katago-worker.js 2,7 MB mit TensorFlow.js

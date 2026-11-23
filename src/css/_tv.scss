@@ -1608,3 +1608,87 @@ $cinema-bar-height: 44px;
     background: #eef6fb;
   }
 }
+
+.BoardPreview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.BoardPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid $very-muted;
+  border-radius: 4px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    border-color: $muted;
+  }
+
+  &-selected {
+    border: 2px solid #2a7ab0;
+    padding: 5px;
+  }
+
+  &-board {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  &-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2bf6e;
+    color: #5a4520;
+  }
+
+  &-wood {
+    fill: #e2bf6e;
+  }
+
+  &-lines line {
+    stroke: #8a6d33;
+    stroke-width: 0.05;
+  }
+
+  &-star {
+    fill: #8a6d33;
+  }
+
+  &-stone-black {
+    fill: #222;
+  }
+
+  &-stone-white {
+    fill: #fafafa;
+    stroke: #666;
+    stroke-width: 0.05;
+  }
+
+  &-players {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-player {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &-meta {
+    color: $semi-muted;
+  }
+}

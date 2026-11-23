@@ -26,6 +26,8 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 - **Follows a match by itself:** name the OGS players of an event, or paste
   one OGS game link at the card ("OGS-Partielink zuordnen") - after each
   game the next game of the same players appears automatically.
+- **Several boards at once:** a team match shows small live boards with
+  players, ranks and move number; a click brings one up next to the stream.
 - **Kinomodus:** stream and board fill the window side by side, with an
   adjustable split and a collapsible chat.
 - **Brett-Verzögerung:** delay the boards by 0-120 s (slider or ±5 s

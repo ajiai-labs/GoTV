@@ -1,6 +1,7 @@
 // @flow
 import React, { PureComponent as Component } from "react";
 import GameList from "../game/GameList";
+import BoardPreviewGrid from "./BoardPreviewGrid";
 import CalendarEventCard from "./CalendarEventCard";
 import TvGamePanel from "./TvGamePanel";
 import SgfReplayView from "./SgfReplayView";
@@ -788,7 +789,14 @@ export default class BroadcastCard extends Component<Props, State> {
             </div>
           ) : null}
           {this._renderOgsStatus(games)}
-          {games.length ? (
+          {games.length > 1 ? (
+            <BoardPreviewGrid
+              games={games}
+              selectedKey={selectedGame ? getGameKey(selectedGame) : null}
+              getKey={getGameKey}
+              onSelect={this._onSelectBoard}
+            />
+          ) : games.length ? (
             <GameList
               games={games}
               roomsById={roomsById}
