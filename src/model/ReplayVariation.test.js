@@ -1,6 +1,8 @@
 import { parseSgf } from "./sgf";
 import {
   getContinuations,
+  getVariationEntries,
+  applyVariationEntries,
   getMoveError,
   getNodeMove,
   playVariationLine,
@@ -154,5 +156,47 @@ describe("rules for own moves", () => {
     expect(getMoveError(tree, getMainLine(tree)[1], { x: 2, y: 6 })).toBe(
       "occupied"
     );
+  });
+});
+
+describe("stored variations", () => {
+  it("lays saved variations again in the same shape", () => {
+    let tree = parseSgf(SGF);
+    let line = getMainLine(tree);
+    let first = playVariationLine(
+      tree,
+      line[1],
+      [
+        { x: 4, y: 4 },
+        { x: 5, y: 5 },
+      ],
+      "KataGo-Variante: E5"
+    );
+    // A second variation at the same point, and one inside the first.
+    let second = playVariationMove(first.tree, line[1], { x: 1, y: 1 });
+    let inner = playVariationMove(second.tree, first.firstNodeId, {
+      x: 7,
+      y: 7,
+    });
+    let entries = getVariationEntries(inner.tree);
+    expect(entries).toEqual([
+      { path: [0], x: 4, y: 4, comment: "KataGo-Variante: E5" },
+      { path: [0, 1], x: 5, y: 5 },
+      { path: [0, 1], x: 7, y: 7 },
+      { path: [0], x: 1, y: 1 },
+    ]);
+    let restored = applyVariationEntries(parseSgf(SGF), entries);
+    expect(getVariationEntries(restored)).toEqual(entries);
+    expect(restored.currentNode).toBe(tree.currentNode);
+    expect(getMainLine(restored)).toEqual(line);
+  });
+
+  it("skips entries that do not fit the game", () => {
+    let tree = parseSgf(SGF);
+    let restored = applyVariationEntries(tree, [
+      { path: [0, 5, 5], x: 1, y: 1 },
+      { path: [0], x: 2, y: 6 }, // taken point
+    ]);
+    expect(getVariationEntries(restored)).toEqual([]);
   });
 });

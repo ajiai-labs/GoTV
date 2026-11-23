@@ -138,6 +138,57 @@ describe("SgfReplayView", () => {
     expect(container.querySelector(".SgfReplay-move-notice")).toBe(null);
   });
 
+  it("keeps variations for next time and saves the game as SGF", async () => {
+    window.localStorage.clear();
+    let sgf = "(;SZ[9]PB[a]PW[b];B[aa];W[bb];B[cc])";
+    let view;
+    let render = () =>
+      act(() => {
+        ReactDOM.render(
+          <SgfReplayView
+            ref={(ref) => {
+              view = ref;
+            }}
+            initialTree={parseSgf(sgf)}
+            replayKey="kgs-7"
+          />,
+          container
+        );
+      });
+    render();
+    act(() => container.querySelector(".BoardNav-next").click());
+    act(() => view._onClickPoint(null, { x: 4, y: 4 }, null));
+    ReactDOM.unmountComponentAtNode(container);
+    render();
+    // Reopened at the game's move 1, where the variation leaves the game.
+    let labels = Array.from(
+      container.querySelectorAll(".SgfReplay-continuation")
+    ).map((button) => button.textContent);
+    expect(labels).toEqual(["Partie B8", "Variante E5"]);
+
+    let saved;
+    global.URL.createObjectURL = jest.fn((blob) => {
+      saved = blob;
+      return "blob:sgf";
+    });
+    global.URL.revokeObjectURL = jest.fn();
+    let click = jest
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    act(() => container.querySelector(".SgfReplay-export").click());
+    expect(click).toHaveBeenCalled();
+    let text = await new Promise((resolve) => {
+      let reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsText(saved);
+    });
+    expect(text).toBe(
+      "(;FF[4]GM[1]CA[UTF-8]SZ[9]PB[a]PW[b];B[aa](;W[bb];B[cc])(;W[ee]))\n"
+    );
+    click.mockRestore();
+    window.localStorage.clear();
+  });
+
   it("continues where the viewer stopped and keeps bookmarks", () => {
     window.localStorage.clear();
     let sgf = "(;SZ[9]PB[a]PW[b];B[aa];W[bb];B[cc])";

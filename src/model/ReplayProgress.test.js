@@ -5,6 +5,7 @@ import {
   getSgfTextKey,
   loadReplayProgress,
   removeReplayBookmark,
+  saveReplayVariations,
   saveReplayMove,
 } from "./ReplayProgress";
 
@@ -45,6 +46,23 @@ describe("ReplayProgress", () => {
     let recent = getRecentReplays(3);
     expect(recent.map((entry) => entry.key)).toEqual(["g31", "g30", "g29"]);
     expect(loadReplayProgress("g0")).toBe(null);
+  });
+
+  it("keeps variations with the game and drops broken entries", () => {
+    saveReplayMove("g", 30, "Partie", "https://x/g", 1);
+    saveReplayVariations("g", [
+      { path: [0], x: 4, y: 4, comment: "KataGo-Variante: E5" },
+      { path: [0, 1], x: 5, y: 5 },
+    ]);
+    expect(loadReplayProgress("g").variations).toEqual([
+      { path: [0], x: 4, y: 4, comment: "KataGo-Variante: E5" },
+      { path: [0, 1], x: 5, y: 5 },
+    ]);
+    expect(loadReplayProgress("g").move).toBe(30);
+    let raw = JSON.parse(window.localStorage.getItem("gotv.replays"));
+    raw.g.variations.push({ path: ["x"], x: 1, y: 1 }, { x: 2 });
+    window.localStorage.setItem("gotv.replays", JSON.stringify(raw));
+    expect(loadReplayProgress("g").variations).toHaveLength(2);
   });
 
   it("names pasted SGF text by a stable key", () => {

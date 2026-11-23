@@ -353,3 +353,114 @@ export function removeVariation(tree: GameTree, nodeId: number): GameTree {
     currentLine: getMainLine({ ...tree, nodes }),
   };
 }
+
+// A stored variation move: the path of child indexes from the root to its
+// parent, the point, and a comment if it carries one ("KataGo-Variante").
+export type VariationEntry = {
+  path: Array<number>,
+  x: number,
+  y: number,
+  comment?: string,
+};
+
+// All own and KataGo variation moves, parents before children and
+// siblings in their order, so they can be laid again the same way.
+export function getVariationEntries(tree: GameTree): Array<VariationEntry> {
+  let mainLine = getMainLine(tree);
+  let entries = [];
+  let stack: Array<{ nodeId: number, path: Array<number> }> = [
+    { nodeId: tree.rootNode, path: [] },
+  ];
+  while (stack.length) {
+    let { nodeId, path } = stack.pop();
+    let children = tree.nodes[nodeId].children;
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push({ nodeId: children[index], path: [...path, index] });
+    }
+    if (mainLine.includes(nodeId)) {
+      continue;
+    }
+    let move = getNodeMove(tree, nodeId);
+    if (!move) {
+      continue;
+    }
+    let commentProp: any = tree.nodes[nodeId].props.find(
+      (prop) => prop.name === "COMMENT"
+    );
+    let entry: VariationEntry = {
+      path: path.slice(0, -1),
+      x: move.x,
+      y: move.y,
+    };
+    if (commentProp && typeof commentProp.text === "string") {
+      entry.comment = commentProp.text;
+    }
+    entries.push(entry);
+  }
+  return entries;
+}
+
+function findByPath(tree: GameTree, path: Array<number>): ?number {
+  let nodeId = tree.rootNode;
+  for (let index of path) {
+    let child = tree.nodes[nodeId].children[index];
+    if (typeof child !== "number") {
+      return null;
+    }
+    nodeId = child;
+  }
+  return nodeId;
+}
+
+function setComment(tree: GameTree, nodeId: number, text: string): GameTree {
+  let node = tree.nodes[nodeId];
+  if (node.props.some((prop) => prop.name === "COMMENT")) {
+    return tree;
+  }
+  return {
+    ...tree,
+    nodes: {
+      ...tree.nodes,
+      [nodeId]: new GameNode(
+        [...node.props, { name: "COMMENT", text }],
+        node.children,
+        node.parent
+      ),
+    },
+  };
+}
+
+// Lays stored variations again; entries that no longer fit are skipped.
+// The view stays where it was (current node and line).
+export function applyVariationEntries(
+  tree: GameTree,
+  entries: Array<VariationEntry>
+): GameTree {
+  let current = tree;
+  for (let entry of entries) {
+    let parentId = findByPath(current, entry.path);
+    if (typeof parentId !== "number") {
+      continue;
+    }
+    let played = playVariationMove(current, parentId, {
+      x: entry.x,
+      y: entry.y,
+    });
+    if (!played) {
+      continue;
+    }
+    current = played.tree;
+    if (entry.comment) {
+      current = setComment(current, played.nodeId, entry.comment);
+    }
+  }
+  return {
+    ...current,
+    currentNode: tree.currentNode,
+    currentLine: tree.currentLine,
+    computedState: {
+      ...current.computedState,
+      ...tree.computedState,
+    },
+  };
+}

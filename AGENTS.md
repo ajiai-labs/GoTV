@@ -313,6 +313,12 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   (Schlüssel `url:<url>`, `game:kgs-<id>`, eingefügtes SGF per Text-Hash), beim Öffnen
   "Weiter bei Zug N" mit "Von vorn"; Lesezeichen mit Notiz (max. 200 Zeichen) pro Zug.
   "Zuletzt nachgespielt" (`RecentlyReplayed.js`) im Nachspielen-Tab öffnet Partien mit URL.
+  Varianten (eigene und KataGo) bleiben gespeichert: `getVariationEntries` legt jeden
+  Variantenzug als {Pfad der Kindindizes zum Elternknoten, x, y, Kommentar} ab
+  (`variations` in `gotv.replays`, max. 400 Züge), `applyVariationEntries` legt sie beim
+  Öffnen in derselben Reihenfolge wieder. "Als SGF speichern" (`src/model/SgfWriter.js`)
+  schreibt Partie, Varianten und Kommentare als SGF-Datei (Download, UTF-8); bei Dateien
+  bleiben deren Wurzelangaben, KGS-Partien bekommen SZ/KM/HA/RU aus RULES.
   Kompakte Bretter (Kinobeispiel, Aufzeichnung) merken nichts.
 - Kanäle-Ausbau (23.11.2026): oben im Tab der Wochenplan (`ChannelWeek.js`, Mo-So, feste
   Sendezeiten, heute markiert, laufende rot). Jede Kanalkarte hat "Auf YouTube/Twitch

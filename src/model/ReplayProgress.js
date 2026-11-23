@@ -1,7 +1,9 @@
 // @flow
 // "Nachspielen fortsetzen": where the viewer stopped in each replayed game,
-// plus personal bookmarks ("Hier verstehe ich den Kampf nicht"). Kept in
-// this browser only (localStorage), for the most recent games.
+// personal bookmarks ("Hier verstehe ich den Kampf nicht") and the own and
+// KataGo variations. Kept in this browser only (localStorage), for the most
+// recent games.
+import type { VariationEntry } from "./ReplayVariation";
 
 export type ReplayBookmark = { move: number, note: string };
 
@@ -13,11 +15,14 @@ export type ReplayProgress = {
   url?: string,
   updatedAt: number,
   bookmarks: Array<ReplayBookmark>,
+  variations?: Array<VariationEntry>,
 };
 
 const STORAGE_KEY = "gotv.replays";
 export const MAX_REMEMBERED_GAMES = 30;
 export const MAX_NOTE_LENGTH = 200;
+// Variation moves kept per game (localStorage holds only a few MB).
+export const MAX_VARIATION_MOVES = 400;
 
 type Store = { [key: string]: ReplayProgress };
 
@@ -47,6 +52,34 @@ function readBookmarks(value: mixed): Array<ReplayBookmark> {
   return bookmarks;
 }
 
+// value is parsed JSON, checked field by field.
+function readVariations(value: any): Array<VariationEntry> {
+  let entries = [];
+  if (Array.isArray(value)) {
+    for (let raw of value) {
+      if (
+        raw &&
+        typeof raw === "object" &&
+        Array.isArray(raw.path) &&
+        raw.path.every((index) => Number.isInteger(index) && index >= 0) &&
+        Number.isInteger(raw.x) &&
+        Number.isInteger(raw.y)
+      ) {
+        let entry: VariationEntry = {
+          path: raw.path.map(Number),
+          x: raw.x,
+          y: raw.y,
+        };
+        if (typeof raw.comment === "string") {
+          entry.comment = raw.comment;
+        }
+        entries.push(entry);
+      }
+    }
+  }
+  return entries;
+}
+
 function readStore(): Store {
   try {
     let data = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
@@ -57,13 +90,19 @@ function readStore(): Store {
     for (let key of Object.keys(data)) {
       let raw = data[key];
       if (raw && typeof raw === "object" && typeof raw.move === "number") {
-        store[key] = {
+        let progress: ReplayProgress = {
           move: raw.move,
           title: typeof raw.title === "string" ? raw.title : "",
           updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : 0,
           bookmarks: readBookmarks(raw.bookmarks),
-          ...(typeof raw.url === "string" ? { url: raw.url } : {}),
         };
+        if (typeof raw.url === "string") {
+          progress.url = raw.url;
+        }
+        if (Array.isArray(raw.variations)) {
+          progress.variations = readVariations(raw.variations);
+        }
+        store[key] = progress;
       }
     }
     return store;
@@ -126,6 +165,21 @@ export function addReplayBookmark(
   store[key] = { ...old, bookmarks, updatedAt: now };
   writeStore(store);
   return bookmarks;
+}
+
+export function saveReplayVariations(
+  key: string,
+  variations: Array<VariationEntry>,
+  now: number = Date.now()
+) {
+  let store = readStore();
+  let old = store[key] || { move: 0, title: "", updatedAt: now, bookmarks: [] };
+  store[key] = {
+    ...old,
+    variations: variations.slice(0, MAX_VARIATION_MOVES),
+    updatedAt: now,
+  };
+  writeStore(store);
 }
 
 export function removeReplayBookmark(

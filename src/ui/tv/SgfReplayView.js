@@ -16,6 +16,8 @@ import {
   getContinuations,
   getMainLine,
   getMoveError,
+  getVariationEntries,
+  applyVariationEntries,
   getNodeMove,
   playVariationLine,
   playVariationMove,
@@ -30,7 +32,9 @@ import {
   loadReplayProgress,
   removeReplayBookmark,
   saveReplayMove,
+  saveReplayVariations,
 } from "../../model/ReplayProgress";
+import { getSgfFileName, writeSgf } from "../../model/SgfWriter";
 import type { ReplayBookmark } from "../../model/ReplayProgress";
 import KataGoPanel from "./KataGoPanel";
 import type { KataGoMove } from "../../model/KataGoEngine";
@@ -168,6 +172,10 @@ export default class SgfReplayView extends Component<Props, State> {
   // Opens a parsed game, at the move where the viewer stopped last time.
   _showTree(tree: GameTree, key: ?string, url: ?string) {
     let progress = key && !this.props.compact ? loadReplayProgress(key) : null;
+    if (progress && progress.variations && progress.variations.length) {
+      // Own and KataGo variations from last time.
+      tree = applyVariationEntries(tree, progress.variations);
+    }
     let mainLine = getMainLine(tree);
     let resumeMove =
       progress && progress.move > 0 && progress.move < mainLine.length
@@ -468,6 +476,7 @@ export default class SgfReplayView extends Component<Props, State> {
     if (laid) {
       this.setState({ tree: laid.tree, currentNode: laid.firstNodeId });
       this._saveProgress(laid.tree, laid.firstNodeId);
+      this._saveVariations(laid.tree);
     }
   };
 
@@ -485,6 +494,7 @@ export default class SgfReplayView extends Component<Props, State> {
       currentNode: next.currentNode,
       kataGoMoves: null,
     });
+    this._saveVariations(next);
   };
 
   _renderProgress(moveNum: number) {
@@ -528,6 +538,12 @@ export default class SgfReplayView extends Component<Props, State> {
             ))}
           </div>
         ) : null}
+        <button
+          type="button"
+          className="Button Button-small Button-secondary SgfReplay-export"
+          onClick={this._onExportSgf}>
+          Als SGF speichern
+        </button>{" "}
         {bookmarkDraft === null ? (
           <button
             type="button"
@@ -564,6 +580,30 @@ export default class SgfReplayView extends Component<Props, State> {
     );
   }
 
+  // The game with all variations and comments as a file to keep or to open
+  // in another Go program.
+  _onExportSgf = () => {
+    let { tree } = this.state;
+    if (!tree) {
+      return;
+    }
+    let blob = new Blob([writeSgf(tree)], { type: "application/x-go-sgf" });
+    let url = URL.createObjectURL(blob);
+    let link = document.createElement("a");
+    link.href = url;
+    link.download = getSgfFileName(tree);
+    document.body && document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  _saveVariations(tree: GameTree) {
+    if (this.state.progressKey) {
+      saveReplayVariations(this.state.progressKey, getVariationEntries(tree));
+    }
+  }
+
   _onKataGoMoves = (nodeId: number, moves: ?Array<KataGoMove>) => {
     this.setState({ kataGoMoves: moves ? { nodeId, moves } : null });
   };
@@ -582,6 +622,7 @@ export default class SgfReplayView extends Component<Props, State> {
         moveNotice: null,
       });
       this._saveProgress(played.tree, played.nodeId);
+      this._saveVariations(played.tree);
     } else {
       let error = getMoveError(tree, currentNode, loc);
       this.setState({ moveNotice: error ? MOVE_NOTICE[error] : null });
