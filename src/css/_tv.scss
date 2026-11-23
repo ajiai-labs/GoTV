@@ -1537,3 +1537,74 @@ $cinema-bar-height: 44px;
     color: $semi-muted;
   }
 }
+
+.KataGoPanel {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid $very-muted;
+  border-radius: 4px;
+  font-size: 13px;
+
+  &-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  &-options {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  &-model-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  // The native file field stays usable (keyboard, screen readers) but
+  // invisible inside its button.
+  &-model-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &-hint,
+  &-meta,
+  &-running {
+    color: $muted;
+  }
+
+  &-running,
+  &-error,
+  &-body {
+    margin-top: 6px;
+  }
+
+  &-error {
+    color: #b00020;
+  }
+
+  &-summary {
+    font-weight: bold;
+
+    .KataGoPanel-meta {
+      font-weight: normal;
+    }
+  }
+
+  &-moves {
+    margin: 6px 0;
+    padding-left: 22px;
+  }
+
+  &-compare {
+    padding: 6px 8px;
+    border-left: 4px solid #2a7ab0;
+    background: #eef6fb;
+  }
+}

@@ -84,6 +84,7 @@ CONTENT_TYPES = {
     ".eot": "application/vnd.ms-fontobject",
     ".txt": "text/plain; charset=utf-8",
     ".sgf": "application/x-go-sgf",
+    ".wasm": "application/wasm",
     ".xml": "application/xml",
 }
 

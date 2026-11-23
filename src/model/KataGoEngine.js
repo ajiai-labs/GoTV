@@ -1,0 +1,273 @@
+// @flow
+// KataGo analysis in the browser: the KataGo engine of Web KaTrain (MIT),
+// bundled as a Web Worker in public/katago/ (see tools/katago-worker/).
+// It runs on WebGPU where the browser has it, else WASM or plain JS - on
+// any graphics card, also on a tablet, without a server. Values come back
+// from black's point of view.
+import { getMainLine, getColorToPlay } from "./ReplayVariation";
+import { getGameLine } from "./game/tree";
+import type { GameTree, PlayerColor } from "./types";
+
+export const KATAGO_BASE_URL = (process.env.PUBLIC_URL || "") + "/katago/";
+export const DEFAULT_MODEL_URL = KATAGO_BASE_URL + "models/katago-small.bin.gz";
+export const DEFAULT_VISITS = 100;
+export const TOP_MOVES = 5;
+// The worker stops after 0.8 s unless told otherwise; the chosen visits
+// should be reached, up to this limit (slow devices without WebGPU).
+export const MAX_ANALYSIS_MS = 30000;
+
+export type KataGoMove = {
+  x: number,
+  y: number,
+  winRate: number,
+  scoreLead: number,
+  visits: number,
+  pointsLost: number,
+  order: number,
+};
+
+export type KataGoAnalysis = {
+  winRate: number, // black's chance to win, 0..1
+  scoreLead: number, // black's lead in points
+  visits: number,
+  moves: Array<KataGoMove>,
+  toPlay: PlayerColor,
+  backend: ?string,
+};
+
+type Position = {
+  board: Array<Array<?PlayerColor>>,
+  currentPlayer: PlayerColor,
+  moveHistory: Array<{ x: number, y: number, player: PlayerColor }>,
+  komi: number,
+  rules: string,
+};
+
+const RULES = {
+  japanese: "japanese",
+  chinese: "chinese",
+  aga: "aga",
+  new_zealand: "new-zealand",
+};
+
+// The position at nodeId as the worker expects it.
+export function getKataGoPosition(tree: GameTree, nodeId: number): Position {
+  let rulesProp: any = tree.nodes[tree.rootNode].props.find(
+    (prop) => prop.name === "RULES"
+  );
+  let komi =
+    rulesProp && typeof rulesProp.komi === "number" ? rulesProp.komi : 6.5;
+  let rules =
+    (rulesProp && RULES[String(rulesProp.rules)]) ||
+    (komi > 7 ? "chinese" : "japanese");
+  let line = getGameLine(tree, nodeId);
+  let moveHistory = [];
+  for (let id of line.slice(0, line.indexOf(nodeId) + 1)) {
+    for (let prop of tree.nodes[id].props) {
+      if (
+        prop.name === "MOVE" &&
+        (prop.color === "black" || prop.color === "white")
+      ) {
+        let loc = prop.loc;
+        moveHistory.push(
+          loc && loc !== "PASS"
+            ? { x: loc.x, y: loc.y, player: prop.color }
+            : { x: -1, y: -1, player: prop.color }
+        );
+      }
+    }
+  }
+  return {
+    board: tree.computedState[nodeId].board,
+    currentPlayer: getColorToPlay(tree, nodeId),
+    moveHistory,
+    komi,
+    rules,
+  };
+}
+
+export function toAnalysis(
+  payload: Object,
+  toPlay: PlayerColor,
+  backend: ?string
+): KataGoAnalysis {
+  let moves = (payload.moves || [])
+    .filter((move) => move.x >= 0 && move.y >= 0)
+    .slice(0, TOP_MOVES)
+    .map((move) => ({
+      x: move.x,
+      y: move.y,
+      winRate: move.winRate,
+      scoreLead: move.scoreLead,
+      visits: move.visits,
+      pointsLost: move.pointsLost,
+      order: move.order,
+    }));
+  return {
+    winRate: payload.rootWinRate,
+    scoreLead: payload.rootScoreLead,
+    visits: payload.rootVisits,
+    moves,
+    toPlay,
+    backend: backend || null,
+  };
+}
+
+// The game's next move after nodeId on the main line, if any.
+export function getGameNextMove(
+  tree: GameTree,
+  nodeId: number
+): ?{ x: number, y: number, color: PlayerColor } {
+  let mainLine = getMainLine(tree);
+  let index = mainLine.indexOf(nodeId);
+  if (index < 0 || index + 1 >= mainLine.length) {
+    return null;
+  }
+  let move: any = tree.nodes[mainLine[index + 1]].props.find(
+    (prop) => prop.name === "MOVE"
+  );
+  if (!move || !move.loc || move.loc === "PASS") {
+    return null;
+  }
+  return { x: move.loc.x, y: move.loc.y, color: move.color };
+}
+
+// "Was wäre hier besser gewesen?": how the game's move compares with
+// KataGo's best one. null when the game move is KataGo's first choice.
+export function compareGameMove(
+  analysis: KataGoAnalysis,
+  gameMove: ?{ x: number, y: number }
+): ?{ best: KataGoMove, played: ?KataGoMove } {
+  if (!gameMove || !analysis.moves.length) {
+    return null;
+  }
+  let best = analysis.moves[0];
+  if (best.x === gameMove.x && best.y === gameMove.y) {
+    return null;
+  }
+  let played = analysis.moves.find(
+    (move) => move.x === gameMove.x && move.y === gameMove.y
+  );
+  return { best, played: played || null };
+}
+
+type Pending = {
+  resolve: (KataGoAnalysis) => any,
+  reject: (Error) => any,
+  toPlay: PlayerColor,
+};
+
+// One worker per page, created on first use (nothing loads before the
+// viewer switches the analysis on).
+export class KataGoEngine {
+  _worker: ?Worker = null;
+  _nextId: number = 1;
+  _pending: { [id: number]: Pending } = {};
+  _modelUrl: string = DEFAULT_MODEL_URL;
+  backend: ?string = null;
+
+  setModelUrl(url: string) {
+    this._modelUrl = url;
+  }
+
+  getModelUrl(): string {
+    return this._modelUrl;
+  }
+
+  _getWorker(): Worker {
+    if (!this._worker) {
+      let worker = new Worker(KATAGO_BASE_URL + "katago-worker.js");
+      worker.onmessage = this._onMessage;
+      worker.onerror = (e: Object) => {
+        this._failAll(new Error(e.message || "KataGo konnte nicht starten"));
+      };
+      this._worker = worker;
+    }
+    return this._worker;
+  }
+
+  _failAll(err: Error) {
+    for (let id of Object.keys(this._pending)) {
+      this._pending[Number(id)].reject(err);
+    }
+    this._pending = {};
+  }
+
+  _onMessage = (ev: Object) => {
+    let msg = ev.data || {};
+    if (msg.type !== "katago:analyze_result") {
+      return; // progress updates and backend notices are not shown
+    }
+    let pending = this._pending[msg.id];
+    if (!pending) {
+      return;
+    }
+    delete this._pending[msg.id];
+    if (msg.backend) {
+      this.backend = msg.backend;
+    }
+    if (msg.ok && msg.analysis) {
+      pending.resolve(toAnalysis(msg.analysis, pending.toPlay, msg.backend));
+    } else {
+      pending.reject(
+        new Error(
+          msg.canceled ? "canceled" : msg.error || "Analyse fehlgeschlagen"
+        )
+      );
+    }
+  };
+
+  // Analyses one position; a newer request cancels the older one.
+  analyze(
+    tree: GameTree,
+    nodeId: number,
+    visits: number = DEFAULT_VISITS
+  ): Promise<KataGoAnalysis> {
+    let worker = this._getWorker();
+    let position = getKataGoPosition(tree, nodeId);
+    this.cancel();
+    let id = this._nextId++;
+    return new Promise((resolve, reject) => {
+      this._pending[id] = { resolve, reject, toPlay: position.currentPlayer };
+      worker.postMessage({
+        type: "katago:analyze",
+        id,
+        analysisGroup: "interactive",
+        modelUrl: new URL(this._modelUrl, window.location.href).href,
+        backend: "webgpu",
+        board: position.board,
+        currentPlayer: position.currentPlayer,
+        moveHistory: position.moveHistory,
+        komi: position.komi,
+        rules: position.rules,
+        topK: TOP_MOVES,
+        visits,
+        maxTimeMs: MAX_ANALYSIS_MS,
+      });
+    });
+  }
+
+  cancel() {
+    let worker = this._worker;
+    for (let id of Object.keys(this._pending)) {
+      if (worker) {
+        worker.postMessage({
+          type: "katago:cancel",
+          id: Number(id),
+          analysisGroup: "interactive",
+        });
+      }
+      this._pending[Number(id)].reject(new Error("canceled"));
+    }
+    this._pending = {};
+  }
+}
+
+let sharedEngine: ?KataGoEngine = null;
+
+export function getKataGoEngine(): KataGoEngine {
+  if (!sharedEngine) {
+    sharedEngine = new KataGoEngine();
+  }
+  return sharedEngine;
+}

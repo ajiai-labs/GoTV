@@ -40,6 +40,13 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
   only its own website; for those, use the desktop app below.
+- **KataGo analysis in the browser:** while replaying, switch on
+  "KataGo-Analyse" for the win chance, the score and KataGo's five best
+  moves on the board, and how the game's move compares ("Die Partie
+  spielte F3: laut KataGo 1,2 Punkte schlechter als C17"). It runs on
+  WebGPU or WASM on any device, without a server; a stronger network can
+  be loaded from disk. Engine: [Web KaTrain](https://github.com/Sir-Teo/web-katrain)
+  (MIT), see `public/katago/NOTICE.txt`.
 - **Nachspielen, your way:** click the board to try your own moves (a side
   line; "Zurück zur Partie" returns), continue a game where you stopped,
   and set bookmarks with a note. The result stays hidden until the game's

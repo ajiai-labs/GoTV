@@ -1,0 +1,11 @@
+{
+  "name": "gotv-katago-worker",
+  "private": true,
+  "dependencies": {
+    "@tensorflow/tfjs": "4.22.0",
+    "@tensorflow/tfjs-backend-webgpu": "4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "4.22.0",
+    "pako": "2.1.0",
+    "esbuild": "0.24.2"
+  }
+}

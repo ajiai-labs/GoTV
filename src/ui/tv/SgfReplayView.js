@@ -25,6 +25,8 @@ import {
   saveReplayMove,
 } from "../../model/ReplayProgress";
 import type { ReplayBookmark } from "../../model/ReplayProgress";
+import KataGoPanel from "./KataGoPanel";
+import type { KataGoMove } from "../../model/KataGoEngine";
 import type { GameTree, Point, PlayerColor } from "../../model";
 
 // OGS writes chat lines it cannot serialise as "name: [object Object]" into
@@ -63,7 +65,36 @@ type State = {
   bookmarks: Array<ReplayBookmark>,
   // Text of a bookmark being written; null while the field is closed.
   bookmarkDraft: ?string,
+  // KataGo's top moves for the shown position, as board labels 1-5.
+  kataGoMoves: ?{ nodeId: number, moves: Array<KataGoMove> },
 };
+
+// The position with KataGo's candidates as labels 1-5 (a copy - the game
+// tree itself keeps its own markup).
+function withKataGoLabels(
+  tree: GameTree,
+  nodeId: number,
+  moves: Array<KataGoMove>
+): GameTree {
+  let state = tree.computedState[nodeId];
+  if (!state) {
+    return tree;
+  }
+  let labels = { ...state.markup.labels };
+  moves.forEach((move, index) => {
+    if (!state.board[move.y] || state.board[move.y][move.x]) {
+      return;
+    }
+    labels[move.y] = { ...(labels[move.y] || {}), [move.x]: String(index + 1) };
+  });
+  return {
+    ...tree,
+    computedState: {
+      ...tree.computedState,
+      [nodeId]: { ...state, markup: { ...state.markup, labels } },
+    },
+  };
+}
 
 const COLOR_LABEL = { black: "Schwarz", white: "Weiß" };
 
@@ -83,6 +114,7 @@ export default class SgfReplayView extends Component<Props, State> {
     resumedFrom: null,
     bookmarks: [],
     bookmarkDraft: null,
+    kataGoMoves: null,
   };
 
   _fileInput: ?HTMLInputElement;
@@ -256,9 +288,13 @@ export default class SgfReplayView extends Component<Props, State> {
     let commentProp = currentNodeProps.find((p) => p.name === "COMMENT");
     let comment = commentProp ? getReadableComment(commentProp.text) : null;
     // BoardContainer only reads game.tree - the rest of GameChannel is unused
+    let kataGoMoves = this.state.kataGoMoves;
     let game: any = {
       type: "review",
-      tree,
+      tree:
+        kataGoMoves && kataGoMoves.nodeId === currentNode
+          ? withKataGoLabels(tree, currentNode, kataGoMoves.moves)
+          : tree,
     };
 
     return (
@@ -308,6 +344,13 @@ export default class SgfReplayView extends Component<Props, State> {
             )
           : null}
         {this.state.progressKey ? this._renderProgress(moveNum) : null}
+        {this.props.compact ? null : (
+          <KataGoPanel
+            tree={tree}
+            nodeId={currentNode}
+            onMoves={this._onKataGoMoves}
+          />
+        )}
         {comment ? (
           <div className="SgfReplay-comment">
             <div className="SgfReplay-comment-title">Kommentar:</div>
@@ -407,6 +450,10 @@ export default class SgfReplayView extends Component<Props, State> {
       </div>
     );
   }
+
+  _onKataGoMoves = (nodeId: number, moves: ?Array<KataGoMove>) => {
+    this.setState({ kataGoMoves: moves ? { nodeId, moves } : null });
+  };
 
   // A click on an empty point plays an own move (a side branch).
   _onClickPoint = (game: Object, loc: Point, color?: ?PlayerColor) => {

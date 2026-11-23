@@ -28,3 +28,7 @@ yarn-error.log*
 __pycache__/
 *.pyc
 .venv/
+
+# KataGo worker build (tools/katago-worker/build.sh)
+/tools/katago-worker/node_modules
+/tools/katago-worker/package-lock.json

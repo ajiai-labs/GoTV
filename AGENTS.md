@@ -272,6 +272,22 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   150 Min.; belegt durch die Livestreams 01.-22.11.2026 (Start jeweils 10:28-10:30 MEZ,
   aus `liveBroadcastDetails` der Videoseiten), Termine kündigt er nicht einzeln an.
   `fetchTvData` teilt eine laufende Anfrage zwischen Events und Kanälen.
+- KataGo im Browser (23.11.2026, `src/model/KataGoEngine.js`, `src/ui/tv/KataGoPanel.js`):
+  Engine von Web KaTrain (MIT, github.com/Sir-Teo/web-katrain, Commit a6a67d6) als
+  fertiger Web Worker in `public/katago/` (katago-worker.js 2,7 MB mit TensorFlow.js
+  4.22.0, tfjs/*.wasm, Netz g170 b6c96 3,8 MB, CC0; Herkunft in `public/katago/NOTICE.txt`).
+  Neu bauen nur über `bash tools/katago-worker/build.sh` (klont die feste Commit-Version,
+  esbuild); der App-Build braucht weder esbuild noch TypeScript. Backend: WebGPU, sonst
+  WASM, sonst JS - läuft auf jeder Grafikkarte und auf Tablets, ohne Server. Im
+  Nachspielen-Tab (nicht in kompakten Brettern) Schalter "KataGo-Analyse" (aus per
+  Vorgabe, `gotv.katago`): Gewinnchance/Punkte aus Sicht Schwarz, 5 beste Züge als
+  Ziffern 1-5 auf dem Brett (Kopie des Markups, der Baum bleibt unverändert) und
+  "Die Partie spielte X: laut KataGo N Punkte schlechter als Y". Visits 50/100/400/1000,
+  `maxTimeMs` 30 s (Worker-Vorgabe wären 0,8 s). Stärkeres Netz (.bin.gz, z. B. b18 aus
+  KaTrain) per Dateiauswahl, bleibt im Browser (katagotraining.org sendet kein CORS,
+  direktes Laden geht nicht). Gemessen 23.11.2026, headless-Chromium ohne GPU (WASM):
+  100 Visits auf 19x19 in rund 1-3 s. Desktop-Server liefert `.wasm` als
+  `application/wasm`.
 - Nachspielen untersuchen und fortsetzen (23.11.2026):
   `src/model/ReplayVariation.js` - Klick auf einen freien Punkt setzt einen eigenen Zug als
   Seitenzweig (neuer GameNode, Partie bleibt erstes Kind = Hauptlinie); Schlagen kommt aus
@@ -478,10 +494,8 @@ Policy, von dir als "Stufe 1" bezeichnet:
   Vorab klären: API-Key (wer betreibt ihn? Server-seitig nötig, Key gehört
   NICHT in den Client), Quota (10k Units/Tag Default), Datenschutz
   (welche Daten werden abgefragt und wo verarbeitet?).
-- [ ] **(c) KataGo-Analyse:** nur im Replay- und Beobachter-Modus, NIE in
-  eigener laufender Partie. Braucht einen Backend-Dienst (Engine läuft
-  nicht im Client). Vorab klären: lokal (WASM) vs. Server,
-  Engine-Lebenszyklus, UI für die Analyse-Anzeige.
+- [x] **(c) KataGo-Analyse:** umgesetzt im Browser (WebGPU/WASM, kein
+  Backend-Dienst), nur beim Nachspielen - siehe "KataGo im Browser" oben.
 
 ## Offene Entscheidungen (Produkt, Stand heute)
 
