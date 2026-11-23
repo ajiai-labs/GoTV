@@ -1,0 +1,104 @@
+name: Tests und Web-Version
+
+# Every push and pull request: lint, Flow, unit tests (app + Python tools)
+# and the production build. On master the web version without KGS
+# ("yarn build:pages", guest TV only) is then published on GitHub Pages:
+# https://diebugger-tech.github.io/GoTV/
+#
+# The daily calendar import commits with GITHUB_TOKEN, which starts no
+# workflow - the web version still shows new dates, because it loads
+# events.json from GitHub at runtime (REMOTE_EVENTS_URL).
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Flow
+        run: yarn flow
+
+      - name: Unit tests (app)
+        run: yarn test --watchAll=false --testPathPattern="src/(model|util|ui)"
+        env:
+          CI: "true"
+
+      - name: Unit tests (Python tools)
+        run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events -v
+
+      - name: Build
+        run: |
+          yarn build
+          if grep -rl "GO-TV-DEV-HARNESS" build/; then
+            echo "Dev harness leaked into the production build" >&2
+            exit 1
+          fi
+
+  pages-build:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Build web version
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build:pages
+
+      - name: Upload
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  pages-deploy:
+    needs: pages-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

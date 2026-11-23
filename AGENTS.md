@@ -63,6 +63,7 @@ cd ~/Projekte/aktiv/shinkgs && yarn install
 | `yarn test` | react-scripts test --env=jsdom |
 | `http://localhost:3100/#tv-dev` | Dev-Harness: kompletter TV-Flow ohne KGS-Login (nur Development) |
 | `desktop/install.sh` | Desktop-App bauen + installieren (siehe Desktop-Abschnitt) |
+| `yarn build:pages` | Web-Version für GitHub Pages: `PUBLIC_URL=/GoTV`, `REACT_APP_GUEST_ONLY=true` (nur Gast-TV, kein Login), `404.html` = `index.html` |
 
 Gate nach jedem Schritt: `yarn lint && yarn flow && yarn build`
 
@@ -277,6 +278,14 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Browser-Notification (`gotv.reminders`, schon gemeldete in `gotv.notified`), geprüft im
   60-s-Takt von TvScreen und nur solange GoTV offen ist; ganztägige Turniere ohne `start`
   bekommen keine Erinnerung.
+- CI + Web-Version (`.github/workflows/ci.yml`, 23.11.2026): jeder Push/PR führt Lint,
+  Flow, App-Tests, Python-Tool-Tests und Build aus (plus Harness-Grep). Auf master wird
+  danach `yarn build:pages` nach https://diebugger-tech.github.io/GoTV/ veröffentlicht
+  (fürs Tablet: Seite öffnen, "Zum Startbildschirm"). Dort gibt es nur das Gast-TV
+  (`GUEST_ONLY` in `App.js`): KGS lässt Anfragen nur von seiner eigenen Webseite zu, die
+  Desktop-App braucht dafür ihren lokalen Proxy. Die History bleibt unter `/GoTV`
+  (basename), `404.html` fängt Unterpfade ab. Tägliche Bot-Commits (GITHUB_TOKEN) starten
+  keinen Workflow - die Web-Version lädt events.json ohnehin zur Laufzeit von GitHub.
 - Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) blendet einen
   importierten Eintrag (`source`, z. B. twitch-egf) aus, wenn ein Hand-Eintrag dieselbe
   Startzeit auf demselben Kanal hat. Der Hand-Eintrag bleibt, weil er Bretter/Partien

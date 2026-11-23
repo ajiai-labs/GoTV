@@ -41,4 +41,19 @@ describe("GuestTvScreen", () => {
     act(() => container.querySelector(".GuestTv-bar-login").click());
     expect(onExit).toHaveBeenCalledTimes(1);
   });
+
+  it("offers no login in the web version without KGS", () => {
+    act(() => {
+      ReactDOM.render(
+        <GuestTvScreen
+          appState={{ tvStreamUrl: null }}
+          actions={{ onJoinGame: jest.fn(), onCloseTvStream: jest.fn() }}
+          onExit={null}
+        />,
+        container
+      );
+    });
+    expect(container.textContent).toContain("GoTV im Browser");
+    expect(container.querySelector(".GuestTv-bar-login")).toBe(null);
+  });
 });
