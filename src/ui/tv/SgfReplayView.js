@@ -343,14 +343,7 @@ export default class SgfReplayView extends Component<Props, State> {
             </span>
           ) : null}
         </div>
-        {typeof branchPoint === "number"
-          ? this._renderVariationBar(
-              mainLine.indexOf(branchPoint),
-              getColorToPlay(tree, currentNode)
-            )
-          : null}
-        {this._renderContinuations(tree, currentNode)}
-        {this.state.progressKey ? this._renderProgress(moveNum) : null}
+        {/* Right under the board buttons, where it is seen. */}
         {this.props.compact ? null : (
           <KataGoPanel
             tree={tree}
@@ -359,6 +352,14 @@ export default class SgfReplayView extends Component<Props, State> {
             onLayLine={this._onLayLine}
           />
         )}
+        {typeof branchPoint === "number"
+          ? this._renderVariationBar(
+              mainLine.indexOf(branchPoint),
+              getColorToPlay(tree, currentNode)
+            )
+          : null}
+        {this._renderContinuations(tree, currentNode)}
+        {this.state.progressKey ? this._renderProgress(moveNum) : null}
         {comment ? (
           <div className="SgfReplay-comment">
             <div className="SgfReplay-comment-title">Kommentar:</div>
