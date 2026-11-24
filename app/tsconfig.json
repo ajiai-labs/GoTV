@@ -2,7 +2,10 @@
 	"extends": "$app/tsconfig",
 	"compilerOptions": {
 		"strict": true,
-		"types": ["$app/types", "node"]
+		"types": ["$app/types", "node", "vitest/globals"]
 	},
-	"include": ["src", "vite.config.ts", "prettier.config.js", "eslint.config.js"]
+	"include": ["src", "vite.config.ts", "prettier.config.js", "eslint.config.js"],
+	// Tests taken over from the old app's Jest suite use deliberately partial
+	// fixtures and were never type-checked; they still run in full (Vitest).
+	"exclude": ["src/lib/model/**/*.test.ts", "src/lib/util/**/*.test.ts"]
 }

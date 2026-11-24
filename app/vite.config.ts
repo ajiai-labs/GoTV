@@ -49,8 +49,11 @@ export default defineConfig({
 			{
 				extends: './vite.config.ts',
 				test: {
-					name: 'server',
-					environment: 'node',
+					// Logic tests (taken over from the old app's Jest suite): a
+					// browser-like DOM for localStorage, window, Blob and FileReader.
+					name: 'unit',
+					environment: 'jsdom',
+					globals: true,
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}

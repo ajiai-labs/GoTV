@@ -1,0 +1,360 @@
+import { format as dateFormat } from 'date-fns';
+import type {
+	AppState,
+	KgsMessage,
+	User,
+	UserFlags,
+	Index,
+	ChannelMembership,
+	RankGraph
+} from './types';
+export function userHasRank(user: User) {
+	return user.rank && user.rank !== '?';
+}
+export function userUnranked(user: User) {
+	return user.rank === undefined;
+}
+export function parseRankVal(rank: string) {
+	const num = parseInt(rank, 10);
+
+	if (!num) {
+		return -9999;
+	}
+
+	let type = rank.charAt(rank.length - 1);
+
+	if (type === '?' && rank.length > 1) {
+		type = rank.charAt(rank.length - 2);
+	}
+
+	if (type === 'k') {
+		return -num;
+	} else if (type === 'p') {
+		return num + 10;
+	} else {
+		return num;
+	}
+}
+export function getUserStatusText(user: User) {
+	let status;
+
+	if (user.flags && user.flags.sleeping) {
+		status = 'Idle';
+	} else if (user.flags && user.flags.playing) {
+		status = 'Playing';
+	} else {
+		status = user.flags && user.flags.connected ? 'Online' : 'Offline';
+	}
+
+	return status;
+}
+export function getUserAuthName(user: User) {
+	switch (user.authLevel) {
+		case 'jr_admin':
+			return 'Junior Admin';
+
+		case 'sr_admin':
+			return 'Senior Admin';
+
+		case 'super_admin':
+			return 'Super Admin';
+
+		case 'teacher':
+			return 'Teacher';
+
+		default:
+			return null;
+	}
+}
+export function sortUsers(users: Array<User>) {
+	users.sort((a, b) => {
+		const cmp = (b.rankVal || 0) - (a.rankVal || 0);
+
+		if (cmp === 0) {
+			return a.name.localeCompare(b.name);
+		} else {
+			return cmp;
+		}
+	});
+}
+export function parseUser(
+	user: User | null | undefined,
+	values: Record<string, any>,
+	details?: Record<string, any>
+): User {
+	const newUser: Record<string, any> = user ? { ...user } : {};
+	newUser.rankVal = parseRankVal(values.rank);
+	const flagsStr: string | null | undefined = values.flags;
+
+	if (typeof flagsStr === 'string') {
+		const flags: UserFlags = {};
+
+		for (const c of flagsStr) {
+			switch (c) {
+				case 'g':
+					flags.guest = true;
+					break;
+
+				case 'c':
+					flags.connected = true;
+					break;
+
+				case 'd':
+					flags.deleted = true;
+					break;
+
+				case 's':
+					flags.sleeping = true;
+					break;
+
+				case 'a':
+					flags.avatar = true;
+					break;
+
+				case 'r':
+					flags.robot = true;
+					break;
+
+				case 'T':
+					flags.tourneyWinner = true;
+					break;
+
+				case 't':
+					flags.tourneyRunnerUp = true;
+					break;
+
+				case 'p':
+					flags.playing = true;
+					break;
+
+				case 'P':
+					flags.playingTourney = true;
+					break;
+
+				case '*':
+					flags.kgsPlus = true;
+					break;
+
+				case '!':
+					flags.kgsMeijin = true;
+					break;
+
+				case '=':
+					flags.canPlayRanked = true;
+					break;
+
+				case '~':
+					flags.selfish = true;
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		newUser.flags = flags;
+	} else if (!newUser.flags) {
+		newUser.flags = {};
+	}
+
+	for (const key of ['name', 'rank', 'authLevel']) {
+		if (key in values) {
+			newUser[key] = values[key];
+		}
+	}
+
+	if (newUser.rank && values.name && values.flags && values.rank === undefined) {
+		// Special case for rank removal (e.g. after details update)
+		newUser.rank = null;
+	}
+
+	if (details) {
+		newUser.details = details;
+	}
+
+	return newUser as User;
+}
+// Turn KGS's rank graph into a format suited for Chartist.js
+export function parseRankGraph(data: Array<number>): RankGraph {
+	const newRankGraph: Record<string, any> = {};
+	// The data is an array of ranks on individual days, ending at yesterday.
+	// Generate dates for each of the data points.
+	const series: Array<Record<string, any>> = data.map((rank, i) => {
+		const d = new Date();
+		d.setDate(d.getDate() - (data.length - i));
+		const maxRank = 900; // 9d
+
+		const minRank = -30000; // 30k
+
+		return {
+			x: d,
+			y: rank < maxRank && rank > minRank ? rank : null
+		};
+	});
+	newRankGraph.data = {
+		series: [series]
+	};
+	// Create a list of the unique months present in the graph data for labeling
+	newRankGraph.months = [];
+	series.forEach((d) => {
+		const str = dateFormat(d.x, 'MMMM yyyy');
+
+		if (newRankGraph.months.indexOf(str) === -1) {
+			newRankGraph.months.push(str);
+		}
+	});
+	return newRankGraph as RankGraph;
+}
+export function handleUserMessage(prevState: AppState, msg: KgsMessage): AppState {
+	const chanId = msg.channelId;
+
+	if (msg.type === 'ROOM_JOIN' || msg.type === 'GAME_JOIN') {
+		const usersByName: Index<User> = { ...prevState.usersByName };
+
+		if (msg.users) {
+			for (const user of msg.users) {
+				usersByName[user.name] = parseUser(usersByName[user.name], user);
+			}
+		}
+
+		return { ...prevState, usersByName };
+	} else if (msg.type === 'USER_UPDATE' || msg.type === 'USER_ADDED') {
+		const usersByName: Index<User> = { ...prevState.usersByName };
+		const user = msg.user;
+		const newUser = parseUser(usersByName[user.name], user);
+		usersByName[user.name] = newUser;
+		const nextState = { ...prevState, usersByName };
+
+		if (nextState.currentUser && nextState.currentUser.name === user.name) {
+			nextState.currentUser = { ...nextState.currentUser, ...newUser };
+		}
+
+		return nextState;
+	} else if (msg.type === 'LOGIN_SUCCESS') {
+		const usersByName: Index<User> = { ...prevState.usersByName };
+		const user = msg.you;
+		usersByName[user.name] = parseUser(usersByName[user.name], user);
+		return { ...prevState, usersByName };
+	} else if (msg.type === 'START_USER_DETAILS') {
+		return {
+			...prevState,
+			userDetailsRequest: {
+				name: msg.name,
+				status: 'pending'
+			}
+		};
+	} else if (msg.type === 'DETAILS_JOIN' && chanId) {
+		const usersByName: Index<User> = { ...prevState.usersByName };
+		const user = msg.user;
+		const newUser = parseUser(usersByName[user.name], user, msg);
+		usersByName[user.name] = newUser;
+		// In case we looked it up without knowing the casing
+		const lowerName = user.name.toLowerCase();
+
+		if (user.name !== lowerName) {
+			usersByName[lowerName] = newUser;
+		}
+
+		const nextState = { ...prevState, usersByName };
+
+		if (
+			prevState.userDetailsRequest &&
+			prevState.userDetailsRequest.name.toLowerCase() === lowerName
+		) {
+			nextState.userDetailsRequest = {
+				name: prevState.userDetailsRequest.name,
+				status: 'received'
+			};
+		}
+
+		// Channel membership
+		const chanMem: ChannelMembership = { ...prevState.channelMembership };
+		chanMem[chanId] = {
+			type: 'details',
+			complete: false,
+			stale: false
+		};
+		nextState.channelMembership = chanMem;
+
+		if (nextState.currentUser && nextState.currentUser.name === user.name) {
+			nextState.currentUser = { ...nextState.currentUser, ...newUser };
+		}
+
+		return nextState;
+	} else if (msg.type === 'DETAILS_RANK_GRAPH') {
+		const rankGraphsByChannelId: Index<RankGraph> = { ...prevState.rankGraphsByChannelId };
+		const channelId: string = String(msg.channelId);
+		const data: Array<number> = msg.data;
+		rankGraphsByChannelId[channelId] = parseRankGraph(data);
+		const nextState = { ...prevState, rankGraphsByChannelId };
+		return nextState;
+	} else if (msg.type === 'DETAILS_UPDATE' && chanId) {
+		const req = prevState.userDetailsRequest;
+
+		if (req) {
+			const user = prevState.usersByName[req.name];
+
+			if (user && user.details && user.details.channelId === chanId) {
+				const usersByName: Index<User> = { ...prevState.usersByName };
+				usersByName[user.name] = parseUser(usersByName[user.name], {}, msg);
+				return { ...prevState, usersByName };
+			}
+		}
+	} else if (msg.type === 'DETAILS_NONEXISTANT') {
+		return {
+			...prevState,
+			userDetailsRequest: {
+				name: msg.name,
+				status: 'nonexistant'
+			}
+		};
+	} else if (msg.type === 'CLOSE_USER_DETAILS') {
+		return { ...prevState, userDetailsRequest: null };
+	} else if (msg.type === 'GAME_LIST' || msg.type === 'GLOBAL_GAMES_JOIN') {
+		if (msg.games) {
+			const usersByName: Index<User> = { ...prevState.usersByName };
+
+			for (const game of msg.games) {
+				if (game.players) {
+					for (const role of Object.keys(game.players)) {
+						const name = game.players[role].name;
+
+						if (name) {
+							usersByName[name] = parseUser(usersByName[name], game.players[role]);
+						}
+					}
+				}
+			}
+
+			return { ...prevState, usersByName };
+		}
+	} else if (
+		msg.users &&
+		(msg.type === 'GAME_JOIN' ||
+			msg.type === 'GAME_UPDATE' ||
+			msg.type === 'GAME_STATE' ||
+			msg.type === 'GAME_NAME_CHANGE' ||
+			msg.type === 'CHALLENGE_JOIN')
+	) {
+		if (prevState.currentUser) {
+			for (const user of msg.users) {
+				if (user.name === prevState.currentUser.name) {
+					const usersByName: Index<User> = { ...prevState.usersByName };
+					const newUser = parseUser(usersByName[user.name], user);
+					usersByName[user.name] = newUser;
+					const nextState = { ...prevState, usersByName };
+
+					if (nextState.currentUser && nextState.currentUser.name === user.name) {
+						nextState.currentUser = { ...nextState.currentUser, ...newUser };
+					}
+
+					return nextState;
+				}
+			}
+		}
+
+		return prevState;
+	}
+
+	return prevState;
+}

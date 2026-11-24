@@ -40,7 +40,7 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 | Phase | Inhalt | fertig, wenn ... | Aufwand |
 |---|---|---|---|
 | 0 ✅ | Gerüst: SvelteKit 3 + Svelte 5 + TS 6 + Vite 8 + Vitest 5 in `app/`, SPA (`adapter-static`, Fallback index.html, `BASE_PATH=/GoTV` für Pages, `ssr = false`), CI-Job `app` (Check, Lint, Tests in Chromium + WebKit, Build) | `npm run build` und Tests grün in der CI | erledigt 24.11.2026 |
-| 1 | Logik umziehen: `src/model`, `src/model/game`, `src/util` -> `app/src/lib/` als TypeScript, mit allen Tests; `AppStore`/`AppActions` werden Svelte-Stores | alle übernommenen Tests grün | ~8 Std. |
+| 1 ✅ | Logik umziehen: `src/model`, `src/model/game`, `src/util`, `src/sound` -> `app/src/lib/` als TypeScript, mit allen Tests | alle übernommenen Tests grün | erledigt 24.11.2026 |
 | 2a | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | der Nutzer hat beide Entwürfe freigegeben | ~6 Std. |
 | 2b | **KGS-Kern im neuen Design:** Anmelden, Räume (Chat, Nutzer, Partien), Partien beobachten, Brett (neu als SVG), Nutzerinfo | man kann sich anmelden, Räume betreten und Partien beobachten | ~12 Std. |
 | 3 | Spielen: Herausforderungen, eigene Partie, Zählen | eine Partie gegen einen Menschen läuft durch | ~5 Std. |
@@ -49,6 +49,24 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 | 6 | Umschalten: GitHub Pages auf `app/`, alte React-App entfernen (nur nach ausdrücklicher Bestätigung) | eine App, ein Build | ~2 Std. |
 
 Gesamt grob 57 Arbeitsstunden.
+
+## Phase 1 - was dabei herauskam (24.11.2026)
+
+- Übersetzt mit `@khanacademy/flow-to-ts`, danach von Hand: 812 Typmeldungen -> 0
+  (`svelte-check`). Zwei zentrale Übersetzungsfehler des Werkzeugs korrigiert: `Index<T>` und
+  `ChannelMembership` waren als "jeder Eintrag kann fehlen" übersetzt; `GamePlayers` und
+  Uhren sind jetzt `Partial` (nicht jede Partie hat alle Rollen).
+- Verhalten unverändert: alle 280 Logik-Tests der alten App laufen in Vitest (jsdom) grün.
+  Die übernommenen Tests sind von der strengen Typprüfung ausgenommen (`tsconfig.json`
+  "exclude") - sie waren nie typgeprüft und arbeiten mit absichtlich unvollständigen Daten.
+- Bibliotheken aktualisiert: date-fns 2 -> 4, idb-keyval 3 -> 6, uuid 8 -> 14.
+- Für die übernommene Logik sind die strengsten Lint-Regeln (`no-unsafe-*`, `any`,
+  `no-floating-promises`) begründet abgeschaltet (lose typisierte KGS-/OGS-Daten, KGS-
+  Nachrichten bewusst ohne Warten); die neue Oberfläche bekommt sie voll.
+- Altlast aus Shin KGS markiert, nicht verändert: in `game/message.ts` vergleicht ein Zweig
+  `playGameId` (immer eine Kanal-Nummer) mit einem Zeitstempel - er greift nie.
+- `AppStore`/`AppActions` sind übernommen; die Anbindung an Svelte (Store-Vertrag
+  `subscribe`) kommt mit der ersten Oberfläche in Phase 2b.
 
 ## Vom Nutzer zu klären (vor Phase 2b)
 
