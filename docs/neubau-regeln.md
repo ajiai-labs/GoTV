@@ -26,6 +26,10 @@ neuen App (`app/`) nachbaut. Plan: `docs/umbau-svelte.md`.
   `app.state` ist der komplette alte AppState (reaktiv, nie verändern), `app.actions` die alten
   AppActions (`app.actions.onJoinGame(id)` usw.). Wo die alte Komponente `props.actions.onX`
   oder Felder aus `appState` bekam, liest die neue sie direkt aus `app`.
+- Seitenwechsel, die in der alten App ein TV-Reiter waren: `app.openReplay(sgfUrl)` öffnet
+  `/nachspielen?sgf=...` (statt `onOpenReplay` im TvScreen), `app.suggestGameReplay(game)`
+  öffnet eine beendete KGS-Partie dort (statt `actions.onSuggestGameReplay`).
+  `app.actions.onOpenTvStream(url)` öffnet Live mit dem Stream (unverändert).
 - Imports aus `src/lib` immer als `#lib/...` MIT Dateiendung: `#lib/model/types.ts`,
   `#lib/ui/Board.svelte`, `#lib/app.svelte.ts`.
 - Seiten-Links: `import { resolve } from '$app/paths'`, `href={resolve('/kalender')}`.

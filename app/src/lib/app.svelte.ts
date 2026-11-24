@@ -14,7 +14,7 @@ import { AppActions } from './model/AppActions';
 import { AppStore } from './model/AppStore';
 import { KgsClient } from './model/KgsClient';
 import { getInitialState, handleMessage } from './model/index';
-import type { AppState, KgsClientState, NavOption } from './model/types';
+import type { AppState, GameChannel, KgsClientState, NavOption } from './model/types';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
 // Nachspielen belong to it as well.
@@ -112,6 +112,19 @@ class GoTvApp {
 		document.addEventListener('visibilitychange', () => {
 			if (document.visibilityState === 'hidden') save();
 		});
+	}
+
+	// Opens an SGF (tournament game, calendar entry, recent replay) on the
+	// Nachspielen page - in the old app this switched the TV tab.
+	openReplay(url: string) {
+		goto(`${resolve('/nachspielen')}?sgf=${encodeURIComponent(url)}`).catch(() => {});
+	}
+
+	// "Nachspielen" after a KGS game ended (old onSuggestGameReplay): the
+	// game's tree goes to the Nachspielen page.
+	suggestGameReplay(game: GameChannel) {
+		this.store?.dispatch({ type: 'TV_REPLAY_GAME', gameId: game.id });
+		goto(resolve('/nachspielen')).catch(() => {});
 	}
 
 	// Keep state.nav in line with the page shown (back/forward, links).
