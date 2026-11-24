@@ -1,6 +1,7 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
+import { language } from '#lib/i18n/index.svelte.ts';
 import type { GameChannel, User } from '#lib/model/types.ts';
 import GameList from './GameList.svelte';
 import GameListFilter from './GameListFilter.svelte';
@@ -46,6 +47,13 @@ describe('GameList', () => {
 		await expect.element(page.getByText('Englischer Raum').first()).toBeVisible();
 		await page.getByRole('button', { name: /Finale/ }).click();
 		expect(onSelect).toHaveBeenCalledWith(2, games[1]);
+	});
+
+	it('speaks English when English is chosen', async () => {
+		language.current = 'en';
+		await render(GameList, { games: [game(1, { observers: 1 })], roomsById, onSelect: () => {} });
+		await expect.element(page.getByText('Move 42')).toBeVisible();
+		await expect.element(page.getByText('1 observer', { exact: true })).toBeVisible();
 	});
 
 	it('applies the room and bot filter and says when nothing is left', async () => {

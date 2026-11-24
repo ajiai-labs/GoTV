@@ -8,6 +8,7 @@
 	// official stream embed (two-click), and an optional "SGF nachspielen"
 	// shortcut when the event carries a recorded SGF. Used by the Kalender page
 	// and by the Live page (currently-live entries, like the old TvScreen).
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import StreamEmbed from './StreamEmbed.svelte';
 	import ReplayGameList from './ReplayGameList.svelte';
 	import FavoriteStar from './FavoriteStar.svelte';
@@ -69,45 +70,42 @@
 		const ogsCount = ogsBoardCount || 0;
 		const total = kgsCount + ogsCount;
 		if (total > 0) {
-			const source = kgsCount && ogsCount ? '' : ogsCount ? 'OGS-' : 'KGS-';
-			const mixed = kgsCount && ogsCount ? ' (KGS + OGS)' : '';
-			return (
-				(hasVideoStream(event) ? 'Stream + ' : '') +
-				total +
-				(total === 1 ? ' ' + source + 'Brett' : ' ' + source + 'Bretter') +
-				mixed +
-				' · Live-Züge und Partiechat'
+			const boards = t(
+				kgsCount && ogsCount
+					? 'app.calendarCard.boardsMixed'
+					: ogsCount
+						? 'app.calendarCard.boardsOgs'
+						: 'app.calendarCard.boardsKgs',
+				{ count: total }
 			);
+			return hasVideoStream(event)
+				? t('app.calendarCard.liveStreamBoards', { boards })
+				: t('app.calendarCard.liveBoards', { boards });
 		}
 		if (event.sgf_url) {
-			return 'SGF-Brett zum Nachspielen verfügbar';
+			return t('app.calendarCard.sgfAvailable');
 		}
 		if (getLiveWindow(event).end.getTime() < now) {
 			return hasOgsReplay(event)
-				? 'Termin vorbei · Partien zum Nachspielen'
-				: 'Termin vorbei · kein Live-Brett verfügbar';
+				? t('app.calendarCard.overReplay')
+				: t('app.calendarCard.overNoBoard');
 		}
 		const hasKgs = !!(event.kgs_room || (event.kgs_players && event.kgs_players.length));
 		if (hasKgs && hasOgsBoard(event)) {
-			return 'KGS-/OGS-Zuordnungen hinterlegt · derzeit kein Brett geladen';
+			return t('app.calendarCard.bothLinked');
 		}
 		if (hasOgsBoard(event)) {
-			return (
-				'OGS-Zuordnung hinterlegt' +
-				(ogsBoardCount === 0
-					? hasVideoStream(event)
-						? ' · Brett lädt beim Öffnen des Streams'
-						: ' · Brett lädt beim Öffnen'
-					: '')
-			);
+			if (ogsBoardCount !== 0) return t('app.calendarCard.ogsLinked');
+			return hasVideoStream(event)
+				? t('app.calendarCard.ogsLinkedWithStream')
+				: t('app.calendarCard.ogsLinkedOnOpen');
 		}
 		if (hasKgs) {
-			return (
-				'KGS-Zuordnung hinterlegt' +
-				(boardCount === 0 ? ' · derzeit kein passendes Brett online' : '')
-			);
+			return boardCount === 0
+				? t('app.calendarCard.kgsLinkedNone')
+				: t('app.calendarCard.kgsLinked');
 		}
-		return 'Nur Stream · keine KGS-Brettzuordnung hinterlegt';
+		return t('app.calendarCard.streamOnly');
 	}
 
 	let currentTime = $derived(now === undefined ? Date.now() : now);
@@ -169,7 +167,7 @@
 		{@const sgfUrl = event.sgf_url}
 		<div class="CalendarEvent-replay">
 			<button type="button" class="button" onclick={() => onOpenReplay(sgfUrl)}>
-				SGF nachspielen
+				{t('app.calendarCard.replaySgf')}
 			</button>
 		</div>
 	{/if}

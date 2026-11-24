@@ -1,25 +1,26 @@
 <script lang="ts" module>
 	import type { User } from '#lib/model/types.ts';
+	import { language, locale, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 
-	const STATUS: Record<string, string> = {
-		Idle: 'Abwesend',
-		Playing: 'Spielt gerade',
-		Online: 'Online',
-		Offline: 'Offline'
+	const STATUS: Record<string, MessageKey> = {
+		Idle: 'chat.profile.status.idle',
+		Playing: 'chat.profile.status.playing',
+		Online: 'chat.profile.status.online',
+		Offline: 'chat.profile.status.offline'
 	};
 
-	const AUTH_NAME: Record<string, string> = {
-		jr_admin: 'Junior-Admin',
-		sr_admin: 'Senior-Admin',
-		super_admin: 'Super-Admin',
-		teacher: 'Lehrer'
+	const AUTH_NAME: Record<string, MessageKey> = {
+		jr_admin: 'chat.profile.auth.jrAdmin',
+		sr_admin: 'chat.profile.auth.srAdmin',
+		super_admin: 'chat.profile.auth.superAdmin',
+		teacher: 'chat.profile.auth.teacher'
 	};
 
 	export function authName(user: User): string | null {
-		return (user.authLevel && AUTH_NAME[user.authLevel]) || null;
+		const key = user.authLevel ? AUTH_NAME[user.authLevel] : undefined;
+		return key ? t(key) : null;
 	}
 
-	const RELATIVE = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
 	const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
 		['minute', 60 * 60],
 		['hour', 60 * 60 * 24],
@@ -37,26 +38,30 @@
 		year: 60 * 60 * 24 * 365
 	};
 
-	// "vor 3 Tagen", with the same steps as timeAgo in util/date (English).
+	// "vor 3 Tagen" / "3 days ago", with the same steps as timeAgo in util/date.
 	export function timeAgo(date: Date, now = Date.now()): string {
 		const diff = (date.valueOf() - now) / 1000;
 		const seconds = Math.abs(diff);
-		if (seconds < 60) return 'gerade eben';
+		if (seconds < 60) return t('chat.profile.justNow');
 		const [unit] = UNITS.find(([, below]) => seconds < below) ?? UNITS[UNITS.length - 1];
-		return RELATIVE.format(Math.sign(diff) * Math.round(seconds / UNIT_SECONDS[unit]), unit);
+		const relative = new Intl.RelativeTimeFormat(language.current, { numeric: 'auto' });
+		return relative.format(Math.sign(diff) * Math.round(seconds / UNIT_SECONDS[unit]), unit);
 	}
 
-	// "en_US" -> "Englisch / USA"
-	export function localeText(locale: string | undefined): string | null {
-		if (!locale) return null;
+	// "en_US" -> "Englisch / USA" ("English / USA")
+	export function localeText(userLocale: string | undefined): string | null {
+		if (!userLocale) return null;
 		try {
-			const parsed = new Intl.Locale(locale.replace('_', '-'));
-			const language = new Intl.DisplayNames(['de'], { type: 'language' }).of(parsed.language);
+			const parsed = new Intl.Locale(userLocale.replace('_', '-'));
+			const names = [locale()];
+			const name = new Intl.DisplayNames(names, { type: 'language' }).of(parsed.language);
 			const region = parsed.region
-				? new Intl.DisplayNames(['de'], { type: 'region' }).of(parsed.region)
+				? new Intl.DisplayNames(names, { type: 'region' }).of(parsed.region)
 				: null;
-			if (!language) return null;
-			return region ? `${language} / ${region.replace('Vereinigte Staaten', 'USA')}` : language;
+			if (!name) return null;
+			return region
+				? `${name} / ${region.replace('Vereinigte Staaten', 'USA').replace('United States', 'USA')}`
+				: name;
 		} catch {
 			return null;
 		}
@@ -109,9 +114,13 @@
 
 	let statusText = $derived.by(() => {
 		if (!user) return null;
-		const status = STATUS[getUserStatusText(user)] ?? getUserStatusText(user);
+		const key = STATUS[getUserStatusText(user)];
+		const status = key ? t(key) : getUserStatusText(user);
 		return offline && user.details
-			? `${status} – zuletzt online ${timeAgo(new Date(user.details.lastOn))}`
+			? t('chat.profile.lastOnline', {
+					status,
+					ago: timeAgo(new Date(user.details.lastOn))
+				})
 			: status;
 	});
 
@@ -152,7 +161,7 @@
 
 {#if request}
 	{#if editing && user && details}
-		<Modal title="Profil bearbeiten" onclose={() => (editing = false)}>
+		<Modal title={t('chat.profile.edit')} onclose={() => (editing = false)}>
 			<UserDetailsEditForm
 				{user}
 				{details}
@@ -161,7 +170,7 @@
 			/>
 		</Modal>
 	{:else if gameToLoad}
-		<Modal title="Partie aus dem Archiv" onclose={() => (gameToLoad = null)}>
+		<Modal title={t('chat.profile.archiveGame')} onclose={() => (gameToLoad = null)}>
 			<UserGameSummary
 				activeConversationId={appState.activeConversationId}
 				game={gameToLoad}
@@ -175,7 +184,7 @@
 		</Modal>
 	{:else}
 		<Modal
-			title="Spielerprofil"
+			title={t('chat.profile.title')}
 			wide
 			onclose={() => {
 				// Switching to the edit form or a game closes this dialog too.
@@ -203,11 +212,11 @@
 									type="button"
 									onclick={() => user && app.actions.onStartChat(user)}
 								>
-									Nachricht senden
+									{t('chat.profile.sendMessage')}
 								</button>
 							{:else if isMe}
 								<button class="button" type="button" onclick={() => (editing = true)}>
-									Profil bearbeiten
+									{t('chat.profile.edit')}
 								</button>
 							{/if}
 							{#if !isMe}
@@ -217,7 +226,7 @@
 									aria-pressed={followed.has(user.name)}
 									onclick={() => user && followed.toggle(user.name)}
 								>
-									{followed.has(user.name) ? '★ Gefolgt' : '☆ Folgen'}
+									{followed.has(user.name) ? t('chat.profile.following') : t('chat.profile.follow')}
 								</button>
 							{/if}
 						</div>
@@ -225,17 +234,21 @@
 				</div>
 
 				{#if user && details}
-					{@const locale = localeText(details.locale)}
+					{@const userLocale = localeText(details.locale)}
 					<ul class="facts">
-						<li>Dabei seit {formatLocaleDate(new Date(details.regStartDate))}</li>
-						{#if locale}<li>{locale}</li>{/if}
+						<li>
+							{t('chat.profile.memberSince', {
+								date: formatLocaleDate(new Date(details.regStartDate))
+							})}
+						</li>
+						{#if userLocale}<li>{userLocale}</li>{/if}
 						{#if details.email && !details.privateEmail}
 							<li><a href="mailto:{details.email}">{details.email}</a></li>
 						{/if}
 					</ul>
 
 					{#if bio || gameSummaries}
-						<div class="tabs" role="tablist" aria-label="Profil">
+						<div class="tabs" role="tablist" aria-label={t('chat.profile.tabs')}>
 							{#if bio}
 								<button
 									type="button"
@@ -243,7 +256,7 @@
 									aria-selected={shownTab === 'bio'}
 									onclick={() => (tab = 'bio')}
 								>
-									Über mich
+									{t('chat.edit.about')}
 								</button>
 							{/if}
 							{#if gameSummaries}
@@ -253,8 +266,7 @@
 									aria-selected={shownTab === 'games'}
 									onclick={() => (tab = 'games')}
 								>
-									{gameSummaries.length}
-									{gameSummaries.length === 1 ? 'Partie' : 'Partien'}
+									{t('chat.roomGames.games', { count: gameSummaries.length })}
 								</button>
 							{/if}
 							<button
@@ -263,7 +275,7 @@
 								aria-selected={shownTab === 'rankGraph'}
 								onclick={showRankGraph}
 							>
-								Rang
+								{t('chat.profile.rank')}
 							</button>
 						</div>
 						<div class="tab-content" role="tabpanel">
@@ -279,7 +291,7 @@
 										/>
 									</div>
 								{:else}
-									<p class="muted">Keine Partien im Archiv.</p>
+									<p class="muted">{t('chat.profile.noGames')}</p>
 								{/if}
 							{:else if shownTab === 'rankGraph'}
 								<UserRankGraph
@@ -289,9 +301,9 @@
 						</div>
 					{/if}
 				{:else if user || request.status === 'pending'}
-					<Spinner label="Profil lädt …" />
+					<Spinner label={t('chat.profile.loading')} />
 				{:else}
-					<p class="not-found">Spieler „{request.name}“ nicht gefunden.</p>
+					<p class="not-found">{t('chat.profile.notFound', { name: request.name })}</p>
 				{/if}
 			</div>
 		</Modal>

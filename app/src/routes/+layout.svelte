@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import '../app.css';
 	import logo from '#lib/assets/gotv-logo.svg';
 	import { onMount } from 'svelte';
@@ -20,17 +21,17 @@
 	let { children }: LayoutProps = $props();
 
 	const tvSections = [
-		{ path: '/', name: 'Live' },
-		{ path: '/kalender', name: 'Kalender' },
-		{ path: '/kanaele', name: 'Kanäle' },
-		{ path: '/nachspielen', name: 'Nachspielen' }
+		{ path: '/', name: 'app.nav.live' },
+		{ path: '/kalender', name: 'app.nav.calendar' },
+		{ path: '/kanaele', name: 'app.nav.channels' },
+		{ path: '/nachspielen', name: 'app.nav.replay' }
 	] as const;
 
 	const kgsSections = [
-		{ path: '/beobachten', name: 'Beobachten', badge: null },
-		{ path: '/spielen', name: 'Spielen', badge: 'play' },
-		{ path: '/chat', name: 'Chat', badge: 'chat' },
-		{ path: '/suche', name: 'Suche', badge: null }
+		{ path: '/beobachten', name: 'app.nav.watch', badge: null },
+		{ path: '/spielen', name: 'app.nav.play', badge: 'play' },
+		{ path: '/chat', name: 'app.nav.chat', badge: 'chat' },
+		{ path: '/suche', name: 'app.nav.search', badge: null }
 	] as const;
 
 	onMount(() => {
@@ -96,32 +97,27 @@
 
 <div class="app">
 	<header class="top">
-		<a class="brand" href={resolve('/')} aria-label="GoTV, zu Live">
+		<a class="brand" href={resolve('/')} aria-label={t('app.layout.home')}>
 			<img src={logo} alt="" width="34" height="34" />
 			<span>GoTV</span>
 		</a>
-		<nav aria-label="Bereiche">
+		<nav aria-label={t('app.layout.areas')}>
 			{#each tvSections as section (section.path)}
 				<a href={resolve(section.path)} aria-current={isCurrent(section.path) ? 'page' : undefined}>
-					{section.name}
+					{t(section.name)}
 				</a>
 			{/each}
-			{#if !config.guestOnly}
-				<span class="divider" aria-hidden="true"></span>
-				{#each kgsSections as section (section.path)}
-					{@const badge =
-						section.badge === 'chat' ? chatBadge : section.badge === 'play' ? playBadge : null}
-					<a
-						href={resolve(section.path)}
-						aria-current={isCurrent(section.path) ? 'page' : undefined}
-					>
-						{section.name}
-						{#if badge && !isCurrent(section.path)}
-							<UnseenBadge major={badge.major} minor={badge.minor} />
-						{/if}
-					</a>
-				{/each}
-			{/if}
+			<span class="divider" aria-hidden="true"></span>
+			{#each kgsSections as section (section.path)}
+				{@const badge =
+					section.badge === 'chat' ? chatBadge : section.badge === 'play' ? playBadge : null}
+				<a href={resolve(section.path)} aria-current={isCurrent(section.path) ? 'page' : undefined}>
+					{t(section.name)}
+					{#if badge && !isCurrent(section.path)}
+						<UnseenBadge major={badge.major} minor={badge.minor} />
+					{/if}
+				</a>
+			{/each}
 		</nav>
 		<div class="account">
 			{#if state.currentUser}
@@ -133,14 +129,14 @@
 					<UserName user={state.currentUser} />
 				</a>
 			{:else if !config.guestOnly}
-				<a class="who" href={resolve('/beobachten')}>Anmelden</a>
+				<a class="who" href={resolve('/beobachten')}>{t('app.layout.login')}</a>
 			{/if}
 			<a
 				class="settings"
 				href={resolve('/einstellungen')}
 				aria-current={isCurrent('/einstellungen') ? 'page' : undefined}
-				aria-label="Einstellungen"
-				title="Einstellungen"
+				aria-label={t('app.layout.settings')}
+				title={t('app.layout.settings')}
 			>
 				⚙
 			</a>
@@ -158,9 +154,9 @@
 	{#if showFooter}
 		<footer class="foot">
 			<a href="https://github.com/ajiai-labs/GoTV" target="_blank" rel="noopener noreferrer">
-				GoTV auf GitHub
+				{t('app.layout.github')}
 			</a>
-			<span class="muted">Offenes Projekt – Fehler und Ideen gern dort melden.</span>
+			<span class="muted">{t('app.layout.openProject')}</span>
 		</footer>
 	{/if}
 

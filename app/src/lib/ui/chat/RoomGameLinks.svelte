@@ -2,6 +2,7 @@
 	// Under a room's description: "N Partien" and "N Herausforderungen" of the
 	// room. A click shows them in Beobachten or Spielen (filtered by the room).
 	import type { GameChannel } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		games,
@@ -26,8 +27,8 @@
 	});
 
 	function label(count: number, isChallenges: boolean): string {
-		if (isChallenges) return `${count} ${count === 1 ? 'Herausforderung' : 'Herausforderungen'}`;
-		return `${count} ${count === 1 ? 'Partie' : 'Partien'}`;
+		if (isChallenges) return t('chat.roomGames.challenges', { count });
+		return t('chat.roomGames.games', { count });
 	}
 </script>
 

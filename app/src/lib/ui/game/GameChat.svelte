@@ -3,6 +3,7 @@
 	// what happened at that move (pass, end of game) and the messages.
 	// Scrolling to the newest message is the parent's job, as before.
 	import type { GameChatSection, Index, User } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import ChatMessages from '#lib/ui/chat/ChatMessages.svelte';
 	import { formatChatActionDe } from './gameText.ts';
 
@@ -27,7 +28,7 @@
 	{#each chatSections as section (section.nodeId)}
 		<section class="GameChat-section">
 			<h3 class="GameChat-section-title">
-				{section.moveNum === 0 ? 'Partiebeginn' : `Zug ${section.moveNum}`}
+				{section.moveNum === 0 ? t('game.chat.start') : t('game.move', { move: section.moveNum })}
 			</h3>
 			{#if section.actions.length}
 				<ul class="GameChat-section-actions">

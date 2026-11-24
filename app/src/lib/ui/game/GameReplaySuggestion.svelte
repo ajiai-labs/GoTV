@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n/index.svelte.ts';
 	// Shown once a watched (not played) game ends: replay exactly this game on
 	// the Nachspielen page - with the tree already in memory, no SGF needed.
 	let {
@@ -11,12 +12,14 @@
 </script>
 
 <div class="GameReplaySuggestion panel" role="status">
-	<p class="GameReplaySuggestion-label">Partie beendet.</p>
+	<p class="GameReplaySuggestion-label">{t('game.replay.over')}</p>
 	<div class="GameReplaySuggestion-buttons">
 		<button type="button" class="button button-primary" onclick={() => onReplay()}>
-			Nachspielen
+			{t('game.replay.replay')}
 		</button>
-		<button type="button" class="button" onclick={() => onDismiss()}>Schließen</button>
+		<button type="button" class="button" onclick={() => onDismiss()}>
+			{t('game.replay.close')}
+		</button>
 	</div>
 </div>
 

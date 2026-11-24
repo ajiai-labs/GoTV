@@ -18,6 +18,7 @@
 	// game up next to the stream. Finished games say "beendet", never the
 	// result (no spoiler).
 	import TvSourceBadge from './TvSourceBadge.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		games,
@@ -97,7 +98,7 @@
 			{#if board}
 				{@render miniBoard(board)}
 			{:else}
-				<span class="BoardPreview-board BoardPreview-empty">Brett nach Klick</span>
+				<span class="BoardPreview-board BoardPreview-empty">{t('tv.preview.boardAfterClick')}</span>
 			{/if}
 			<span class="BoardPreview-players">
 				<span class="BoardPreview-player">● {formatPlayer(game, 'black')}</span>
@@ -105,7 +106,11 @@
 			</span>
 			<span class="BoardPreview-meta">
 				<TvSourceBadge {game} />
-				{game.over ? 'beendet' : game.moveNum ? 'Zug ' + String(game.moveNum) : 'läuft'}
+				{game.over
+					? t('tv.preview.over')
+					: game.moveNum
+						? t('tv.preview.move', { move: game.moveNum })
+						: t('tv.preview.running')}
 			</span>
 		</button>
 	{/each}

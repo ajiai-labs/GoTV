@@ -9,6 +9,7 @@ import {
 	validateChannelSchedule
 } from './tvChannels';
 import { validateTvChannel } from './tv';
+import { language } from '#lib/i18n/index.svelte.ts';
 const BASE = {
 	id: 'jupptube-youtube',
 	name: 'JuppTube',
@@ -181,6 +182,14 @@ describe('formatChannelSchedule', () => {
 		});
 		expect(formatChannelSchedule(channel)).toBe('freitags 15:45 Uhr · sonntags 10:30 Uhr');
 		expect(formatChannelSchedule(validateTvChannel(BASE))).toBe(null);
+	});
+	it('says the air times in English when the interface is English', () => {
+		const channel = validateTvChannel({
+			...BASE,
+			schedule: [{ weekday: 7, time: '10:30' }]
+		});
+		language.current = 'en';
+		expect(formatChannelSchedule(channel)).toBe('Sundays 10:30');
 	});
 });
 describe('groupChannels', () => {

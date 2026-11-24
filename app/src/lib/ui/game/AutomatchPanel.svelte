@@ -11,31 +11,33 @@
 	} from '#lib/model/automatch.ts';
 	import type { AutomatchPrefs } from '#lib/model/types.ts';
 	import Modal from '#lib/ui/Modal.svelte';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 
 	type Flag = keyof Omit<AutomatchPrefs, 'maxHandicap' | 'estimatedRank'>;
 
-	const GROUPS: Array<{ title: string; flags: Array<[Flag, string]> }> = [
+	// Titles and labels are text keys (src/lib/i18n), shown with t().
+	const GROUPS: Array<{ title: MessageKey; flags: Array<[Flag, MessageKey]> }> = [
 		{
-			title: 'Gegnerwahl',
+			title: 'play.automatch.opponents',
 			flags: [
-				['humanOk', 'Mensch'],
-				['robotOk', 'Bot'],
-				['unrankedOk', 'Gegner ohne Rang']
+				['humanOk', 'play.automatch.human'],
+				['robotOk', 'play.automatch.robot'],
+				['unrankedOk', 'play.automatch.unranked']
 			]
 		},
 		{
-			title: 'Spielart',
+			title: 'play.automatch.gameType',
 			flags: [
-				['rankedOk', 'Gewertet'],
-				['freeOk', 'Frei']
+				['rankedOk', 'play.automatch.ranked'],
+				['freeOk', 'play.automatch.free']
 			]
 		},
 		{
-			title: 'Spielgeschwindigkeit',
+			title: 'play.automatch.speed',
 			flags: [
-				['mediumOk', 'Mittel'],
-				['fastOk', 'Schnell'],
-				['blitzOk', 'Blitz']
+				['mediumOk', 'play.automatch.medium'],
+				['fastOk', 'play.automatch.fast'],
+				['blitzOk', 'play.automatch.blitz']
 			]
 		}
 	];
@@ -76,46 +78,48 @@
 </script>
 
 <section class="automatch panel" class:searching aria-labelledby="automatch-title">
-	<h2 id="automatch-title" class="panel-title">Automatische Gegnerwahl</h2>
+	<h2 id="automatch-title" class="panel-title">{t('play.automatch.title')}</h2>
 	<div class="body">
 		<label class="switch">
 			<input type="checkbox" checked={searching} onchange={toggle} />
 			<span>
-				{searching ? 'Suche läuft – KGS sucht einen Gegner …' : 'Gegner automatisch suchen'}
+				{searching ? t('play.automatch.searching') : t('play.automatch.start')}
 			</span>
 		</label>
 		<p class="summary muted">
 			{GROUPS.map((group) =>
 				group.flags
 					.filter(([flag]) => prefs[flag])
-					.map(([, label]) => label)
+					.map(([, label]) => t(label))
 					.join(', ')
 			)
 				.filter(Boolean)
-				.join(' · ')} · max. Rangunterschied {prefs.maxHandicap}
+				.join(' · ')} · {t('play.automatch.summaryMax', { max: prefs.maxHandicap })}
 		</p>
-		<button type="button" class="button" onclick={openSettings}>Autowahleinstellungen</button>
+		<button type="button" class="button" onclick={openSettings}>
+			{t('play.automatch.settings')}
+		</button>
 	</div>
 </section>
 
 {#if editing}
-	<Modal title="Autowahleinstellungen" onclose={() => (editing = false)}>
+	<Modal title={t('play.automatch.settings')} onclose={() => (editing = false)}>
 		<form class="settings" onsubmit={save}>
 			{#each GROUPS as group (group.title)}
 				<fieldset>
-					<legend>{group.title}</legend>
+					<legend>{t(group.title)}</legend>
 					{#each group.flags as [flag, label] (flag)}
 						<label>
 							<input type="checkbox" bind:checked={draft[flag]} />
-							{label}
+							{t(label)}
 						</label>
 					{/each}
-					{#if group.title === 'Gegnerwahl'}
+					{#if group.title === 'play.automatch.opponents'}
 						<div class="handicap">
 							<button
 								type="button"
 								class="button"
-								aria-label="Rangunterschied verringern"
+								aria-label={t('play.automatch.decrease')}
 								disabled={draft.maxHandicap <= MAX_HANDICAP_MIN}
 								onclick={() => changeHandicap(-1)}
 							>
@@ -125,27 +129,31 @@
 							<button
 								type="button"
 								class="button"
-								aria-label="Rangunterschied erhöhen"
+								aria-label={t('play.automatch.increase')}
 								disabled={draft.maxHandicap >= MAX_HANDICAP_MAX}
 								onclick={() => changeHandicap(1)}
 							>
 								+
 							</button>
-							<span>Max. Rangunterschied</span>
+							<span>{t('play.automatch.maxDifference')}</span>
 						</div>
 					{/if}
 				</fieldset>
 			{/each}
 			{#if missing.length}
 				<p class="error" role="alert">
-					Bitte in {missing.join(' und ')} mindestens eins wählen.
+					{t('play.automatch.missing', {
+						groups: missing.map((title) => t(title)).join(t('play.automatch.and'))
+					})}
 				</p>
 			{/if}
 			<div class="actions">
 				<button type="submit" class="button button-primary" disabled={missing.length > 0}>
-					OK
+					{t('play.automatch.ok')}
 				</button>
-				<button type="button" class="button" onclick={() => (editing = false)}>Abbrechen</button>
+				<button type="button" class="button" onclick={() => (editing = false)}>
+					{t('play.automatch.cancel')}
+				</button>
 			</div>
 		</form>
 	</Modal>

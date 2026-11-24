@@ -2,6 +2,7 @@ import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { app } from '#lib/app.svelte.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 import type { AppActions } from '#lib/model/AppActions.ts';
 import { getInitialState, handleMessage } from '#lib/model/index.ts';
 import { parseSgf } from '#lib/model/sgf.ts';
@@ -270,5 +271,22 @@ describe('GameScreen', () => {
 		await input.fill('Schöner Zug');
 		input.element().closest('form')!.requestSubmit();
 		expect(actions.onSendGameChat).toHaveBeenCalledWith('Schöner Zug', 501);
+	});
+
+	it('speaks English, with the original English result', async () => {
+		mockActions();
+		language.current = 'en';
+		await render(GameScreen, {
+			game: fixtureGame({ over: true, score: 'W+RESIGN' }),
+			playing: true
+		});
+		await expect.element(page.getByRole('heading', { name: 'Game over: W+Resign' })).toBeVisible();
+		await expect
+			.element(page.getByRole('img', { name: /anna \(White\) vs gotvfan \(Black\), move 2/ }))
+			.toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Resign' })).toBeVisible();
+		await expect.element(page.getByRole('tab', { name: '1 observer' })).toBeInTheDocument();
+		await expect.element(page.getByText('1 capture')).not.toBeInTheDocument();
+		await expect.element(page.getByText('0 captures').first()).toBeInTheDocument();
 	});
 });

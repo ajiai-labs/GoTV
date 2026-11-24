@@ -8,6 +8,7 @@
 	import type { MyGoTvItem } from '#lib/model/MyGoTv.ts';
 	import type { TvChannel, TvEvent } from '#lib/model/tv.ts';
 	import type { TvFavorites } from '#lib/model/TvFavorites.ts';
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		favorites,
@@ -31,22 +32,26 @@
 	const uid = $props.id();
 
 	function formatDay(date: Date): string {
-		return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
+		return date.toLocaleDateString(locale(), {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'numeric'
+		});
 	}
 
 	function formatStart(start: Date, today: Date): string {
-		const time = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-		if (start.toDateString() === today.toDateString()) return 'heute ' + time + ' Uhr';
-		return formatDay(start) + ' ' + time + ' Uhr';
+		const time = start.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+		if (start.toDateString() === today.toDateString()) return t('tv.my.today', { time });
+		return t('tv.my.dayTime', { day: formatDay(start), time });
 	}
 
 	function describe(item: MyGoTvItem, today: Date): string {
-		if (item.status === 'now') return item.planned ? 'läuft gerade (geplant)' : 'läuft gerade';
+		if (item.status === 'now') return item.planned ? t('tv.onAirPlanned') : t('tv.my.now');
 		if (item.status === 'next' && item.start) {
 			const when = item.timed ? formatStart(item.start, today) : formatDay(item.start);
-			return item.planned ? 'nächste Sendung ' + when + ' (geplant)' : when;
+			return item.planned ? t('tv.my.nextPlanned', { when }) : when;
 		}
-		return 'keine feste Sendezeit';
+		return t('tv.my.noTime');
 	}
 
 	let date = $derived(new Date(now));
@@ -55,10 +60,10 @@
 
 <section class="MyGoTv panel" class:MyGoTv-empty={!items.length} aria-labelledby="{uid}-title">
 	<header class="MyGoTv-header">
-		<h2 id="{uid}-title" class="panel-title">Mein GoTV</h2>
+		<h2 id="{uid}-title" class="panel-title">{t('tv.my.title')}</h2>
 		{#if items.length && notificationPermission}
 			{#if notificationPermission === 'denied'}
-				<span class="MyGoTv-reminder-note muted">Erinnerungen sind im Browser blockiert</span>
+				<span class="MyGoTv-reminder-note muted">{t('tv.my.blocked')}</span>
 			{:else}
 				<label class="MyGoTv-reminder">
 					<input
@@ -66,17 +71,17 @@
 						checked={remindersEnabled && notificationPermission === 'granted'}
 						onchange={() => onToggleReminders()}
 					/>
-					10 Min. vorher erinnern (solange GoTV offen ist)
+					{t('tv.my.remind')}
 				</label>
 			{/if}
 		{/if}
 	</header>
 	{#if !items.length}
 		<p class="MyGoTv-hint">
-			Markiere Kanäle und Turniere mit ☆ – sie erscheinen dann hier mit ihrem nächsten Termin.
+			{t('tv.my.hint')}
 		</p>
 		<p class="MyGoTv-hint">
-			<a class="button" href={resolve('/kanaele')}>Zu den Kanälen</a>
+			<a class="button" href={resolve('/kanaele')}>{t('tv.my.toChannels')}</a>
 		</p>
 	{:else}
 		<ul>
@@ -89,7 +94,9 @@
 					>
 						<span class="MyGoTv-item-star" aria-hidden="true">★</span>
 						<span class="MyGoTv-item-name">{item.name}</span>
-						<span class="MyGoTv-item-kind">{item.kind === 'channel' ? 'Kanal' : 'Turnier'}</span>
+						<span class="MyGoTv-item-kind">
+							{item.kind === 'channel' ? t('tv.my.kindChannel') : t('tv.my.kindEvent')}
+						</span>
 						<span class="MyGoTv-item-when">{describe(item, date)}</span>
 					</a>
 				</li>

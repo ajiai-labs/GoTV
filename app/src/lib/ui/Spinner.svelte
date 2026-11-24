@@ -1,10 +1,11 @@
 <script lang="ts">
-	let { label = 'Lädt …' }: { label?: string } = $props();
+	import { t } from '#lib/i18n/index.svelte.ts';
+	let { label }: { label?: string } = $props();
 </script>
 
 <div class="spinner" role="status">
 	<span class="dot" aria-hidden="true"></span>
-	<span class="text">{label}</span>
+	<span class="text">{label ?? t('app.spinner.loading')}</span>
 </div>
 
 <style>

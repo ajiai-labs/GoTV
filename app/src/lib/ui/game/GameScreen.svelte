@@ -11,6 +11,7 @@
 	// the board (two-click embed).
 	import { onMount, tick } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import {
 		getGameChatSections,
 		getGameLine,
@@ -129,10 +130,11 @@
 	let title = $derived.by(() => {
 		if (game.over || game.score) {
 			const score = game.score ? formatScoreDe(game.score) : '';
-			if (game.over) return 'Partie beendet' + (score ? ': ' + score : '');
+			if (game.over)
+				return score ? t('game.screen.overWithScore', { score }) : t('game.screen.over');
 			return score;
 		}
-		return game.name || (moveNum ? `Zug ${moveNum}` : '');
+		return game.name || (moveNum ? t('game.move', { move: moveNum }) : '');
 	});
 
 	// The chat follows new messages and moves with chat, as before.
@@ -225,9 +227,9 @@
 	}
 
 	const TABS: Array<{ id: Tab; label: () => string }> = [
-		{ id: 'chat', label: () => 'Chat' },
-		{ id: 'info', label: () => 'Info' },
-		{ id: 'users', label: () => `${users.length} Beobachter` }
+		{ id: 'chat', label: () => t('game.screen.tabChat') },
+		{ id: 'info', label: () => t('game.screen.tabInfo') },
+		{ id: 'users', label: () => t('game.screen.observers', { count: users.length }) }
 	];
 </script>
 
@@ -245,7 +247,8 @@
 	<header class="GameScreen-header">
 		{#if !playing}
 			<button type="button" class="GameScreen-back button" onclick={onLeave}>
-				<span aria-hidden="true">‹</span> Zurück
+				<span aria-hidden="true">‹</span>
+				{t('game.screen.back')}
 			</button>
 		{/if}
 		<h1 class="GameScreen-title">{title}</h1>
@@ -262,8 +265,10 @@
 	>
 		<div class="GameScreen-board-column">
 			{#if liveEvent}
-				<section class="GameScreen-tv-stream" aria-label="Übertragung">
-					<h2 class="GameScreen-tv-stream-title">Live: {liveEvent.name}</h2>
+				<section class="GameScreen-tv-stream" aria-label={t('game.screen.broadcast')}>
+					<h2 class="GameScreen-tv-stream-title">
+						{t('game.screen.live', { name: liveEvent.name })}
+					</h2>
 					<StreamEmbed event={liveEvent} />
 				</section>
 			{/if}
@@ -298,13 +303,13 @@
 
 		<div class="GameScreen-splitter">
 			<Splitter
-				label="Brett größer oder kleiner"
+				label={t('game.screen.splitter')}
 				valuenow={mainWidth ? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth) : 0}
 				valuemin={Math.round(BOARD_MIN_SHARE * 100)}
 				valuemax={100}
-				valuetext="Brettbereich {mainWidth
-					? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth)
-					: 0} Prozent der Breite"
+				valuetext={t('game.screen.splitterValue', {
+					percent: mainWidth ? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth) : 0
+				})}
 				onpointer={onSplitterPointer}
 				onkey={onSplitterKey}
 			/>
@@ -339,7 +344,7 @@
 				<div class="GameScreen-players">
 					<GamePlayersInfo {game} {onUserDetail} />
 				</div>
-				<div class="GameScreen-tabs" role="tablist" aria-label="Ansicht">
+				<div class="GameScreen-tabs" role="tablist" aria-label={t('game.screen.tabs')}>
 					{#each TABS as item (item.id)}
 						<button
 							type="button"
@@ -353,7 +358,9 @@
 					{/each}
 				</div>
 				<div class="GameScreen-users" class:GameScreen-tab-content={tab === 'users'}>
-					<h2 class="GameScreen-side-title">{users.length} Beobachter</h2>
+					<h2 class="GameScreen-side-title">
+						{t('game.screen.observers', { count: users.length })}
+					</h2>
 					<UserList {users} onSelectUser={onUserDetail} />
 				</div>
 			</div>

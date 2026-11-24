@@ -3,6 +3,7 @@
 	// the curve; below the games played last and the tournament games.
 	// Opens, in this order: ?sgf=<address>, the KGS game handed over after it
 	// ended (app.state.tvReplayGameId), else the loader (file or SGF text).
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { app } from '#lib/app.svelte.ts';
@@ -82,10 +83,10 @@
 </script>
 
 <svelte:head>
-	<title>Nachspielen – GoTV</title>
+	<title>{t('app.replay.pageTitle')}</title>
 </svelte:head>
 
-<h1 class="visually-hidden">Nachspielen</h1>
+<h1 class="visually-hidden">{t('app.replay.title')}</h1>
 
 <div class="page">
 	<div class="replay" bind:this={replayElement}>

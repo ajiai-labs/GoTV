@@ -3,6 +3,7 @@
 	// without a KGS login. Stars ("Mein GoTV") are kept in this browser only.
 	// A tournament running right now shows as a full broadcast with its
 	// boards, as on Live.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import CalendarView from '#lib/ui/tv/CalendarView.svelte';
@@ -53,7 +54,7 @@
 </script>
 
 <svelte:head>
-	<title>Kalender – GoTV</title>
+	<title>{t('app.calendar.pageTitle')}</title>
 </svelte:head>
 
 {#snippet renderEvent(event: TvEvent, options: { openGames: boolean })}

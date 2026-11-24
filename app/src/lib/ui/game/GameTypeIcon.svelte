@@ -3,6 +3,7 @@
 	// S(imul), 2 (rengo), C(hallenge), a trophy for tournaments, a lock for
 	// private games and a top hat for KGS Plus subscriber games.
 	import type { GameType } from '#lib/model/types.ts';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		type,
@@ -27,26 +28,28 @@
 		tournament: '🏆'
 	};
 
-	const GAME_TYPE_LABEL: Record<GameType, string> = {
-		challenge: 'Herausforderung',
-		demonstration: 'Demonstration',
-		review: 'Besprechung',
-		rengo_review: 'Rengo-Besprechung',
-		teaching: 'Lehrpartie',
-		simul: 'Simultan',
-		rengo: 'Rengo',
-		free: 'Freie Partie',
-		ranked: 'Gewertete Partie',
-		tournament: 'Turnierpartie'
+	const GAME_TYPE_LABEL: Record<GameType, MessageKey> = {
+		challenge: 'game.type.challenge',
+		demonstration: 'game.type.demonstration',
+		review: 'game.type.review',
+		rengo_review: 'game.type.rengoReview',
+		teaching: 'game.type.teaching',
+		simul: 'game.type.simul',
+		rengo: 'game.type.rengo',
+		free: 'game.typeIcon.free',
+		ranked: 'game.typeIcon.ranked',
+		tournament: 'game.typeIcon.tournament'
 	};
 
 	let code = $derived(subscribersOnly ? '🎩' : isPrivate ? '🔒' : (GAME_TYPE_CODE[type] ?? '?'));
 	let label = $derived(
 		subscribersOnly
-			? 'Nur für KGS-Plus-Abonnenten'
+			? t('game.typeIcon.subscribers')
 			: isPrivate
-				? 'Private Partie'
-				: (GAME_TYPE_LABEL[type] ?? type)
+				? t('game.typeIcon.private')
+				: GAME_TYPE_LABEL[type]
+					? t(GAME_TYPE_LABEL[type])
+					: type
 	);
 </script>
 

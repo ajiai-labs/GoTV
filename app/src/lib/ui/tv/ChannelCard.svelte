@@ -8,6 +8,7 @@
 	import { formatChannelSchedule, getChannelLiveUrl } from '#lib/model/tvChannels.ts';
 	import { getChannelChat } from '#lib/model/StreamChat.ts';
 	import type { TvChannel } from '#lib/model/tv.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		channel,
@@ -50,9 +51,9 @@
 	{#if schedule}
 		<p class="ChannelCard-schedule">
 			{#if onAir}
-				<span class="ChannelCard-live">läuft gerade (geplant)</span>
+				<span class="ChannelCard-live">{t('tv.onAirPlanned')}</span>
 			{/if}
-			Feste Sendezeit: {schedule} (deutsche Zeit)
+			{t('tv.channel.schedule', { schedule })}
 		</p>
 	{/if}
 	{#if channel.notes}
@@ -67,12 +68,12 @@
 			target="_blank"
 			rel="noopener noreferrer"
 		>
-			Auf {platformLabel} öffnen (mit Chat)
+			{t('tv.channel.openOn', { platform: platformLabel })}
 		</a>
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{#if channel.platform === 'youtube'}
 			<span class="ChannelCard-links-hint muted">
-				Chat, Like und Abo gibt es direkt auf YouTube.
+				{t('tv.channel.youtubeHint')}
 			</span>
 		{/if}
 	</div>

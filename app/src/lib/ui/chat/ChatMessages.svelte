@@ -6,6 +6,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import type { ConversationMessage, GameChannel, Index, User } from '#lib/model/types.ts';
 	import { formatLocaleTime } from '#lib/util/date.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { extractUrls, isStreamUrl, normalizeUrl } from '#lib/util/urls.ts';
 	import RichContent from '#lib/ui/RichContent.svelte';
 	import UserName from '#lib/ui/UserName.svelte';
@@ -69,7 +70,7 @@
 
 	function senderOf(message: ConversationMessage): User | string {
 		// The old app noted the sender is sometimes missing.
-		return usersByName[message.sender] || message.sender || '[unbekannt]';
+		return usersByName[message.sender] || message.sender || t('chat.messages.unknownSender');
 	}
 
 	function senderName(sender: User | string): string {
@@ -115,7 +116,9 @@
 				class:ChatMessages-item-self={!!currentUser && currentUser.name === senderName(sender)}
 			>
 				<div class="ChatMessages-item-content">
-					{#if message.announcement}<span class="ChatMessages-item-label">Ankündigung</span>{/if}
+					{#if message.announcement}<span class="ChatMessages-item-label">
+							{t('chat.messages.announcement')}
+						</span>{/if}
 					<button
 						type="button"
 						class="ChatMessages-item-user"
@@ -140,7 +143,7 @@
 									title={url}
 									onclick={() => onOpenTv(url)}
 								>
-									Im TV öffnen
+									{t('chat.messages.openInTv')}
 								</button>
 							{/each}
 						</div>
@@ -148,7 +151,7 @@
 				</div>
 				{#if message.date}
 					<div class="ChatMessages-item-time">
-						{message.sending ? 'Wird gesendet …' : formatLocaleTime(message.date)}
+						{message.sending ? t('chat.messages.sending') : formatLocaleTime(message.date)}
 					</div>
 				{/if}
 			</div>

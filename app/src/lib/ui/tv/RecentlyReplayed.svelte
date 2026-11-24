@@ -1,6 +1,7 @@
 <script lang="ts">
 	// "Zuletzt nachgespielt": reopen a game where it was left (this browser).
 	import { getRecentReplays } from '#lib/model/ReplayProgress.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		onOpenReplay,
@@ -22,7 +23,7 @@
 
 {#if recent.length}
 	<section class="recent panel" aria-labelledby="{uid}-title">
-		<h2 id="{uid}-title" class="panel-title">Zuletzt nachgespielt</h2>
+		<h2 id="{uid}-title" class="panel-title">{t('replay.recently.title')}</h2>
 		<ul>
 			{#each recent as entry (entry.key)}
 				<li>
@@ -35,8 +36,8 @@
 					>
 						<span class="name">{entry.title}</span>
 						<span class="move muted">
-							weiter bei Zug {entry.move}{entry.bookmarks.length
-								? ' · ' + String(entry.bookmarks.length) + ' Lesezeichen'
+							{t('replay.recently.resume', { move: entry.move })}{entry.bookmarks.length
+								? ' · ' + t('replay.recently.bookmarks', { count: entry.bookmarks.length })
 								: ''}
 						</span>
 					</button>

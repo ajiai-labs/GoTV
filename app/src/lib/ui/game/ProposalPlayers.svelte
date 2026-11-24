@@ -1,18 +1,21 @@
 <script lang="ts" module>
 	import type { GameRole } from '#lib/model/types.ts';
 
-	const ROLE_DE: Record<GameRole, string> = {
-		black: 'Schwarz',
-		white: 'Weiß',
-		black_2: 'Schwarz 2',
-		white_2: 'Weiß 2',
-		challengeCreator: 'Ersteller',
-		owner: 'Besitzer'
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+
+	const ROLE_KEYS: Record<GameRole, MessageKey> = {
+		black: 'play.role.black',
+		white: 'play.role.white',
+		black_2: 'play.role.black2',
+		white_2: 'play.role.white2',
+		challengeCreator: 'play.role.challengeCreator',
+		owner: 'play.role.owner'
 	};
 
-	// formatGameRole (taken over unchanged) in German.
+	// formatGameRole (taken over unchanged) in the current language.
 	export function formatGameRoleDe(role: GameRole): string {
-		return ROLE_DE[role] ?? role;
+		const key = ROLE_KEYS[role];
+		return key ? t(key) : role;
 	}
 </script>
 
@@ -68,7 +71,9 @@
 		{@const user = userOf(name)}
 		{@const roleHilite = roleChanged(player, prevPlayers ? prevPlayers[i] : undefined)}
 		{@const playerHilite = i > 0 && !!name && currentUser.name !== name}
-		{@const roleName = nigiri ? `Spieler ${i + 1}` : formatGameRoleDe(player.role)}
+		{@const roleName = nigiri
+			? t('play.players.player', { number: i + 1 })
+			: formatGameRoleDe(player.role)}
 		<div
 			class="ProposalPlayers-item"
 			class:ProposalPlayers-item-player-hilite={playerHilite}
@@ -77,7 +82,9 @@
 			<button
 				type="button"
 				class="ProposalPlayers-role"
-				aria-label="{roleName}{nigiri ? ' (Nigiri)' : ''} – Farbe wechseln"
+				aria-label={t(nigiri ? 'play.players.toggleNigiri' : 'play.players.toggle', {
+					role: roleName
+				})}
 				onclick={() => user && onToggleRole(typeof user === 'string' ? user : user.name)}
 			>
 				<span class="ProposalPlayers-role-icon" aria-hidden="true">
@@ -104,7 +111,7 @@
 						<UserName {user} extraIcons />
 					{/if}
 				{:else}
-					<span class="muted">– offen –</span>
+					<span class="muted">{t('play.players.open')}</span>
 				{/if}
 			</button>
 		</div>

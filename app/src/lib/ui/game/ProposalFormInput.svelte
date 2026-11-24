@@ -2,6 +2,8 @@
 	// One value of a challenge proposal (time, board size, handicap, komi)
 	// with − and + buttons. Read-only: the buttons are switched off.
 	// Highlighted: the value differs from the previous proposal.
+	import { t } from '#lib/i18n/index.svelte.ts';
+
 	let {
 		value,
 		label,
@@ -37,14 +39,14 @@
 	<div class="ProposalForm-input-value">
 		<output aria-live="polite">{value}</output>
 		<span class="ProposalForm-input-value-label">
-			{label}{#if hilited}<span class="sr-only"> (geändert)</span>{/if}
+			{label}{#if hilited}<span class="sr-only">{t('play.input.changed')}</span>{/if}
 		</span>
 	</div>
 	<div class="ProposalForm-input-plusminus">
 		<button
 			type="button"
 			class="ProposalForm-input-minus"
-			aria-label="{label} verringern"
+			aria-label={t('play.input.decrease', { label })}
 			disabled={readonly}
 			onclick={minus}
 		>
@@ -53,7 +55,7 @@
 		<button
 			type="button"
 			class="ProposalForm-input-plus"
-			aria-label="{label} erhöhen"
+			aria-label={t('play.input.increase', { label })}
 			disabled={readonly}
 			onclick={plus}
 		>

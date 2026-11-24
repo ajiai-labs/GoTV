@@ -1,3 +1,4 @@
+import { language } from '#lib/i18n/index.svelte.ts';
 import { kgsMessage } from './kgsText';
 
 describe('kgsMessage', () => {
@@ -7,5 +8,10 @@ describe('kgsMessage', () => {
 		);
 		expect(kgsMessage('Text von KGS')).toBe('Text von KGS');
 		expect(kgsMessage(null)).toBeNull();
+	});
+
+	it('shows the original English text in English', () => {
+		language.current = 'en';
+		expect(kgsMessage('Login failed - bad password')).toBe('Login failed - bad password');
 	});
 });

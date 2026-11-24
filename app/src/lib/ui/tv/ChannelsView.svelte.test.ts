@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import ChannelsView from './ChannelsView.svelte';
 import { getGermanClock } from '#lib/model/tvChannels.ts';
 import type { TvChannel } from '#lib/model/tv.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 
 const NOW = Date.now();
 const TODAY = getGermanClock(new Date(NOW)).weekday;
@@ -121,5 +122,15 @@ describe('ChannelsView', () => {
 	it('names an empty roster', async () => {
 		await render(ChannelsView, { status: 'ready', channels: [], now: NOW });
 		await expect.element(page.getByText('Keine Kanäle eingetragen.')).toBeVisible();
+	});
+
+	it('switches to English with the interface language', async () => {
+		await render(ChannelsView, { status: 'ready', channels: CHANNELS, now: NOW });
+		await expect.element(page.getByRole('heading', { name: /Wochenplan/ })).toBeVisible();
+		language.current = 'en';
+		await expect.element(page.getByRole('heading', { name: /Weekly schedule/ })).toBeVisible();
+		await expect.element(page.getByRole('heading', { name: 'Players' })).toBeVisible();
+		await expect.element(page.getByRole('listitem', { name: /\(today\)/ })).toBeVisible();
+		expect(document.body.textContent).toContain('on air now (scheduled)');
 	});
 });

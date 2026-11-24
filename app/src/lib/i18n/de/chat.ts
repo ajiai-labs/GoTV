@@ -1,0 +1,123 @@
+import type { Message } from '../types.ts';
+
+// KGS chat (routes/chat, ui/chat) and the user parts (ui/user): profile,
+// followed players, rank graph.
+export const chat = {
+	// Chat page (routes/chat)
+	'chat.page.pageTitle': 'Chat – GoTV',
+	'chat.page.title': 'Chat',
+	'chat.page.userCount': { one: '{count} Nutzer', other: '{count} Nutzer' },
+	'chat.page.tabs': 'Räume und Gespräche',
+	'chat.page.empty': '[leer]',
+	'chat.page.leaveRoom': 'Raum verlassen',
+	'chat.page.closeConversation': 'Gespräch schließen',
+	'chat.page.joinRoom': 'Raum betreten …',
+	'chat.page.back': 'Zurück',
+	'chat.page.roomUsers': 'Nutzer im Raum',
+	'chat.page.chats': 'Chats',
+	'chat.page.showRoomUsers': 'Nutzer im Raum {room} zeigen',
+	'chat.page.noChat': 'Kein Chat offen. Über „Raum betreten …“ findest du alle Räume.',
+	'chat.page.rooms': 'Räume',
+	// ChatMessageBar
+	'chat.disabled': 'Chat ist abgeschaltet',
+	'chat.bar.label': 'Chatnachricht',
+	'chat.bar.placeholder': 'Nachricht schreiben …',
+	// ChatMessages
+	'chat.messages.unknownSender': '[unbekannt]',
+	'chat.messages.announcement': 'Ankündigung',
+	'chat.messages.openInTv': 'Im TV öffnen',
+	'chat.messages.sending': 'Wird gesendet …',
+	// ChatRoomList
+	'chat.rooms.main': 'Haupträume',
+	'chat.rooms.national': 'Länder',
+	'chat.rooms.tournament': 'Turniere',
+	'chat.rooms.friendly': 'Gesellig',
+	'chat.rooms.special': 'Besondere',
+	'chat.rooms.lessons': 'Unterricht',
+	'chat.rooms.clubs': 'Vereine',
+	'chat.rooms.temporary': 'Neue Räume',
+	'chat.rooms.other': 'Sonstige',
+	'chat.rooms.search': 'Räume suchen',
+	'chat.rooms.private': 'Privater Raum',
+	// RoomGameLinks
+	'chat.roomGames.games': { one: '{count} Partie', other: '{count} Partien' },
+	'chat.roomGames.challenges': {
+		one: '{count} Herausforderung',
+		other: '{count} Herausforderungen'
+	},
+	// UserChat
+	'chat.user.viewProfile': 'Profil ansehen',
+	// User status (chat/userStatus.ts)
+	'chat.status.idle': 'Abwesend',
+	'chat.status.playing': 'Spielt',
+	'chat.status.online': 'Online',
+	'chat.status.offline': 'Offline',
+	// FollowedPlayers
+	'chat.followed.title': 'Gefolgte Spieler',
+	'chat.followed.empty':
+		'Folge Spielern auf KGS: Namen anklicken und im Profil „Folgen“ wählen. Dann siehst du hier, wer gerade spielt.',
+	'chat.followed.logIn': 'Bei KGS anmelden, um zu sehen, wer gerade spielt.',
+	'chat.followed.unfollowName': '{name} nicht mehr folgen',
+	'chat.followed.unfollow': 'Nicht mehr folgen',
+	'chat.followed.playsAgainst': 'spielt gegen {opponent}',
+	'chat.followed.move': ' · Zug {move}',
+	'chat.followed.watch': 'Ansehen',
+	'chat.followed.noGame': 'gerade keine Partie',
+	'chat.followed.hint':
+		'Beginnt ein gefolgter Spieler eine Partie, meldet GoTV das, solange es offen ist und die Erinnerungen unter „Mein GoTV“ eingeschaltet sind.',
+	// FollowWatcher (notifications)
+	'chat.follow.title': '{name} spielt jetzt auf KGS',
+	'chat.follow.bodyOpponent': 'Neue Partie gegen {opponent} – in GoTV unter „Beobachten“',
+	'chat.follow.body': 'Neue Partie – in GoTV unter „Beobachten“',
+	// UserDetailsEditForm
+	'chat.edit.name': 'Name',
+	'chat.edit.email': 'E-Mail',
+	'chat.edit.newPassword': 'Neues Passwort',
+	'chat.edit.newPasswordHint': 'leer lassen, um das bisherige zu behalten',
+	'chat.edit.about': 'Über mich',
+	'chat.edit.emailWanted': 'Ankündigungen von KGS per E-Mail erhalten',
+	'chat.edit.privateEmail': 'E-Mail-Adresse vor anderen Spielern verbergen',
+	'chat.edit.rankWanted': 'Mit Rang spielen',
+	'chat.edit.save': 'Änderungen speichern',
+	'chat.edit.cancel': 'Abbrechen',
+	// UserGameSummary
+	'chat.summary.white': 'Weiß',
+	'chat.summary.black': 'Schwarz',
+	'chat.summary.result': 'Ergebnis',
+	'chat.summary.date': 'Datum',
+	'chat.summary.type': 'Art',
+	'chat.summary.joinRoomFirst': 'Betritt zuerst einen Raum, um eine Partie zu laden.',
+	'chat.summary.loading': 'Partie wird geladen …',
+	'chat.summary.loadInto': 'Partie laden in:',
+	'chat.summary.loadsIn': 'Die Partie wird in {room} geladen.',
+	'chat.summary.private': 'Privat',
+	'chat.summary.load': 'Partie laden',
+	// UserRankGraph
+	'chat.rankGraph.summary': 'Rangverlauf der letzten {count} Tage',
+	'chat.rankGraph.summaryCurrent': 'Rangverlauf der letzten {count} Tage, zuletzt etwa {rank}',
+	'chat.rankGraph.loading': 'Rangverlauf lädt …',
+	'chat.rankGraph.none': 'Für diesen Spieler gibt es keinen Rangverlauf.',
+	// UserDetailsModal (profile)
+	'chat.profile.status.idle': 'Abwesend',
+	'chat.profile.status.playing': 'Spielt gerade',
+	'chat.profile.status.online': 'Online',
+	'chat.profile.status.offline': 'Offline',
+	'chat.profile.auth.jrAdmin': 'Junior-Admin',
+	'chat.profile.auth.srAdmin': 'Senior-Admin',
+	'chat.profile.auth.superAdmin': 'Super-Admin',
+	'chat.profile.auth.teacher': 'Lehrer',
+	'chat.profile.justNow': 'gerade eben',
+	'chat.profile.lastOnline': '{status} – zuletzt online {ago}',
+	'chat.profile.title': 'Spielerprofil',
+	'chat.profile.edit': 'Profil bearbeiten',
+	'chat.profile.archiveGame': 'Partie aus dem Archiv',
+	'chat.profile.sendMessage': 'Nachricht senden',
+	'chat.profile.following': '★ Gefolgt',
+	'chat.profile.follow': '☆ Folgen',
+	'chat.profile.memberSince': 'Dabei seit {date}',
+	'chat.profile.tabs': 'Profil',
+	'chat.profile.rank': 'Rang',
+	'chat.profile.noGames': 'Keine Partien im Archiv.',
+	'chat.profile.loading': 'Profil lädt …',
+	'chat.profile.notFound': 'Spieler „{name}“ nicht gefunden.'
+} satisfies Record<string, Message>;

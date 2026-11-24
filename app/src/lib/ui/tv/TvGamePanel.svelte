@@ -17,6 +17,7 @@
 	import GameMoreMenu from '#lib/ui/game/GameMoreMenu.svelte';
 	import GamePlayersInfo from '#lib/ui/game/GamePlayersInfo.svelte';
 	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import ChatMessageBar from '#lib/ui/chat/ChatMessageBar.svelte';
 	import UserList from '#lib/ui/user/UserList.svelte';
 	import TvSourceBadge from './TvSourceBadge.svelte';
@@ -73,10 +74,9 @@
 	});
 	let header = $derived.by(() => {
 		if (game.over || game.score) {
-			return (
-				(game.over ? 'Partie beendet' : '') +
-				(game.score ? (game.over ? ': ' : '') + formatScoreDe(game.score) : '')
-			);
+			if (!game.score) return t('tv.panel.over');
+			const score = formatScoreDe(game.score);
+			return game.over ? t('tv.panel.overWithScore', { score }) : score;
 		}
 		return game.name || '';
 	});
@@ -115,9 +115,9 @@
 	}
 
 	const TABS: Array<{ id: Tab; label: () => string }> = [
-		{ id: 'chat', label: () => 'Chat' },
-		{ id: 'info', label: () => 'Info' },
-		{ id: 'users', label: () => `${users.length} Beobachter` }
+		{ id: 'chat', label: () => t('tv.panel.chat') },
+		{ id: 'info', label: () => t('tv.panel.info') },
+		{ id: 'users', label: () => t('tv.panel.observerCount', { count: users.length }) }
 	];
 </script>
 
@@ -137,12 +137,12 @@
 			<GameBoardNav nodeId={currentNode} {currentLine} {onChangeCurrentNode} live={!game.over} />
 		</div>
 	{:else}
-		<p class="TvGamePanel-notice" role="status">Brett wird von {source} geladen …</p>
+		<p class="TvGamePanel-notice" role="status">{t('tv.panel.loading', { source })}</p>
 	{/if}
 	<div class="TvGamePanel-players">
 		<GamePlayersInfo game={liveGame} {onUserDetail} />
 	</div>
-	<div class="TvGamePanel-tabs" role="tablist" aria-label="Partie">
+	<div class="TvGamePanel-tabs" role="tablist" aria-label={t('tv.panel.tabs')}>
 		{#each TABS as item (item.id)}
 			<button
 				type="button"
@@ -160,7 +160,11 @@
 	</div>
 	<div id="{uid}-panel" role="tabpanel" aria-labelledby="{uid}-{tab}">
 		<h4 class="TvGamePanel-chat-title">
-			{tab === 'info' ? 'Partieinfo' : tab === 'users' ? 'Beobachter' : source + '-Partiechat'}
+			{tab === 'info'
+				? t('tv.panel.gameInfo')
+				: tab === 'users'
+					? t('tv.panel.observers')
+					: t('tv.panel.gameChat', { source })}
 		</h4>
 		<div class="TvGamePanel-chat" bind:this={chatEl}>
 			{#if tab === 'info'}
@@ -181,7 +185,7 @@
 				/>
 			{:else}
 				<p class="TvGamePanel-notice">
-					{tree ? 'Noch keine Chatnachrichten.' : 'Chat wird geladen …'}
+					{tree ? t('tv.panel.noMessages') : t('tv.panel.chatLoading')}
 				</p>
 			{/if}
 		</div>

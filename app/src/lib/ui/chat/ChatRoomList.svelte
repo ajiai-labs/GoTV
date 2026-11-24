@@ -3,17 +3,18 @@
 	import type { Index, Room, RoomCategory } from '#lib/model/types.ts';
 	import { isMobileScreen } from '#lib/util/dom.ts';
 	import { quoteRegExpPattern } from '#lib/util/string.ts';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 
-	const CAT_LABELS: Record<RoomCategory, string> = {
-		MAIN: 'Haupträume',
-		NATIONAL: 'Länder',
-		TOURNAMENT: 'Turniere',
-		FRIENDLY: 'Gesellig',
-		SPECIAL: 'Besondere',
-		LESSONS: 'Unterricht',
-		CLUBS: 'Vereine',
-		TEMPORARY: 'Neue Räume',
-		OTHER: 'Sonstige'
+	const CAT_LABELS: Record<RoomCategory, MessageKey> = {
+		MAIN: 'chat.rooms.main',
+		NATIONAL: 'chat.rooms.national',
+		TOURNAMENT: 'chat.rooms.tournament',
+		FRIENDLY: 'chat.rooms.friendly',
+		SPECIAL: 'chat.rooms.special',
+		LESSONS: 'chat.rooms.lessons',
+		CLUBS: 'chat.rooms.clubs',
+		TEMPORARY: 'chat.rooms.temporary',
+		OTHER: 'chat.rooms.other'
 	};
 
 	let {
@@ -40,7 +41,7 @@
 		}
 		return Object.entries(roomsByCat).map(([cat, rooms = []]) => ({
 			cat,
-			label: CAT_LABELS[cat as RoomCategory] ?? CAT_LABELS.OTHER,
+			label: t(CAT_LABELS[cat as RoomCategory] ?? CAT_LABELS.OTHER),
 			rooms: [...rooms].sort((a, b) => a.name.localeCompare(b.name))
 		}));
 	});
@@ -60,8 +61,8 @@
 		bind:value={search}
 		class="ChatRoomList-search"
 		type="search"
-		placeholder="Räume suchen"
-		aria-label="Räume suchen"
+		placeholder={t('chat.rooms.search')}
+		aria-label={t('chat.rooms.search')}
 		autocomplete="off"
 	/>
 	{#each categories as category (category.cat)}
@@ -71,7 +72,7 @@
 				{#each category.rooms as room (room.id)}
 					<li>
 						<button type="button" class="ChatRoomList-room" onclick={() => onJoinRoom(room)}>
-							{room.name}{#if room.private}<span title="Privater Raum"> 🔒</span>{/if}
+							{room.name}{#if room.private}<span title={t('chat.rooms.private')}> 🔒</span>{/if}
 						</button>
 					</li>
 				{/each}

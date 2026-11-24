@@ -1,19 +1,21 @@
-// German wording for the English messages set by the ported session logic
-// (src/lib/model/session.ts). Texts that come from KGS itself (msg.text)
-// are shown as they are.
-const MESSAGES: Record<string, string> = {
-	'Enter username and password': 'Bitte Benutzername und Passwort eingeben.',
-	'Login failed - no such user': 'Anmeldung fehlgeschlagen: Diesen Benutzer gibt es bei KGS nicht.',
-	'Login failed - you are temporarily banned':
-		'Anmeldung fehlgeschlagen: Das Konto ist vorübergehend gesperrt.',
-	'Login failed - bad password': 'Anmeldung fehlgeschlagen: Das Passwort stimmt nicht.',
-	'Login failed - user already exists': 'Anmeldung fehlgeschlagen: Den Benutzer gibt es schon.',
+// Wording for the English messages set by the ported session logic
+// (src/lib/model/session.ts): German in German, the original text in
+// English. Texts that come from KGS itself (msg.text) are shown as they are.
+import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+
+const MESSAGES: Record<string, MessageKey> = {
+	'Enter username and password': 'app.kgs.enterLogin',
+	'Login failed - no such user': 'app.kgs.noSuchUser',
+	'Login failed - you are temporarily banned': 'app.kgs.banned',
+	'Login failed - bad password': 'app.kgs.badPassword',
+	'Login failed - user already exists': 'app.kgs.userExists',
 	'Automatically logged out because your account has been logged into another system':
-		'Abgemeldet, weil das Konto anderswo angemeldet wurde',
-	'Previous session expired or became invalid': 'Die vorige Sitzung ist abgelaufen'
+		'app.kgs.loggedInElsewhere',
+	'Previous session expired or became invalid': 'app.kgs.sessionExpired'
 };
 
 export function kgsMessage(text: string | null | undefined): string | null {
 	if (!text) return null;
-	return MESSAGES[text] ?? text;
+	const key = MESSAGES[text];
+	return key ? t(key) : text;
 }

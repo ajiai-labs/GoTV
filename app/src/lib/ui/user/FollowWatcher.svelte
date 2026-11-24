@@ -9,6 +9,7 @@
 	import { loadRemindersEnabled } from '#lib/model/TvFavorites.ts';
 	import { getNotificationPermission } from '#lib/ui/tv/reminders.ts';
 	import { followed } from './followed.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	// Plain variables on purpose: bookkeeping, not something to render.
 	let seen: Set<number> | null = null;
@@ -16,10 +17,11 @@
 
 	function notify(item: FollowedGame) {
 		if (!loadRemindersEnabled() || getNotificationPermission() !== 'granted') return;
-		const opponent = item.opponent ? ` gegen ${item.opponent.name}` : '';
 		try {
-			new Notification(`${item.name} spielt jetzt auf KGS`, {
-				body: `Neue Partie${opponent} – in GoTV unter „Beobachten“`,
+			new Notification(t('chat.follow.title', { name: item.name }), {
+				body: item.opponent
+					? t('chat.follow.bodyOpponent', { opponent: item.opponent.name })
+					: t('chat.follow.body'),
 				tag: `gotv-follow-${item.game.id}`
 			});
 		} catch {

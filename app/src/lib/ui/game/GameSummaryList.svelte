@@ -11,6 +11,7 @@
 	import GamePlayersList from './GamePlayersList.svelte';
 	import GameRulesDisplay from './GameRulesDisplay.svelte';
 	import { formatScoreDe } from './gameText.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		games,
@@ -65,14 +66,14 @@
 			<span class="GameSummaryList-item-info">
 				{#if playingNow}
 					<span class="GameSummaryList-item-date-now">
-						{game.type === 'review' ? 'Wird besprochen' : 'Läuft gerade'}
+						{game.type === 'review' ? t('play.summary.inReview') : t('play.summary.playingNow')}
 					</span>
 				{:else}
 					<span class="GameSummaryList-item-result-rules">
 						{#if game.score}
 							<span class="GameSummaryList-item-result">
 								{#if result}<span class="sr-only">
-										{result === 'won' ? 'Gewonnen: ' : 'Verloren: '}
+										{result === 'won' ? t('play.summary.won') : t('play.summary.lost')}
 									</span>{/if}{formatScoreDe(game.score)}
 							</span>
 						{/if}

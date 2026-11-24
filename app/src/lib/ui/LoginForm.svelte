@@ -2,6 +2,7 @@
 	// KGS login, as in the old LoginScreen: user name (remembered), password
 	// (only remembered when "Passwort speichern" is ticked, in this browser's
 	// IndexedDB like before), errors from KGS or the network.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { get, set } from 'idb-keyval';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
@@ -20,9 +21,7 @@
 	let loggingIn = $derived(app.state.clientState.status === 'loggingIn');
 	let error = $derived(
 		kgsMessage(app.state.loginError) ||
-			(app.state.clientState.network !== 'online'
-				? 'KGS ist nicht erreichbar. Versuche es noch einmal oder prüfe die Internetverbindung.'
-				: null)
+			(app.state.clientState.network !== 'online' ? t('app.login.unreachable') : null)
 	);
 
 	onMount(() => {
@@ -55,13 +54,13 @@
 </script>
 
 <form class="login panel" onsubmit={submit}>
-	<h2 class="panel-title">Bei KGS anmelden</h2>
+	<h2 class="panel-title">{t('app.login.title')}</h2>
 	<div class="fields">
 		{#if error}
 			<p class="error" role="alert">{error}</p>
 		{/if}
 		<label>
-			<span>Benutzername</span>
+			<span>{t('app.search.userName')}</span>
 			<input
 				type="text"
 				autocomplete="username"
@@ -72,22 +71,22 @@
 			/>
 		</label>
 		<label>
-			<span>Passwort</span>
+			<span>{t('app.login.password')}</span>
 			<input type="password" autocomplete="current-password" bind:value={password} />
 		</label>
 		<label class="check">
 			<input type="checkbox" bind:checked={savePassword} />
-			<span>Passwort in diesem Browser speichern</span>
+			<span>{t('app.login.savePassword')}</span>
 		</label>
 		<button class="button button-primary" type="submit" disabled={loggingIn}>
-			{loggingIn ? 'Anmeldung läuft …' : 'Anmelden'}
+			{loggingIn ? t('app.login.loggingIn') : t('app.layout.login')}
 		</button>
 		<p class="links">
 			<a href="https://www.gokgs.com/register" target="_blank" rel="noopener noreferrer">
-				Bei KGS registrieren
+				{t('app.login.register')}
 			</a>
 			<a href="https://www.gokgs.com/password.jsp" target="_blank" rel="noopener noreferrer">
-				Passwort vergessen
+				{t('app.login.forgotPassword')}
 			</a>
 		</p>
 	</div>

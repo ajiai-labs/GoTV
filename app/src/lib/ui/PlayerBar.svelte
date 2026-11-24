@@ -1,5 +1,6 @@
 <script lang="ts">
 	// One player above or below the board: stone colour, name, rank, clock.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	let {
 		color,
 		name,
@@ -16,11 +17,14 @@
 </script>
 
 <div class="player" class:to-move={toMove}>
-	<span class="stone {color}" aria-label={color === 'black' ? 'Schwarz' : 'Weiß'}></span>
+	<span
+		class="stone {color}"
+		aria-label={color === 'black' ? t('app.color.black') : t('app.color.white')}
+	></span>
 	<span class="name">{name}</span>
 	<span class="rank">{rank}</span>
 	{#if clock}
-		<span class="clock" aria-label="Bedenkzeit">{clock}</span>
+		<span class="clock" aria-label={t('app.playerBar.clock')}>{clock}</span>
 	{/if}
 </div>
 

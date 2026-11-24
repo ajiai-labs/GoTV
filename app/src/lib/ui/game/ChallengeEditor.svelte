@@ -26,6 +26,7 @@
 	import ChatMessages from '#lib/ui/chat/ChatMessages.svelte';
 	import ChatMessageBar from '#lib/ui/chat/ChatMessageBar.svelte';
 	import ProposalForm from './ProposalForm.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		currentUser,
@@ -282,7 +283,7 @@
 			/>
 		{:else}
 			<p class="ChallengeEditor-noroom">
-				Kein Raum verfügbar. Herausforderungen entstehen in einem Raum – tritt erst einem Raum bei.
+				{t('play.editor.noRoom')}
 			</p>
 		{/if}
 
@@ -294,29 +295,31 @@
 					disabled={!room}
 					onclick={onCreateChallenge}
 				>
-					Herausforderung erstellen
+					{t('play.editor.create')}
 				</button>
 			{:else if view.buttons.kind === 'submit'}
 				<button type="button" class="button button-primary" onclick={onSubmitProposal}>
-					Vorschlag senden
+					{t('play.editor.submit')}
 				</button>
 			{:else if view.buttons.kind === 'decide'}
 				<button type="button" class="button button-primary" onclick={onAcceptProposal}>
-					Annehmen
+					{t('play.editor.accept')}
 				</button>
 				<button type="button" class="button button-danger" onclick={onDeclineProposal}>
-					Ablehnen
+					{t('play.editor.decline')}
 				</button>
 			{:else}
 				<button type="button" class="button button-primary button-waiting" disabled>
 					<span class="loading" aria-hidden="true"></span>
 					{view.buttons.kind === 'awaitChallengers'
-						? 'Warte auf Herausforderer'
-						: 'Warte auf Antwort'}
+						? t('play.editor.awaitChallengers')
+						: t('play.editor.awaitResponse')}
 				</button>
 			{/if}
 			{#if view.editMode === 'creating' || view.editMode === 'negotiating'}
-				<button type="button" class="button" onclick={() => onCancel()}>Abbrechen</button>
+				<button type="button" class="button" onclick={() => onCancel()}>
+					{t('play.editor.cancel')}
+				</button>
 			{/if}
 
 			{#if proposalCount > 1}
@@ -324,7 +327,7 @@
 					<button
 						type="button"
 						class="button ChallengeEditor-prevnext-button"
-						aria-label="Vorheriger Vorschlag"
+						aria-label={t('play.editor.previous')}
 						disabled={proposalIndex === 0}
 						onclick={() => (selectedProposalIndex = proposalIndex - 1)}
 					>
@@ -333,7 +336,7 @@
 					<button
 						type="button"
 						class="button ChallengeEditor-prevnext-button"
-						aria-label="Nächster Vorschlag"
+						aria-label={t('play.editor.next')}
 						disabled={proposalIndex === proposalCount - 1}
 						onclick={() => (selectedProposalIndex = proposalIndex + 1)}
 					>
@@ -347,14 +350,14 @@
 
 <div class="ChallengeEditor">
 	{#if status === 'declined'}
-		<p class="ChallengeEditor-declined" role="status">Dein Vorschlag wurde abgelehnt.</p>
+		<p class="ChallengeEditor-declined" role="status">{t('play.editor.declined')}</p>
 	{/if}
 	{#if status === 'accepted'}
-		<p class="ChallengeEditor-accepted" role="status">✓ Die Partie beginnt …</p>
+		<p class="ChallengeEditor-accepted" role="status">{t('play.editor.accepted')}</p>
 	{/if}
 
 	{#if view.editMode !== 'creating'}
-		<div class="ChallengeEditor-tabs" role="tablist" aria-label="Herausforderung">
+		<div class="ChallengeEditor-tabs" role="tablist" aria-label={t('play.editor.tabs')}>
 			<button
 				type="button"
 				role="tab"
@@ -366,7 +369,7 @@
 				onclick={() => selectTab('proposal')}
 				onkeydown={onTabKey}
 			>
-				Vorschlag
+				{t('play.editor.proposalTab')}
 			</button>
 			<button
 				type="button"
@@ -379,7 +382,7 @@
 				onclick={() => selectTab('chat')}
 				onkeydown={onTabKey}
 			>
-				Chat
+				{t('play.editor.chatTab')}
 				<UnseenBadge major={conversation?.unseenCount || 0} />
 			</button>
 		</div>
@@ -404,7 +407,7 @@
 					<ChatMessageBar {conversation} onSubmit={onChat} />
 				</div>
 			{:else}
-				<p class="muted ChallengeEditor-nochat">Noch kein Chat.</p>
+				<p class="muted ChallengeEditor-nochat">{t('play.editor.noChat')}</p>
 			{/if}
 		</div>
 	{:else}

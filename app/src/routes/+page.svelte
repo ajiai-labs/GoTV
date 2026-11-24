@@ -4,6 +4,7 @@
 	// that just ended, "Mein GoTV" and "Meine Daten". Works without a KGS
 	// login: streams, OGS boards and replays need none; KGS boards appear
 	// once logged in. Nothing running: the next event and an example.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { app } from '#lib/app.svelte.ts';
@@ -134,7 +135,7 @@
 </script>
 
 <svelte:head>
-	<title>Live – GoTV</title>
+	<title>{t('app.live.pageTitle')}</title>
 </svelte:head>
 
 {#snippet broadcastCard(broadcast: TvBroadcast)}
@@ -155,12 +156,12 @@
 	{#if tvStreamUrl}
 		<section class="opened" aria-labelledby="opened-title">
 			<header class="opened-head">
-				<h2 id="opened-title" class="panel-title">Stream aus dem Chat</h2>
+				<h2 id="opened-title" class="panel-title">{t('app.live.streamFromChat')}</h2>
 				<button
 					type="button"
 					class="button opened-close"
-					aria-label="Stream schließen"
-					title="Stream schließen"
+					aria-label={t('app.live.closeStream')}
+					title={t('app.live.closeStream')}
 					onclick={() => app.actions.onCloseTvStream()}
 				>
 					×
@@ -174,7 +175,7 @@
 				{#key tvStreamUrl}
 					<div class="opened-stream">
 						<StreamEmbed url={tvStreamUrl} />
-						<p class="muted">Diesem Stream ist kein KGS-Brett zugeordnet.</p>
+						<p class="muted">{t('app.live.noKgsBoard')}</p>
 					</div>
 				{/key}
 			{/if}
@@ -182,27 +183,31 @@
 	{/if}
 
 	{#if eventsStatus === 'loading'}
-		<Spinner label="Übertragungen werden geladen …" />
+		<Spinner label={t('app.live.loading')} />
 	{:else if broadcasts.length}
-		<h1 class="live-title"><span class="dot" aria-hidden="true"></span>Läuft gerade</h1>
+		<h1 class="live-title">
+			<span class="dot" aria-hidden="true"></span>{t('app.live.runningNow')}
+		</h1>
 		{#each listedBroadcasts as broadcast (broadcast.event.id)}
 			{@render broadcastCard(broadcast)}
 		{/each}
 	{:else}
 		<section class="empty" aria-labelledby="empty-title">
 			<div>
-				<h1 id="empty-title">Gerade keine Übertragung.</h1>
+				<h1 id="empty-title">{t('app.live.noBroadcast')}</h1>
 				{#if eventsStatus === 'error'}
 					<p class="muted" role="alert">
-						Der Kalender konnte nicht geladen werden (events.json nicht erreichbar).
+						{t('app.live.calendarError')}
 					</p>
 				{:else if nextEvent}
 					<p class="next">
-						Nächstes Event: <strong>{nextEvent.name}</strong> ({formatEventDateRange(nextEvent)})
+						{t('app.live.nextEvent')} <strong>{nextEvent.name}</strong> ({formatEventDateRange(
+							nextEvent
+						)})
 					</p>
 				{/if}
 			</div>
-			<a class="button button-primary" href={resolve('/kalender')}>Zum Kalender</a>
+			<a class="button button-primary" href={resolve('/kalender')}>{t('app.live.toCalendar')}</a>
 		</section>
 		<CinemaExample />
 	{/if}
@@ -212,10 +217,10 @@
 			{#if onAirChannels.length}
 				<p class="on-air">
 					<span>
-						Jetzt auf den Kanälen (geplant):
+						{t('app.live.onAirNow')}
 						<strong>{onAirChannels.map((channel) => channel.name).join(', ')}</strong>
 					</span>
-					<a class="button" href={resolve('/kanaele')}>Zu den Kanälen</a>
+					<a class="button" href={resolve('/kanaele')}>{t('app.live.toChannels')}</a>
 				</p>
 			{/if}
 			<RecentReplays

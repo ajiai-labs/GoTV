@@ -12,11 +12,17 @@
 			content="GoTV: live Go broadcasts with the board next to the stream, a tournament calendar, Go channels and game replay with KataGo analysis - in the browser, on a tablet or as a desktop app."
 		/>
 		<script>
-			// Apply the chosen design before the first paint (no flash of the other one).
+			// Apply the chosen design and language before the first paint (no flash of the other one).
 			try {
 				var d = localStorage.getItem('gotv.design');
 				if (d === 'oldschool' || d === 'modern' || d === 'modern-dark')
 					document.documentElement.dataset.design = d;
+			} catch (e) {}
+			// The interface language (src/lib/i18n/index.svelte.ts) for <html lang>.
+			try {
+				var l = localStorage.getItem('gotv.language');
+				if (l !== 'de' && l !== 'en') l = /^de/i.test(navigator.language || '') ? 'de' : 'en';
+				document.documentElement.lang = l;
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

@@ -3,6 +3,7 @@
 	// takes the focus when shown and whenever another chat is opened.
 	import type { Conversation } from '#lib/model/types.ts';
 	import { isTouchDevice } from '#lib/util/dom.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		conversation,
@@ -47,8 +48,8 @@
 			type="text"
 			enterkeyhint="send"
 			autocomplete="off"
-			aria-label="Chatnachricht"
-			placeholder={disabled ? 'Chat ist abgeschaltet' : 'Nachricht schreiben …'}
+			aria-label={t('chat.bar.label')}
+			placeholder={disabled ? t('chat.disabled') : t('chat.bar.placeholder')}
 		/>
 	</form>
 </div>

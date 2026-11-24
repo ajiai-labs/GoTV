@@ -17,6 +17,7 @@
 	import RoomChat from '#lib/ui/chat/RoomChat.svelte';
 	import UserChat from '#lib/ui/chat/UserChat.svelte';
 	import { userStatusText } from '#lib/ui/chat/userStatus.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	// Space kept free under the chat (the layout's bottom padding).
 	const BOTTOM_SPACE = 32;
@@ -159,7 +160,7 @@
 
 	function userCount(room: Room | null): string | null {
 		if (!room || !room.users) return null;
-		return `${room.users.length} Nutzer`;
+		return t('chat.page.userCount', { count: room.users.length });
 	}
 
 	// The chat fills the window below the header: messages scroll inside.
@@ -181,11 +182,11 @@
 </script>
 
 <svelte:head>
-	<title>Chat – GoTV</title>
+	<title>{t('chat.page.pageTitle')}</title>
 </svelte:head>
 
 {#snippet tabList()}
-	<ul class="ChatScreen-tabs" aria-label="Räume und Gespräche">
+	<ul class="ChatScreen-tabs" aria-label={t('chat.page.tabs')}>
 		{#each tabs as tab (tab.conversation.id)}
 			{@const conversation = tab.conversation}
 			{@const active = chat.activeConversationId === conversation.id}
@@ -209,7 +210,7 @@
 						{:else if tab.room}
 							<span>{tab.room.name}{tab.room.private ? ' 🔒' : ''}</span>
 						{:else}
-							<span>[leer]</span>
+							<span>{t('chat.page.empty')}</span>
 						{/if}
 					</span>
 					<span class="ChatScreen-tab-info">
@@ -223,8 +224,8 @@
 				<button
 					type="button"
 					class="ChatScreen-tab-close"
-					aria-label={tab.room ? 'Raum verlassen' : 'Gespräch schließen'}
-					title={tab.room ? 'Raum verlassen' : 'Gespräch schließen'}
+					aria-label={tab.room ? t('chat.page.leaveRoom') : t('chat.page.closeConversation')}
+					title={tab.room ? t('chat.page.leaveRoom') : t('chat.page.closeConversation')}
 					onclick={() => closeConversation(conversation.id)}
 				>
 					×
@@ -233,7 +234,7 @@
 		{/each}
 		<li class="ChatScreen-tab ChatScreen-tab-join">
 			<button type="button" class="ChatScreen-tab-label" onclick={showRoomList}>
-				Raum betreten …
+				{t('chat.page.joinRoom')}
 			</button>
 		</li>
 	</ul>
@@ -243,21 +244,23 @@
 	<div class="ChatScreen-banner">
 		{#if usersView}
 			<button type="button" class="ChatScreen-back" onclick={() => (showingRoomUsers = false)}>
-				<span aria-hidden="true">‹</span> Zurück
+				<span aria-hidden="true">‹</span>
+				{t('chat.page.back')}
 			</button>
 			<span class="ChatScreen-banner-title">
-				{userCount(chat.activeRoom) ?? 'Nutzer im Raum'}
+				{userCount(chat.activeRoom) ?? t('chat.page.roomUsers')}
 			</span>
 		{:else}
 			<button type="button" class="ChatScreen-back" onclick={() => (showingList = true)}>
-				<span aria-hidden="true">‹</span> Chats
+				<span aria-hidden="true">‹</span>
+				{t('chat.page.chats')}
 				<UnseenBadge major={unseen.major} minor={unseen.minor} />
 			</button>
 			{#if chat.activeRoom}
 				<button
 					type="button"
 					class="ChatScreen-banner-title"
-					aria-label="Nutzer im Raum {chat.activeRoom.name ?? ''} zeigen"
+					aria-label={t('chat.page.showRoomUsers', { room: chat.activeRoom.name ?? '' })}
 					onclick={() => (showingRoomUsers = true)}
 				>
 					{chat.activeRoom.name}{chat.activeRoom.private ? ' 🔒' : ''}
@@ -276,7 +279,7 @@
 {/snippet}
 
 <KgsGate>
-	<h1 class="visually-hidden">Chat</h1>
+	<h1 class="visually-hidden">{t('chat.page.title')}</h1>
 	<div class="ChatScreen panel" class:ChatScreen-phone={phone.current} {@attach fillWindow}>
 		{#if listView}
 			<div class="ChatScreen-list">
@@ -306,7 +309,7 @@
 					/>
 				{:else}
 					<p class="ChatScreen-empty muted">
-						Kein Chat offen. Über „Raum betreten …“ findest du alle Räume.
+						{t('chat.page.noChat')}
 					</p>
 				{/if}
 			</div>
@@ -314,7 +317,7 @@
 	</div>
 
 	{#if showingRoomList}
-		<Modal title="Räume" onclose={() => (showingRoomList = false)}>
+		<Modal title={t('chat.page.rooms')} onclose={() => (showingRoomList = false)}>
 			<ChatRoomList roomsById={app.state.roomsById} onJoinRoom={joinRoom} />
 		</Modal>
 	{/if}

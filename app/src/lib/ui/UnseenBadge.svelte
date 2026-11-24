@@ -1,11 +1,16 @@
 <script lang="ts">
 	// Count of unseen messages or proposals. "major" (direct messages,
 	// proposals) is drawn strong, "minor" (room chat) quiet.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	let { major = 0, minor = 0 }: { major?: number; minor?: number } = $props();
 </script>
 
 {#if major || minor}
-	<span class="badge" class:major={!!major} aria-label="{major || minor} neu">
+	<span
+		class="badge"
+		class:major={!!major}
+		aria-label={t('app.badge.unseen', { count: major || minor })}
+	>
 		{major || minor}
 	</span>
 {/if}

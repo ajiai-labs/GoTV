@@ -4,6 +4,7 @@
 	// players shows its owner instead of white. A click on a name opens the
 	// user's details.
 	import { app } from '#lib/app.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { getWinningColor } from '#lib/model/game/display.ts';
 	import type { ClockState, GameChannel, User } from '#lib/model/types.ts';
 	import UserName from '#lib/ui/UserName.svelte';
@@ -63,7 +64,11 @@
 		];
 	});
 
-	const COLOR_LABEL = { white: 'Weiß', black: 'Schwarz', owner: 'Besitzer der Partie' };
+	const COLOR_LABEL = {
+		white: 'game.color.white',
+		black: 'game.color.black',
+		owner: 'game.players.owner'
+	} as const;
 </script>
 
 {#if players}
@@ -92,7 +97,7 @@
 									<span
 										class="GamePlayersInfo-stone {side.color}"
 										role="img"
-										aria-label={COLOR_LABEL[side.color]}
+										aria-label={t(COLOR_LABEL[side.color])}
 									></span>
 								{/if}
 								<button
@@ -116,12 +121,12 @@
 							</div>
 						{/if}
 						{#if side.color === 'owner'}
-							<div class="GamePlayersInfo-role muted">{COLOR_LABEL.owner}</div>
+							<div class="GamePlayersInfo-role muted">{t(COLOR_LABEL.owner)}</div>
 						{:else}
 							<div class="GamePlayersInfo-captures muted">
-								{side.captures} Gefangene
+								{t('game.players.captures', { count: side.captures })}
 								{#if side.winner}
-									<span class="GamePlayersInfo-winner-badge">✓ Sieger</span>
+									<span class="GamePlayersInfo-winner-badge">{t('game.players.winnerBadge')}</span>
 								{/if}
 							</div>
 						{/if}

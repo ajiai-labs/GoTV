@@ -3,6 +3,7 @@
 	// bots - remembered by the app), or the game being watched. A game of a
 	// live broadcast shows its stream; the calendar events for that are
 	// loaded once.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { fetchTvEvents } from '#lib/model/tv.ts';
@@ -38,7 +39,7 @@
 </script>
 
 <svelte:head>
-	<title>Beobachten – GoTV</title>
+	<title>{t('app.watch.pageTitle')}</title>
 </svelte:head>
 
 <KgsGate>
@@ -51,7 +52,7 @@
 			</div>
 		{/if}
 		<section class="WatchScreen-list panel" aria-labelledby="watch-title">
-			<h1 id="watch-title" class="panel-title">Partien beobachten</h1>
+			<h1 id="watch-title" class="panel-title">{t('app.watch.title')}</h1>
 			<GameListFilter
 				games={appState.activeGames}
 				roomsById={appState.roomsById}

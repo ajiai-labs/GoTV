@@ -4,6 +4,7 @@
 	// was typed) to onSave.
 	import { untrack } from 'svelte';
 	import type { User, UserDetails } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		user,
@@ -37,7 +38,7 @@
 
 <form class="UserDetailsEditForm" onsubmit={save}>
 	<label>
-		<span>Name</span>
+		<span>{t('chat.edit.name')}</span>
 		<input
 			type="text"
 			name="personalName"
@@ -47,38 +48,38 @@
 		/>
 	</label>
 	<label>
-		<span>E-Mail</span>
+		<span>{t('chat.edit.email')}</span>
 		<input type="email" name="email" autocomplete="email" bind:value={draft.email} />
 	</label>
 	<label>
-		<span>Neues Passwort</span>
+		<span>{t('chat.edit.newPassword')}</span>
 		<input
 			type="password"
 			name="newPassword"
 			autocomplete="new-password"
-			placeholder="leer lassen, um das bisherige zu behalten"
+			placeholder={t('chat.edit.newPasswordHint')}
 			bind:value={newPassword}
 		/>
 	</label>
 	<label>
-		<span>Über mich</span>
+		<span>{t('chat.edit.about')}</span>
 		<textarea name="personalInfo" rows="5" bind:value={draft.personalInfo}></textarea>
 	</label>
 	<label class="check">
 		<input type="checkbox" name="emailWanted" bind:checked={draft.emailWanted} />
-		<span>Ankündigungen von KGS per E-Mail erhalten</span>
+		<span>{t('chat.edit.emailWanted')}</span>
 	</label>
 	<label class="check">
 		<input type="checkbox" name="privateEmail" bind:checked={draft.privateEmail} />
-		<span>E-Mail-Adresse vor anderen Spielern verbergen</span>
+		<span>{t('chat.edit.privateEmail')}</span>
 	</label>
 	<label class="check">
 		<input type="checkbox" name="rankWanted" bind:checked={draft.rankWanted} />
-		<span>Mit Rang spielen</span>
+		<span>{t('chat.edit.rankWanted')}</span>
 	</label>
 	<div class="buttons">
-		<button class="button button-primary" type="submit">Änderungen speichern</button>
-		<button class="button" type="button" onclick={() => onCancel()}>Abbrechen</button>
+		<button class="button button-primary" type="submit">{t('chat.edit.save')}</button>
+		<button class="button" type="button" onclick={() => onCancel()}>{t('chat.edit.cancel')}</button>
 	</div>
 </form>
 

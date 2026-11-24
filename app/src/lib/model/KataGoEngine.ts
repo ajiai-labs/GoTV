@@ -8,6 +8,7 @@ import { getMainLine, getColorToPlay } from './ReplayVariation';
 import { getGameLine } from './game/tree';
 import type { GameTree, PlayerColor } from './types';
 import { config } from '../config';
+import { t } from '#lib/i18n/index.svelte.ts';
 export const KATAGO_BASE_URL = config.basePath + '/katago/';
 export const DEFAULT_MODEL_URL = KATAGO_BASE_URL + 'models/katago-small.bin.gz';
 export const DEFAULT_VISITS = 100;
@@ -299,7 +300,7 @@ export class KataGoEngine {
 			worker.onmessage = this._onMessage;
 
 			worker.onerror = (e: Record<string, any>) => {
-				this._failAll(new Error(e.message || 'KataGo konnte nicht starten'));
+				this._failAll(new Error(e.message || t('replay.katago.startFailed')));
 			};
 
 			this._worker = worker;
@@ -340,7 +341,9 @@ export class KataGoEngine {
 		} else if (pending.kind !== 'batch' && msg.ok && msg.analysis) {
 			pending.resolve(toAnalysis(msg.analysis, pending.toPlay, msg.backend));
 		} else {
-			pending.reject(new Error(msg.canceled ? 'canceled' : msg.error || 'Analyse fehlgeschlagen'));
+			pending.reject(
+				new Error(msg.canceled ? 'canceled' : msg.error || t('replay.katago.analysisFailed'))
+			);
 		}
 	};
 

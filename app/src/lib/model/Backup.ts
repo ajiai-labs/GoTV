@@ -7,6 +7,7 @@
 // keeps its newer state, plain settings come from the file.
 import { MAX_REMEMBERED_GAMES } from './ReplayProgress';
 import { mergeFollowed } from './FollowedPlayers';
+import { t } from '#lib/i18n/index.svelte.ts';
 export const BACKUP_FORMAT = 'gotv-backup';
 export const BACKUP_VERSION = 1;
 const KEY_RE = /^gotv\.[A-Za-z]+$/;
@@ -58,19 +59,13 @@ export function collectBackup(storage: Storage, now: Date): Backup {
 		data
 	};
 }
-// The file name with the date: "gotv-sicherung-2026-11-23.json".
+// The file name with the date: "gotv-sicherung-2026-11-23.json" (English
+// "gotv-backup-2026-11-23.json").
 export function getBackupFileName(now: Date): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
 
-	return (
-		'gotv-sicherung-' +
-		now.getFullYear() +
-		'-' +
-		pad(now.getMonth() + 1) +
-		'-' +
-		pad(now.getDate()) +
-		'.json'
-	);
+	const date = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+	return t('replay.backup.fileName', { date });
 }
 // A checked backup, or an error message for the viewer.
 export type ParsedBackup =
@@ -90,21 +85,21 @@ export function parseBackup(text: string): ParsedBackup {
 	} catch {
 		return {
 			ok: false,
-			error: 'Die Datei ist keine GoTV-Sicherung (kein JSON).'
+			error: t('replay.backup.errorNotJson')
 		};
 	}
 
 	if (!raw || typeof raw !== 'object' || raw.format !== BACKUP_FORMAT) {
 		return {
 			ok: false,
-			error: 'Die Datei ist keine GoTV-Sicherung.'
+			error: t('replay.backup.errorFormat')
 		};
 	}
 
 	if (!Number.isInteger(raw.version) || raw.version > BACKUP_VERSION) {
 		return {
 			ok: false,
-			error: 'Die Sicherung stammt aus einer neueren GoTV-Version. Bitte GoTV aktualisieren.'
+			error: t('replay.backup.errorVersion')
 		};
 	}
 
@@ -113,7 +108,7 @@ export function parseBackup(text: string): ParsedBackup {
 	if (!data || typeof data !== 'object' || Array.isArray(data)) {
 		return {
 			ok: false,
-			error: 'Die Sicherung enthält keine Daten.'
+			error: t('replay.backup.errorEmpty')
 		};
 	}
 
@@ -122,7 +117,7 @@ export function parseBackup(text: string): ParsedBackup {
 	if (keys.length > MAX_KEYS) {
 		return {
 			ok: false,
-			error: 'Die Sicherung ist zu groß.'
+			error: t('replay.backup.errorTooBig')
 		};
 	}
 

@@ -3,6 +3,8 @@
 	// Shown only when at least one channel has a schedule.
 	import { getGermanClock, getWeekPlan, isChannelOnAir } from '#lib/model/tvChannels.ts';
 	import type { TvChannel } from '#lib/model/tv.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import type { MessageKey } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		channels,
@@ -14,14 +16,14 @@
 		favoriteIds?: Array<string>;
 	} = $props();
 
-	const DAY_NAMES = [
-		'Montag',
-		'Dienstag',
-		'Mittwoch',
-		'Donnerstag',
-		'Freitag',
-		'Samstag',
-		'Sonntag'
+	const DAY_NAMES: Array<MessageKey> = [
+		'tv.weekday.1',
+		'tv.weekday.2',
+		'tv.weekday.3',
+		'tv.weekday.4',
+		'tv.weekday.5',
+		'tv.weekday.6',
+		'tv.weekday.7'
 	];
 
 	let week = $derived(getWeekPlan(channels));
@@ -32,7 +34,7 @@
 {#if hasEntries}
 	<section class="ChannelWeek panel" aria-labelledby="ChannelWeek-title">
 		<h2 class="ChannelWeek-title panel-title" id="ChannelWeek-title">
-			Wochenplan · feste Sendezeiten (deutsche Zeit, geplant)
+			{t('tv.week.title')}
 		</h2>
 		<ol class="ChannelWeek-days">
 			{#each week as day (day.weekday)}
@@ -40,7 +42,9 @@
 				<li
 					class="ChannelWeek-day"
 					class:ChannelWeek-day-today={isToday}
-					aria-label={DAY_NAMES[day.weekday - 1] + (isToday ? ' (heute)' : '')}
+					aria-label={isToday
+						? t('tv.week.today', { day: t(DAY_NAMES[day.weekday - 1]) })
+						: t(DAY_NAMES[day.weekday - 1])}
 				>
 					<span class="ChannelWeek-day-label">{day.label}</span>
 					{#each day.entries as entry (entry.channel.id + entry.time)}
@@ -48,7 +52,7 @@
 						<span class="ChannelWeek-entry" class:ChannelWeek-entry-now={running}>
 							<span class="ChannelWeek-entry-time">{entry.time}</span>
 							{favoriteIds.includes(entry.channel.id) ? '★ ' : ''}{entry.channel.name}
-							{#if running}<span class="visually-hidden">(läuft gerade)</span>{/if}
+							{#if running}<span class="visually-hidden">{t('tv.week.running')}</span>{/if}
 						</span>
 					{:else}
 						<span class="ChannelWeek-empty">–</span>

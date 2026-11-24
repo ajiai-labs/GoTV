@@ -9,6 +9,7 @@ import {
 	loadRemindersEnabled,
 	saveNotifiedKeys
 } from '#lib/model/TvFavorites.ts';
+import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 // How often the starred channels and tournaments are checked.
 export const REMINDER_CHECK_MS = 60000;
@@ -19,11 +20,9 @@ export function getNotificationPermission(): NotificationPermission | null {
 
 function formatReminder(item: MyGoTvItem): string {
 	const time = item.start
-		? item.start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+		? item.start.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
 		: '';
-	return item.planned
-		? 'Feste Sendezeit ' + time + ' Uhr (geplant)'
-		: 'Beginnt um ' + time + ' Uhr';
+	return item.planned ? t('tv.reminder.planned', { time }) : t('tv.reminder.starts', { time });
 }
 
 // Browser notification shortly before a starred channel or tournament

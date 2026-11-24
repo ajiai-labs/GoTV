@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Black's chance to win over the game as one thin line - the "horizon"
 	// under the board. Above the middle line black leads, below white.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	let {
 		values,
 		current = values.length - 1,
@@ -65,11 +66,14 @@
 			preserveAspectRatio="none"
 			role="slider"
 			tabindex="0"
-			aria-label="Gewinnchance Schwarz im Partieverlauf"
+			aria-label={t('app.winCurve.label')}
 			aria-valuemin={0}
 			aria-valuemax={values.length - 1}
 			aria-valuenow={current}
-			aria-valuetext="Zug {current}, Schwarz {Math.round(currentValue * 100)} Prozent"
+			aria-valuetext={t('app.winCurve.valuetext', {
+				move: current,
+				percent: Math.round(currentValue * 100)
+			})}
 			onclick={pick}
 			onkeydown={key}
 		>
@@ -80,16 +84,16 @@
 			viewBox="0 0 {WIDTH} {HEIGHT}"
 			preserveAspectRatio="none"
 			role="img"
-			aria-label="Gewinnchance Schwarz im Partieverlauf, jetzt {Math.round(
-				currentValue * 100
-			)} Prozent"
+			aria-label={t('app.winCurve.labelNow', { percent: Math.round(currentValue * 100) })}
 		>
 			{@render lines()}
 		</svg>
 	{/if}
 	<figcaption>
-		<span>Schwarz {Math.round(currentValue * 100)} %</span>
-		<span class="muted">Weiß {100 - Math.round(currentValue * 100)} %</span>
+		<span>{t('app.winCurve.black', { percent: Math.round(currentValue * 100) })}</span>
+		<span class="muted">
+			{t('app.winCurve.white', { percent: 100 - Math.round(currentValue * 100) })}
+		</span>
 	</figcaption>
 </figure>
 

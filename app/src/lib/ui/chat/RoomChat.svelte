@@ -13,6 +13,7 @@
 		User
 	} from '#lib/model/types.ts';
 	import { sortUsers } from '#lib/model/user.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import RichContent from '#lib/ui/RichContent.svelte';
 	import UserList from '#lib/ui/user/UserList.svelte';
 	import ChatMessages from './ChatMessages.svelte';
@@ -110,7 +111,7 @@
 		<ChatMessageBar {conversation} onSubmit={onSendChat} />
 	</div>
 	{#if !phone.current}
-		<aside class="RoomChat-sidebar" aria-label="Nutzer im Raum">
+		<aside class="RoomChat-sidebar" aria-label={t('chat.page.roomUsers')}>
 			{#if users}
 				<UserList {users} onSelectUser={showUserDetail} />
 			{/if}

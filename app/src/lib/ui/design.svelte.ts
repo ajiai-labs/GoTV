@@ -3,24 +3,27 @@
 // <html data-design>, where the CSS tokens in app.css pick it up; app.html
 // applies it before the first paint.
 
+import type { MessageKey } from '#lib/i18n/index.svelte.ts';
+
 // 'oldschool' is shown as "Classic"; the stored value stays the same.
 export type Design = 'modern' | 'modern-dark' | 'oldschool';
 
-export const DESIGNS: Array<{ id: Design; name: string; description: string }> = [
+// Name and description are text keys (src/lib/i18n), shown with t().
+export const DESIGNS: Array<{ id: Design; name: MessageKey; description: MessageKey }> = [
 	{
 		id: 'modern',
-		name: 'Modern',
-		description: 'Hell und ruhig, Brett und Stream stehen im Mittelpunkt.'
+		name: 'settings.design.modern.name',
+		description: 'settings.design.modern.description'
 	},
 	{
 		id: 'modern-dark',
-		name: 'Modern dunkel',
-		description: 'Das moderne Design in dunkel – angenehm am Abend und im Kinomodus.'
+		name: 'settings.design.modernDark.name',
+		description: 'settings.design.modernDark.description'
 	},
 	{
 		id: 'oldschool',
-		name: 'Classic',
-		description: 'Wie klassische Go-Programme: graue Fenster, Holzbrett mit plastischen Steinen.'
+		name: 'settings.design.oldschool.name',
+		description: 'settings.design.oldschool.description'
 	}
 ];
 

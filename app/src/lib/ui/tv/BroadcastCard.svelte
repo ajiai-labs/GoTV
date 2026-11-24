@@ -1,6 +1,24 @@
 <script module lang="ts">
 	import type { GameChannel } from '#lib/model/types.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import type { MessageKey } from '#lib/i18n/index.svelte.ts';
+
+	type GameStatus = 'running' | 'paused' | 'adjourned' | 'over';
+
+	// "Partie läuft" for a single game, "2 Partien laufen" for several.
+	const STATUS_SINGLE: Record<GameStatus, MessageKey> = {
+		running: 'tv.status.oneRunning',
+		paused: 'tv.status.onePaused',
+		adjourned: 'tv.status.oneAdjourned',
+		over: 'tv.status.oneOver'
+	};
+	const STATUS_COUNT: Record<GameStatus, MessageKey> = {
+		running: 'tv.status.running',
+		paused: 'tv.status.paused',
+		adjourned: 'tv.status.adjourned',
+		over: 'tv.status.over'
+	};
 
 	// Share of the width the stream gets next to the board, in percent.
 	export const CINEMA_SPLIT_KEY = 'gotv.cinemaSplit';
@@ -34,29 +52,29 @@
 
 	// List metadata only: never join a game to determine its status or move.
 	export function getBroadcastStatus(games: Array<GameChannel>): string {
-		const counts: Record<string, number> = { läuft: 0, pausiert: 0, unterbrochen: 0, beendet: 0 };
+		const counts: Record<GameStatus, number> = { running: 0, paused: 0, adjourned: 0, over: 0 };
 		for (const game of games) {
-			const status = game.over
-				? 'beendet'
+			const status: GameStatus = game.over
+				? 'over'
 				: game.adjourned
-					? 'unterbrochen'
+					? 'adjourned'
 					: game.paused
-						? 'pausiert'
-						: 'läuft';
+						? 'paused'
+						: 'running';
 			counts[status]++;
 		}
-		let status = Object.keys(counts)
+		let status = (Object.keys(counts) as Array<GameStatus>)
 			.filter((label) => counts[label])
-			.map((label) => {
-				const count = counts[label];
-				const noun = count === 1 ? 'Partie' : 'Partien';
-				const verb = count > 1 && label === 'läuft' ? 'laufen' : label;
-				return (games.length > 1 ? String(count) + ' ' : '') + noun + ' ' + verb;
-			})
+			.map((label) =>
+				games.length > 1
+					? t(STATUS_COUNT[label], { count: counts[label] })
+					: t(STATUS_SINGLE[label])
+			)
 			.join(' · ');
 		if (games.length === 1) {
 			const moveNum = games[0].moveNum;
-			if (Number.isInteger(moveNum) && moveNum >= 0) status += ' · Zug ' + String(moveNum);
+			if (Number.isInteger(moveNum) && moveNum >= 0)
+				status += ' · ' + t('tv.status.move', { move: moveNum });
 		}
 		return status;
 	}
@@ -74,6 +92,7 @@
 	// (CinemaExample).
 	import { onDestroy, untrack } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { locale } from '#lib/i18n/index.svelte.ts';
 	import { ogsTvSource } from '#lib/model/OgsTvSource.ts';
 	import { hasOgsBoard, hasVideoStream } from '#lib/model/tv.ts';
 	import type { TvBroadcast } from '#lib/model/tv.ts';
@@ -192,25 +211,21 @@
 	let hasVideoToggle = $derived(hasVideo && (games.length > 0 || !!recordingUrl));
 
 	let boardTitle = $derived.by(() => {
-		if (recordingUrl) return 'Finalpartie zum Nachspielen · Aufzeichnung';
+		if (recordingUrl) return t('tv.broadcast.recordingTitle');
 		if (kgsGames.length && (hasOgs || ogsGames.length)) {
-			return 'Bretter der Übertragung (KGS + OGS)';
+			return t('tv.broadcast.boardsKgsOgs');
 		}
 		if (games.length) {
 			const source = ogsGames.length ? 'OGS' : 'KGS';
-			return games.length === 1
-				? 'Brett auf ' + source
-				: String(games.length) + ' Bretter auf ' + source;
+			return t('tv.broadcast.boardsOn', { count: games.length, source });
 		}
 		if (hasOgs) {
 			if (!streamLoaded) {
-				return hasVideo ? 'OGS-Brett beim Öffnen des Streams verfügbar' : 'OGS-Brett verfügbar';
+				return hasVideo ? t('tv.broadcast.ogsOnStreamOpen') : t('tv.broadcast.ogsAvailable');
 			}
-			return event.ogs_game_id
-				? 'OGS-Brett wird geladen …'
-				: 'OGS-Brett erscheint, sobald die Partie läuft';
+			return event.ogs_game_id ? t('tv.broadcast.ogsLoading') : t('tv.broadcast.ogsAppears');
 		}
-		return hasVideo ? 'Kein KGS-Brett – nur Stream' : 'Derzeit kein passendes KGS-Brett online';
+		return hasVideo ? t('tv.broadcast.noKgsStreamOnly') : t('tv.broadcast.noKgsBoard');
 	});
 
 	// Says honestly how fresh the OGS board is, so a stalled board never
@@ -222,31 +237,26 @@
 		if (ogsError) {
 			return {
 				kind: 'stale',
-				text:
-					'Verbindung zu OGS unterbrochen' +
-					(ogsUpdatedAt
-						? ' – letzter Stand von ' + new Date(ogsUpdatedAt).toLocaleTimeString('de-DE')
-						: '') +
-					' (' +
-					ogsError +
-					')'
+				text: ogsUpdatedAt
+					? t('tv.ogsStatus.staleSince', {
+							time: new Date(ogsUpdatedAt).toLocaleTimeString(locale()),
+							error: ogsError
+						})
+					: t('tv.ogsStatus.stale', { error: ogsError })
 			};
 		}
 		if (game.over) {
-			return {
-				kind: 'waiting',
-				text: 'Partie beendet – eine weitere Partie derselben Spieler erscheint automatisch'
-			};
+			return { kind: 'waiting', text: t('tv.ogsStatus.over') };
 		}
 		if (game.tvLive) {
 			return {
 				kind: 'live',
 				text: delaySeconds
-					? 'Live verbunden – Anzeige um ' + String(delaySeconds) + ' s verzögert'
-					: 'Live verbunden – Züge erscheinen sofort'
+					? t('tv.ogsStatus.liveDelayed', { seconds: delaySeconds })
+					: t('tv.ogsStatus.live')
 			};
 		}
-		return { kind: 'polling', text: 'Brett wird alle paar Sekunden abgefragt' };
+		return { kind: 'polling', text: t('tv.ogsStatus.polling') };
 	});
 
 	function observeOgs() {
@@ -414,7 +424,7 @@
 		e.preventDefault();
 		const gameId = parseOgsGameLink(linkInput);
 		if (!gameId) {
-			linkError = 'Das ist kein OGS-Partielink. Erwartet: https://online-go.com/game/…';
+			linkError = t('tv.link.invalid');
 			return;
 		}
 		linkFormOpen = false;
@@ -431,14 +441,14 @@
 		class="button BroadcastCard-video-toggle"
 		onclick={() => (videoVisible = !videoVisible)}
 	>
-		{videoVisible ? 'Nur Brett' : 'Video zuschalten'}
+		{videoVisible ? t('tv.broadcast.boardOnly') : t('tv.broadcast.showVideo')}
 	</button>
 {/snippet}
 
 {#snippet delayControl()}
-	<div class="BroadcastCard-delay" role="group" aria-label="Brett-Verzögerung">
+	<div class="BroadcastCard-delay" role="group" aria-label={t('tv.delay.label')}>
 		<label>
-			<span>Brett-Verzögerung</span>
+			<span>{t('tv.delay.label')}</span>
 			<input
 				type="range"
 				min={0}
@@ -448,13 +458,13 @@
 			/>
 		</label>
 		<span class="BroadcastCard-delay-value" aria-live="polite">
-			{delaySeconds ? String(delaySeconds) + ' s' : 'aus'}
+			{delaySeconds ? String(delaySeconds) + ' s' : t('tv.delay.off')}
 		</span>
 		<button
 			type="button"
 			class="button BroadcastCard-delay-earlier"
-			title="Brett {DELAY_STEP_SECONDS} Sekunden früher"
-			aria-label="Brett {DELAY_STEP_SECONDS} Sekunden früher"
+			title={t('tv.delay.earlier', { seconds: DELAY_STEP_SECONDS })}
+			aria-label={t('tv.delay.earlier', { seconds: DELAY_STEP_SECONDS })}
 			disabled={!delaySeconds}
 			onclick={() => setDelay(stepDelay(delaySeconds, -1))}
 		>
@@ -463,8 +473,8 @@
 		<button
 			type="button"
 			class="button BroadcastCard-delay-later"
-			title="Brett {DELAY_STEP_SECONDS} Sekunden später"
-			aria-label="Brett {DELAY_STEP_SECONDS} Sekunden später"
+			title={t('tv.delay.later', { seconds: DELAY_STEP_SECONDS })}
+			aria-label={t('tv.delay.later', { seconds: DELAY_STEP_SECONDS })}
 			disabled={delaySeconds >= DELAY_MAX_SECONDS}
 			onclick={() => setDelay(stepDelay(delaySeconds, 1))}
 		>
@@ -485,7 +495,7 @@
 					linkError = null;
 				}}
 			>
-				OGS-Partielink zuordnen
+				{t('tv.link.assign')}
 			</button>
 			{#if hasManualOgsLink}
 				<button
@@ -493,7 +503,7 @@
 					class="BroadcastCard-link-toggle BroadcastCard-link-remove"
 					onclick={() => onAssignOgsLink?.(broadcast.event.id, null)}
 				>
-					Zuordnung entfernen
+					{t('tv.link.remove')}
 				</button>
 			{/if}
 		</div>
@@ -503,13 +513,13 @@
 			<input
 				class="BroadcastCard-link-input"
 				type="text"
-				aria-label="OGS-Partielink"
+				aria-label={t('tv.link.inputLabel')}
 				autofocus
 				placeholder="https://online-go.com/game/…"
 				bind:value={linkInput}
 				oninput={() => (linkError = null)}
 			/>
-			<button class="button button-primary" type="submit">Zuordnen</button>
+			<button class="button button-primary" type="submit">{t('tv.link.submit')}</button>
 			<button
 				class="button"
 				type="button"
@@ -518,7 +528,7 @@
 					linkError = null;
 				}}
 			>
-				Abbrechen
+				{t('tv.cancel')}
 			</button>
 			{#if linkError}
 				<p class="BroadcastCard-link-error" role="alert">{linkError}</p>
@@ -548,12 +558,12 @@
 			<div
 				class="BroadcastCard-splitter"
 				role="slider"
-				aria-label="Größe von Video und Brett ändern"
+				aria-label={t('tv.split.resize')}
 				aria-orientation="horizontal"
 				aria-valuemin={CINEMA_SPLIT_MIN}
 				aria-valuemax={CINEMA_SPLIT_MAX}
 				aria-valuenow={cinemaSplit}
-				aria-valuetext="Video {cinemaSplit} Prozent"
+				aria-valuetext={t('tv.split.valueText', { percent: cinemaSplit })}
 				tabindex="0"
 				style:left="{cinemaSplit}%"
 				onpointerdown={onStartSplit}
@@ -569,16 +579,16 @@
 				<h2 class="BroadcastCard-cinema-title">{event.name}</h2>
 				{#if showVideo}
 					<label class="BroadcastCard-cinema-split">
-						Stream
+						{t('tv.split.stream')}
 						<input
 							type="range"
 							min={CINEMA_SPLIT_MIN}
 							max={CINEMA_SPLIT_MAX}
 							value={cinemaSplit}
-							aria-label="Aufteilung zwischen Stream und Brett"
+							aria-label={t('tv.split.label')}
 							oninput={(e) => setSplit(clampSplit(e.currentTarget.value))}
 						/>
-						Brett
+						{t('tv.split.board')}
 					</label>
 				{/if}
 				{#if hasVideoToggle}
@@ -591,7 +601,7 @@
 						class="button BroadcastCard-cinema-chat"
 						onclick={() => (cinemaChatHidden = !cinemaChatHidden)}
 					>
-						{cinemaChatHidden ? 'Chat einblenden' : 'Chat ausblenden'}
+						{cinemaChatHidden ? t('tv.cinema.showChat') : t('tv.cinema.hideChat')}
 					</button>
 				{/if}
 				<button
@@ -599,7 +609,7 @@
 					class="button button-primary BroadcastCard-cinema-exit"
 					onclick={exitCinema}
 				>
-					Kinomodus beenden (Esc)
+					{t('tv.cinema.exit')}
 				</button>
 			</div>
 		{/if}
@@ -625,10 +635,10 @@
 			{#if streamLoaded}
 				<div class="BroadcastCard-controls">
 					<button type="button" class="button BroadcastCard-close" onclick={onClose}>
-						Übertragung schließen
+						{t('tv.broadcast.close')}
 					</button>
 					<button type="button" class="button BroadcastCard-cinema-enter" onclick={enterCinema}>
-						Kinomodus
+						{t('tv.cinema.enter')}
 					</button>
 					{#if hasVideoToggle}
 						{@render videoToggle()}
@@ -644,7 +654,7 @@
 					class="button button-primary BroadcastCard-open-boards"
 					onclick={onStreamLoad}
 				>
-					{games.length > 1 ? 'Bretter öffnen' : 'Brett öffnen'}
+					{games.length > 1 ? t('tv.broadcast.openBoards') : t('tv.broadcast.openBoard')}
 				</button>
 			{/if}
 			<h3 class="BroadcastCard-boards-title">{boardTitle}</h3>
@@ -653,7 +663,7 @@
 			{/if}
 			{#if ogsError && !ogsGames.length}
 				<p class="BroadcastCard-notice" role="alert">
-					OGS-Brett konnte nicht geladen werden: {ogsError}
+					{t('tv.broadcast.ogsFailed', { error: ogsError })}
 				</p>
 			{/if}
 			{#if games.length}
@@ -685,7 +695,7 @@
 				<SgfReplayView initialUrl={recordingUrl} compact />
 			{:else if recordingUrl}
 				<p class="BroadcastCard-recording-hint muted">
-					Das Brett erscheint nach „Stream laden“ neben dem Video.
+					{t('tv.broadcast.recordingHint')}
 				</p>
 			{/if}
 		</div>

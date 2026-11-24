@@ -15,6 +15,7 @@ import {
 import { parseRankVal } from './user';
 import type { TvSource } from './TvSource';
 import type { TvEvent, TvBroadcast } from './tv';
+import { t } from '#lib/i18n/index.svelte.ts';
 import type {
 	ConversationMessage,
 	GameChannel,
@@ -384,7 +385,7 @@ export class OgsTvSource implements TvSource {
 					);
 
 					if (!player) {
-						throw new Error('OGS-Spieler nicht gefunden: ' + name);
+						throw new Error(t('tv.ogs.playerNotFound', { name }));
 					}
 
 					return player.id;
@@ -440,7 +441,7 @@ export class OgsTvSource implements TvSource {
 				gameIds.map((gameId) => this._fetchJson(OGS_API_URL + gameId).catch(() => null))
 			).then((raw) => {
 				if (raw.every((game) => !game)) {
-					throw new Error('OGS nicht erreichbar');
+					throw new Error(t('tv.ogs.unreachable'));
 				}
 
 				return pickReplayGames(raw);
@@ -548,7 +549,7 @@ export class OgsTvSource implements TvSource {
 					searching = false;
 
 					if (!released && !currentId) {
-						listener(null, err && err.message ? err.message : 'OGS nicht erreichbar');
+						listener(null, err && err.message ? err.message : t('tv.ogs.unreachable'));
 					}
 				}
 			);
@@ -797,7 +798,7 @@ export class OgsTvSource implements TvSource {
 						return;
 					}
 
-					const message = err && err.message ? err.message : 'OGS-Brett nicht erreichbar';
+					const message = err && err.message ? err.message : t('tv.ogs.boardUnreachable');
 					current.listeners.forEach((listener) =>
 						listener(this._gamesById[gameId] || null, message)
 					);

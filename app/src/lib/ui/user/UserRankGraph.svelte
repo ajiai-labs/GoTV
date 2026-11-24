@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { RankGraph } from '#lib/model/types.ts';
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 	type Point = { x: Date; y: number | null };
 
@@ -13,14 +14,17 @@
 		return null;
 	}
 
-	const MONTH = new Intl.DateTimeFormat('de-DE', { month: 'short' });
-	const MONTH_YEAR = new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric' });
-	const DAY_MONTH = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'short' });
-	const FULL = new Intl.DateTimeFormat('de-DE', {
-		day: 'numeric',
-		month: 'short',
-		year: 'numeric'
-	});
+	const FORMATS = {
+		month: { month: 'short' },
+		monthYear: { month: 'short', year: 'numeric' },
+		dayMonth: { day: 'numeric', month: 'short' },
+		full: { day: 'numeric', month: 'short', year: 'numeric' }
+	} satisfies Record<string, Intl.DateTimeFormatOptions>;
+
+	// In the interface language's locale.
+	function formatDate(date: Date, format: keyof typeof FORMATS): string {
+		return new Intl.DateTimeFormat(locale(), FORMATS[format]).format(date);
+	}
 
 	// The x labels of the old Chartist graph: with more than two months the
 	// first day of each month (with the year for January and the first
@@ -33,11 +37,13 @@
 	): string | null {
 		if (months > 2) {
 			if (date.getDate() !== 1) return null;
-			return index < 31 || date.getMonth() === 0 ? MONTH_YEAR.format(date) : MONTH.format(date);
+			return index < 31 || date.getMonth() === 0
+				? formatDate(date, 'monthYear')
+				: formatDate(date, 'month');
 		}
 		const ratio = count / 10;
 		if (ratio > 0 && Math.floor(index % ratio) !== 0) return null;
-		return index === 0 ? FULL.format(date) : DAY_MONTH.format(date);
+		return index === 0 ? formatDate(date, 'full') : formatDate(date, 'dayMonth');
 	}
 </script>
 
@@ -100,15 +106,17 @@
 		if (!values.length) return '';
 		const last = values[values.length - 1];
 		const current = rankLabel(Math.round(last / 100) * 100);
-		return `Rangverlauf der letzten ${series.length} Tage${current ? `, zuletzt etwa ${current}` : ''}`;
+		return current
+			? t('chat.rankGraph.summaryCurrent', { count: series.length, rank: current })
+			: t('chat.rankGraph.summary', { count: series.length });
 	});
 </script>
 
 <div class="UserRankGraph" bind:clientWidth={width}>
 	{#if !graph}
-		<Spinner label="Rangverlauf lädt …" />
+		<Spinner label={t('chat.rankGraph.loading')} />
 	{:else if !values.length}
-		<p class="UserRankGraph-none muted">Für diesen Spieler gibt es keinen Rangverlauf.</p>
+		<p class="UserRankGraph-none muted">{t('chat.rankGraph.none')}</p>
 	{:else if width > 0}
 		<svg {width} height={HEIGHT} role="img" aria-label={summary}>
 			{#each scale.ticks as tick (tick)}

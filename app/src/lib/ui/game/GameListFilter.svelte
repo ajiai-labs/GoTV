@@ -4,6 +4,8 @@
 	// `onChange` as a new filter; the app remembers it (watchFilter/playFilter).
 	import type { GameChannel, GameFilter, Index, Room } from '#lib/model/types.ts';
 
+	import { t } from '#lib/i18n/index.svelte.ts';
+
 	let {
 		games,
 		roomsById,
@@ -51,13 +53,15 @@
 
 <div class="GameListFilter">
 	<div class="GameListFilter-room" class:GameListFilter-room-active={!!filter.roomId}>
-		<label class="visually-hidden" for="{uid}-room">Raum</label>
+		<label class="visually-hidden" for="{uid}-room">{t('play.filter.room')}</label>
 		<select
 			id="{uid}-room"
 			value={filter.roomId ? String(filter.roomId) : ''}
 			onchange={onChangeRoom}
 		>
-			<option value="">{isChallenges ? 'Alle Herausforderungen' : 'Alle Partien'}</option>
+			<option value="">
+				{isChallenges ? t('play.filter.allChallenges') : t('play.filter.allGames')}
+			</option>
 			{#each rooms as room (room.id)}
 				<option value={String(room.id)}>{room.name}</option>
 			{/each}
@@ -66,8 +70,8 @@
 			<button
 				type="button"
 				class="GameListFilter-room-clear"
-				aria-label="Raumfilter aufheben"
-				title="Raumfilter aufheben"
+				aria-label={t('play.filter.clearRoom')}
+				title={t('play.filter.clearRoom')}
 				onclick={onClearRoom}
 			>
 				×
@@ -76,7 +80,7 @@
 	</div>
 	<label class="GameListFilter-bots">
 		<input type="checkbox" checked={!filter.excludeBots} onchange={onChangeBots} />
-		Bots
+		{t('play.filter.bots')}
 	</label>
 </div>
 

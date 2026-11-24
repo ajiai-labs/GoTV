@@ -3,6 +3,7 @@
 	// Works without a KGS login. Stars ("Mein GoTV") stay in this browser.
 	// A calendar event running on a channel right now shows there as a full
 	// broadcast with its boards, as on Live.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import ChannelsView from '#lib/ui/tv/ChannelsView.svelte';
@@ -104,10 +105,10 @@
 </script>
 
 <svelte:head>
-	<title>Kanäle – GoTV</title>
+	<title>{t('app.channels.pageTitle')}</title>
 </svelte:head>
 
-<h1>Kanäle</h1>
+<h1>{t('app.channels.title')}</h1>
 
 {#snippet renderChannel(channel: TvChannel, onAir: boolean)}
 	{@const broadcast = getBroadcast(channel)}

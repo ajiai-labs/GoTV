@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import BackupPanel from './BackupPanel.svelte';
 import * as backupModule from './BackupPanel.svelte';
 import type { BackupSummary } from '#lib/model/Backup.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 
 // The helper lives in the component's module script (as in the old app).
 const { formatSummary } = backupModule as unknown as {
@@ -49,6 +50,26 @@ describe('BackupPanel', () => {
 				settings: 0
 			})
 		).toBe('keine Daten');
+	});
+
+	it('speaks English after a language switch', async () => {
+		await render(BackupPanel);
+		await expect.element(page.getByRole('heading', { name: 'Meine Daten' })).toBeVisible();
+		language.current = 'en';
+		await expect.element(page.getByRole('heading', { name: 'My data' })).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Save backup' })).toBeVisible();
+		expect(
+			formatSummary({
+				favoriteChannels: 1,
+				favoriteEvents: 2,
+				games: 1,
+				bookmarks: 3,
+				variationMoves: 1,
+				settings: 0
+			})
+		).toBe(
+			'1 favourite channel, 2 favourite tournaments, 1 replayed game (3 bookmarks, 1 variation move)'
+		);
 	});
 
 	it("saves this browser's data as a file", async () => {

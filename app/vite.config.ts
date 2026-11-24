@@ -61,7 +61,9 @@ export default defineConfig({
 						instances: browsers
 					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**']
+					exclude: ['src/lib/server/**'],
+					// Tests look for the German texts (src/lib/i18n/testSetup.ts).
+					setupFiles: ['src/lib/i18n/testSetup.ts']
 				}
 			},
 
@@ -74,7 +76,8 @@ export default defineConfig({
 					environment: 'jsdom',
 					globals: true,
 					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					setupFiles: ['src/lib/i18n/testSetup.ts']
 				}
 			}
 		]

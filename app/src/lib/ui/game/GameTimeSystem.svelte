@@ -1,13 +1,14 @@
 <script lang="ts" module>
 	import { formatGameTimeSystem } from '#lib/model/game/display.ts';
 	import type { GameRules } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	// formatGameTimeSystem (taken over unchanged) speaks English in two
-	// places; the new interface shows German.
+	// places; the interface shows them in its language.
 	export function formatTimeSystemDe(rules: GameRules): string {
 		const text = formatGameTimeSystem(rules) ?? '';
-		if (rules.timeSystem === 'none') return 'Ohne Zeitlimit';
-		return text.replace(/ absolute$/, ' absolut');
+		if (rules.timeSystem === 'none') return t('game.time.none');
+		return text.replace(/ absolute$/, ' ' + t('game.time.absolute'));
 	}
 </script>
 
@@ -23,7 +24,13 @@
 		speed === 'very fast' ? '⚡⚡' : speed === 'fast' ? '⚡' : speed === 'slow' ? '⏳' : ''
 	);
 	let speedLabel = $derived(
-		speed === 'very fast' ? 'sehr schnell' : speed === 'fast' ? 'schnell' : 'langsam'
+		t(
+			speed === 'very fast'
+				? 'game.time.veryFast'
+				: speed === 'fast'
+					? 'game.time.fast'
+					: 'game.time.slow'
+		)
 	);
 </script>
 

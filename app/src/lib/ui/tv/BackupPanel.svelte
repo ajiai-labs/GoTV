@@ -1,31 +1,30 @@
 <script module lang="ts">
 	import type { BackupSummary } from '#lib/model/Backup.ts';
-
-	function plural(count: number, one: string, many: string): string {
-		return String(count) + ' ' + (count === 1 ? one : many);
-	}
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 	export function formatSummary(summary: BackupSummary): string {
 		const parts: Array<string> = [];
 		if (summary.favoriteChannels) {
-			parts.push(plural(summary.favoriteChannels, 'Lieblingskanal', 'Lieblingskanäle'));
+			parts.push(t('replay.backup.favoriteChannels', { count: summary.favoriteChannels }));
 		}
 		if (summary.favoriteEvents) {
-			parts.push(plural(summary.favoriteEvents, 'Lieblingsturnier', 'Lieblingsturniere'));
+			parts.push(t('replay.backup.favoriteEvents', { count: summary.favoriteEvents }));
 		}
 		if (summary.games) {
-			const game = plural(summary.games, 'nachgespielte Partie', 'nachgespielte Partien');
+			const game = t('replay.backup.games', { count: summary.games });
 			const extras: Array<string> = [];
-			if (summary.bookmarks) extras.push(plural(summary.bookmarks, 'Lesezeichen', 'Lesezeichen'));
+			if (summary.bookmarks) {
+				extras.push(t('replay.backup.bookmarks', { count: summary.bookmarks }));
+			}
 			if (summary.variationMoves) {
-				extras.push(plural(summary.variationMoves, 'Variantenzug', 'Variantenzüge'));
+				extras.push(t('replay.backup.variationMoves', { count: summary.variationMoves }));
 			}
 			parts.push(game + (extras.length ? ' (' + extras.join(', ') + ')' : ''));
 		}
 		if (summary.settings) {
-			parts.push(plural(summary.settings, 'Einstellung', 'Einstellungen'));
+			parts.push(t('replay.backup.settings', { count: summary.settings }));
 		}
-		return parts.length ? parts.join(', ') : 'keine Daten';
+		return parts.length ? parts.join(', ') : t('replay.backup.noData');
 	}
 </script>
 
@@ -55,8 +54,9 @@
 	const uid = $props.id();
 
 	let pending = $state.raw<Backup | null>(null);
-	let message: string | null = $state(null);
-	let error: string | null = $state(null);
+	// Messages are built when shown, so they follow a language switch.
+	let message: (() => string) | null = $state(null);
+	let error: (() => string) | null = $state(null);
 
 	function getStorage(): Storage | null {
 		try {
@@ -69,17 +69,17 @@
 	function formatDate(iso: string): string {
 		const date = new Date(iso);
 		return isNaN(date.getTime())
-			? 'unbekanntem Datum'
-			: date.toLocaleDateString('de-DE') +
-					', ' +
-					date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) +
-					' Uhr';
+			? t('replay.backup.unknownDate')
+			: t('replay.backup.dateTime', {
+					date: date.toLocaleDateString(locale()),
+					time: date.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
+				});
 	}
 
 	function onSave() {
 		const storage = getStorage();
 		if (!storage) {
-			error = 'Dieser Browser speichert keine Daten.';
+			error = () => t('replay.backup.noStorage');
 			return;
 		}
 		const now = new Date();
@@ -93,7 +93,8 @@
 		link.click();
 		link.remove();
 		setTimeout(() => URL.revokeObjectURL(url), 1000);
-		message = 'Sicherung gespeichert: ' + formatSummary(describeBackup(backup)) + '.';
+		const summary = describeBackup(backup);
+		message = () => t('replay.backup.saved', { summary: formatSummary(summary) });
 		error = null;
 		pending = null;
 	}
@@ -111,13 +112,14 @@
 				error = null;
 				message = null;
 			} else {
-				error = result.error;
+				const reason = result.error;
+				error = () => reason;
 				pending = null;
 				message = null;
 			}
 		};
 		reader.onerror = () => {
-			error = 'Die Datei konnte nicht gelesen werden.';
+			error = () => t('replay.backup.unreadable');
 		};
 		reader.readAsText(file);
 	}
@@ -127,26 +129,23 @@
 		if (!pending || !storage) return;
 		const changed = restoreBackup(storage, pending);
 		pending = null;
-		message = changed
-			? 'Sicherung übernommen. GoTV lädt neu …'
-			: 'Nichts zu übernehmen – diese Daten sind schon hier.';
+		message = changed ? () => t('replay.backup.restored') : () => t('replay.backup.nothingNew');
 		if (changed) setTimeout(() => onRestored(), RELOAD_DELAY_MS);
 	}
 </script>
 
 <section class="BackupPanel panel" aria-labelledby="{uid}-title">
-	<h2 id="{uid}-title" class="panel-title">Meine Daten</h2>
+	<h2 id="{uid}-title" class="panel-title">{t('replay.backup.title')}</h2>
 	<div class="BackupPanel-body">
 		<p class="BackupPanel-hint">
-			Favoriten, nachgespielte Partien mit Lesezeichen und Varianten, Einstellungen – nur in diesem
-			Browser. Mit einer Sicherungsdatei nimmst du sie auf ein anderes Gerät mit.
+			{t('replay.backup.hint')}
 		</p>
 		<div class="BackupPanel-actions">
 			<button type="button" class="button BackupPanel-save" onclick={onSave}>
-				Sicherung speichern
+				{t('replay.backup.save')}
 			</button>
 			<label class="button BackupPanel-load">
-				Sicherung einspielen …
+				{t('replay.backup.load')}
 				<input
 					type="file"
 					accept=".json,application/json"
@@ -158,11 +157,13 @@
 		{#if pending}
 			<div class="BackupPanel-confirm">
 				<p>
-					Sicherung vom {formatDate(pending.createdAt)}: {formatSummary(describeBackup(pending))}.
+					{t('replay.backup.pending', {
+						date: formatDate(pending.createdAt),
+						summary: formatSummary(describeBackup(pending))
+					})}
 				</p>
 				<p class="BackupPanel-hint">
-					Einspielen ergänzt nur: Was hier schon gespeichert ist, bleibt erhalten; bei derselben
-					Partie gilt der neuere Stand.
+					{t('replay.backup.restoreHint')}
 				</p>
 				<div class="BackupPanel-actions">
 					<button
@@ -170,17 +171,19 @@
 						class="button button-primary BackupPanel-restore"
 						onclick={onRestore}
 					>
-						Einspielen
+						{t('replay.backup.restore')}
 					</button>
-					<button type="button" class="button" onclick={() => (pending = null)}>Abbrechen</button>
+					<button type="button" class="button" onclick={() => (pending = null)}>
+						{t('replay.cancel')}
+					</button>
 				</div>
 			</div>
 		{/if}
 		{#if message}
-			<p class="BackupPanel-message" role="status">{message}</p>
+			<p class="BackupPanel-message" role="status">{message()}</p>
 		{/if}
 		{#if error}
-			<p class="BackupPanel-error" role="alert">{error}</p>
+			<p class="BackupPanel-error" role="alert">{error()}</p>
 		{/if}
 	</div>
 </section>

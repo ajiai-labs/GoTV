@@ -8,6 +8,7 @@
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import { formatGameTypeDe, formatScoreDe } from '#lib/ui/game/gameText.ts';
 	import Spinner from '#lib/ui/Spinner.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		activeConversationId,
@@ -58,6 +59,9 @@
 		}
 	});
 
+	// "Die Partie wird in {room} geladen.": the room name in bold.
+	let loadsIn = $derived(t('chat.summary.loadsIn').split('{room}'));
+
 	function load() {
 		if (!targetRoom) return;
 		showSpinner = true;
@@ -67,24 +71,24 @@
 
 <div class="UserGameSummary">
 	<dl>
-		<dt>Weiß</dt>
+		<dt>{t('chat.summary.white')}</dt>
 		<dd>{game.players.white?.name}</dd>
-		<dt>Schwarz</dt>
+		<dt>{t('chat.summary.black')}</dt>
 		<dd>{game.players.black?.name}</dd>
 		{#if game.score}
-			<dt>Ergebnis</dt>
+			<dt>{t('chat.summary.result')}</dt>
 			<dd>{formatScoreDe(game.score)}</dd>
 		{/if}
-		<dt>Datum</dt>
+		<dt>{t('chat.summary.date')}</dt>
 		<dd>{formatLocaleDateTime(game.timestamp)}</dd>
-		<dt>Art</dt>
+		<dt>{t('chat.summary.type')}</dt>
 		<dd>{formatGameTypeDe(game.type)}</dd>
 	</dl>
 
 	{#if !targetRoom}
-		<p class="note"><strong>Betritt zuerst einen Raum, um eine Partie zu laden.</strong></p>
+		<p class="note"><strong>{t('chat.summary.joinRoomFirst')}</strong></p>
 	{:else if showSpinner}
-		<Spinner label="Partie wird geladen …" />
+		<Spinner label={t('chat.summary.loading')} />
 	{:else}
 		<form
 			class="load"
@@ -94,21 +98,21 @@
 			}}
 		>
 			{#if rooms.length > 1}
-				<label class="room" for="{formId}-room">Partie laden in:</label>
+				<label class="room" for="{formId}-room">{t('chat.summary.loadInto')}</label>
 				<select id="{formId}-room" name="rooms" bind:value={targetRoom}>
 					{#each rooms as room (room.id)}
 						<option value={room.id}>{room.name}</option>
 					{/each}
 				</select>
 			{:else if rooms.length === 1}
-				<p>Die Partie wird in <strong>{rooms[0].name}</strong> geladen.</p>
+				<p>{loadsIn[0]}<strong>{rooms[0].name}</strong>{loadsIn[1]}</p>
 			{/if}
 			<label class="check">
 				<input type="checkbox" name="privateGame" bind:checked={privateGame} />
-				<span>Privat</span>
+				<span>{t('chat.summary.private')}</span>
 			</label>
 			<div>
-				<button class="button button-primary" type="submit">Partie laden</button>
+				<button class="button button-primary" type="submit">{t('chat.summary.load')}</button>
 			</div>
 		</form>
 	{/if}

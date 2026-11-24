@@ -9,6 +9,7 @@
 	import Spinner from '#lib/ui/Spinner.svelte';
 	import { groupChannels, isChannelOnAir } from '#lib/model/tvChannels.ts';
 	import type { TvChannel } from '#lib/model/tv.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		status,
@@ -32,8 +33,8 @@
 	} = $props();
 
 	const GROUPS = [
-		{ key: 'player', title: 'Spieler' },
-		{ key: 'organization', title: 'Verbände und Turniere' }
+		{ key: 'player', title: 'tv.channels.players' },
+		{ key: 'organization', title: 'tv.channels.organizations' }
 	] as const;
 
 	let date = $derived(new Date(now));
@@ -53,8 +54,8 @@
 			)
 	);
 	let sections = $derived([
-		{ key: 'favorites', title: '★ Favoriten', channels: starred },
-		...GROUPS.map(({ key, title }) => ({ key, title, channels: groups[key] }))
+		{ key: 'favorites', title: t('tv.channels.favorites'), channels: starred },
+		...GROUPS.map(({ key, title }) => ({ key, title: t(title), channels: groups[key] }))
 	]);
 </script>
 
@@ -69,12 +70,14 @@
 
 <div class="ChannelsView">
 	{#if status === 'loading'}
-		<Spinner label="Kanäle werden geladen …" />
+		<Spinner label={t('tv.channels.loading')} />
 	{:else if status === 'error'}
 		<div class="ChannelsView-error panel" role="alert">
-			<p>Kanäle konnten nicht geladen werden (events.json nicht erreichbar).</p>
+			<p>{t('tv.channels.error')}</p>
 			{#if onRetry}
-				<button type="button" class="button" onclick={() => onRetry()}>Erneut versuchen</button>
+				<button type="button" class="button" onclick={() => onRetry()}>
+					{t('tv.channels.retry')}
+				</button>
 			{/if}
 		</div>
 	{:else}
@@ -97,7 +100,7 @@
 			{/if}
 		{/each}
 		{#if !channels.length}
-			<p class="ChannelsView-empty muted">Keine Kanäle eingetragen.</p>
+			<p class="ChannelsView-empty muted">{t('tv.channels.empty')}</p>
 		{/if}
 	{/if}
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	// A player asks to take back a move: allow or deny.
 	import type { GameRole } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const uid = $props.id();
 
@@ -18,10 +19,14 @@
 </script>
 
 <div class="GameUndoPrompt panel" role="alertdialog" aria-labelledby="{uid}-label">
-	<p id="{uid}-label" class="GameUndoPrompt-label">Bitte um Zugrücknahme.</p>
+	<p id="{uid}-label" class="GameUndoPrompt-label">{t('game.undo.request')}</p>
 	<div class="GameUndoPrompt-buttons">
-		<button type="button" class="button button-primary" onclick={() => onAccept()}>Erlauben</button>
-		<button type="button" class="button" onclick={() => onDecline()}>Ablehnen</button>
+		<button type="button" class="button button-primary" onclick={() => onAccept()}>
+			{t('game.undo.allow')}
+		</button>
+		<button type="button" class="button" onclick={() => onDecline()}>
+			{t('game.undo.decline')}
+		</button>
 	</div>
 </div>
 

@@ -5,6 +5,7 @@ import {
 	parseBackup,
 	restoreBackup
 } from './Backup';
+import { language } from '#lib/i18n/index.svelte.ts';
 const NOW = new Date(2026, 10, 23, 19, 30);
 
 function storageFrom(entries) {
@@ -66,6 +67,16 @@ describe('collectBackup', () => {
 			'gotv.replays'
 		]);
 		expect(getBackupFileName(NOW)).toBe('gotv-sicherung-2026-11-23.json');
+	});
+	it('carries the interface language and names the file in English', () => {
+		const backup = collectBackup(storageFrom({ ...DESKTOP, 'gotv.language': 'en' }), NOW);
+		expect(backup.data['gotv.language']).toBe('en');
+		const target = storageFrom({ 'gotv.language': 'de' });
+		restoreBackup(target, backup);
+		expect(target.getItem('gotv.language')).toBe('en'); // a plain setting: the file wins
+		language.current = 'en';
+		expect(getBackupFileName(NOW)).toBe('gotv-backup-2026-11-23.json');
+		expect(parseBackup('not json').error).toBe('The file is not a GoTV backup (not JSON).');
 	});
 	it('describes what the file holds', () => {
 		const backup = collectBackup(storageFrom(DESKTOP), NOW);

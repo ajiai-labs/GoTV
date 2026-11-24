@@ -51,6 +51,7 @@
 	import type { ReplayBookmark } from '#lib/model/ReplayProgress.ts';
 	import { getSgfFileName, writeSgf } from '#lib/model/SgfWriter.ts';
 	import type { GameTree, PlayerColor, Point, SgfProp } from '#lib/model/types.ts';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import KataGoPanel from './KataGoPanel.svelte';
 
 	let {
@@ -67,20 +68,17 @@
 		compact?: boolean;
 	} = $props();
 
-	const MOVE_NOTICE: Record<string, string | null> = {
-		ko: 'Ko: sofort zurückschlagen ist verboten – erst woanders spielen.',
-		suicide: 'Selbstmord: Der Stein hätte keine Freiheit.',
+	const MOVE_NOTICE: Record<string, MessageKey | null> = {
+		ko: 'replay.view.koNotice',
+		suicide: 'replay.view.suicideNotice',
 		occupied: null // a click on a stone just does nothing
 	};
 
-	const COLOR_LABEL = { black: 'Schwarz', white: 'Weiß' } as const;
-
-	const CORS_ERROR_MESSAGE =
-		'SGF konnte nicht geladen werden. Wahrscheinlich blockiert der Server ' +
-		'direkte Anfragen (CORS). Lade die Datei direkt hoch oder füge den SGF-Text ein.';
+	const COLOR_LABEL = { black: 'replay.black', white: 'replay.white' } as const;
 
 	let status = $state<'empty' | 'ready' | 'error'>('empty');
-	let error = $state<string | null>(null);
+	// The error text, built when shown (it follows a language switch).
+	let error = $state<(() => string) | null>(null);
 	let tree = $state.raw<GameTree | null>(null);
 	let currentNode = $state(0);
 	let input = $state('');
@@ -94,7 +92,7 @@
 	// KataGo's top moves for the shown position, as board labels 1-5.
 	let kataGoMoves = $state.raw<{ nodeId: number; moves: Array<KataGoMove> } | null>(null);
 	// Why the last click on the board was not played (ko, suicide).
-	let moveNotice = $state<string | null>(null);
+	let moveNotice = $state<MessageKey | null>(null);
 
 	const uid = $props.id();
 	let loadCount = 0;
@@ -126,17 +124,19 @@
 		return base + url;
 	}
 
-	function getTitle(t: GameTree): string {
-		const names = getSgfPlayerNames(t);
-		return names.black && names.white ? names.black + ' – ' + names.white : 'SGF-Partie';
+	function getTitle(game: GameTree): string {
+		const names = getSgfPlayerNames(game);
+		return names.black && names.white
+			? names.black + ' – ' + names.white
+			: t('replay.view.untitled');
 	}
 
 	// A tree that's already in memory (e.g. a game just watched to the end) -
 	// no fetch, no SGF (re-)parsing. Always starts the replay at the root,
 	// regardless of where the live view's currentNode happened to be.
-	function applyTree(t: GameTree) {
+	function applyTree(game: GameTree) {
 		loadCount++;
-		showTree(t, replayKey ? 'game:' + replayKey : null, null);
+		showTree(game, replayKey ? 'game:' + replayKey : null, null);
 	}
 
 	// Opens a parsed game, at the move where the viewer stopped last time.
@@ -197,9 +197,7 @@
 				console.warn('[tv] Failed to load SGF from ' + url + ':', err);
 				if (count !== loadCount) return;
 				status = 'error';
-				error = compact
-					? 'Finalpartie konnte nicht geladen werden. Schließe das Beispiel und öffne es erneut.'
-					: CORS_ERROR_MESSAGE;
+				error = compact ? () => t('replay.view.exampleError') : () => t('replay.view.corsError');
 			});
 	}
 
@@ -210,7 +208,8 @@
 		} catch (err) {
 			if (err instanceof SgfParseError) {
 				status = 'error';
-				error = 'SGF konnte nicht gelesen werden: ' + err.message;
+				const reason = err.message;
+				error = () => t('replay.view.parseError', { error: reason });
 				tree = null;
 				return;
 			}
@@ -221,16 +220,16 @@
 
 	// Remembers the move on the game itself (inside a variation: where the
 	// variation left the game).
-	function saveProgress(t: GameTree, nodeId: number) {
+	function saveProgress(game: GameTree, nodeId: number) {
 		if (!progressKey) return;
-		const mainLine = getMainLine(t);
-		const branch = getBranchPoint(t, nodeId);
+		const mainLine = getMainLine(game);
+		const branch = getBranchPoint(game, nodeId);
 		const move = mainLine.indexOf(typeof branch === 'number' ? branch : nodeId);
-		saveReplayMove(progressKey, Math.max(0, move), getTitle(t), progressUrl);
+		saveReplayMove(progressKey, Math.max(0, move), getTitle(game), progressUrl);
 	}
 
-	function saveVariations(t: GameTree) {
-		if (progressKey) saveReplayVariations(progressKey, getVariationEntries(t));
+	function saveVariations(game: GameTree) {
+		if (progressKey) saveReplayVariations(progressKey, getVariationEntries(game));
 	}
 
 	function changeCurrentNode(nodeId: number) {
@@ -400,24 +399,29 @@
 	});
 	let continuations = $derived.by(() => {
 		if (!tree) return [];
-		const t = tree;
-		const size = t.computedState[currentNode]?.board.length ?? 19;
-		const shownNext = t.currentLine[t.currentLine.indexOf(currentNode) + 1];
-		return getContinuations(t, currentNode).map((continuation) => {
-			const move = getNodeMove(t, continuation.nodeId);
-			const point = move ? formatPoint(move.x, move.y, size) : 'Passen';
+		const game = tree;
+		const size = game.computedState[currentNode]?.board.length ?? 19;
+		const shownNext = game.currentLine[game.currentLine.indexOf(currentNode) + 1];
+		return getContinuations(game, currentNode).map((continuation) => {
+			const move = getNodeMove(game, continuation.nodeId);
+			const point = move ? formatPoint(move.x, move.y, size) : t('replay.pass');
+			// KataGo's lines carry a comment starting with "KataGo" in both languages.
 			const label = continuation.isGame
-				? 'Partie ' + point
-				: (continuation.comment?.startsWith('KataGo') ? 'KataGo ' : 'Variante ') + point;
+				? t('replay.view.continuationGame', { point })
+				: continuation.comment?.startsWith('KataGo')
+					? t('replay.view.continuationKataGo', { point })
+					: t('replay.view.continuationVariation', { point });
 			return { nodeId: continuation.nodeId, label, shown: continuation.nodeId === shownNext };
 		});
 	});
 	let boardLabel = $derived(
-		(playerNames.black && playerNames.white
-			? playerNames.black + ' gegen ' + playerNames.white + ', '
-			: '') +
-			'Brett nach Zug ' +
-			String(moveNum)
+		playerNames.black && playerNames.white
+			? t('replay.view.boardLabelPlayers', {
+					black: playerNames.black,
+					white: playerNames.white,
+					move: moveNum
+				})
+			: t('replay.view.boardLabel', { move: moveNum })
 	);
 </script>
 
@@ -426,12 +430,12 @@
 		{#if playerNames.black && playerNames.white}
 			<span class="player">
 				<span class="stone black" aria-hidden="true"></span>{playerNames.black}
-				<span class="muted">(Schwarz)</span>
+				<span class="muted">{t('replay.view.colorInParens', { color: t('replay.black') })}</span>
 			</span>
-			<span>gegen</span>
+			<span>{t('replay.view.versus')}</span>
 			<span class="player">
 				<span class="stone white" aria-hidden="true"></span>{playerNames.white}
-				<span class="muted">(Weiß)</span>
+				<span class="muted">{t('replay.view.colorInParens', { color: t('replay.white') })}</span>
 			</span>
 		{/if}
 		<span class="game-meta">
@@ -446,31 +450,38 @@
 {#snippet captures()}
 	{#if computed}
 		<p class="captures muted">
-			Zug {moveNum} · Gefangene: Schwarz {computed.blackCaptures}, Weiß {computed.whiteCaptures}
+			{t('replay.view.captures', {
+				move: moveNum,
+				black: computed.blackCaptures,
+				white: computed.whiteCaptures
+			})}
 		</p>
 	{/if}
 {/snippet}
 
 {#snippet navigation()}
 	{#if moveNotice}
-		<p class="move-notice" role="status">{moveNotice}</p>
+		<p class="move-notice" role="status">{t(moveNotice)}</p>
 	{/if}
 	{#if tree && typeof branchPoint === 'number'}
 		<div class="variation">
 			<span>
-				Variante ab Zug {mainLine.indexOf(branchPoint)} · {COLOR_LABEL[
-					getColorToPlay(tree, currentNode)
-				]} ist am Zug
+				{t('replay.view.variation', {
+					move: mainLine.indexOf(branchPoint),
+					color: t(COLOR_LABEL[getColorToPlay(tree, currentNode)])
+				})}
 			</span>
 			<button type="button" class="small-button" onclick={onReturnToGame}>
-				Zurück zur Partie
+				{t('replay.view.backToGame')}
 			</button>
-			<button type="button" class="link" onclick={onRemoveVariation}>Variante löschen</button>
+			<button type="button" class="link" onclick={onRemoveVariation}>
+				{t('replay.view.removeVariation')}
+			</button>
 		</div>
 	{/if}
 	{#if continuations.length}
 		<div class="continuations">
-			<span class="muted">Weiter mit:</span>
+			<span class="muted">{t('replay.view.continueWith')}</span>
 			{#each continuations as continuation (continuation.nodeId)}
 				<button
 					type="button"
@@ -489,7 +500,7 @@
 {#snippet commentBox()}
 	{#if comment}
 		<div class="comment">
-			<div class="comment-title">Kommentar:</div>
+			<div class="comment-title">{t('replay.view.comment')}</div>
 			<div class="comment-text">{comment}</div>
 		</div>
 	{/if}
@@ -499,12 +510,12 @@
 	<div class="progress">
 		{#if resumedFrom}
 			<p class="resumed muted">
-				Weiter bei Zug {resumedFrom} – hier hast du zuletzt aufgehört.
-				<button type="button" class="link" onclick={onRestart}>Von vorn</button>
+				{t('replay.view.resumed', { move: resumedFrom })}
+				<button type="button" class="link" onclick={onRestart}>{t('replay.view.restart')}</button>
 			</p>
 		{/if}
 		{#if bookmarks.length}
-			<ul class="bookmarks" aria-label="Lesezeichen">
+			<ul class="bookmarks" aria-label={t('replay.view.bookmarks')}>
 				{#each bookmarks as bookmark (bookmark.move)}
 					<li class="bookmark">
 						<button
@@ -512,12 +523,14 @@
 							class="bookmark-jump"
 							onclick={() => onJumpToBookmark(bookmark.move)}
 						>
-							Zug {bookmark.move}{bookmark.note ? ': ' + bookmark.note : ''}
+							{bookmark.note
+								? t('replay.view.bookmarkNote', { move: bookmark.move, note: bookmark.note })
+								: t('replay.move', { move: bookmark.move })}
 						</button>
 						<button
 							type="button"
 							class="bookmark-remove"
-							aria-label={'Lesezeichen bei Zug ' + String(bookmark.move) + ' löschen'}
+							aria-label={t('replay.view.removeBookmark', { move: bookmark.move })}
 							onclick={() => onRemoveBookmark(bookmark.move)}
 						>
 							×
@@ -527,7 +540,9 @@
 			</ul>
 		{/if}
 		<div class="progress-actions">
-			<button type="button" class="small-button" onclick={onExportSgf}>Als SGF speichern</button>
+			<button type="button" class="small-button" onclick={onExportSgf}>
+				{t('replay.view.exportSgf')}
+			</button>
 			{#if bookmarkDraft === null}
 				<button
 					type="button"
@@ -535,7 +550,7 @@
 					disabled={moveNum < 1}
 					onclick={() => (bookmarkDraft = '')}
 				>
-					Lesezeichen bei Zug {moveNum}
+					{t('replay.view.addBookmark', { move: moveNum })}
 				</button>
 			{/if}
 		</div>
@@ -546,12 +561,14 @@
 					class="bookmark-input"
 					value={bookmarkDraft}
 					maxlength={200}
-					placeholder="z. B. Hier verstehe ich den Kampf nicht"
-					aria-label={'Notiz zu Zug ' + String(moveNum)}
+					placeholder={t('replay.view.notePlaceholder')}
+					aria-label={t('replay.view.noteLabel', { move: moveNum })}
 					oninput={(e) => (bookmarkDraft = e.currentTarget.value)}
 				/>
-				<button type="submit" class="small-button">Speichern</button>
-				<button type="button" class="link" onclick={() => (bookmarkDraft = null)}>Abbrechen</button>
+				<button type="submit" class="small-button">{t('replay.view.save')}</button>
+				<button type="button" class="link" onclick={() => (bookmarkDraft = null)}>
+					{t('replay.cancel')}
+				</button>
 			</form>
 		{/if}
 	</div>
@@ -560,11 +577,11 @@
 {#snippet sources()}
 	<section class="sources panel" aria-labelledby="{uid}-sources">
 		<h2 id="{uid}-sources" class="panel-title">
-			{status === 'ready' ? 'Andere Partie laden' : 'Partie laden'}
+			{status === 'ready' ? t('replay.view.loadOther') : t('replay.view.load')}
 		</h2>
 		<div class="sources-body">
 			<label class="source">
-				<span class="source-label">SGF-Datei:</span>
+				<span class="source-label">{t('replay.view.sgfFile')}</span>
 				<input
 					type="file"
 					accept=".sgf,.SGF,text/plain,application/x-go-sgf"
@@ -572,7 +589,7 @@
 				/>
 			</label>
 			<div class="source">
-				<label class="source-label" for="{uid}-paste">SGF einfügen:</label>
+				<label class="source-label" for="{uid}-paste">{t('replay.view.pasteSgf')}</label>
 				<textarea id="{uid}-paste" bind:value={input} placeholder="(;GM[1]SZ[19]...)" rows="3"
 				></textarea>
 				<div>
@@ -582,7 +599,7 @@
 						disabled={!input.trim()}
 						onclick={() => loadSgf(input)}
 					>
-						Laden
+						{t('replay.view.loadButton')}
 					</button>
 				</div>
 			</div>
@@ -592,10 +609,10 @@
 
 <div class="replay" class:compact>
 	{#if compact && status === 'empty'}
-		<p class="notice muted" role="status">Finalpartie wird geladen …</p>
+		<p class="notice muted" role="status">{t('replay.view.loadingExample')}</p>
 	{/if}
 	{#if status === 'error'}
-		<p class="error" role="alert">{error || 'Unbekannter Fehler'}</p>
+		<p class="error" role="alert">{error ? error() : t('replay.view.unknownError')}</p>
 	{/if}
 
 	{#if status === 'ready' && tree && computed}

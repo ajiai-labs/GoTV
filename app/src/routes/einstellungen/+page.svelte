@@ -1,6 +1,7 @@
 <script lang="ts">
-	// Settings (draft): choose the design. More settings follow in phase 2b.
+	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 
 	// Fixed colours per option, so each card shows its own design whatever
@@ -13,14 +14,33 @@
 </script>
 
 <svelte:head>
-	<title>Einstellungen – GoTV</title>
+	<title>{t('settings.pageTitle')}</title>
 </svelte:head>
 
-<h1>Einstellungen</h1>
+<h1>{t('settings.title')}</h1>
+
+<fieldset class="language">
+	<legend>{t('settings.language')}</legend>
+	<p class="muted">{t('settings.languageHint')}</p>
+	<div class="languages">
+		{#each LANGUAGES as option (option.id)}
+			<label class="choice" class:chosen={language.current === option.id}>
+				<input
+					type="radio"
+					name="language"
+					value={option.id}
+					checked={language.current === option.id}
+					onchange={() => language.set(option.id)}
+				/>
+				<span class="name" lang={option.id}>{option.name}</span>
+			</label>
+		{/each}
+	</div>
+</fieldset>
 
 <fieldset>
-	<legend>Design</legend>
-	<p class="muted">Gilt sofort und bleibt in diesem Browser gespeichert.</p>
+	<legend>{t('settings.design')}</legend>
+	<p class="muted">{t('settings.designHint')}</p>
 	<div class="choices">
 		{#each DESIGNS as option (option.id)}
 			{@const c = SWATCH[option.id]}
@@ -40,14 +60,14 @@
 					<span class="mini-bar" style:background={c.ink}></span>
 					<span class="mini-button" style:background={c.accent}></span>
 				</span>
-				<span class="name">{option.name}</span>
-				<span class="muted">{option.description}</span>
+				<span class="name">{t(option.name)}</span>
+				<span class="muted">{t(option.description)}</span>
 			</label>
 		{/each}
 	</div>
 </fieldset>
 
-<section class="data" aria-label="Meine Daten">
+<section class="data" aria-label={t('settings.myData')}>
 	<BackupPanel />
 </section>
 
@@ -69,6 +89,21 @@
 		font-weight: 650;
 		font-size: 1.15rem;
 		padding: 0;
+	}
+
+	.language {
+		margin-bottom: calc(var(--gap) * 1.6);
+	}
+
+	.languages {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--gap);
+		margin-top: 12px;
+	}
+
+	.languages .choice {
+		min-width: 160px;
 	}
 
 	.choices {

@@ -5,6 +5,7 @@ import CalendarMonth from './CalendarMonth.svelte';
 import CalendarView from './CalendarView.svelte';
 import { ogsTvSource } from '#lib/model/OgsTvSource.ts';
 import type { TvEvent } from '#lib/model/tv.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 
 const NOW = new Date(2026, 10, 17, 12).getTime(); // 17 November 2026
 
@@ -51,6 +52,17 @@ afterEach(() => {
 });
 
 describe('CalendarMonth', () => {
+	it('speaks English when English is chosen', async () => {
+		language.current = 'en';
+		await render(CalendarMonth, { props: { events: EVENTS, now: NOW } });
+		await expect.element(page.getByRole('button', { name: 'Today' })).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Next month' })).toBeVisible();
+		await expect
+			.element(page.getByRole('heading', { name: 'Tuesday, 17 November 2026' }))
+			.toBeVisible();
+		expect(document.querySelector('.CalendarMonth-weekday')?.textContent).toBe('Mon');
+	});
+
 	it('shows the month with today marked and tournaments as bars', async () => {
 		await render(CalendarMonth, { props: { events: EVENTS, now: NOW } });
 		await expect.element(page.getByRole('heading', { name: 'November 2026' })).toBeVisible();

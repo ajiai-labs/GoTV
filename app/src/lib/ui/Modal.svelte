@@ -1,5 +1,6 @@
 <script lang="ts">
 	// A dialog over the page (native <dialog>: focus stays inside, Esc closes).
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -33,7 +34,7 @@
 >
 	<header>
 		<h2 class="panel-title">{title}</h2>
-		<button class="close" onclick={onclose} aria-label="Schließen">×</button>
+		<button class="close" onclick={onclose} aria-label={t('app.modal.close')}>×</button>
 	</header>
 	<div class="body">
 		{@render children()}

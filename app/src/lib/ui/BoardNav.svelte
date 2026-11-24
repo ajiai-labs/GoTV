@@ -2,6 +2,7 @@
 	// Move bar under a board: start, back, slider, forward, end. Arrow keys
 	// step one move, Home/End jump to the ends (not while typing in a field).
 	// With `latest` set (live board), "end" means "follow the game again".
+	import { t } from '#lib/i18n/index.svelte.ts';
 	let {
 		move = $bindable(),
 		total,
@@ -38,14 +39,19 @@
 
 <svelte:window onkeydown={onkey} />
 
-<div class="nav" role="group" aria-label="Züge">
-	<button class="button" onclick={() => go(0)} aria-label="Zum Anfang" disabled={move === 0}>
+<div class="nav" role="group" aria-label={t('app.boardNav.moves')}>
+	<button
+		class="button"
+		onclick={() => go(0)}
+		aria-label={t('app.boardNav.first')}
+		disabled={move === 0}
+	>
 		⏮
 	</button>
 	<button
 		class="button"
 		onclick={() => go(move - 1)}
-		aria-label="Ein Zug zurück"
+		aria-label={t('app.boardNav.back')}
 		disabled={move === 0}
 	>
 		◀
@@ -56,13 +62,13 @@
 		max={last}
 		value={move}
 		oninput={(e) => go(Number(e.currentTarget.value))}
-		aria-label="Zug wählen"
-		aria-valuetext="Zug {move} von {last}"
+		aria-label={t('app.boardNav.choose')}
+		aria-valuetext={t('app.boardNav.valuetext', { move, last })}
 	/>
 	<button
 		class="button"
 		onclick={() => go(move + 1)}
-		aria-label="Ein Zug vor"
+		aria-label={t('app.boardNav.forward')}
 		disabled={move === last}
 	>
 		▶
@@ -70,7 +76,7 @@
 	<button
 		class="button"
 		onclick={() => go(last)}
-		aria-label={latest !== null ? 'Zum aktuellen Zug' : 'Zum letzten Zug'}
+		aria-label={latest !== null ? t('app.boardNav.current') : t('app.boardNav.last')}
 		disabled={move === last}
 	>
 		⏭

@@ -1,3 +1,6 @@
+// Dates and times in the interface language's locale (de-DE / en-GB).
+import { locale } from '#lib/i18n/index.svelte.ts';
+
 export function toLocaleStringSupportsLocales() {
 	try {
 		new Date().toLocaleString('i');
@@ -16,7 +19,7 @@ export function formatLocaleDate(date: Date | number | string) {
 		return date.toLocaleDateString();
 	}
 
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString(locale(), {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric'
@@ -31,7 +34,7 @@ export function formatLocaleDateTime(date: Date | number | string) {
 		return date.toLocaleString();
 	}
 
-	return date.toLocaleString(undefined, {
+	return date.toLocaleString(locale(), {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric',
@@ -49,7 +52,7 @@ export function formatLocaleTime(date: Date | number | string) {
 		return date.toLocaleTimeString();
 	}
 
-	return date.toLocaleTimeString(undefined, {
+	return date.toLocaleTimeString(locale(), {
 		hour: 'numeric',
 		minute: 'numeric',
 		second: undefined

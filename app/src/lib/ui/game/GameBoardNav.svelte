@@ -5,6 +5,7 @@
 	// down to the start (Home/End work as well). Typing in a field is left
 	// alone.
 	import BoardNav from '#lib/ui/BoardNav.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		nodeId,
@@ -52,7 +53,7 @@
 {#if typeof nodeId === 'number' && currentLine}
 	<div class="GameBoardNav">
 		<BoardNav bind:move={() => moveNum, goTo} {total} latest={live ? total : null} />
-		<div class="GameBoardNav-move">Zug {moveNum}</div>
+		<div class="GameBoardNav-move">{t('game.move', { move: moveNum })}</div>
 	</div>
 {:else}
 	<div class="GameBoardNav"></div>

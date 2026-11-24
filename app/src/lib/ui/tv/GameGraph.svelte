@@ -6,6 +6,7 @@
 	import { formatPoint } from '#lib/model/KataGoEngine.ts';
 	import type { GameMistake, PositionEval } from '#lib/model/KataGoEngine.ts';
 	import type { GameTree } from '#lib/model/types.ts';
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		tree,
@@ -23,10 +24,10 @@
 
 	const WIDTH = 600;
 	const HEIGHT = 90;
-	const COLOR_LABEL = { black: 'Schwarz', white: 'Weiß' } as const;
+	const COLOR_LABEL = { black: 'replay.black', white: 'replay.white' } as const;
 
 	function formatPoints(value: number): string {
-		return value.toLocaleString('de-DE', {
+		return value.toLocaleString(locale(), {
 			minimumFractionDigits: 1,
 			maximumFractionDigits: 1
 		});
@@ -81,7 +82,7 @@
 	function mistakePoint(mistake: GameMistake): string {
 		const move = tree.nodes[mistake.nodeId]?.props.find((prop) => prop.name === 'MOVE');
 		const loc = move?.loc;
-		return loc && loc !== 'PASS' ? formatPoint(loc.x, loc.y, size) : 'Passen';
+		return loc && loc !== 'PASS' ? formatPoint(loc.x, loc.y, size) : t('replay.pass');
 	}
 </script>
 
@@ -92,13 +93,16 @@
 		preserveAspectRatio="none"
 		role="slider"
 		tabindex="0"
-		aria-label="Gewinnchance Schwarz über die ganze Partie"
+		aria-label={t('replay.graph.label')}
 		aria-valuemin={0}
 		aria-valuemax={Math.max(0, evals.length - 1)}
 		aria-valuenow={currentMove}
 		aria-valuetext={typeof currentValue === 'number' && isFinite(currentValue)
-			? `Zug ${currentMove}, Schwarz ${Math.round(currentValue * 100)} Prozent`
-			: `Zug ${currentMove}`}
+			? t('replay.graph.valueText', {
+					move: currentMove,
+					percent: Math.round(currentValue * 100)
+				})
+			: t('replay.move', { move: currentMove })}
 		onclick={onClickGraph}
 		onkeydown={onKey}
 	>
@@ -121,28 +125,29 @@
 		<line x1={x(currentMove)} x2={x(currentMove)} y1="0" y2={HEIGHT} class="current" />
 	</svg>
 	<p class="legend muted">
-		oben Schwarz vorn, unten Weiß · Klick auf die Kurve springt zum Zug · Fehler nach verlorener
-		Gewinnchance, Punkte mit KataGo-Suche geprüft; das mitgelieferte kleine Netz ist in Ko-Kämpfen
-		ungenau
+		{t('replay.graph.legend')}
 	</p>
 	<div class="mistakes">
 		{#if mistakes.length}
-			<span class="mistakes-title">Partieentscheidende Fehler:</span>
+			<span class="mistakes-title">{t('replay.graph.mistakesTitle')}</span>
 			{#each mistakes as mistake (mistake.move)}
 				<button
 					type="button"
 					class="mistake-button"
-					title="Stellung vor dem Zug zeigen – KataGo zeigt dort den besseren Zug"
+					title={t('replay.graph.mistakeTitle')}
 					onclick={() => onJump(mistake.beforeNodeId)}
 				>
-					Zug {mistake.move} · {COLOR_LABEL[mistake.color]}
-					{mistakePoint(mistake)}: −{Math.round(mistake.winRateLost * 100)} % · −{formatPoints(
-						mistake.pointsLost
-					)} Punkte
+					{t('replay.graph.mistake', {
+						move: mistake.move,
+						color: t(COLOR_LABEL[mistake.color]),
+						point: mistakePoint(mistake),
+						winRate: Math.round(mistake.winRateLost * 100),
+						points: formatPoints(mistake.pointsLost)
+					})}
 				</button>
 			{/each}
 		{:else}
-			<span>Keine Züge, die 2 Punkte oder mehr verloren haben.</span>
+			<span>{t('replay.graph.noMistakes')}</span>
 		{/if}
 	</div>
 </div>

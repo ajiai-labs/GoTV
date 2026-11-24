@@ -2,6 +2,7 @@
 	// The platform's own chat next to a stream, through its official embed.
 	// Like the player it loads only after a click (two-click solution).
 	import type { StreamChatInfo } from '#lib/model/StreamChat.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { chat, title }: { chat: StreamChatInfo; title: string } = $props();
 
@@ -22,16 +23,22 @@
 			aria-expanded={open}
 			onclick={() => (open = !open)}
 		>
-			{open ? label + '-Chat ausblenden' : label + '-Chat anzeigen'}
+			{open
+				? t('tv.streamChat.hide', { platform: label })
+				: t('tv.streamChat.show', { platform: label })}
 		</button>
 		{#if !open}
 			<span class="StreamChat-hint muted">
-				lädt den Chat von {label}; schreiben nur mit {label}-Anmeldung
+				{t('tv.streamChat.hint', { platform: label })}
 			</span>
 		{/if}
 	</div>
 	{#if open}
-		<iframe class="StreamChat-frame" src={chat.embedUrl} title={'Chat: ' + title}></iframe>
+		<iframe
+			class="StreamChat-frame"
+			src={chat.embedUrl}
+			title={t('tv.streamChat.frameTitle', { title })}
+		></iframe>
 	{/if}
 </div>
 

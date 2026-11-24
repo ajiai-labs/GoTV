@@ -4,6 +4,8 @@
 // (Europe/Berlin), because the roster is maintained in Germany and the
 // streamers announce them that way.
 import type { TvChannel } from './tv';
+import { t } from '#lib/i18n/index.svelte.ts';
+import type { MessageKey } from '#lib/i18n/index.svelte.ts';
 export type ChannelKind = 'player' | 'organization';
 export type ChannelSlot = {
 	// ISO weekday: 1 = Monday ... 7 = Sunday.
@@ -16,17 +18,25 @@ export const CHANNEL_TIME_ZONE = 'Europe/Berlin';
 export const DEFAULT_SLOT_MINUTES = 120;
 const MINUTES_PER_DAY = 24 * 60;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const WEEKDAY_PLURAL = [
-	'',
-	'montags',
-	'dienstags',
-	'mittwochs',
-	'donnerstags',
-	'freitags',
-	'samstags',
-	'sonntags'
+// Text keys (src/lib/i18n): "sonntags" / "Sundays", "Mo" / "Mon".
+const WEEKDAY_PLURAL: Array<MessageKey> = [
+	'tv.weekdays.1',
+	'tv.weekdays.2',
+	'tv.weekdays.3',
+	'tv.weekdays.4',
+	'tv.weekdays.5',
+	'tv.weekdays.6',
+	'tv.weekdays.7'
 ];
-const WEEKDAY_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const WEEKDAY_SHORT: Array<MessageKey> = [
+	'tv.weekdayShort.1',
+	'tv.weekdayShort.2',
+	'tv.weekdayShort.3',
+	'tv.weekdayShort.4',
+	'tv.weekdayShort.5',
+	'tv.weekdayShort.6',
+	'tv.weekdayShort.7'
+];
 const SHORT_WEEKDAYS: Record<string, number> = {
 	Mon: 1,
 	Tue: 2,
@@ -166,7 +176,9 @@ export function formatChannelSchedule(channel: TvChannel): string | null | undef
 	return schedule
 		.slice()
 		.sort((a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time))
-		.map((slot) => WEEKDAY_PLURAL[slot.weekday] + ' ' + slot.time + ' Uhr')
+		.map((slot) =>
+			t('tv.schedule.slot', { weekdays: t(WEEKDAY_PLURAL[slot.weekday - 1]), time: slot.time })
+		)
 		.join(' · ');
 }
 // Players first, then federations and tournaments; inside each group the
@@ -342,9 +354,9 @@ export function getWeekPlan(channels: Array<TvChannel>): Array<{
 	label: string;
 	entries: Array<WeekPlanEntry>;
 }> {
-	const days = WEEKDAY_SHORT.map((label, index) => ({
+	const days = WEEKDAY_SHORT.map((key, index) => ({
 		weekday: index + 1,
-		label,
+		label: t(key),
 		entries: [] as Array<WeekPlanEntry>
 	}));
 

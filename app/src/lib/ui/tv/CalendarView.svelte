@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The Kalender: a month sheet (default) or a list grouped by region, with
 	// the entries of events.json, refreshed every minute.
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import { onMount, untrack } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import CalendarEventCard from './CalendarEventCard.svelte';
@@ -37,10 +38,13 @@
 	const VIEW_KEY = 'gotv.calendarView';
 	const REFRESH_MS = 60000;
 	const REGION_ORDER: Array<Region> = ['de', 'intl'];
-	const REGION_LABELS: Record<Region, string> = { de: 'Deutschland', intl: 'International' };
-	const VIEWS: Array<[ViewMode, string]> = [
-		['month', 'Monat'],
-		['list', 'Liste']
+	const REGION_LABELS: Record<Region, MessageKey> = {
+		de: 'app.calendar.regionDe',
+		intl: 'app.calendar.regionIntl'
+	};
+	const VIEWS: Array<[ViewMode, MessageKey]> = [
+		['month', 'app.calendar.month'],
+		['list', 'app.calendar.list']
 	];
 
 	function loadView(): ViewMode {
@@ -126,12 +130,12 @@
 		return [
 			...REGION_ORDER.map((region) => ({
 				key: 'calendar-' + region,
-				title: REGION_LABELS[region],
+				title: t(REGION_LABELS[region]),
 				events: calendar[region]
 			})),
 			...REGION_ORDER.map((region) => ({
 				key: 'archive-' + region,
-				title: 'Archiv · ' + REGION_LABELS[region],
+				title: t('app.calendar.archive', { region: t(REGION_LABELS[region]) }),
 				events: archive[region]
 			}))
 		].filter((group) => group.events.length);
@@ -140,9 +144,9 @@
 
 <div class="CalendarView">
 	<div class="CalendarView-top">
-		<h1>Kalender</h1>
+		<h1>{t('app.calendar.title')}</h1>
 		{#if status === 'ready'}
-			<div class="CalendarView-switch" role="group" aria-label="Ansicht">
+			<div class="CalendarView-switch" role="group" aria-label={t('app.calendar.view')}>
 				{#each VIEWS as [id, label] (id)}
 					<button
 						type="button"
@@ -152,7 +156,7 @@
 						aria-pressed={view === id}
 						onclick={() => selectView(id)}
 					>
-						{label}
+						{t(label)}
 					</button>
 				{/each}
 			</div>
@@ -160,11 +164,11 @@
 	</div>
 
 	{#if status === 'loading'}
-		<Spinner label="Kalender wird geladen …" />
+		<Spinner label={t('app.calendar.loading')} />
 	{:else if status === 'error'}
 		<div class="CalendarView-error panel" role="alert">
-			<p>Kalender konnte nicht geladen werden (events.json nicht erreichbar).</p>
-			<button type="button" class="button" onclick={loadEvents}>Erneut versuchen</button>
+			<p>{t('app.calendar.error')}</p>
+			<button type="button" class="button" onclick={loadEvents}>{t('app.calendar.retry')}</button>
 		</div>
 	{:else if view === 'month'}
 		<CalendarMonth
@@ -197,7 +201,7 @@
 			</section>
 		{/each}
 		{#if !events.length}
-			<p class="CalendarView-empty muted">Keine Events im Kalender.</p>
+			<p class="CalendarView-empty muted">{t('app.calendar.empty')}</p>
 		{/if}
 	{/if}
 </div>

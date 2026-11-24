@@ -5,6 +5,7 @@
 	// in GoTV - the old app resigned on the first tap, easy to hit on a tablet).
 	import { getGamePlayerOtherRole } from '#lib/model/game/tree.ts';
 	import type { GameChannel, GameRole, User } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const ONE_MINUTE = 60;
 
@@ -67,14 +68,14 @@
 
 <svelte:document onclick={onDocumentClick} onkeydown={onKeydown} />
 
-<div class="GamePlayActions" role="group" aria-label="Partie">
+<div class="GamePlayActions" role="group" aria-label={t('game.play.group')}>
 	{#if scoring}
 		<button
 			type="button"
 			class="button button-primary GamePlayActions-done"
 			onclick={() => onDoneScoring(game)}
 		>
-			Fertig
+			{t('game.play.done')}
 		</button>
 	{:else}
 		<button
@@ -84,20 +85,20 @@
 			disabled={!isOurMove}
 			onclick={pass}
 		>
-			Passen
+			{t('game.play.pass')}
 		</button>
 	{/if}
 	<button
 		type="button"
 		class="button GamePlayActions-undo"
-		title="Den Gegner bitten, den letzten Zug zurückzunehmen"
+		title={t('game.play.undoTitle')}
 		onclick={() => onUndo(game)}
 	>
-		Zug zurück
+		{t('game.play.undo')}
 	</button>
 	{#if confirmingResign}
-		<span class="GamePlayActions-confirm" role="group" aria-label="Wirklich aufgeben?">
-			<span>Wirklich aufgeben?</span>
+		<span class="GamePlayActions-confirm" role="group" aria-label={t('game.play.confirmResign')}>
+			<span>{t('game.play.confirmResign')}</span>
 			<button
 				type="button"
 				class="button GamePlayActions-resign"
@@ -106,10 +107,10 @@
 					onResign(game);
 				}}
 			>
-				Ja, aufgeben
+				{t('game.play.resignYes')}
 			</button>
 			<button type="button" class="button" onclick={() => (confirmingResign = false)}>
-				Weiter spielen
+				{t('game.play.keepPlaying')}
 			</button>
 		</span>
 	{:else}
@@ -118,7 +119,7 @@
 			class="button GamePlayActions-resign"
 			onclick={() => (confirmingResign = true)}
 		>
-			Aufgeben
+			{t('game.play.resign')}
 		</button>
 	{/if}
 	<div class="GamePlayActions-more-container" bind:this={moreEl}>
@@ -129,19 +130,19 @@
 			aria-controls="{uid}-more"
 			onclick={() => (moreShowing = !moreShowing)}
 		>
-			Mehr <span aria-hidden="true">▾</span>
+			{t('game.more')} <span aria-hidden="true">▾</span>
 		</button>
 		{#if moreShowing}
 			<div class="GamePlayActions-more-menu panel" id="{uid}-more">
 				<button type="button" class="GamePlayActions-more-item" onclick={() => addTime(ONE_MINUTE)}>
-					1 Minute schenken
+					{t('game.play.addOneMinute')}
 				</button>
 				<button
 					type="button"
 					class="GamePlayActions-more-item"
 					onclick={() => addTime(FIVE_MINUTES)}
 				>
-					5 Minuten schenken
+					{t('game.play.addFiveMinutes')}
 				</button>
 				<hr class="GamePlayActions-more-menu-separator" />
 				<button
@@ -149,7 +150,7 @@
 					class="GamePlayActions-more-item GamePlayActions-leave"
 					onclick={leave}
 				>
-					Partie verlassen
+					{t('game.play.leave')}
 				</button>
 			</div>
 		{/if}

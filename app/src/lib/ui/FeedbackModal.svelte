@@ -2,6 +2,7 @@
 	// "Feedback senden" (old FeedbackModal). The old form mailed the Shin KGS
 	// author; GoTV has no mail service and its GitHub issues are switched off,
 	// so this points to the project page on GitHub instead.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { User } from '#lib/model/types.ts';
 	import Modal from './Modal.svelte';
 
@@ -14,15 +15,14 @@
 	} = $props();
 </script>
 
-<Modal title="Feedback" onclose={() => onClose()}>
+<Modal title={t('app.feedback.title')} onclose={() => onClose()}>
 	<div class="FeedbackModal">
 		<p>
-			Fehler gefunden oder einen Wunsch für GoTV? GoTV wird auf GitHub entwickelt. Dort findest du
-			das Projekt und wie du Kontakt aufnimmst.
+			{t('app.feedback.text')}
 		</p>
 		{#if currentUser}
 			<!-- The old form filled in your name; here it is a hint for your message. -->
-			<p class="muted">Nenne gern deinen KGS-Namen ({currentUser.name}), wenn es um KGS geht.</p>
+			<p class="muted">{t('app.feedback.kgsName', { name: currentUser.name })}</p>
 		{/if}
 		<div class="buttons">
 			<a
@@ -31,9 +31,9 @@
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				GoTV auf GitHub öffnen
+				{t('app.feedback.openGithub')}
 			</a>
-			<button class="button" type="button" onclick={() => onClose()}>Schließen</button>
+			<button class="button" type="button" onclick={() => onClose()}>{t('app.modal.close')}</button>
 		</div>
 	</div>
 </Modal>

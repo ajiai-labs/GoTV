@@ -2,6 +2,7 @@
 	// Marks which Go server a board comes from. Games parsed by KgsClient carry
 	// no tvSource, so everything that is not explicitly OGS is a KGS board.
 	import type { GameChannel } from '#lib/model/types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { game }: { game: GameChannel } = $props();
 
@@ -10,7 +11,7 @@
 
 <span
 	class="TvSourceBadge TvSourceBadge-{isOgs ? 'ogs' : 'kgs'}"
-	title={isOgs ? 'Brett von online-go.com (OGS)' : 'Brett vom KGS Go Server'}
+	title={isOgs ? t('tv.source.ogs') : t('tv.source.kgs')}
 >
 	{isOgs ? 'OGS' : 'KGS'}
 </span>

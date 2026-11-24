@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import { parseSgf } from '#lib/model/sgf.ts';
 import { getKataGoEngine } from '#lib/model/KataGoEngine.ts';
 import type { KataGoAnalysis } from '#lib/model/KataGoEngine.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 import SgfReplayView from './SgfReplayView.svelte';
 import * as replayModule from './SgfReplayView.svelte';
 
@@ -46,6 +47,21 @@ describe('SgfReplayView', () => {
 		expect(document.body.textContent).not.toContain('B+R');
 		await last();
 		await expect.element(page.getByText(/· B\+R/)).toBeVisible();
+	});
+
+	it('speaks English, also for an error already shown', async () => {
+		await render(SgfReplayView, {});
+		await page.getByLabelText('SGF einfügen:').fill('kein sgf');
+		await page.getByRole('button', { name: 'Laden', exact: true }).click();
+		await expect.element(page.getByRole('alert').getByText(/SGF konnte nicht/)).toBeVisible();
+		language.current = 'en';
+		await expect.element(page.getByRole('alert').getByText(/Could not read the SGF/)).toBeVisible();
+		await page.getByLabelText('Paste SGF:').fill(GAME);
+		await page.getByRole('button', { name: 'Load', exact: true }).click();
+		await expect.element(page.getByText(/Move 0 · Captures: Black 0, White 0/)).toBeVisible();
+		await expect
+			.element(page.getByRole('img', { name: 'a vs b, board after move 0' }))
+			.toBeVisible();
 	});
 
 	it('reports SGF that cannot be read', async () => {

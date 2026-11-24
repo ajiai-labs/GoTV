@@ -7,6 +7,7 @@ import { getInitialState } from '#lib/model/appState.ts';
 import type { GameChannel } from '#lib/model/types.ts';
 import FollowedPlayers from './FollowedPlayers.svelte';
 import { followed } from './followed.svelte.ts';
+import { language } from '#lib/i18n/index.svelte.ts';
 
 const running = {
 	id: 31,
@@ -51,5 +52,14 @@ describe('FollowedPlayers', () => {
 		await render(FollowedPlayers);
 		await page.getByRole('button', { name: 'sandora nicht mehr folgen' }).click();
 		await expect.element(page.getByText(/im Profil „Folgen“ wählen/)).toBeVisible();
+	});
+
+	it('speaks English when English is chosen', async () => {
+		language.current = 'en';
+		followed.toggle('ARNDT');
+		await render(FollowedPlayers);
+		await expect.element(page.getByRole('heading', { name: 'Followed players' })).toBeVisible();
+		await expect.element(page.getByText('playing JiriK [4k] · move 57')).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Unfollow ARNDT' })).toBeVisible();
 	});
 });

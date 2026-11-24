@@ -4,6 +4,7 @@
 	// details) come as children.
 	import type { Snippet } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { GameChannel, Index, Room } from '#lib/model/types.ts';
 	import GameTimeSystem from './GameTimeSystem.svelte';
 	import { formatGameTypeDe, formatRulesetDe } from './gameText.ts';
@@ -27,23 +28,25 @@
 	<table class="GameInfo-table">
 		<tbody>
 			{#if game.name}
-				<tr><th scope="row">Name</th><td>{game.name}</td></tr>
+				<tr><th scope="row">{t('game.info.name')}</th><td>{game.name}</td></tr>
 			{/if}
-			<tr><th scope="row">Art</th><td>{formatGameTypeDe(game.type)}</td></tr>
+			<tr><th scope="row">{t('game.info.type')}</th><td>{formatGameTypeDe(game.type)}</td></tr>
 			{#if rules}
 				{#if rules.handicap}
-					<tr><th scope="row">Vorgabe</th><td>{rules.handicap}</td></tr>
+					<tr><th scope="row">{t('game.info.handicap')}</th><td>{rules.handicap}</td></tr>
 				{/if}
-				<tr><th scope="row">Komi</th><td>{rules.komi}</td></tr>
+				<tr><th scope="row">{t('game.info.komi')}</th><td>{rules.komi}</td></tr>
 				{#if rules.timeSystem}
-					<tr><th scope="row">Zeit</th><td><GameTimeSystem {rules} /></td></tr>
+					<tr><th scope="row">{t('game.info.time')}</th><td><GameTimeSystem {rules} /></td></tr>
 				{/if}
 				{#if rules.rules}
-					<tr><th scope="row">Regeln</th><td>{formatRulesetDe(rules.rules)}</td></tr>
+					<tr>
+						<th scope="row">{t('game.info.rules')}</th><td>{formatRulesetDe(rules.rules)}</td>
+					</tr>
 				{/if}
 			{/if}
 			{#if room && room.name}
-				<tr><th scope="row">Raum</th><td>{room.name}</td></tr>
+				<tr><th scope="row">{t('game.info.room')}</th><td>{room.name}</td></tr>
 			{/if}
 			{@render children?.()}
 		</tbody>

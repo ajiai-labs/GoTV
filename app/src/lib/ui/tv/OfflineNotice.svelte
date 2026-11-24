@@ -2,6 +2,8 @@
 	// Says what still works without a connection: replaying (also tournament
 	// games opened before) and KataGo; streams and live boards need the
 	// network.
+	import { t } from '#lib/i18n/index.svelte.ts';
+
 	let offline = $state(typeof navigator !== 'undefined' && navigator.onLine === false);
 
 	function update() {
@@ -13,8 +15,7 @@
 
 {#if offline}
 	<p class="OfflineNotice" role="status">
-		Offline · Nachspielen und KataGo gehen weiter, auch schon geöffnete Turnierpartien. Streams,
-		Live-Bretter und neue Kalenderdaten brauchen Internet.
+		{t('tv.offline')}
 	</p>
 {/if}
 

@@ -4,6 +4,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import { getFollowedGames } from '#lib/model/FollowedPlayers.ts';
 	import { followed } from './followed.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let loggedIn = $derived(!!app.state.currentUser);
 	let games = $derived(getFollowedGames(app.state.activeGames, followed.names));
@@ -14,16 +15,15 @@
 </script>
 
 <section class="followed panel" aria-labelledby="followed-title">
-	<h2 id="followed-title" class="panel-title">Gefolgte Spieler</h2>
+	<h2 id="followed-title" class="panel-title">{t('chat.followed.title')}</h2>
 	<div class="body">
 		{#if !followed.names.length}
 			<p class="muted">
-				Folge Spielern auf KGS: Namen anklicken und im Profil „Folgen“ wählen. Dann siehst du hier,
-				wer gerade spielt.
+				{t('chat.followed.empty')}
 			</p>
 		{:else}
 			{#if !loggedIn}
-				<p class="muted">Bei KGS anmelden, um zu sehen, wer gerade spielt.</p>
+				<p class="muted">{t('chat.followed.logIn')}</p>
 			{/if}
 			<ul>
 				{#each followed.names as name (name)}
@@ -32,8 +32,8 @@
 						<button
 							type="button"
 							class="star"
-							aria-label="{name} nicht mehr folgen"
-							title="Nicht mehr folgen"
+							aria-label={t('chat.followed.unfollowName', { name })}
+							title={t('chat.followed.unfollow')}
 							onclick={() => followed.toggle(name)}
 						>
 							★
@@ -41,26 +41,27 @@
 						<span class="name">{item?.name ?? name}</span>
 						{#if item}
 							<span class="status live">
-								spielt gegen {item.opponent?.name ?? '?'}{item.opponent?.rank
-									? ` [${item.opponent.rank}]`
-									: ''}{item.game.moveNum ? ` · Zug ${item.game.moveNum}` : ''}
+								{t('chat.followed.playsAgainst', {
+									opponent:
+										(item.opponent?.name ?? '?') +
+										(item.opponent?.rank ? ` [${item.opponent.rank}]` : '')
+								})}{item.game.moveNum ? t('chat.followed.move', { move: item.game.moveNum }) : ''}
 							</span>
 							<button
 								type="button"
 								class="button button-primary"
 								onclick={() => app.actions.onJoinGame(item.game.id)}
 							>
-								Ansehen
+								{t('chat.followed.watch')}
 							</button>
 						{:else if loggedIn}
-							<span class="status muted">gerade keine Partie</span>
+							<span class="status muted">{t('chat.followed.noGame')}</span>
 						{/if}
 					</li>
 				{/each}
 			</ul>
 			<p class="hint muted">
-				Beginnt ein gefolgter Spieler eine Partie, meldet GoTV das, solange es offen ist und die
-				Erinnerungen unter „Mein GoTV“ eingeschaltet sind.
+				{t('chat.followed.hint')}
 			</p>
 		{/if}
 	</div>

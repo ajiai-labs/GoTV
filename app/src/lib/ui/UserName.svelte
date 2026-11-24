@@ -1,6 +1,7 @@
 <script lang="ts">
 	// A KGS user as in the old app: name [rank] plus robot, guest, "selfish"
 	// and (with extraIcons) admin, KGS+, sleeping and tournament icons.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { User } from '#lib/model/types.ts';
 
 	let {
@@ -29,17 +30,16 @@
 	<span class="user">
 		{user.name}{#if !flags.guest}<span class="rank">
 				[{user.rank || '-'}]
-			</span>{/if}{#if flags.robot}<span title="Bot"> 🤖</span>{/if}{#if flags.selfish}<span
-				class="selfish"
-				title="spielt keine Partien gegen Unbekannte"
-			>
+			</span>{/if}{#if flags.robot}<span title={t('app.user.bot')}>
+				🤖
+			</span>{/if}{#if flags.selfish}<span class="selfish" title={t('app.user.selfish')}>
 				~
-			</span>{/if}{#if flags.guest}<span title="Gast">
+			</span>{/if}{#if flags.guest}<span title={t('app.user.guest')}>
 				👤
 			</span>{/if}{#each extra as icon (icon)}<span> {icon}</span>{/each}
 	</span>
 {:else}
-	<span class="user unknown">[unbekannt]</span>
+	<span class="user unknown">[{t('app.user.unknown')}]</span>
 {/if}
 
 <style>

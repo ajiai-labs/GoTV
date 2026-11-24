@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Month sheet of the tournament calendar: a multi-day tournament runs as one
 	// bar across its days; clicking a day lists that day's tournaments below.
+	import { locale, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import { tick, untrack } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import CalendarEventCard from './CalendarEventCard.svelte';
@@ -28,7 +29,15 @@
 		onToggleFavorite?: (eventId: string) => unknown;
 	} = $props();
 
-	const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+	const WEEKDAYS: Array<MessageKey> = [
+		'app.calendar.weekday.mon',
+		'app.calendar.weekday.tue',
+		'app.calendar.weekday.wed',
+		'app.calendar.weekday.thu',
+		'app.calendar.weekday.fri',
+		'app.calendar.weekday.sat',
+		'app.calendar.weekday.sun'
+	];
 	// Rows of tournaments a day cell shows before it says "+N".
 	const VISIBLE_SLOTS = 3;
 	const SLOTS = Array.from({ length: VISIBLE_SLOTS }, (_, slot) => slot);
@@ -40,7 +49,7 @@
 	let selectedRef: HTMLElement | undefined = $state();
 
 	function formatMonth(year: number, month: number): string {
-		return new Date(year, month, 1).toLocaleDateString('de-DE', {
+		return new Date(year, month, 1).toLocaleDateString(locale(), {
 			month: 'long',
 			year: 'numeric'
 		});
@@ -48,7 +57,7 @@
 
 	function formatDay(dayKey: string): string {
 		const [y, m, d] = dayKey.split('-').map(Number);
-		return new Date(y, m - 1, d).toLocaleDateString('de-DE', {
+		return new Date(y, m - 1, d).toLocaleDateString(locale(), {
 			weekday: 'long',
 			day: 'numeric',
 			month: 'long',
@@ -102,31 +111,33 @@
 			<button
 				type="button"
 				class="button CalendarMonth-prev"
-				aria-label="Vorheriger Monat"
+				aria-label={t('app.calendar.prevMonth')}
 				onclick={() => step(-1)}
 			>
 				◀
 			</button>
-			<button type="button" class="button CalendarMonth-today" onclick={goToday}>Heute</button>
+			<button type="button" class="button CalendarMonth-today" onclick={goToday}>
+				{t('app.calendar.today')}
+			</button>
 			<button
 				type="button"
 				class="button CalendarMonth-next"
-				aria-label="Nächster Monat"
+				aria-label={t('app.calendar.nextMonth')}
 				onclick={() => step(1)}
 			>
 				▶
 			</button>
 		</div>
 	</div>
-	<ul class="CalendarMonth-legend" aria-label="Legende">
-		<li class="CalendarMonth-legend-video">mit Stream</li>
-		<li class="CalendarMonth-legend-plain">ohne Stream</li>
-		<li class="CalendarMonth-legend-replay">▶ Partien zum Nachspielen</li>
+	<ul class="CalendarMonth-legend" aria-label={t('app.calendar.legend')}>
+		<li class="CalendarMonth-legend-video">{t('app.calendar.withStream')}</li>
+		<li class="CalendarMonth-legend-plain">{t('app.calendar.withoutStream')}</li>
+		<li class="CalendarMonth-legend-replay">▶ {t('app.calendar.gamesToReplay')}</li>
 	</ul>
 
 	<div class="CalendarMonth-grid panel" role="group" aria-label={monthTitle}>
 		{#each WEEKDAYS as weekday (weekday)}
-			<div class="CalendarMonth-weekday" aria-hidden="true">{weekday}</div>
+			<div class="CalendarMonth-weekday" aria-hidden="true">{t(weekday)}</div>
 		{/each}
 		{#each weeks as week (week[0].key)}
 			{#each week as cell, index (cell.key)}
@@ -165,7 +176,7 @@
 						{/if}
 					{/each}
 					{#if hidden}
-						<span class="CalendarMonth-more">+{hidden} weitere</span>
+						<span class="CalendarMonth-more">{t('app.calendar.more', { count: hidden })}</span>
 					{/if}
 				</button>
 			{/each}
@@ -192,7 +203,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="CalendarMonth-empty muted">Keine Turniere an diesem Tag.</p>
+			<p class="CalendarMonth-empty muted">{t('app.calendar.noTournaments')}</p>
 		{/if}
 	</section>
 </div>

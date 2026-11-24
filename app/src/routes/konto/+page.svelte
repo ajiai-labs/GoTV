@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Konto (old MoreScreen + MoreMenu): your KGS name (opens your profile),
 	// "Profil ansehen", "Abmelden", the settings and "Über GoTV".
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { resolve } from '$app/paths';
 	import { version } from '../../../package.json';
 	import { app } from '#lib/app.svelte.ts';
@@ -14,36 +15,38 @@
 </script>
 
 <svelte:head>
-	<title>Konto – GoTV</title>
+	<title>{t('app.account.pageTitle')}</title>
 </svelte:head>
 
 <KgsGate>
 	<div class="MoreScreen">
-		<h1>Konto</h1>
+		<h1>{t('app.account.title')}</h1>
 
 		<section class="panel account">
-			<h2 class="panel-title">Angemeldet bei KGS</h2>
+			<h2 class="panel-title">{t('app.account.loggedIn')}</h2>
 			<div class="body">
 				<button class="me" type="button" onclick={showProfile}>
 					<UserName user={app.state.currentUser} />
 				</button>
-				<nav class="menu" aria-label="Konto">
-					<button class="button" type="button" onclick={showProfile}>Profil ansehen</button>
-					<a class="button" href={resolve('/einstellungen')}>Einstellungen</a>
+				<nav class="menu" aria-label={t('app.account.title')}>
+					<button class="button" type="button" onclick={showProfile}>
+						{t('app.account.viewProfile')}
+					</button>
+					<a class="button" href={resolve('/einstellungen')}>{t('app.layout.settings')}</a>
 					<button class="button" type="button" onclick={() => app.actions.onLogout()}>
-						Abmelden
+						{t('app.account.logout')}
 					</button>
 				</nav>
 			</div>
 		</section>
 
 		<section class="panel about">
-			<h2 class="panel-title">Über GoTV</h2>
+			<h2 class="panel-title">{t('app.account.about')}</h2>
 			<div class="body">
-				<p class="title">GoTV <span class="muted">Version {version}</span></p>
+				<p class="title">GoTV <span class="muted">{t('app.account.version', { version })}</span></p>
 				<p class="links">
 					<button class="button" type="button" onclick={() => app.actions.onShowFeedbackModal()}>
-						Feedback senden
+						{t('app.account.sendFeedback')}
 					</button>
 					<a
 						class="button"
@@ -51,15 +54,14 @@
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						GoTV auf GitHub
+						{t('app.layout.github')}
 					</a>
 					<a class="button" href="https://www.gokgs.com/" target="_blank" rel="noopener noreferrer">
-						Offizielle KGS-Webseite
+						{t('app.account.kgsWebsite')}
 					</a>
 				</p>
 				<p class="muted origin">
-					GoTV ist aus Shin KGS von Justin Kramer entstanden (MIT-Lizenz). Es ist kein offizieller
-					KGS-Client und gehört nicht zum KGS Go Server.
+					{t('app.account.origin')}
 				</p>
 			</div>
 		</section>

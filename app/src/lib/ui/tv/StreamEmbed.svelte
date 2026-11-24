@@ -12,6 +12,7 @@
 		hasVideoStream
 	} from '#lib/model/tv.ts';
 	import type { StreamUrlInfo, TvChannel, TvEvent } from '#lib/model/tv.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const PLATFORM_LABEL: Record<StreamUrlInfo['platform'], string> = {
 		youtube: 'YouTube',
@@ -71,36 +72,37 @@
 	<div class="StreamEmbed">
 		<p class="StreamEmbed-notice">
 			{#if noVideo}
-				Für dieses Turnier ist kein Videostream hinterlegt.
+				{t('tv.stream.noVideo')}
 			{:else if platformLabel}
-				Dieser Stream kann nicht direkt eingebettet werden ({platformLabel}).
+				{t('tv.stream.cannotEmbedOn', { platform: platformLabel })}
 			{:else}
-				Dieser Stream kann nicht direkt eingebettet werden.
+				{t('tv.stream.cannotEmbed')}
 			{/if}
 		</p>
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the stream's own page, outside GoTV -->
 		<a class="button" href={info.externalUrl} target="_blank" rel="noopener noreferrer">
-			{noVideo ? 'Turnierseite öffnen' : 'Extern öffnen'}
+			{noVideo ? t('tv.stream.openTournamentPage') : t('tv.stream.openExternally')}
 		</a>
 	</div>
 {:else if !isLoaded}
 	<div class="StreamEmbed StreamEmbed-placeholder">
 		<p class="StreamEmbed-placeholder-text">
-			Stream wird über den offiziellen {platformLabel}-Player eingebettet. Erst nach Klick wird eine
-			Verbindung zu {platformLabel} aufgebaut.
+			{t('tv.stream.placeholder', { platform: platformLabel })}
 		</p>
 		{#if channel}
 			<p class="StreamEmbed-placeholder-hint">
-				Sendet der Kanal gerade nicht live, zeigt der Player „Gerade keine Übertragung“.
+				{t('tv.stream.channelHint')}
 			</p>
 		{/if}
 		<div class="StreamEmbed-actions">
-			<button type="button" class="button button-primary" onclick={load}>Stream laden</button>
+			<button type="button" class="button button-primary" onclick={load}>
+				{t('tv.stream.load')}
+			</button>
 			<!-- A channel card has its own "Auf YouTube/Twitch öffnen". -->
 			{#if !channel}
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the stream's own page, outside GoTV -->
 				<a class="button" href={info.externalUrl} target="_blank" rel="noopener noreferrer">
-					Extern öffnen
+					{t('tv.stream.openExternally')}
 				</a>
 			{/if}
 		</div>
@@ -124,7 +126,7 @@
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				Extern öffnen
+				{t('tv.stream.openExternally')}
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		</div>

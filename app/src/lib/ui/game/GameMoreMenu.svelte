@@ -4,21 +4,22 @@
 	// such as event, round and place) in a dialog. A click elsewhere closes
 	// the menu.
 	import { formatScoreDe } from './gameText.ts';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import { getKgsSgfUrl } from '#lib/model/game/tree.ts';
 	import type { GameChannel, GameNode, Index, Room, SgfProp } from '#lib/model/types.ts';
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import Modal from '#lib/ui/Modal.svelte';
 	import GameInfo from './GameInfo.svelte';
 
-	const MORE_INFO_PROPS: Record<string, string> = {
-		ANNOTATOR: 'Kommentar von',
-		COPYRIGHT: 'Copyright',
-		EVENT: 'Veranstaltung',
-		PLACE: 'Ort',
-		PLAYERTEAM: 'Team',
-		ROUND: 'Runde',
-		SOURCE: 'Quelle',
-		TRANSCRIBER: 'Mitschrift von'
+	const MORE_INFO_PROPS: Record<string, MessageKey> = {
+		ANNOTATOR: 'game.moreMenu.annotator',
+		COPYRIGHT: 'game.moreMenu.copyright',
+		EVENT: 'game.moreMenu.event',
+		PLACE: 'game.moreMenu.place',
+		PLAYERTEAM: 'game.moreMenu.playerTeam',
+		ROUND: 'game.moreMenu.round',
+		SOURCE: 'game.moreMenu.source',
+		TRANSCRIBER: 'game.moreMenu.transcriber'
 	};
 
 	let {
@@ -44,11 +45,15 @@
 		return root.props
 			.filter((prop) => prop.name in MORE_INFO_PROPS)
 			.map((prop: SgfProp) => {
-				const color =
-					prop.color === 'black' ? ' (Schwarz)' : prop.color === 'white' ? ' (Weiß)' : '';
+				const label = t(MORE_INFO_PROPS[prop.name]);
 				return {
-					key: prop.name.toLowerCase() + color,
-					label: MORE_INFO_PROPS[prop.name] + color,
+					key: prop.name.toLowerCase() + (prop.color ? ' ' + prop.color : ''),
+					label:
+						prop.color === 'black'
+							? t('game.moreMenu.propBlack', { label })
+							: prop.color === 'white'
+								? t('game.moreMenu.propWhite', { label })
+								: label,
 					text: prop.text ?? ''
 				};
 			});
@@ -82,7 +87,7 @@
 		aria-controls="{uid}-menu"
 		onclick={() => (moreShowing = !moreShowing)}
 	>
-		Mehr <span aria-hidden="true">▾</span>
+		{t('game.more')} <span aria-hidden="true">▾</span>
 	</button>
 	{#if moreShowing}
 		<div class="GameMoreMenu-dropdown panel" id="{uid}-menu">
@@ -93,7 +98,7 @@
 				href={sgfUrl}
 				onclick={() => (moreShowing = false)}
 			>
-				SGF herunterladen
+				{t('game.moreMenu.downloadSgf')}
 			</a>
 			<a
 				class="GameMoreMenu-dropdown-item"
@@ -102,7 +107,7 @@
 				href={gokibitzUrl}
 				onclick={() => (moreShowing = false)}
 			>
-				In GoKibitz öffnen
+				{t('game.moreMenu.openGoKibitz')}
 			</a>
 			<a
 				class="GameMoreMenu-dropdown-item"
@@ -111,25 +116,35 @@
 				href={eidogoUrl}
 				onclick={() => (moreShowing = false)}
 			>
-				In EidoGo öffnen
+				{t('game.moreMenu.openEidoGo')}
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			<button type="button" class="GameMoreMenu-dropdown-item" onclick={showGameInfo}>
-				Partieinfo
+				{t('game.moreMenu.gameInfo')}
 			</button>
 		</div>
 	{/if}
 	{#if gameInfoShowing}
-		<Modal title="Partieinfo" onclose={() => (gameInfoShowing = false)}>
+		<Modal title={t('game.moreMenu.gameInfo')} onclose={() => (gameInfoShowing = false)}>
 			<div class="GameMoreMenu-game-info">
 				<GameInfo {game} {roomsById}>
 					{#if game.rules}
-						<tr><th scope="row">Größe</th><td>{game.rules.size} × {game.rules.size}</td></tr>
+						<tr>
+							<th scope="row">{t('game.moreMenu.size')}</th><td>
+								{game.rules.size} × {game.rules.size}
+							</td>
+						</tr>
 					{/if}
-					<tr><th scope="row">ID</th><td>{game.id}</td></tr>
-					<tr><th scope="row">Datum</th><td>{formatLocaleDateTime(new Date(game.time))}</td></tr>
+					<tr><th scope="row">{t('game.moreMenu.id')}</th><td>{game.id}</td></tr>
+					<tr>
+						<th scope="row">{t('game.moreMenu.date')}</th><td>
+							{formatLocaleDateTime(new Date(game.time))}
+						</td>
+					</tr>
 					{#if game.over && game.score}
-						<tr><th scope="row">Ergebnis</th><td>{formatScoreDe(game.score)}</td></tr>
+						<tr>
+							<th scope="row">{t('game.moreMenu.result')}</th><td>{formatScoreDe(game.score)}</td>
+						</tr>
 					{/if}
 					{#each extraRows as row (row.key)}
 						<tr><th scope="row">{row.label}</th><td>{row.text}</td></tr>

@@ -8,6 +8,7 @@
 	// under the pointer.
 	import type { BoardPointMark, GameChannel, PlayerColor, Point } from '#lib/model/types.ts';
 	import Board from '#lib/ui/Board.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		game,
@@ -46,9 +47,11 @@
 	let label = $derived.by(() => {
 		const white = game.players.white?.name ?? game.players.owner?.name;
 		const black = game.players.black?.name;
-		const who =
-			white && black ? `${white} (Weiß) gegen ${black} (Schwarz)` : (white ?? black ?? '');
-		return `Brett${who ? ' ' + who : ''}, Zug ${moveNum}`;
+		if (white && black) return t('game.board.labelPlayers', { white, black, move: moveNum });
+		const name = white ?? black;
+		return name
+			? t('game.board.labelOne', { name, move: moveNum })
+			: t('game.board.label', { move: moveNum });
 	});
 </script>
 

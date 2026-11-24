@@ -3,6 +3,7 @@
 	// games, creating a challenge. A selected or new challenge opens the
 	// ChallengeEditor in a dialog; once the game starts (playGameId), the
 	// game itself is shown here.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { getDefaultRoom } from '#lib/model/room.ts';
@@ -77,8 +78,8 @@
 	function challengeTitle(game: GameChannel | null, currentUser: User) {
 		const creator = game ? game.players.challengeCreator : currentUser;
 		return creator && creator.name === currentUser.name
-			? 'Herausforderung erstellen'
-			: 'Herausforderung';
+			? t('app.play.createChallenge')
+			: t('app.play.challenge');
 	}
 
 	function hasProposal(game: GameChannel) {
@@ -87,7 +88,7 @@
 </script>
 
 <svelte:head>
-	<title>Spielen – GoTV</title>
+	<title>{t('app.play.pageTitle')}</title>
 </svelte:head>
 
 <KgsGate>
@@ -96,7 +97,7 @@
 		{#if challenge || creatingChallenge}
 			<Modal title={challengeTitle(challenge, currentUser)} onclose={onCloseChallenge}>
 				{#if challenge && !hasProposal(challenge)}
-					<Spinner label="Herausforderung wird geladen …" />
+					<Spinner label={t('app.play.loadingChallenge')} />
 				{:else}
 					<ChallengeEditor
 						{currentUser}
@@ -123,13 +124,14 @@
 		{:else}
 			<div class="PlayScreen">
 				<header class="PlayScreen-head">
-					<h1>Spielen</h1>
+					<h1>{t('app.play.title')}</h1>
 					<button
 						type="button"
 						class="button button-primary"
 						onclick={() => (creatingChallenge = true)}
 					>
-						<span aria-hidden="true">+</span> Herausforderung erstellen
+						<span aria-hidden="true">+</span>
+						{t('app.play.createChallenge')}
 					</button>
 				</header>
 
@@ -137,7 +139,7 @@
 
 				{#if appState.unfinishedGames.length}
 					<section class="panel" aria-labelledby="unfinished-title">
-						<h2 id="unfinished-title" class="panel-title">Nicht beendete Partien</h2>
+						<h2 id="unfinished-title" class="panel-title">{t('app.play.unfinished')}</h2>
 						{#if unfinishedChannels.length}
 							<GameList games={unfinishedChannels} onSelect={onSelectGameChannel} />
 						{/if}
@@ -150,7 +152,7 @@
 				{/if}
 
 				<section class="panel" aria-labelledby="challenges-title">
-					<h2 id="challenges-title" class="panel-title">Offene Herausforderungen</h2>
+					<h2 id="challenges-title" class="panel-title">{t('app.play.openChallenges')}</h2>
 					<GameListFilter
 						games={appState.challenges}
 						roomsById={appState.roomsById}

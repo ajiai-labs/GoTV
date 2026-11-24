@@ -21,6 +21,7 @@
 	import { getBranchPoint, getMainLine } from '#lib/model/ReplayVariation.ts';
 	import { errorMessage } from '#lib/util/error.ts';
 	import type { GameTree } from '#lib/model/types.ts';
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 	import GameGraph from './GameGraph.svelte';
 
 	let {
@@ -73,19 +74,22 @@
 	const DEBOUNCE_MS = 250;
 
 	function formatPercent(value: number): string {
-		return String(Math.round(value * 100)) + ' %';
+		return t('replay.katago.percent', { value: Math.round(value * 100) });
 	}
 
 	function formatPoints(value: number): string {
-		return Math.abs(value).toLocaleString('de-DE', {
+		return Math.abs(value).toLocaleString(locale(), {
 			minimumFractionDigits: 1,
 			maximumFractionDigits: 1
 		});
 	}
 
 	function formatLead(lead: number): string {
-		if (Math.abs(lead) < 0.05) return 'ausgeglichen';
-		return (lead > 0 ? 'Schwarz' : 'Weiß') + ' führt mit ' + formatPoints(lead) + ' Punkten';
+		if (Math.abs(lead) < 0.05) return t('replay.katago.even');
+		return t('replay.katago.lead', {
+			color: t(lead > 0 ? 'replay.black' : 'replay.white'),
+			points: formatPoints(lead)
+		});
 	}
 
 	function loadEnabled(): boolean {
@@ -96,8 +100,8 @@
 		}
 	}
 
-	function getBoardSize(t: GameTree, id: number): number {
-		return t.computedState[id]?.board.length ?? 19;
+	function getBoardSize(game: GameTree, id: number): number {
+		return game.computedState[id]?.board.length ?? 19;
 	}
 
 	let enabled = $state(loadEnabled());
@@ -196,12 +200,12 @@
 		const size = getBoardSize(tree, nodeId);
 		onLayLine(
 			getPvPoints(move, size),
-			'KataGo-Variante: ' +
-				formatPoint(move.x, move.y, size) +
-				' · Schwarz ' +
-				formatPercent(move.winRate) +
-				' · ' +
-				formatLead(move.scoreLead)
+			// Starts with "KataGo" in both languages: SgfReplayView recognises it.
+			t('replay.katago.lineComment', {
+				point: formatPoint(move.x, move.y, size),
+				winRate: formatPercent(move.winRate),
+				lead: formatLead(move.scoreLead)
+			})
 		);
 	}
 
@@ -252,41 +256,33 @@
 	let compareText = $derived.by(() => {
 		if (!analysis || !gameMove) return null;
 		const played = formatPoint(gameMove.x, gameMove.y, size);
-		if (!comparison) return 'Die Partie spielte ' + played + ' – auch KataGos erste Wahl.';
+		if (!comparison) return t('replay.katago.compareSame', { played });
 		const best = formatPoint(comparison.best.x, comparison.best.y, size);
 		if (comparison.played) {
-			return (
-				'Die Partie spielte ' +
-				played +
-				': laut KataGo ' +
-				formatPoints(comparison.played.pointsLost) +
-				' Punkte schlechter als ' +
-				best +
-				'.'
-			);
+			return t('replay.katago.compareWorse', {
+				played,
+				points: formatPoints(comparison.played.pointsLost),
+				best
+			});
 		}
-		return (
-			'Die Partie spielte ' +
-			played +
-			' – nicht unter KataGos ' +
-			String(analysis.moves.length) +
-			' besten Zügen; KataGo bevorzugt ' +
-			best +
-			'.'
-		);
+		return t('replay.katago.compareNotListed', {
+			played,
+			count: analysis.moves.length,
+			best
+		});
 	});
 </script>
 
-<section class="katago panel" aria-label="KataGo-Analyse">
+<section class="katago panel" aria-label={t('replay.katago.title')}>
 	<div class="header">
 		<label class="switch">
 			<input type="checkbox" checked={enabled} onchange={onToggle} />
-			<strong>KataGo-Analyse</strong>
+			<strong>{t('replay.katago.title')}</strong>
 		</label>
 		{#if enabled}
 			<span class="options">
 				<label>
-					Visits
+					{t('replay.katago.visits')}
 					<select value={visits} onchange={onChangeVisits}>
 						{#each VISIT_OPTIONS as option (option)}
 							<option value={option}>{option}</option>
@@ -294,17 +290,16 @@
 					</select>
 				</label>
 				<span class="model">
-					Netz: {modelName || 'klein (b6, mitgeliefert)'}
+					{t('replay.katago.network', { name: modelName || t('replay.katago.smallNetwork') })}
 					<label class="small-button file-button">
-						Stärkeres Netz laden …
+						{t('replay.katago.loadNetwork')}
 						<input type="file" accept=".gz,.bin" class="file-input" onchange={onChooseModel} />
 					</label>
 				</span>
 			</span>
 		{:else}
 			<span class="muted hint">
-				rechnet im Browser, nichts wird verschickt; zeigt Bewertung und bessere Züge erst nach dem
-				Einschalten
+				{t('replay.katago.offHint')}
 			</span>
 		{/if}
 	</div>
@@ -313,48 +308,45 @@
 		<div class="body">
 			{#if game.status === 'running'}
 				<p class="game" role="status">
-					{game.step === 'curve'
-						? 'Partie wird ausgewertet … Zug ' +
-							String(game.done) +
-							' von ' +
-							(game.total ? String(game.total) : '?')
-						: 'Auffällige Züge werden mit KataGo-Suche geprüft … ' +
-							String(game.done) +
-							' von ' +
-							(game.total ? String(game.total) : '?')}
-					<button type="button" class="link" onclick={() => (stopGame = true)}>Abbrechen</button>
+					{t(game.step === 'curve' ? 'replay.katago.evaluating' : 'replay.katago.checking', {
+						done: game.done,
+						total: game.total || '?'
+					})}
+					<button type="button" class="link" onclick={() => (stopGame = true)}>
+						{t('replay.cancel')}
+					</button>
 				</p>
 			{:else if game.status === 'ready' && onJump}
 				<GameGraph {tree} evals={game.evals} mistakes={game.mistakes} {currentMove} {onJump} />
 			{:else}
 				<p class="game">
 					<button type="button" class="small-button" onclick={evaluateGame}>
-						Ganze Partie auswerten
+						{t('replay.katago.evaluateGame')}
 					</button>
 					<span class="muted">
 						{game.status === 'error'
-							? 'Auswertung fehlgeschlagen: ' + (game.error || '')
-							: 'Gewinnkurve und die größten Fehler; zeigt den Partieverlauf'}
+							? t('replay.katago.evaluationFailed', { error: game.error || '' })
+							: t('replay.katago.evaluateHint')}
 					</span>
 				</p>
 			{/if}
 
 			{#if status === 'error'}
 				<p class="error" role="alert">
-					KataGo konnte nicht rechnen: {error || 'unbekannter Fehler'}
+					{t('replay.katago.failed', { error: error || t('replay.katago.unknownError') })}
 				</p>
 			{:else if !analysis || analysedNode !== nodeId}
 				<p class="muted running" role="status">
-					KataGo rechnet … (beim ersten Mal wird das Netz geladen)
+					{t('replay.katago.running')}
 				</p>
 			{:else}
 				<div class="position">
 					<p class="summary">
-						Gewinnchance Schwarz {formatPercent(analysis.winRate)} · {formatLead(
+						{t('replay.katago.winRate', { winRate: formatPercent(analysis.winRate) })} · {formatLead(
 							analysis.scoreLead
 						)}
 						<span class="muted meta">
-							({analysis.visits} Visits{analysis.backend
+							({t('replay.katago.visitCount', { visits: analysis.visits })}{analysis.backend
 								? ', ' + analysis.backend.toUpperCase()
 								: ''})
 						</span>
@@ -364,21 +356,23 @@
 							<li>
 								<span class="badge" aria-hidden="true">{index + 1}</span>
 								<span class="move-text">
-									<strong>{formatPoint(move.x, move.y, size)}</strong> · Schwarz {formatPercent(
-										move.winRate
-									)} · {move.scoreLead >= 0 ? '+' : '−'}{formatPoints(move.scoreLead)} · {move.visits}
-									Visits
+									<strong>{formatPoint(move.x, move.y, size)}</strong> · {t('replay.black')}
+									{formatPercent(move.winRate)} · {move.scoreLead >= 0 ? '+' : '−'}{formatPoints(
+										move.scoreLead
+									)} · {t('replay.katago.visitCount', { visits: move.visits })}
 									{#if move.pv.length > 1}
 										<span class="muted pv">
-											· erwartet {move.pv.slice(0, PV_SHOWN).join(' ')}{move.pv.length > PV_SHOWN
-												? ' …'
-												: ''}
+											{t('replay.katago.expected', {
+												line:
+													move.pv.slice(0, PV_SHOWN).join(' ') +
+													(move.pv.length > PV_SHOWN ? ' …' : '')
+											})}
 										</span>
 									{/if}
 								</span>
 								{#if onLayLine}
 									<button type="button" class="small-button lay" onclick={() => layLine(move)}>
-										Variante legen
+										{t('replay.katago.layLine')}
 									</button>
 								{/if}
 							</li>

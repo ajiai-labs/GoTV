@@ -1,34 +1,38 @@
 <script lang="ts" module>
 	import type { GameRuleSet, GameType } from '#lib/model/types.ts';
 
-	const GAME_TYPE_DE: Record<GameType, string> = {
-		challenge: 'Herausforderung',
-		demonstration: 'Demonstration',
-		review: 'Besprechung',
-		rengo_review: 'Rengo-Besprechung',
-		teaching: 'Lehrpartie',
-		simul: 'Simultan',
-		rengo: 'Rengo',
-		free: 'Freie Partie',
-		ranked: 'Gewertete Partie',
-		tournament: 'Turnierpartie'
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+
+	const GAME_TYPE_KEYS: Record<GameType, MessageKey> = {
+		challenge: 'play.gameType.challenge',
+		demonstration: 'play.gameType.demonstration',
+		review: 'play.gameType.review',
+		rengo_review: 'play.gameType.rengoReview',
+		teaching: 'play.gameType.teaching',
+		simul: 'play.gameType.simul',
+		rengo: 'play.gameType.rengo',
+		free: 'play.gameType.free',
+		ranked: 'play.gameType.ranked',
+		tournament: 'play.gameType.tournament'
 	};
 
-	const RULESET_DE: Record<GameRuleSet, string> = {
-		japanese: 'Japanische Regeln',
-		chinese: 'Chinesische Regeln',
-		aga: 'AGA-Regeln',
-		new_zealand: 'Neuseeländische Regeln'
+	const RULESET_KEYS: Record<GameRuleSet, MessageKey> = {
+		japanese: 'play.ruleset.japanese',
+		chinese: 'play.ruleset.chinese',
+		aga: 'play.ruleset.aga',
+		new_zealand: 'play.ruleset.newZealand'
 	};
 
 	// formatGameType / formatGameRuleset (taken over
-	// unchanged) speak English; the new interface shows German.
+	// unchanged) speak English; the new interface shows the current language.
 	export function formatGameTypeDe(type: GameType): string {
-		return GAME_TYPE_DE[type] ?? type;
+		const key = GAME_TYPE_KEYS[type];
+		return key ? t(key) : type;
 	}
 
 	export function formatGameRulesetDe(ruleset: GameRuleSet): string {
-		return RULESET_DE[ruleset] ?? ruleset;
+		const key = RULESET_KEYS[ruleset];
+		return key ? t(key) : ruleset;
 	}
 </script>
 
@@ -54,6 +58,7 @@
 	import GameTimeSystem from './GameTimeSystem.svelte';
 	import ProposalPlayers from './ProposalPlayers.svelte';
 	import ProposalFormInput from './ProposalFormInput.svelte';
+	import { language } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		currentUser,
@@ -87,30 +92,30 @@
 		onChangeRoomId: (roomId: number) => unknown;
 	} = $props();
 
-	const visibilityOptions: Array<{ value: ProposalVisibility; label: string }> = [
-		{ value: 'private', label: 'Privat' },
-		{ value: 'roomOnly', label: 'Nur im Raum' },
-		{ value: 'public', label: 'Öffentlich' }
+	const visibilityOptions: Array<{ value: ProposalVisibility; label: MessageKey }> = [
+		{ value: 'private', label: 'play.visibility.private' },
+		{ value: 'roomOnly', label: 'play.visibility.roomOnly' },
+		{ value: 'public', label: 'play.visibility.public' }
 	];
 
-	const gameTypeOptions: Array<{ value: GameType; label: string }> = [
-		{ value: 'ranked', label: 'Gewertete Partie' },
-		{ value: 'free', label: 'Freie Partie' }
+	const gameTypeOptions: Array<{ value: GameType; label: MessageKey }> = [
+		{ value: 'ranked', label: 'play.gameType.ranked' },
+		{ value: 'free', label: 'play.gameType.free' }
 	];
 
-	const rulesetOptions: Array<{ value: GameRuleSet; label: string }> = [
-		{ value: 'japanese', label: RULESET_DE.japanese },
-		{ value: 'chinese', label: RULESET_DE.chinese },
-		{ value: 'aga', label: RULESET_DE.aga },
-		{ value: 'new_zealand', label: RULESET_DE.new_zealand }
+	const rulesetOptions: Array<{ value: GameRuleSet; label: MessageKey }> = [
+		{ value: 'japanese', label: RULESET_KEYS.japanese },
+		{ value: 'chinese', label: RULESET_KEYS.chinese },
+		{ value: 'aga', label: RULESET_KEYS.aga },
+		{ value: 'new_zealand', label: RULESET_KEYS.new_zealand }
 	];
 
 	type TimeSystem = NonNullable<GameRules['timeSystem']>;
-	const timeSystemOptions: Array<{ value: TimeSystem; label: string }> = [
-		{ value: 'none', label: 'Ohne Zeitlimit' },
-		{ value: 'absolute', label: 'Absolute Zeit' },
-		{ value: 'byo_yomi', label: 'Byo-Yomi' },
-		{ value: 'canadian', label: 'Kanadische Zeit' }
+	const timeSystemOptions: Array<{ value: TimeSystem; label: MessageKey }> = [
+		{ value: 'none', label: 'play.timeSystem.none' },
+		{ value: 'absolute', label: 'play.timeSystem.absolute' },
+		{ value: 'byo_yomi', label: 'play.timeSystem.byoYomi' },
+		{ value: 'canadian', label: 'play.timeSystem.canadian' }
 	];
 
 	const sizeOptions = [9, 13, 19];
@@ -276,7 +281,7 @@
 				onToggleRole={toggleRole}
 			/>
 			{#if editMode === 'negotiating'}
-				<p class="ProposalForm-hint muted">Ein Klick auf die Farbe wechselt sie.</p>
+				<p class="ProposalForm-hint muted">{t('play.form.toggleHint')}</p>
 			{/if}
 		</div>
 
@@ -289,7 +294,9 @@
 					class:ProposalForm-game-type-name-hilite={!!prevProposal &&
 						prevProposal.gameType !== proposal.gameType}
 				>
-					{visibility === 'private' ? 'Privat · ' : ''}{formatGameTypeDe(proposal.gameType)}
+					{visibility === 'private' ? t('play.visibility.private') + ' · ' : ''}{formatGameTypeDe(
+						proposal.gameType
+					)}
 				</span>
 				{#if notes}<span class="ProposalForm-notes">– {notes}</span>{/if}
 			</div>
@@ -298,24 +305,24 @@
 		<div class="ProposalForm-rules-time">
 			<dl class="ProposalForm-rules-readonly">
 				<div class="ProposalForm-field">
-					<dt class="ProposalForm-field-label">Zeit</dt>
+					<dt class="ProposalForm-field-label">{t('play.form.time')}</dt>
 					<dd class="ProposalForm-field-content"><GameTimeSystem {rules} /></dd>
 				</div>
 				{#if rules.rules}
 					<div class="ProposalForm-field">
-						<dt class="ProposalForm-field-label">Regeln</dt>
+						<dt class="ProposalForm-field-label">{t('play.form.rules')}</dt>
 						<dd class="ProposalForm-field-content">{formatGameRulesetDe(rules.rules)}</dd>
 					</div>
 				{/if}
 				<div class="ProposalForm-field">
-					<dt class="ProposalForm-field-label">Brett</dt>
+					<dt class="ProposalForm-field-label">{t('play.form.board')}</dt>
 					<dd class="ProposalForm-field-content">{rules.size}×{rules.size}</dd>
 				</div>
 			</dl>
 			<div class="ProposalForm-handicap-komi">
 				<ProposalFormInput
 					value={rules.handicap || 0}
-					label="Vorgabe"
+					label={t('play.form.handicap')}
 					readonly={handiKomiReadonly}
 					hilited={prevProposal
 						? (prevProposal.rules.handicap || 0) !== (rules.handicap || 0)
@@ -324,8 +331,10 @@
 					onPlus={handiPlus}
 				/>
 				<ProposalFormInput
-					value={String(rules.komi).replace('.', ',')}
-					label="Komi"
+					value={language.current === 'de'
+						? String(rules.komi).replace('.', ',')
+						: String(rules.komi)}
+					label={t('play.form.komi')}
 					readonly={handiKomiReadonly}
 					hilited={prevProposal ? prevProposal.rules.komi !== rules.komi : false}
 					onMinus={komiMinus}
@@ -336,7 +345,7 @@
 	{:else}
 		<div class="ProposalForm-grid">
 			<label class="ProposalForm-field">
-				<span class="ProposalForm-field-label">Raum</span>
+				<span class="ProposalForm-field-label">{t('play.form.room')}</span>
 				<select value={room.id} onchange={(e) => onChangeRoomId(Number(e.currentTarget.value))}>
 					{#each rooms as r (r.id)}
 						<option value={r.id}>{r.name}</option>
@@ -345,29 +354,29 @@
 			</label>
 
 			<label class="ProposalForm-field">
-				<span class="ProposalForm-field-label">Hinweis</span>
+				<span class="ProposalForm-field-label">{t('play.form.note')}</span>
 				<input
 					type="text"
-					placeholder="Hinweis für Herausforderer"
+					placeholder={t('play.form.notePlaceholder')}
 					value={notes}
 					oninput={(e) => onChangeNotes(e.currentTarget.value)}
 				/>
 			</label>
 
 			<label class="ProposalForm-field">
-				<span class="ProposalForm-field-label">Art der Partie</span>
+				<span class="ProposalForm-field-label">{t('play.form.gameType')}</span>
 				<select value={proposal.gameType} onchange={changeGameType}>
 					{#each gameTypeOptions as opt (opt.value)}
-						<option value={opt.value}>{opt.label}</option>
+						<option value={opt.value}>{t(opt.label)}</option>
 					{/each}
 				</select>
 			</label>
 
 			<label class="ProposalForm-field">
-				<span class="ProposalForm-field-label">Sichtbarkeit</span>
+				<span class="ProposalForm-field-label">{t('play.form.visibility')}</span>
 				<select value={visibility} onchange={changeVisibility}>
 					{#each visibilityOptions as opt (opt.value)}
-						<option value={opt.value}>{opt.label}</option>
+						<option value={opt.value}>{t(opt.label)}</option>
 					{/each}
 				</select>
 			</label>
@@ -376,17 +385,17 @@
 		<div class="ProposalForm-rules-time">
 			<div class="ProposalForm-time">
 				<label class="ProposalForm-field">
-					<span class="ProposalForm-field-label">Zeit</span>
+					<span class="ProposalForm-field-label">{t('play.form.time')}</span>
 					<select value={rules.timeSystem} onchange={changeTimeSystem}>
 						{#each timeSystemOptions as opt (opt.value)}
-							<option value={opt.value}>{opt.label}</option>
+							<option value={opt.value}>{t(opt.label)}</option>
 						{/each}
 					</select>
 				</label>
 				{#if rules.timeSystem !== 'none'}
 					<ProposalFormInput
 						value={formatDuration(rules.mainTime || 0)}
-						label="Hauptzeit"
+						label={t('play.form.mainTime')}
 						onMinus={mainTimeMinus}
 						onPlus={mainTimePlus}
 					/>
@@ -394,7 +403,7 @@
 				{#if rules.timeSystem === 'byo_yomi' || rules.timeSystem === 'canadian'}
 					<ProposalFormInput
 						value={formatDuration(rules.byoYomiTime || 0)}
-						label="Byo-Yomi"
+						label={t('play.timeSystem.byoYomi')}
 						onMinus={byoYomiMinus}
 						onPlus={byoYomiPlus}
 					/>
@@ -402,7 +411,7 @@
 				{#if rules.timeSystem === 'byo_yomi'}
 					<ProposalFormInput
 						value={rules.byoYomiPeriods || 0}
-						label="Perioden"
+						label={t('play.form.periods')}
 						onMinus={() => periodsStep(-1)}
 						onPlus={() => periodsStep(1)}
 					/>
@@ -410,7 +419,7 @@
 				{#if rules.timeSystem === 'canadian'}
 					<ProposalFormInput
 						value={rules.byoYomiStones || 0}
-						label="Steine"
+						label={t('play.form.stones')}
 						onMinus={() => stonesStep(-5)}
 						onPlus={() => stonesStep(5)}
 					/>
@@ -418,16 +427,16 @@
 			</div>
 			<div class="ProposalForm-rules">
 				<label class="ProposalForm-field">
-					<span class="ProposalForm-field-label">Regeln</span>
+					<span class="ProposalForm-field-label">{t('play.form.rules')}</span>
 					<select value={ruleset} onchange={changeRuleset}>
 						{#each rulesetOptions as opt (opt.value)}
-							<option value={opt.value}>{opt.label}</option>
+							<option value={opt.value}>{t(opt.label)}</option>
 						{/each}
 					</select>
 				</label>
 				<ProposalFormInput
 					value="{rules.size}×{rules.size}"
-					label="Brett"
+					label={t('play.form.board')}
 					onMinus={() => stepSize(-1)}
 					onPlus={() => stepSize(1)}
 				/>

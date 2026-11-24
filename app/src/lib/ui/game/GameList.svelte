@@ -12,6 +12,7 @@
 	import GameTypeIcon from './GameTypeIcon.svelte';
 	import TvSourceBadge from '#lib/ui/tv/TvSourceBadge.svelte';
 	import { formatScoreDe } from './gameText.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const FIRST_RENDER = 20;
 
@@ -93,10 +94,12 @@
 				{#if game.over && game.score}
 					<span class="GameList-item-result">{formatScoreDe(game.score)}</span>
 				{:else if !isChallenge && game.moveNum}
-					<span class="GameList-item-move">Zug {game.moveNum}</span>
+					<span class="GameList-item-move">{t('play.list.move', { move: game.moveNum })}</span>
 				{/if}
 				{#if !isChallenge && game.observers}
-					<span class="GameList-item-observers">{game.observers} Zuschauer</span>
+					<span class="GameList-item-observers">
+						{t('play.list.observers', { count: game.observers })}
+					</span>
 				{/if}
 				{#if rules}
 					<span class="GameList-item-rules"><GameRulesDisplay {rules} /></span>
@@ -106,11 +109,11 @@
 				{/if}
 			</span>
 			{#if room}
-				<span class="GameList-item-room">{room.name || 'Automatch'}</span>
+				<span class="GameList-item-room">{room.name || t('play.list.automatch')}</span>
 			{/if}
 		</button>
 	{:else}
-		<p class="GameList-empty muted">Keine Partien</p>
+		<p class="GameList-empty muted">{t('play.list.empty')}</p>
 	{/each}
 </div>
 

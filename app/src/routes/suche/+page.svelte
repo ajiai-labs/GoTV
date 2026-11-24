@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Suche (old SearchScreen): type a KGS user name and open the profile.
 	// Known users whose name matches are listed below, strongest first.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import type { User } from '#lib/model/types.ts';
@@ -48,17 +49,17 @@
 </script>
 
 <svelte:head>
-	<title>Suche – GoTV</title>
+	<title>{t('app.search.pageTitle')}</title>
 </svelte:head>
 
 <KgsGate>
 	<div class="SearchScreen">
-		<h1>Suche</h1>
+		<h1>{t('app.search.title')}</h1>
 		<form class="search panel" role="search" onsubmit={lookup}>
 			<input
 				type="text"
-				aria-label="Benutzername"
-				placeholder="Benutzername"
+				aria-label={t('app.search.userName')}
+				placeholder={t('app.search.userName')}
 				autocomplete="off"
 				autocorrect="off"
 				autocapitalize="none"
@@ -66,10 +67,10 @@
 				bind:value={query}
 				bind:this={input}
 			/>
-			<button class="button button-primary" type="submit">Profil ansehen</button>
+			<button class="button button-primary" type="submit">{t('app.account.viewProfile')}</button>
 		</form>
 		{#if users.length}
-			<section class="users panel" aria-label="Gefundene Spieler">
+			<section class="users panel" aria-label={t('app.search.found')}>
 				<UserList {users} onSelectUser={selectUser} />
 			</section>
 		{/if}

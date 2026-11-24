@@ -4,6 +4,7 @@
 	// hide one of them (:global(.GameRulesDisplay-komi)).
 	import type { GameRules } from '#lib/model/types.ts';
 	import GameTimeSystem from './GameTimeSystem.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { rules }: { rules: GameRules } = $props();
 </script>
@@ -22,7 +23,7 @@
 		</div>
 	{/if}
 	{#if rules.komi}
-		<div class="GameRulesDisplay-komi">Komi {rules.komi}</div>
+		<div class="GameRulesDisplay-komi">{t('game.rules.komi', { komi: rules.komi })}</div>
 	{/if}
 </div>
 

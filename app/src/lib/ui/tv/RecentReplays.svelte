@@ -29,6 +29,7 @@
 <script lang="ts">
 	// Tournament games to replay: under Nachspielen the last three months,
 	// under Live (justEnded) those of the last 24 hours, games listed at once.
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import ReplayGameList from './ReplayGameList.svelte';
 
 	let {
@@ -60,8 +61,8 @@
 	<section class="replays panel" class:just-ended={justEnded} aria-labelledby="{uid}-title">
 		<h2 id="{uid}-title" class="panel-title">
 			{justEnded
-				? 'Gerade zu Ende – Partien nachspielen'
-				: 'Turnierpartien der letzten ' + String(Math.round(REPLAY_KEEP_DAYS / 30)) + ' Monate'}
+				? t('replay.recent.justEnded')
+				: t('replay.recent.title', { months: Math.round(REPLAY_KEEP_DAYS / 30) })}
 		</h2>
 		{#if recent.length}
 			<ul>
@@ -79,14 +80,14 @@
 									if (event.sgf_url) onOpenReplay(event.sgf_url);
 								}}
 							>
-								SGF nachspielen
+								{t('replay.recent.replaySgf')}
 							</button>
 						{/if}
 					</li>
 				{/each}
 			</ul>
 		{:else}
-			<p class="empty muted">Keine Turnierpartien aus den letzten Monaten.</p>
+			<p class="empty muted">{t('replay.recent.empty')}</p>
 		{/if}
 	</section>
 {/if}

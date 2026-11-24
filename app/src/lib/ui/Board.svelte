@@ -7,6 +7,7 @@
 	// move waiting for the server (pendingBlack/White), territory, dead
 	// stones, triangle/square/circle/cross, letters. With `ghost` set, a
 	// see-through stone follows the pointer (playing).
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { BoardMarkup, BoardPointMark, BoardState, Point } from '#lib/model/types.ts';
 	import { design } from './design.svelte.ts';
 
@@ -18,7 +19,7 @@
 		lastMove = null,
 		labels = [],
 		coordinates = true,
-		label = 'Go-Brett',
+		label,
 		ghost = null,
 		onpoint
 	}: {
@@ -110,7 +111,7 @@
 	class:clickable={!!onpoint}
 	viewBox={view}
 	role="img"
-	aria-label={label}
+	aria-label={label ?? t('app.board.label')}
 	onpointermove={ghost ? (e) => (hover = pointFrom(e)) : undefined}
 	onpointerleave={ghost ? () => (hover = null) : undefined}
 >

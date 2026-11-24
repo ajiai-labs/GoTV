@@ -5,6 +5,7 @@
 	import { ogsTvSource } from '#lib/model/OgsTvSource.ts';
 	import type { ReplayGame } from '#lib/model/OgsReplay.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
+	import { locale, t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		event,
@@ -23,12 +24,13 @@
 	let open = $state(untrack(() => !!defaultOpen));
 	let status: 'idle' | 'loading' | 'ready' | 'error' = $state('idle');
 	let games: Array<ReplayGame> = $state([]);
+	// The reason from OGS; null shows "OGS nicht erreichbar" in the current language.
 	let error: string | null = $state(null);
 	let mounted = false;
 
 	function formatStart(time: number): string {
 		return time
-			? new Date(time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+			? new Date(time).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
 			: '';
 	}
 
@@ -46,7 +48,7 @@
 				if (!mounted) return;
 				const message =
 					err && typeof err === 'object' && 'message' in err ? String(err.message) : '';
-				error = message || 'OGS nicht erreichbar';
+				error = message || null;
 				status = 'error';
 			}
 		);
@@ -69,21 +71,23 @@
 <div class="ReplayGameList">
 	<button type="button" class="button ReplayGameList-toggle" aria-expanded={open} onclick={toggle}>
 		{open
-			? 'Partien ausblenden'
+			? t('replay.games.hide')
 			: status === 'ready'
-				? games.length + ' Partien nachspielen'
-				: 'Partien nachspielen'}
+				? t('replay.games.replayCount', { count: games.length })
+				: t('replay.games.replay')}
 	</button>
 	{#if open}
 		{#if status === 'loading' || status === 'idle'}
-			<p class="ReplayGameList-note" role="status">Partien werden bei OGS gesucht …</p>
+			<p class="ReplayGameList-note" role="status">{t('replay.games.loading')}</p>
 		{:else if status === 'error'}
 			<p class="ReplayGameList-note ReplayGameList-error" role="alert">
-				Partien konnten nicht geladen werden ({error}).
-				<button type="button" class="ReplayGameList-retry" onclick={load}>Erneut versuchen</button>
+				{t('replay.games.error', { error: error || t('replay.games.ogsUnreachable') })}
+				<button type="button" class="ReplayGameList-retry" onclick={load}>
+					{t('replay.games.retry')}
+				</button>
 			</p>
 		{:else if !games.length}
-			<p class="ReplayGameList-note">Noch keine beendete Partie gefunden.</p>
+			<p class="ReplayGameList-note">{t('replay.games.none')}</p>
 		{:else}
 			<ol class="ReplayGameList-games">
 				{#each games as game, index (game.id)}

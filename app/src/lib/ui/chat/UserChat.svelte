@@ -8,6 +8,7 @@
 	import ChatMessageBar from './ChatMessageBar.svelte';
 	import { keepNewestInView } from './keepNewestInView.svelte.ts';
 	import { userStatusText } from './userStatus.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		user,
@@ -38,14 +39,14 @@
 	<div class="UserChat-head">
 		<div class="UserChat-info">
 			{#if disabled}
-				<span class="muted">Chat ist abgeschaltet</span>
+				<span class="muted">{t('chat.disabled')}</span>
 			{:else}
 				<UserName {user} extraIcons />
 				<span class="muted">· {userStatusText(user)}</span>
 			{/if}
 		</div>
 		<button type="button" class="button" onclick={() => showProfile(user.name)}>
-			Profil ansehen
+			{t('chat.user.viewProfile')}
 		</button>
 	</div>
 	<div

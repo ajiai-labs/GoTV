@@ -1,5 +1,7 @@
 <script lang="ts">
 	// The star of "Mein GoTV" at a channel or tournament card.
+	import { t } from '#lib/i18n/index.svelte.ts';
+
 	let {
 		active,
 		name,
@@ -11,9 +13,7 @@
 		onToggle: () => unknown;
 	} = $props();
 
-	let label = $derived(
-		active ? name + ' aus Mein GoTV entfernen' : name + ' zu Mein GoTV hinzufügen'
-	);
+	let label = $derived(active ? t('tv.favorite.remove', { name }) : t('tv.favorite.add', { name }));
 </script>
 
 <button
