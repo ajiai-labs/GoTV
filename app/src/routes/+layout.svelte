@@ -10,6 +10,8 @@
 	import UserName from '#lib/ui/UserName.svelte';
 	import OfflineAlert from '#lib/ui/OfflineAlert.svelte';
 	import UserDetailsModal from '#lib/ui/user/UserDetailsModal.svelte';
+	import FeedbackModal from '#lib/ui/FeedbackModal.svelte';
+	import UnderConstructionModal from '#lib/ui/UnderConstructionModal.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -141,6 +143,15 @@
 
 	{#if state.userDetailsRequest}
 		<UserDetailsModal />
+	{/if}
+	{#if state.showUnderConstruction}
+		<UnderConstructionModal onClose={() => app.actions.onHideUnderConstruction()} />
+	{/if}
+	{#if state.showFeedbackModal}
+		<FeedbackModal
+			currentUser={state.currentUser}
+			onClose={() => app.actions.onHideFeedbackModal()}
+		/>
 	{/if}
 </div>
 

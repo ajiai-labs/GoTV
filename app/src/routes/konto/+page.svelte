@@ -1,5 +1,16 @@
 <script lang="ts">
+	// Konto (old MoreScreen + MoreMenu): your KGS name (opens your profile),
+	// "Profil ansehen", "Abmelden", the settings and "Über GoTV".
+	import { resolve } from '$app/paths';
+	import { version } from '../../../package.json';
+	import { app } from '#lib/app.svelte.ts';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
+	import UserName from '#lib/ui/UserName.svelte';
+
+	function showProfile() {
+		const user = app.state.currentUser;
+		if (user) app.actions.onUserDetail(user.name);
+	}
 </script>
 
 <svelte:head>
@@ -7,5 +18,117 @@
 </svelte:head>
 
 <KgsGate>
-	<h1>Konto</h1>
+	<div class="MoreScreen">
+		<h1>Konto</h1>
+
+		<section class="panel account">
+			<h2 class="panel-title">Angemeldet bei KGS</h2>
+			<div class="body">
+				<button class="me" type="button" onclick={showProfile}>
+					<UserName user={app.state.currentUser} />
+				</button>
+				<nav class="menu" aria-label="Konto">
+					<button class="button" type="button" onclick={showProfile}>Profil ansehen</button>
+					<a class="button" href={resolve('/einstellungen')}>Einstellungen</a>
+					<button class="button" type="button" onclick={() => app.actions.onLogout()}>
+						Abmelden
+					</button>
+				</nav>
+			</div>
+		</section>
+
+		<section class="panel about">
+			<h2 class="panel-title">Über GoTV</h2>
+			<div class="body">
+				<p class="title">GoTV <span class="muted">Version {version}</span></p>
+				<p class="links">
+					<button class="button" type="button" onclick={() => app.actions.onShowFeedbackModal()}>
+						Feedback senden
+					</button>
+					<a
+						class="button"
+						href="https://github.com/ajiai-labs/GoTV"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						GoTV auf GitHub
+					</a>
+					<a class="button" href="https://www.gokgs.com/" target="_blank" rel="noopener noreferrer">
+						Offizielle KGS-Webseite
+					</a>
+				</p>
+				<p class="muted origin">
+					GoTV ist aus Shin KGS von Justin Kramer entstanden (MIT-Lizenz). Es ist kein offizieller
+					KGS-Client und gehört nicht zum KGS Go Server.
+				</p>
+			</div>
+		</section>
+	</div>
 </KgsGate>
+
+<style>
+	.MoreScreen {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gap);
+		max-width: 640px;
+	}
+
+	h1 {
+		margin: 8px 0 0;
+		font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+		letter-spacing: -0.015em;
+	}
+
+	.body {
+		padding: 8px 16px 16px;
+	}
+
+	.me {
+		display: block;
+		max-width: 100%;
+		margin-bottom: 12px;
+		padding: 4px 0;
+		border: 0;
+		background: none;
+		color: var(--ink);
+		font-size: 1.3rem;
+		font-weight: 650;
+		text-align: left;
+		cursor: pointer;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.me:hover {
+		color: var(--accent);
+	}
+
+	.menu,
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.about p {
+		margin: 0 0 12px;
+	}
+
+	.about .origin {
+		margin: 0;
+		font-size: 0.9em;
+	}
+
+	.title {
+		font-weight: 650;
+	}
+
+	:global([data-design='oldschool']) .MoreScreen h1 {
+		font-size: 1.3rem;
+	}
+
+	:global([data-design='oldschool']) .me {
+		font-size: 1.1rem;
+	}
+</style>
