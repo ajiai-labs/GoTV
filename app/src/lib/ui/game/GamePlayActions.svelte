@@ -176,7 +176,7 @@
 	}
 
 	.GamePlayActions-resign {
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 	}
 
 	.GamePlayActions-more-container {
@@ -210,7 +210,7 @@
 	}
 
 	.GamePlayActions-leave {
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 	}
 
 	.GamePlayActions-more-menu-separator {

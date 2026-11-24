@@ -93,19 +93,6 @@
 	</div>
 </form>
 
-<section class="clients">
-	<h3>Offizielle KGS-Programme</h3>
-	<p class="muted">Für alle Funktionen von KGS gibt es das Programm CGoban von KGS selbst:</p>
-	<p class="downloads">
-		<a class="button" href="https://files.gokgs.com/javaBin/cgoban.exe">Windows</a>
-		<a class="button" href="https://files.gokgs.com/javaBin/cgoban.dmg">Mac</a>
-		<a class="button" href="https://files.gokgs.com/javaBin/cgoban.jar">Java (JAR)</a>
-		<a class="button" href="https://play.google.com/store/apps/details?id=com.gokgs.client.android">
-			Android
-		</a>
-	</p>
-</section>
-
 <style>
 	.login {
 		max-width: 420px;
@@ -153,8 +140,8 @@
 		margin: 0;
 		padding: 10px 12px;
 		border-radius: var(--radius-s);
-		background: #f9e0dd;
-		color: #7a1d14;
+		background: var(--danger-bg, #f9e0dd);
+		color: var(--danger-ink, #7a1d14);
 	}
 
 	.links {
@@ -166,21 +153,5 @@
 
 	button[type='submit'] {
 		align-self: flex-start;
-	}
-
-	.clients {
-		max-width: 560px;
-		margin-top: 28px;
-	}
-
-	.clients h3 {
-		margin: 0 0 4px;
-		font-size: 1rem;
-	}
-
-	.downloads {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
 	}
 </style>

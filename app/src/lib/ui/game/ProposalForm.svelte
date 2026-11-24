@@ -474,8 +474,8 @@
 	.ProposalForm-game-type-name-hilite {
 		padding: 1px 6px;
 		border-radius: var(--radius-s);
-		background: #fff1a9;
-		color: #1d2421;
+		background: var(--warn-bg, #fff1a9);
+		color: var(--paper-ink, #1d2421);
 	}
 
 	.ProposalForm-notes {

@@ -45,6 +45,43 @@
 	--gap: 20px;
 }
 
+:root[data-design='modern-dark'] {
+	/* Modern dunkel: the Modern design at night - deep slate, the board stays
+	   warm wood, jade a little brighter for contrast. Light-only status
+	   colours of the components read the --danger/--warn/--paper tokens
+	   (their light values are the fallbacks, so the other designs keep them). */
+	color-scheme: dark;
+
+	--bg: #121816;
+	--surface: #1b2320;
+	--surface-sunk: #0f1412;
+	--ink: #e4ebe7;
+	--ink-soft: #97a59e;
+	--rule: #2c3833;
+	--accent: #3fb68b;
+	--accent-ink: #0c1411;
+	--accent-soft: #1d3a30;
+	--live: #46c595;
+	--focus: #7fdcb8;
+
+	--stage: #090d0c;
+	--stage-ink: #e9eee9;
+
+	--board: #cfa86c;
+	--board-edge: #b28c51;
+	--board-line: #4a3519;
+	--board-coord: #5e4521;
+
+	--danger: #ff8a80;
+	--danger-bg: #3a1d1a;
+	--danger-ink: #ffb4aa;
+	--warn-bg: #3a3218;
+	--warn-ink: #f3dd8e;
+	--paper: #232c29;
+	--paper-ink: #e4ebe7;
+	--calendar-bar-plain: #3a4642;
+}
+
 :root[data-design='oldschool'] {
 	/* Oldschool: classic Go programs - window grey, deep kaya, navy selection. */
 	--font-ui: Tahoma, Verdana, 'DejaVu Sans', 'Segoe UI', sans-serif;

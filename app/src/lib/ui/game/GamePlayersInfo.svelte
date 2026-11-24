@@ -259,7 +259,7 @@
 	}
 
 	:global([data-design='oldschool']) .GamePlayersInfo-winner {
-		background: #fff7c2;
+		background: var(--warn-bg, #fff7c2);
 	}
 
 	:global([data-design='oldschool']) .GamePlayersInfo-stone {

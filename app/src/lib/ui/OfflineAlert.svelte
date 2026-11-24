@@ -27,7 +27,7 @@
 		margin-bottom: 12px;
 		padding: 8px 12px;
 		border-radius: var(--radius-s);
-		background: #f9e0dd;
-		color: #7a1d14;
+		background: var(--danger-bg, #f9e0dd);
+		color: var(--danger-ink, #7a1d14);
 	}
 </style>

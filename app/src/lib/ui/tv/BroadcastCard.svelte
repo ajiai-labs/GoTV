@@ -839,7 +839,7 @@
 
 	.BroadcastCard-link-error {
 		flex-basis: 100%;
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 		font-size: 0.9em;
 	}
 
@@ -865,7 +865,7 @@
 	}
 
 	.BroadcastCard-ogs-status-stale {
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 	}
 
 	.BroadcastCard-ogs-status-stale::before {

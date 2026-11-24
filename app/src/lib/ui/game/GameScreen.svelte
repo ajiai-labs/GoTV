@@ -44,12 +44,31 @@
 	import GameReplaySuggestion from './GameReplaySuggestion.svelte';
 	import GameUndoPrompt from './GameUndoPrompt.svelte';
 	import { formatScoreDe } from './gameText.ts';
+	import Splitter from '#lib/ui/Splitter.svelte';
 
 	type Tab = 'chat' | 'info' | 'users';
 
 	// Space the layout keeps below the page (padding of the app frame).
 	const BOTTOM_SPACE = 32;
 	const MIN_HEIGHT = 420;
+
+	// Width of the side column (players, chat) on wide screens; the board gets
+	// the rest. Dragged with the splitter, remembered in this browser.
+	const SIDE_WIDTH_KEY = 'gotv.gameSideWidth';
+	const SIDE_WIDTH_DEFAULT = 380;
+	const SIDE_WIDTH_MIN = 280;
+	const SIDE_WIDTH_STEP = 20;
+	// The board keeps at least this share of the width.
+	const BOARD_MIN_SHARE = 0.4;
+
+	function loadSideWidth(): number {
+		try {
+			const value = Number(localStorage.getItem(SIDE_WIDTH_KEY));
+			return value >= SIDE_WIDTH_MIN ? value : SIDE_WIDTH_DEFAULT;
+		} catch {
+			return SIDE_WIDTH_DEFAULT; // storage disabled
+		}
+	}
 
 	let {
 		game,
@@ -138,6 +157,33 @@
 
 	let screenHeight = $derived(Math.max(MIN_HEIGHT, innerHeight - topOffset - BOTTOM_SPACE));
 
+	let mainEl: HTMLElement | undefined = $state();
+	let sideWidth = $state(loadSideWidth());
+	let mainWidth = $state(0);
+	let sideMax = $derived(Math.max(SIDE_WIDTH_MIN, Math.round(mainWidth * (1 - BOARD_MIN_SHARE))));
+	let shownSideWidth = $derived(Math.min(sideWidth, sideMax));
+
+	function setSideWidth(value: number) {
+		sideWidth = Math.max(SIDE_WIDTH_MIN, Math.min(sideMax, Math.round(value)));
+		try {
+			localStorage.setItem(SIDE_WIDTH_KEY, String(sideWidth));
+		} catch {
+			// not remembered without storage
+		}
+	}
+
+	function onSplitterPointer(clientX: number) {
+		if (!mainEl) return;
+		setSideWidth(mainEl.getBoundingClientRect().right - clientX);
+	}
+
+	function onSplitterKey(step: -1 | 1 | 'min' | 'max') {
+		if (step === 'min') setSideWidth(sideMax);
+		else if (step === 'max') setSideWidth(SIDE_WIDTH_MIN);
+		// Arrow right moves the edge right: a bigger board, a narrower side.
+		else setSideWidth(shownSideWidth - step * SIDE_WIDTH_STEP);
+	}
+
 	function onLeave() {
 		app.actions.onLeaveGame(game);
 	}
@@ -208,7 +254,12 @@
 		{/if}
 	</header>
 
-	<div class="GameScreen-main">
+	<div
+		class="GameScreen-main"
+		bind:this={mainEl}
+		bind:clientWidth={mainWidth}
+		style:--side-width="{shownSideWidth}px"
+	>
 		<div class="GameScreen-board-column">
 			{#if liveEvent}
 				<section class="GameScreen-tv-stream" aria-label="Übertragung">
@@ -243,6 +294,20 @@
 					</div>
 				{/if}
 			</div>
+		</div>
+
+		<div class="GameScreen-splitter">
+			<Splitter
+				label="Brett größer oder kleiner"
+				valuenow={mainWidth ? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth) : 0}
+				valuemin={Math.round(BOARD_MIN_SHARE * 100)}
+				valuemax={100}
+				valuetext="Brettbereich {mainWidth
+					? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth)
+					: 0} Prozent der Breite"
+				onpointer={onSplitterPointer}
+				onkey={onSplitterKey}
+			/>
 		</div>
 
 		<div class="GameScreen-side panel">
@@ -351,9 +416,14 @@
 
 	.GameScreen-main {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
-		gap: var(--gap);
+		grid-template-columns: minmax(0, 1fr) auto var(--side-width, 380px);
+		gap: calc(var(--gap) / 2);
 		min-height: 0;
+	}
+
+	.GameScreen-splitter {
+		display: flex;
+		align-items: stretch;
 	}
 
 	.GameScreen-board-column {
@@ -399,8 +469,8 @@
 		top: 40%;
 		margin: 0;
 		padding: 10px 16px;
-		background: #fff3cd;
-		color: #5c4400;
+		background: var(--warn-bg, #fff3cd);
+		color: var(--warn-ink, #5c4400);
 		text-align: center;
 	}
 
@@ -511,6 +581,11 @@
 	@media (max-width: 900px) {
 		.GameScreen-main {
 			grid-template-columns: minmax(0, 1fr);
+		}
+
+		/* One column: board on top, nothing to resize. */
+		.GameScreen-splitter {
+			display: none;
 		}
 
 		.GameScreen-board-area {

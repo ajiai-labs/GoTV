@@ -246,7 +246,7 @@
 
 	.error {
 		margin: 0;
-		color: #7a1d14;
+		color: var(--danger-ink, #7a1d14);
 	}
 
 	.actions {

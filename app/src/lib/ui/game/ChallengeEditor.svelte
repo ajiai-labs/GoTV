@@ -429,8 +429,8 @@
 	}
 
 	.ChallengeEditor-declined {
-		background: #fbe3c8;
-		color: #6b3a00;
+		background: var(--warn-bg, #fbe3c8);
+		color: var(--warn-ink, #6b3a00);
 	}
 
 	.ChallengeEditor-accepted {
@@ -491,8 +491,8 @@
 	}
 
 	.button-danger {
-		border-color: #b3261e;
-		color: #b3261e;
+		border-color: var(--danger, #b3261e);
+		color: var(--danger, #b3261e);
 	}
 
 	.loading {

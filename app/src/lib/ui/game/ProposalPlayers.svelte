@@ -179,8 +179,8 @@
 	}
 
 	.ProposalPlayers-item-role-hilite .ProposalPlayers-role-name {
-		background: #fff1a9;
-		color: #1d2421;
+		background: var(--warn-bg, #fff1a9);
+		color: var(--paper-ink, #1d2421);
 	}
 
 	.ProposalPlayers-player-button {
@@ -206,8 +206,8 @@
 	}
 
 	.ProposalPlayers-item-player-hilite .ProposalPlayers-player-button {
-		background: #fff1a9;
-		color: #1d2421;
+		background: var(--warn-bg, #fff1a9);
+		color: var(--paper-ink, #1d2421);
 	}
 
 	:global([data-design='oldschool']) .ProposalPlayers-item {

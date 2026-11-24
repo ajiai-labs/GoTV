@@ -1,4 +1,4 @@
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { app } from '#lib/app.svelte.ts';
@@ -246,6 +246,21 @@ describe('GameScreen', () => {
 		await render(GameScreen, { game: state.gamesById[777] });
 		await expect.element(page.getByText('schöner Zug')).toBeVisible();
 		await expect.element(page.getByText('danke')).toBeVisible();
+	});
+
+	it('makes the board bigger or smaller with the splitter, remembered', async () => {
+		mockActions();
+		localStorage.removeItem('gotv.gameSideWidth');
+		await page.viewport(1180, 820);
+		await render(GameScreen, { game: fixtureGame(), playing: true });
+		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
+		const before = Number(splitter.element().getAttribute('aria-valuenow'));
+		(splitter.element() as HTMLElement).focus();
+		await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+		const after = Number(splitter.element().getAttribute('aria-valuenow'));
+		expect(after).toBeGreaterThan(before);
+		expect(Number(localStorage.getItem('gotv.gameSideWidth'))).toBe(340);
+		await page.viewport(414, 896);
 	});
 
 	it('sends game chat', async () => {

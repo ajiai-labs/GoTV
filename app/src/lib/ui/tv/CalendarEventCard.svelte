@@ -273,7 +273,7 @@
 	}
 
 	:global([data-design='oldschool']) .CalendarEvent-board-status {
-		background: #ffffff;
+		background: var(--paper, #ffffff);
 		border: 1px solid #808080;
 		border-left-width: 3px;
 	}

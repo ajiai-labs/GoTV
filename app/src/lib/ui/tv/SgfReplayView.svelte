@@ -752,8 +752,8 @@
 		padding: 10px 12px;
 		border-left: 4px solid #c4302b;
 		border-radius: var(--radius-s);
-		background: #fdf0ef;
-		color: #5c1512;
+		background: var(--danger-bg, #fdf0ef);
+		color: var(--danger-ink, #5c1512);
 	}
 
 	.move-notice {
@@ -761,8 +761,8 @@
 		padding: 8px 12px;
 		border-left: 4px solid #c4302b;
 		border-radius: var(--radius-s);
-		background: #fdf0ef;
-		color: #5c1512;
+		background: var(--danger-bg, #fdf0ef);
+		color: var(--danger-ink, #5c1512);
 	}
 
 	.variation {
@@ -963,7 +963,7 @@
 	:global([data-design='oldschool']) .comment {
 		border: 2px inset #ece9e2;
 		border-radius: 0;
-		background: #ffffff;
+		background: var(--paper, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .chip,
@@ -987,7 +987,7 @@
 	:global([data-design='oldschool']) .bookmark-input {
 		border: 2px inset #ece9e2;
 		border-radius: 0;
-		background: #ffffff;
+		background: var(--paper, #ffffff);
 	}
 
 	@media (max-width: 900px) {

@@ -122,7 +122,7 @@
 	}
 
 	.ReplayGameList-error {
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 	}
 
 	.ReplayGameList-retry {

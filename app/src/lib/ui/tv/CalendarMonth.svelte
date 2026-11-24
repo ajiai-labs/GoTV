@@ -253,7 +253,7 @@
 	}
 
 	.CalendarMonth {
-		--bar-plain: #c9d1cb;
+		--bar-plain: var(--calendar-bar-plain, #c9d1cb);
 		--bar-plain-ink: var(--ink);
 	}
 

@@ -7,6 +7,7 @@
 	// is chosen right now.
 	const SWATCH = {
 		modern: { bg: '#eef1ec', ink: '#1d2421', board: '#ddb77a', accent: '#1f7a5c' },
+		'modern-dark': { bg: '#121816', ink: '#e4ebe7', board: '#cfa86c', accent: '#3fb68b' },
 		oldschool: { bg: '#d4d0c8', ink: '#000000', board: '#d9a54a', accent: '#1c3f7a' }
 	} as const;
 </script>

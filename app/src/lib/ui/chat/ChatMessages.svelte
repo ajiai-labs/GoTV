@@ -212,8 +212,8 @@
 	}
 
 	.ChatMessages-item-announcement .ChatMessages-item-content {
-		background: #fff3c4;
-		color: #1d2421;
+		background: var(--warn-bg, #fff3c4);
+		color: var(--paper-ink, #1d2421);
 	}
 
 	.ChatMessages-item-label {

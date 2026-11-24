@@ -491,7 +491,7 @@
 	}
 
 	.error {
-		color: #b3261e;
+		color: var(--danger, #b3261e);
 	}
 
 	.summary {
@@ -550,7 +550,7 @@
 
 	:global([data-design='oldschool']) .compare {
 		border: 1px solid #808080;
-		background: #ffffe1;
+		background: var(--warn-bg, #ffffe1);
 	}
 
 	:global([data-design='oldschool']) .small-button {

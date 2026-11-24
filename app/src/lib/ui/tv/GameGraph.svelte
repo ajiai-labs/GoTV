@@ -217,7 +217,7 @@
 		border: 1px solid #c4302b;
 		border-radius: var(--radius-pill);
 		background: var(--surface);
-		color: #8a1f1b;
+		color: var(--danger-ink, #8a1f1b);
 		cursor: pointer;
 		text-align: left;
 	}

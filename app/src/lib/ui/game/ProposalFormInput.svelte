@@ -90,11 +90,11 @@
 
 	.ProposalForm-input-hilite .ProposalForm-input-value {
 		background: var(--hilite, #fff1a9);
-		color: #1d2421;
+		color: var(--paper-ink, #1d2421);
 	}
 
 	.ProposalForm-input-hilite .ProposalForm-input-value-label {
-		color: #4b4b3a;
+		color: var(--warn-ink, #4b4b3a);
 	}
 
 	.ProposalForm-input-value-label {
@@ -159,7 +159,7 @@
 	}
 
 	:global([data-design='oldschool']) .ProposalForm-input-hilite .ProposalForm-input-value {
-		background: #fff1a9;
+		background: var(--warn-bg, #fff1a9);
 	}
 
 	.sr-only {

@@ -3,7 +3,8 @@
 // <html data-design>, where the CSS tokens in app.css pick it up; app.html
 // applies it before the first paint.
 
-export type Design = 'modern' | 'oldschool';
+// 'oldschool' is shown as "Classic"; the stored value stays the same.
+export type Design = 'modern' | 'modern-dark' | 'oldschool';
 
 export const DESIGNS: Array<{ id: Design; name: string; description: string }> = [
 	{
@@ -12,8 +13,13 @@ export const DESIGNS: Array<{ id: Design; name: string; description: string }> =
 		description: 'Hell und ruhig, Brett und Stream stehen im Mittelpunkt.'
 	},
 	{
+		id: 'modern-dark',
+		name: 'Modern dunkel',
+		description: 'Das moderne Design in dunkel – angenehm am Abend und im Kinomodus.'
+	},
+	{
 		id: 'oldschool',
-		name: 'Oldschool',
+		name: 'Classic',
 		description: 'Wie klassische Go-Programme: graue Fenster, Holzbrett mit plastischen Steinen.'
 	}
 ];
@@ -22,7 +28,8 @@ const STORAGE_KEY = 'gotv.design';
 
 function loadDesign(): Design {
 	try {
-		return localStorage.getItem(STORAGE_KEY) === 'oldschool' ? 'oldschool' : 'modern';
+		const saved = localStorage.getItem(STORAGE_KEY);
+		return saved === 'oldschool' || saved === 'modern-dark' ? saved : 'modern';
 	} catch {
 		return 'modern'; // storage disabled
 	}

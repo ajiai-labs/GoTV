@@ -32,6 +32,6 @@
 		border: 2px solid;
 		border-color: #ffffff #808080 #808080 #ffffff;
 		border-left: 4px solid #c8962b;
-		background: #ffffe1;
+		background: var(--warn-bg, #ffffe1);
 	}
 </style>
