@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { app } from '#lib/app.svelte.ts';
 import type { AppActions } from '#lib/model/AppActions.ts';
-import { getInitialState } from '#lib/model/index.ts';
+import { getInitialState, handleMessage } from '#lib/model/index.ts';
 import { parseSgf } from '#lib/model/sgf.ts';
 import type { GameChannel, GameTree, User } from '#lib/model/types.ts';
 import GameScreen from './GameScreen.svelte';
@@ -211,6 +211,41 @@ describe('GameScreen', () => {
 		// Wide: observers are listed without a tab.
 		await expect.element(page.getByRole('button', { name: /^kibitz/ })).toBeVisible();
 		await page.viewport(414, 896);
+	});
+
+	it('shows the chat KGS sends with the game (comments in its SGF)', async () => {
+		mockActions();
+		// A game as KGS delivers it on joining: the chat so far is stored as
+		// COMMENT props of the moves.
+		const state = handleMessage(app.state, {
+			type: 'GAME_JOIN',
+			channelId: 777,
+			gameType: 'ranked',
+			players: { white: anna, black: kibitz },
+			users: [],
+			sgfEvents: [
+				{
+					type: 'PROP_GROUP_ADDED',
+					nodeId: 0,
+					props: [{ name: 'RULES', size: 9, komi: 6.5, rules: 'japanese' }]
+				},
+				{ type: 'CHILD_ADDED', nodeId: 0, childNodeId: 1 },
+				{
+					type: 'PROP_GROUP_ADDED',
+					nodeId: 1,
+					props: [{ name: 'MOVE', color: 'black', loc: { x: 2, y: 6 } }]
+				},
+				{
+					type: 'PROP_ADDED',
+					nodeId: 1,
+					prop: { name: 'COMMENT', text: 'anna [2d]: schöner Zug\nkibitz [9k]: danke\n' }
+				},
+				{ type: 'ACTIVATED', nodeId: 1 }
+			]
+		});
+		await render(GameScreen, { game: state.gamesById[777] });
+		await expect.element(page.getByText('schöner Zug')).toBeVisible();
+		await expect.element(page.getByText('danke')).toBeVisible();
 	});
 
 	it('sends game chat', async () => {
