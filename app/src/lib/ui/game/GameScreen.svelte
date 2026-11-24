@@ -498,6 +498,9 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
+		/* Its width follows the splitter: narrow sides stack the players and
+		   the observers instead of cutting the names short. */
+		container-type: inline-size;
 	}
 
 	.GameScreen-controls {
@@ -515,6 +518,14 @@
 		order: 0;
 		max-height: 220px;
 		border-bottom: 1px solid var(--rule);
+	}
+
+	@container (max-width: 420px) {
+		.GameScreen-players-users {
+			grid-template-columns: minmax(0, 1fr);
+			max-height: 300px;
+			overflow-y: auto;
+		}
 	}
 
 	.GameScreen-players {
