@@ -54,9 +54,9 @@ Rules for changing or adding screens: [`../docs/neubau-regeln.md`](../docs/neuba
 
 ## Builds
 
-| Target | Command |
-|---|---|
-| Development (KGS through the dev proxy) | `npm run dev` |
-| Desktop app | `sh ../desktop/install.sh` (`VITE_API_URL=/json/access`) |
-| Web preview (CI) | `BASE_PATH=/GoTV/neu npm run build` |
-| Web version after the switch-over | `VITE_GUEST_ONLY=true BASE_PATH=/GoTV npm run build` |
+| Target                                  | Command                                                  |
+| --------------------------------------- | -------------------------------------------------------- |
+| Development (KGS through the dev proxy) | `npm run dev`                                            |
+| Desktop app                             | `sh ../desktop/install.sh` (`VITE_API_URL=/json/access`) |
+| Web preview (CI)                        | `BASE_PATH=/GoTV/neu npm run build`                      |
+| Web version after the switch-over       | `VITE_GUEST_ONLY=true BASE_PATH=/GoTV npm run build`     |
