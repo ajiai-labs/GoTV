@@ -18,7 +18,8 @@
 	import FollowWatcher from '#lib/ui/user/FollowWatcher.svelte';
 	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
 	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
-	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
+	import { effectiveNavOrder, navOrder } from '#lib/ui/navOrder.svelte.ts';
+	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { fetchTvEvents, hasLiveBroadcast } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import type { LayoutProps } from './$types';
@@ -46,6 +47,15 @@
 	let liveNow = $derived(
 		hasLiveBroadcast(app.state.activeGames, tvEvents, app.state.roomsById, new Date(now))
 	);
+	// The KGS order switches to the GoTV order while a broadcast is on. Not
+	// while the pointer is on the menu - an item must not move under a click.
+	let pointerOnNav = $state(false);
+	let shownOrder: NavOrder = $state(navOrder.current);
+	$effect(() => {
+		const wanted = effectiveNavOrder(navOrder.current, liveNow);
+		if (!pointerOnNav) shownOrder = wanted;
+	});
+
 	function refreshLive() {
 		now = Date.now();
 		fetchTvEvents()
@@ -170,8 +180,12 @@
 			<img src={logo} alt="" width="34" height="34" />
 			<span>GoTV</span>
 		</a>
-		<nav aria-label={t('app.layout.areas')}>
-			{#if navOrder.current === 'kgs'}
+		<nav
+			aria-label={t('app.layout.areas')}
+			onpointerenter={() => (pointerOnNav = true)}
+			onpointerleave={() => (pointerOnNav = false)}
+		>
+			{#if shownOrder === 'kgs'}
 				{@render kgsNav()}
 				<span class="divider" aria-hidden="true"></span>
 				{@render tvNav()}

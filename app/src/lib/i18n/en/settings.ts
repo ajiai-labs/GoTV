@@ -10,11 +10,12 @@ export const settings: Translation<typeof de> = {
 	'settings.designHint': 'Applies at once and is remembered in this browser.',
 	'settings.navOrder': 'Menu order',
 	'settings.navOrderHint':
-		'What comes first at the top. While a broadcast is on, "Live" lights up in both orders.',
+		'What comes first at the top. While a broadcast is on, "Live" lights up - in the KGS order it then moves to the front.',
 	'settings.navOrder.gotv.name': 'GoTV',
 	'settings.navOrder.gotv.description': 'Broadcasts first, then KGS.',
 	'settings.navOrder.kgs.name': 'KGS',
-	'settings.navOrder.kgs.description': 'Like a KGS client: Watch, Play, Chat, Search first.',
+	'settings.navOrder.kgs.description':
+		'Like a KGS client: Watch, Play, Chat, Search first. While a broadcast is on, Live comes first.',
 	'settings.myData': 'My data',
 	'settings.design.modern.name': 'Modern',
 	'settings.design.modern.description':
