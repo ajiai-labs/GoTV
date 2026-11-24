@@ -176,7 +176,15 @@
 
 <div class="app">
 	<header class="top">
-		<a class="brand" href={resolve('/')} aria-label={t('app.layout.home')}>
+		<a
+			class="brand"
+			class:on-air={liveNow}
+			href={resolve('/')}
+			aria-label={liveNow
+				? `${t('app.layout.home')} – ${t('app.nav.liveNow')}`
+				: t('app.layout.home')}
+			title={liveNow ? t('app.nav.liveNow') : undefined}
+		>
 			<img src={logo} alt="" width="34" height="34" />
 			<span>GoTV</span>
 		</a>
@@ -291,6 +299,31 @@
 		display: block;
 		width: 34px;
 		height: 34px;
+	}
+
+	/* GoTV itself lights up while a broadcast runs, together with "Live". */
+	.brand.on-air img {
+		animation: brand-on-air 1.6s ease-in-out infinite alternate;
+	}
+
+	.brand.on-air span {
+		color: var(--live);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.brand.on-air img {
+			animation: none;
+			filter: drop-shadow(0 0 5px var(--live));
+		}
+	}
+
+	@keyframes brand-on-air {
+		from {
+			filter: drop-shadow(0 0 1px color-mix(in srgb, var(--live) 50%, transparent));
+		}
+		to {
+			filter: drop-shadow(0 0 7px var(--live));
+		}
 	}
 
 	nav {
