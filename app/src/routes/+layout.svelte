@@ -75,6 +75,14 @@
 		};
 	});
 
+	// Chat, Beobachten and Spielen fill the window height (iPad, no scrolling):
+	// no footer there.
+	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen'];
+	let showFooter = $derived.by(() => {
+		void page.url.pathname;
+		return !FULL_HEIGHT_PAGES.some((path) => isCurrent(path));
+	});
+
 	let offline = $derived(
 		!!state.currentUser &&
 			(state.clientState.status === 'loggedOut' || state.clientState.network !== 'online')
@@ -145,6 +153,15 @@
 	<main>
 		{@render children()}
 	</main>
+
+	{#if showFooter}
+		<footer class="foot">
+			<a href="https://github.com/ajiai-labs/GoTV" target="_blank" rel="noopener noreferrer">
+				GoTV auf GitHub
+			</a>
+			<span class="muted">Offenes Projekt – Fehler und Ideen gern dort melden.</span>
+		</footer>
+	{/if}
 
 	{#if state.userDetailsRequest}
 		<UserDetailsModal />
@@ -249,6 +266,16 @@
 
 	main {
 		padding-top: 4px;
+	}
+
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 12px;
+		margin-top: 40px;
+		padding-top: 12px;
+		border-top: 1px solid var(--rule);
+		font-size: 0.85em;
 	}
 
 	/* Oldschool: a classic window menu bar */
