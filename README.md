@@ -16,10 +16,11 @@ and it is also a full client for the [KGS Go Server](http://www.gokgs.com/).
   <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
 </p>
 
-**New interface:** GoTV has been rebuilt with Svelte 5 + TypeScript, with two
-designs to choose from, "Modern" and "Oldschool". The desktop app already uses it;
-the web version shows it under https://ajiai-labs.github.io/GoTV/neu/ until the
-switch-over - plan and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
+**New interface:** GoTV has been rebuilt with Svelte 5 + TypeScript, with three
+designs to choose from: "Modern", "Modern dunkel" (dark) and "Classic". The desktop
+app already uses it; in the browser try it at
+**https://ajiai-labs.github.io/GoTV/neu/** until the web version switches over - plan
+and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
 
 ## What GoTV does
 
@@ -35,12 +36,21 @@ switch-over - plan and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
 - **Several boards at once:** a team match shows small live boards with
   players, ranks and move number; a click brings one up next to the stream.
 - **Kinomodus:** stream and board fill the window side by side, with an
-  adjustable split and a collapsible chat.
+  adjustable split and a collapsible chat. The split between stream and board
+  can be dragged in the normal view too.
 - **Brett-Verzögerung:** delay the boards by 0-120 s (slider or ±5 s
   buttons) so moves never get ahead of the video commentary; GoTV
   remembers the delay per channel.
-- **Watch without a KGS login:** "Go TV ohne Anmeldung ansehen" on the
-  login screen, or open `/tv` directly.
+- **Watch without a KGS login:** Live, Kalender, Kanäle and Nachspielen work
+  without an account; KGS (Beobachten, Spielen, Chat) asks for the login.
+- **Playing on KGS:** challenges, your own games with clocks, undo, scoring -
+  and, new in GoTV, **automatic opponent selection** ("Automatische Gegnerwahl",
+  as in CGoban: humans/bots, ranked/free, speed, max. rank difference). Resigning
+  asks once more, so a mistaken tap on the tablet does not end the game. The
+  edge between board and side column can be dragged to make the board bigger.
+- **Follow KGS players:** "Folgen" in a player's profile; "Gefolgte Spieler"
+  shows who plays right now with a link to the game, and GoTV notifies you
+  when one starts a game (while GoTV is open).
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
   daily (DGoB, EGF Grand Prix, the EGF Twitch schedule and the Speed Go
   Championship bracket, whose OGS games are linked automatically), and SGF
@@ -90,17 +100,29 @@ click (two-click solution).
 
 ## Screenshots
 
-**Live** — running tournaments with the official video embed and their KGS/OGS boards:
+**Live** - a broadcast with the official player and the board next to it (here the
+example: the EGF channel and the bundled EM 2026 final), design "Modern":
 
-<img src="./docs/screenshots/tv-live.png" width="700">
+<img src="./docs/screenshots/app/live.png" width="800" alt="Live: Twitch player of the EGF next to the board of the EM 2026 final">
 
-**Kalender** — upcoming and recent tournaments as a month sheet or grouped by region:
+**Nachspielen with KataGo** - win chance, score and the five best moves on the
+board, design "Modern dunkel":
 
-<img src="./docs/screenshots/tv-kalender.png" width="700">
+<img src="./docs/screenshots/app/nachspielen-katago.png" width="800" alt="Replay of the EM 2026 final at move 88 with KataGo's five best moves">
 
-**Nachspielen** — load any SGF (file, paste, or a bundled demo) and step through it move by move:
+**Kalender** - tournaments as a month sheet (or a list by region), ▶ marks games to
+replay:
 
-<img src="./docs/screenshots/tv-nachspielen.png" width="700">
+<img src="./docs/screenshots/app/kalender.png" width="800" alt="Calendar month November 2026 with tournaments as bars">
+
+**Kanäle** - channels of players and federations with fixed air times, design
+"Classic":
+
+<img src="./docs/screenshots/app/kanaele-classic.png" width="800" alt="Channels page with week plan in the Classic design">
+
+**Einstellungen** - three designs, switched at once:
+
+<img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings with the design choice">
 
 ## KGS client
 
