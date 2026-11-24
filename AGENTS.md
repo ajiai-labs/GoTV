@@ -604,7 +604,12 @@ Bewusst so gelassen (Nutzer, 24.11.2026): kein AppImage/.deb - die Desktop-App l
 auch Vite-Umstieg und Einreich-Formular als offene Punkte (wieder aufgreifen nur auf
 ausdrücklichen Wunsch). Erledigt aus dem externen Feedback: cmdtest-Hinweis.
 
-Offen bleibt nur:
+**Umbau auf Svelte 5 (Entscheidung 24.11.2026):** Plan in `docs/umbau-svelte.md` - neue App
+in `app/` (SvelteKit + TypeScript + Vite), Aufbau nach Vorbild CGoban 3, Logik wird übernommen,
+die alte App läuft bis zum Umschalten weiter. Vor Phase 2 nennt der Nutzer, was CGoban
+besser macht.
+
+Offen bleibt außerdem:
 
 1. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
