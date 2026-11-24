@@ -3,11 +3,15 @@
 	import Board from '#lib/ui/Board.svelte';
 	import PlayerBar from '#lib/ui/PlayerBar.svelte';
 	import WinCurve from '#lib/ui/WinCurve.svelte';
+	import BoardNav from '#lib/ui/BoardNav.svelte';
 	import { finalPosition, sampleCurve, upcoming } from '#lib/demo/index.ts';
 
-	const MOVE = 142;
-	const position = finalPosition(MOVE);
-	const curve = sampleCurve(MOVE);
+	// The draft pretends the game is live at move 142: you can step back
+	// through it and return to the current move, like on a real live board.
+	const LIVE_MOVE = 142;
+	const curve = sampleCurve(LIVE_MOVE);
+	let move = $state(LIVE_MOVE);
+	let position = $derived(finalPosition(move));
 	let streamLoaded = $state(false);
 </script>
 
@@ -72,14 +76,20 @@
 		<Board
 			board={position.board}
 			lastMove={position.lastMove}
-			label="Partie Kravets gegen Jabarin nach Zug {MOVE}"
+			label="Partie Kravets gegen Jabarin nach Zug {move}"
 		/>
 		<PlayerBar color="black" name="Andrii Kravets" rank="3p" clock="1:12" toMove />
+		<BoardNav bind:move total={LIVE_MOVE} latest={LIVE_MOVE} />
 		<div class="move-line">
-			<span>Zug {MOVE}</span>
-			<span class="muted">OGS, live verbunden</span>
+			{#if move < LIVE_MOVE}
+				<span>Zug {move}, live ist Zug {LIVE_MOVE}</span>
+				<button class="link" onclick={() => (move = LIVE_MOVE)}>Zum aktuellen Zug</button>
+			{:else}
+				<span>Zug {move}</span>
+				<span class="muted">OGS, live verbunden</span>
+			{/if}
 		</div>
-		<WinCurve values={curve} />
+		<WinCurve values={curve} current={move} onmove={(m: number) => (move = m)} />
 	</div>
 </section>
 
@@ -161,6 +171,17 @@
 		flex-direction: column;
 		gap: calc(var(--gap) * 1.2);
 		min-width: 0;
+	}
+
+	.link {
+		border: 0;
+		padding: 0;
+		background: none;
+		color: var(--accent);
+		font-weight: 600;
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
 	.next .panel-title {

@@ -3,6 +3,7 @@
 	import Board from '#lib/ui/Board.svelte';
 	import PlayerBar from '#lib/ui/PlayerBar.svelte';
 	import WinCurve from '#lib/ui/WinCurve.svelte';
+	import BoardNav from '#lib/ui/BoardNav.svelte';
 	import { finalMoveCount, finalPosition, sampleCurve } from '#lib/demo/index.ts';
 
 	const total = finalMoveCount();
@@ -39,10 +40,6 @@
 				lead: '+' + ((black - 50) / 5 - i * 0.8).toFixed(1).replace('.', ',')
 			}))
 	);
-
-	function step(delta: number) {
-		move = Math.max(0, Math.min(total, move + delta));
-	}
 </script>
 
 <svelte:head>
@@ -59,13 +56,7 @@
 			label="Europameisterschaft 2026, Finale, nach Zug {move}"
 		/>
 		<PlayerBar color="black" name="Andrii Kravets" rank="3p" />
-		<div class="nav" role="group" aria-label="Züge">
-			<button class="button" onclick={() => (move = 0)} aria-label="Zum Anfang">⏮</button>
-			<button class="button" onclick={() => step(-1)} aria-label="Ein Zug zurück">◀</button>
-			<input type="range" min="0" max={total} bind:value={move} aria-label="Zug wählen" />
-			<button class="button" onclick={() => step(1)} aria-label="Ein Zug vor">▶</button>
-			<button class="button" onclick={() => (move = total)} aria-label="Zum letzten Zug">⏭</button>
-		</div>
+		<BoardNav bind:move {total} />
 	</div>
 
 	<aside class="analysis">
@@ -118,19 +109,6 @@
 
 	.board-side {
 		padding: 10px 14px 14px;
-	}
-
-	.nav {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding-top: 8px;
-	}
-
-	.nav input {
-		flex: 1;
-		accent-color: var(--accent);
-		min-width: 0;
 	}
 
 	.analysis {
