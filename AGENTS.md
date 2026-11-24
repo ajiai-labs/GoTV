@@ -605,9 +605,9 @@ auch Vite-Umstieg und Einreich-Formular als offene Punkte (wieder aufgreifen nur
 ausdrücklichen Wunsch). Erledigt aus dem externen Feedback: cmdtest-Hinweis.
 
 **Umbau auf Svelte 5 (Entscheidung 24.11.2026):** Plan in `docs/umbau-svelte.md` - neue App
-in `app/` (SvelteKit + TypeScript + Vite), Aufbau nach Vorbild CGoban 3, Logik wird übernommen,
-die alte App läuft bis zum Umschalten weiter. Vor Phase 2 nennt der Nutzer, was CGoban
-besser macht.
+in `app/` (SvelteKit + TypeScript + Vite), eigenes modernes Design (kein CGoban-/Shin-KGS-
+Nachbau), Logik wird übernommen, die alte App läuft bis zum Umschalten weiter. Vor dem Bau der
+Oberfläche gibt der Nutzer einen Design-Entwurf frei (Phase 2a).
 
 Offen bleibt außerdem:
 

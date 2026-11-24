@@ -1,3 +1,7 @@
+[ignore]
+# The new Svelte/TypeScript app (docs/umbau-svelte.md) has its own checks.
+<PROJECT_ROOT>/app/.*
+
 [untyped]
 .*/node_modules/.*
 

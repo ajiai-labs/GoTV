@@ -65,6 +65,47 @@ jobs:
             exit 1
           fi
 
+  # The new Svelte 5 + TypeScript app in app/ (docs/umbau-svelte.md). Its
+  # component tests run in Chromium and in WebKit - Safari's engine, as on the
+  # iPad - so every change is checked for the tablet too.
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install test browsers (Chromium, WebKit)
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Type check
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests (Chromium + WebKit)
+        run: npm test
+        env:
+          TEST_BROWSERS: chromium,webkit
+
+      - name: Build (web version path)
+        run: npm run build
+        env:
+          BASE_PATH: /GoTV
+
   pages-build:
     needs: test
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
