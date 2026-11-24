@@ -1,7 +1,9 @@
-# ShinKGS — Fork "Go TV"
+# GoTV (hervorgegangen aus ShinKGS)
 
-Fork von jkk/shinkgs (React 16, Flow, react-scripts 3.4.1, SCSS). Web-Client für den
-KGS Go Server über die JSON-API. Ziel des Forks: "Go TV" — drei Bausteine:
+Eigenständiges Projekt `diebugger-tech/GoTV`, hervorgegangen aus jkk/shinkgs (React 16,
+Flow, react-scripts 3.4.1, SCSS); die Fork-Verbindung hat der Nutzer am 24.11.2026 gelöst
+("Leave fork network"). `LICENSE.txt` (MIT, Justin Kramer) bleibt für den übernommenen Code.
+Web-Client für den KGS Go Server über die JSON-API, erweitert zu "GoTV" — drei Bausteine:
 
 1. **Live:** starke Partien, die gerade auf KGS laufen, prominent anzeigen und beobachten.
 2. **Kalender:** Turniere mit Übertragung (YouTube/Twitch), Stream direkt in der App.

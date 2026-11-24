@@ -14,10 +14,12 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
 </p>
 
-> **Note:** This repository is a fork of [jkk/shinkgs](https://github.com/jkk/shinkgs)
-> (the "GoTV" fork). It is **not** the official Shin KGS client, it is **not**
-> operated by or affiliated with KGS Go Server, and it uses **no** KGS logos
-> or trademarks. See `LICENSE.txt` for the original MIT license (Justin Kramer).
+> **Note:** GoTV is an independent project that grew out of
+> [jkk/shinkgs](https://github.com/jkk/shinkgs) (Shin KGS by Justin Kramer, no
+> longer maintained since 2023). It is **not** the official Shin KGS client, it
+> is **not** operated by or affiliated with KGS Go Server, and it uses **no**
+> KGS logos or trademarks. The code taken from Shin KGS stays under its MIT
+> license - see `LICENSE.txt`.
 
 - The upstream project's **official stable version** is available at https://shin.gokgs.com.
 - The upstream project's **development version** (less stable) is available at https://shinkgs-master.now.sh.
@@ -140,8 +142,8 @@ Discord chat group for anyone interested in helping: https://discord.gg/vwzxdVr
 
 ## Desktop-Installation (Linux, GNOME)
 
-**Currently Linux only** (tested on Ubuntu/GNOME) - Windows and macOS
-packaging is planned but not built yet. The "GoTV" fork can be installed
+**Linux only** (tested on Ubuntu/GNOME); on other systems use the
+[web version](https://diebugger-tech.github.io/GoTV/). GoTV can be installed
 as a local desktop app: a Go-board-themed icon in the app grid opens the
 login screen in its own window (no browser chrome).
 
