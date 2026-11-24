@@ -12,8 +12,11 @@ neuen App (`app/`) nachbaut. Plan: `docs/umbau-svelte.md`.
   `app/src/lib/util/` (gleiche Dateinamen wie in `src/model/`, `src/util/`). Importieren,
   nicht kopieren. Fehlt eine reine Hilfsfunktion, die in der alten UI-Datei steckte, kommt sie
   in die neue Komponente.
-- Texte auf Deutsch (die alte KGS-Oberfläche war Englisch, die GoTV-Teile Deutsch). Kurz,
-  sachlich, Aktivsätze, Knöpfe sagen, was passiert.
+- Texte zweisprachig: nie direkt ins Markup schreiben, sondern `t('bereich.schluessel', {…})`
+  aus `#lib/i18n/index.svelte.ts`; den deutschen Text in `app/src/lib/i18n/de/<bereich>.ts`,
+  den englischen in `en/<bereich>.ts` (die Typprüfung meldet fehlende Schlüssel). Deutsch:
+  kurz, sachlich, Aktivsätze, Knöpfe sagen, was passiert. Daten (Namen, Notizen, Chat) nicht
+  übersetzen. Datumsangaben mit `locale()` statt fest `'de-DE'`.
 - Keine KGS-Logos, kein Branding, das GoTV als offiziellen KGS-Client ausgibt.
 - Streams nur über die offiziellen Embed-Player, Iframe erst nach Klick (Zwei-Klick), sonst
   "Extern öffnen" mit `target="_blank" rel="noopener noreferrer"`.

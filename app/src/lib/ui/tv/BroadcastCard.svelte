@@ -94,7 +94,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import { locale } from '#lib/i18n/index.svelte.ts';
 	import { ogsTvSource } from '#lib/model/OgsTvSource.ts';
-	import { hasOgsBoard, hasVideoStream } from '#lib/model/tv.ts';
+	import { getEmbedUrlForEvent, hasOgsBoard, hasVideoStream } from '#lib/model/tv.ts';
 	import type { TvBroadcast } from '#lib/model/tv.ts';
 	import { parseOgsGameLink } from '#lib/model/OgsLinks.ts';
 	import { DelayBuffer } from '#lib/model/DelayBuffer.ts';
@@ -172,6 +172,10 @@
 	let kgsGames = $derived(broadcast.games);
 	let hasOgs = $derived(hasOgsBoard(event));
 	let hasVideo = $derived(hasVideoStream(event));
+	// A stream the official player can show here. A YouTube @handle without a
+	// video or channel id only offers "Extern öffnen" - then the boards need
+	// their own button, or they would never open.
+	let embeddable = $derived(hasVideo && !!getEmbedUrlForEvent(event, window.location.hostname));
 	let showVideo = $derived(hasVideo && videoVisible);
 	let kgsInline = $derived(!!app.state.currentUser && app.started);
 	let inline = $derived(streamLoaded && (!!recordingUrl || hasOgs || kgsInline));
@@ -189,7 +193,20 @@
 			const buffer = delayBuffers[key] || new DelayBuffer<GameChannel>();
 			buffers[key] = buffer;
 			if (buffer.latest() !== game) buffer.push(game, time);
-			return buffer.get(time, delayMs) || game;
+			const delayedGame = buffer.get(time, delayMs, true);
+			if (delayedGame) return delayedGame;
+			// Not delayMs old yet: a board without moves, result or clocks, so
+			// nothing gets ahead of the video.
+			const wait = (buffer.oldestAt() ?? time) + delayMs - time;
+			return {
+				...game,
+				tree: undefined,
+				score: undefined,
+				over: false,
+				clocks: undefined,
+				moveNum: 0,
+				tvDelayWaitSeconds: Math.max(1, Math.ceil(wait / 1000))
+			};
 		});
 		delayBuffers = buffers; // boards that are gone drop their history
 		return delayed;
@@ -208,7 +225,7 @@
 		!!selectedGame && (selectedGame.tvSource === 'ogs' || kgsInline)
 	);
 	let showSplitter = $derived(inline && showVideo && (games.length > 0 || !!recordingUrl));
-	let hasVideoToggle = $derived(hasVideo && (games.length > 0 || !!recordingUrl));
+	let hasVideoToggle = $derived(embeddable && (games.length > 0 || !!recordingUrl));
 
 	let boardTitle = $derived.by(() => {
 		if (recordingUrl) return t('tv.broadcast.recordingTitle');
@@ -221,7 +238,7 @@
 		}
 		if (hasOgs) {
 			if (!streamLoaded) {
-				return hasVideo ? t('tv.broadcast.ogsOnStreamOpen') : t('tv.broadcast.ogsAvailable');
+				return embeddable ? t('tv.broadcast.ogsOnStreamOpen') : t('tv.broadcast.ogsAvailable');
 			}
 			return event.ogs_game_id ? t('tv.broadcast.ogsLoading') : t('tv.broadcast.ogsAppears');
 		}
@@ -647,7 +664,7 @@
 						{@render delayControl()}
 					{/if}
 				</div>
-			{:else if !hasVideo && (hasOgs || (kgsInline && games.length))}
+			{:else if !embeddable && (hasOgs || (kgsInline && games.length))}
 				<!-- No stream to load: the boards open with their own button. -->
 				<button
 					type="button"

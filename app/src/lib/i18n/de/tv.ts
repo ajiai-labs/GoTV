@@ -107,6 +107,8 @@ export const tv = {
 	'tv.panel.over': 'Partie beendet',
 	'tv.panel.overWithScore': 'Partie beendet: {score}',
 	'tv.panel.loading': 'Brett wird von {source} geladen …',
+	'tv.panel.delayWaiting':
+		'Brett startet in {seconds} s – so läuft es nicht dem verzögerten Video voraus.',
 	'tv.panel.tabs': 'Partie',
 	'tv.panel.chat': 'Chat',
 	'tv.panel.info': 'Info',

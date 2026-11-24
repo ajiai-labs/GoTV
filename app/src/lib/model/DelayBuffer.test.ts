@@ -23,6 +23,17 @@ describe('DelayBuffer', () => {
 		expect(buffer.size()).toBe(2);
 		expect(buffer.latest()).toBe('c');
 	});
+	it('strict: shows nothing until a value is old enough (no spoilers)', () => {
+		const buffer = new DelayBuffer<string>();
+		buffer.push('jetzt', 1000);
+		expect(buffer.get(1000, 30000, true)).toBeNull();
+		expect(buffer.get(30999, 30000, true)).toBeNull();
+		expect(buffer.oldestAt()).toBe(1000);
+		expect(buffer.get(31000, 30000, true)).toBe('jetzt');
+		// not strict: the oldest value shows right away, as before
+		expect(new DelayBuffer<string>().get(0, 30000)).toBeNull();
+	});
+
 	it('knows the last pushed value, to skip repeated pushes', () => {
 		const buffer = new DelayBuffer();
 		expect(buffer.latest()).toBe(null);

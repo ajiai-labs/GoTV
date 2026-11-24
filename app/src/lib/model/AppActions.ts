@@ -6,6 +6,9 @@ import { isGamePlayer, isGameProposalPlayer, proposalsEqual } from './game';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
+
+// How long after KGS ended the search a joined game still counts as found.
+const AUTOMATCH_JOIN_GRACE_MS = 60000;
 import type {
 	AutomatchPrefs,
 	GameChannel,
@@ -29,6 +32,9 @@ export class AppActions {
 	_client: KgsClient;
 	_history: Record<string, any>;
 	_tvGameSubscriptions: TvGameSubscriptions;
+	// When KGS ended a running automatch search on its own (it found a game),
+	// 0 otherwise. The game itself may arrive in a later answer.
+	_automatchEndedAt = 0;
 
 	constructor(store: AppStore, client: KgsClient, history: Record<string, any>) {
 		this._store = store;
@@ -69,9 +75,17 @@ export class AppActions {
 		});
 	};
 	onReceiveServerMessages = (msgs: Array<KgsMessage>) => {
-		// KGS may switch the search off in the same batch that brings the game.
-		const wasAutomatching = this._store.getState().automatchEnabled;
+		// KGS may switch the search off before it brings the game - in the same
+		// batch or in an earlier answer (see _automatchEndedAt).
+		const wasAutomatching =
+			this._store.getState().automatchEnabled ||
+			Date.now() - this._automatchEndedAt < AUTOMATCH_JOIN_GRACE_MS;
 		this._store.dispatch(msgs);
+		if (this._store.getState().automatchEnabled) {
+			this._automatchEndedAt = 0;
+		} else if (wasAutomatching && !this._automatchEndedAt) {
+			this._automatchEndedAt = Date.now();
+		}
 
 		// Follow-up actions we know we need to take, even without user interaction
 		msgs = Array.isArray(msgs) ? msgs : [msgs];
@@ -917,6 +931,7 @@ export class AppActions {
 		this._store.dispatch({ type: 'AUTOMATCH_STATUS', enabled: true });
 	};
 	onCancelAutomatch = () => {
+		this._automatchEndedAt = 0; // cancelled by the user: no game is coming
 		this._client.sendMessage({ type: 'AUTOMATCH_CANCEL' });
 		this._store.dispatch({ type: 'AUTOMATCH_STATUS', enabled: false });
 	};
@@ -929,6 +944,7 @@ export class AppActions {
 		if (!game || !name || !isGamePlayer(name, game.players)) {
 			return;
 		}
+		this._automatchEndedAt = 0;
 		this._store.dispatch({ type: 'PLAY_GAME', gameId });
 		this.onChangeNav('play');
 	};

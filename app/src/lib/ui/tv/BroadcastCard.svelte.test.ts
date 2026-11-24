@@ -220,6 +220,36 @@ describe('BroadcastCard', () => {
 		});
 	});
 
+	it('opens the OGS board when the YouTube stream cannot be embedded (@handle)', async () => {
+		const ogs = mockOgs();
+		await render(BroadcastCard, {
+			broadcast: {
+				event: {
+					...EVENT,
+					platform: 'youtube',
+					stream_url: 'https://www.youtube.com/@somechannel',
+					ogs_game_id: 7
+				},
+				games: []
+			}
+		});
+		await expect.element(page.getByRole('link', { name: 'Extern öffnen' })).toBeVisible();
+		await page.getByRole('button', { name: 'Brett öffnen' }).click();
+		expect(ogs.observe).toHaveBeenCalledTimes(1);
+	});
+
+	it('with a board delay, shows no moves before the delay has passed', async () => {
+		const ogs = mockOgs();
+		window.localStorage.setItem('gotv.boardDelay', '30');
+		await render(BroadcastCard, {
+			broadcast: { event: { ...EVENT, ogs_game_id: 7 }, games: [] }
+		});
+		await loadStream();
+		ogs.deliver(ogsGame({ tvLive: true }));
+		await expect.element(page.getByText(/Brett startet in 30 s/)).toBeVisible();
+		expect(document.querySelector('.BroadcastCard svg.board')).toBeNull();
+	});
+
 	it('says how fresh the OGS board is', async () => {
 		const ogs = mockOgs();
 		await render(BroadcastCard, {

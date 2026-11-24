@@ -103,6 +103,39 @@ describe('automatch', () => {
 		expect(history.push).toHaveBeenCalledWith('/play');
 	});
 
+	it('opens the game also when KGS ends the search in an earlier answer', () => {
+		const { store, history, actions } = setup({ automatchEnabled: true } as Partial<AppState>);
+		actions.onReceiveServerMessages([{ type: 'AUTOMATCH_STATUS', enabled: false }]);
+		actions.onReceiveServerMessages([
+			{
+				type: 'GAME_JOIN',
+				channelId: 902,
+				gameType: 'ranked',
+				players: { white: ME, black: { name: 'sandora', rank: '5k', flags: {} } },
+				sgfEvents: [],
+				users: []
+			}
+		]);
+		expect(store.getState().playGameId).toBe(902);
+		expect(history.push).toHaveBeenCalledWith('/play');
+	});
+
+	it('does not treat a game as found after the user cancelled the search', () => {
+		const { store, actions } = setup({ automatchEnabled: true } as Partial<AppState>);
+		actions.onCancelAutomatch();
+		actions.onReceiveServerMessages([
+			{
+				type: 'GAME_JOIN',
+				channelId: 903,
+				gameType: 'ranked',
+				players: { white: ME, black: { name: 'sandora', rank: '5k', flags: {} } },
+				sgfEvents: [],
+				users: []
+			}
+		]);
+		expect(store.getState().playGameId).toBeNull();
+	});
+
 	it('does not take over a game the user only watches', () => {
 		const { store, history, actions } = setup({ automatchEnabled: true } as Partial<AppState>);
 		actions.onReceiveServerMessages([

@@ -353,6 +353,8 @@ export type GameChannel = {
 	accessDenied?: string;
 	undoRequest?: GameRole;
 	tvSource?: 'kgs' | 'ogs';
+	// Board delay: seconds until the first delayed position can be shown.
+	tvDelayWaitSeconds?: number;
 	// OGS only: true while the real-time connection delivers this game.
 	tvLive?: boolean;
 	// Flags

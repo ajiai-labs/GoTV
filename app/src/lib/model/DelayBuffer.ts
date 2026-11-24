@@ -23,13 +23,23 @@ export class DelayBuffer<T> {
 		return this._items.length;
 	}
 
+	// When the oldest value arrived, or null.
+	oldestAt(): number | null {
+		return this._items.length ? this._items[0].at : null;
+	}
+
 	// The newest value that is at least delayMs old. Until one is, the oldest
-	// value shows, so a freshly opened board is never empty. Older values than
-	// the returned one are dropped.
-	get(now: number, delayMs: number): T | null | undefined {
+	// value shows, so a freshly opened board is never empty - unless strict:
+	// then nothing (a live board must not show moves the delayed video has not
+	// reached yet). Older values than the returned one are dropped.
+	get(now: number, delayMs: number, strict = false): T | null | undefined {
 		const items = this._items;
 
 		if (!items.length) {
+			return null;
+		}
+
+		if (strict && items[0].at > now - delayMs) {
 			return null;
 		}
 

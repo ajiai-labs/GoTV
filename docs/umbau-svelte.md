@@ -102,7 +102,7 @@ Spielen, Kalender/Kanäle, Nachspielen, zuletzt Live. Gate grün (svelte-check, 
 Für Phase 6 (nur nach Bestätigung): Pages-Build auf `app/` mit `VITE_GUEST_ONLY=true`
 und `BASE_PATH=/GoTV`; der alte Service Worker `gotv-sw.js` muss dann abgemeldet werden
 (neuer Worker unter gleichem Scope ersetzt ihn, alte Caches `gotv-app-*` räumt der neue
-beim Aktivieren mit ab); alte React-App, `public/gotv-sw.js`, `.flowconfig`, CRA-Build und
+beim Aktivieren mit ab - Achtung: der neue Worker nutzt das Präfix `gotv-svelte-app-`, beim Umschalten also die alten `gotv-app-*`-Caches einmal ausdrücklich löschen); alte React-App, `public/gotv-sw.js`, `.flowconfig`, CRA-Build und
 `app/src/lib/demo/` (nicht mehr benutzt) entfernen.
 
 ## Phase 2a – Stand (24.11.2026, freigegeben)

@@ -21,7 +21,11 @@ import { self as sw } from '$app/service-worker';
 import { assets, immutable, prerendered } from '$app/manifest';
 import { version } from '$app/env';
 
-const APP_CACHE = `gotv-app-${version}`;
+// Own prefix: the old app's worker (public/gotv-sw.js) on the same domain
+// deletes every other "gotv-app-*" cache, and this one must not delete the
+// old app's cache either while both are online.
+const APP_PREFIX = 'gotv-svelte-app-';
+const APP_CACHE = `${APP_PREFIX}${version}`;
 // Games and calendar data survive app updates.
 const DATA_CACHE = 'gotv-data-v1';
 const MAX_DATA_ENTRIES = 300;
@@ -60,7 +64,7 @@ sw.addEventListener('activate', (event) => {
 			.then((names) =>
 				Promise.all(
 					names
-						.filter((name) => name.startsWith('gotv-app-') && name !== APP_CACHE)
+						.filter((name) => name.startsWith(APP_PREFIX) && name !== APP_CACHE)
 						.map((name) => caches.delete(name))
 				)
 			)

@@ -137,7 +137,11 @@
 			<GameBoardNav nodeId={currentNode} {currentLine} {onChangeCurrentNode} live={!game.over} />
 		</div>
 	{:else}
-		<p class="TvGamePanel-notice" role="status">{t('tv.panel.loading', { source })}</p>
+		<p class="TvGamePanel-notice" role="status">
+			{game.tvDelayWaitSeconds
+				? t('tv.panel.delayWaiting', { seconds: game.tvDelayWaitSeconds })
+				: t('tv.panel.loading', { source })}
+		</p>
 	{/if}
 	<div class="TvGamePanel-players">
 		<GamePlayersInfo game={liveGame} {onUserDetail} />

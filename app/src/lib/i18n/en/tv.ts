@@ -101,6 +101,8 @@ export const tv: Translation<typeof de> = {
 	'tv.panel.over': 'Game over',
 	'tv.panel.overWithScore': 'Game over: {score}',
 	'tv.panel.loading': 'Loading board from {source} …',
+	'tv.panel.delayWaiting':
+		'Board starts in {seconds} s, so it does not run ahead of the delayed video.',
 	'tv.panel.tabs': 'Game',
 	'tv.panel.chat': 'Chat',
 	'tv.panel.info': 'Info',

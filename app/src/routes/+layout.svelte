@@ -45,6 +45,14 @@
 		app.syncNav(currentPath());
 	});
 
+	// Clicking "Beobachten" again while a game is open goes back to the list,
+	// as the old app's second click on "Watch" did (AppActions.onChangeNav).
+	function onReselect(path: string) {
+		if (path === '/beobachten' && isCurrent(path) && app.started) {
+			app.actions.onChangeNav('watch', { push: false });
+		}
+	}
+
 	function isCurrent(path: string): boolean {
 		void page.url.pathname;
 		const here = currentPath();
@@ -111,7 +119,11 @@
 			{#each kgsSections as section (section.path)}
 				{@const badge =
 					section.badge === 'chat' ? chatBadge : section.badge === 'play' ? playBadge : null}
-				<a href={resolve(section.path)} aria-current={isCurrent(section.path) ? 'page' : undefined}>
+				<a
+					href={resolve(section.path)}
+					aria-current={isCurrent(section.path) ? 'page' : undefined}
+					onclick={() => onReselect(section.path)}
+				>
 					{t(section.name)}
 					{#if badge && !isCurrent(section.path)}
 						<UnseenBadge major={badge.major} minor={badge.minor} />
