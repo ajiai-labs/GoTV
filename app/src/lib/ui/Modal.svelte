@@ -69,6 +69,8 @@
 
 	header .panel-title {
 		padding-bottom: 12px;
+		/* the header already carries the title bar (Oldschool gradient) */
+		background: none;
 	}
 
 	.close {

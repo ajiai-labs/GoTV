@@ -460,6 +460,8 @@ export type AppState = {
 	readonly conversationsById: Index<Conversation>;
 	readonly channelMembership: ChannelMembership;
 	readonly automatchPrefs: AutomatchPrefs | null | undefined;
+	// KGS automatch search running (AUTOMATCH_STATUS).
+	readonly automatchEnabled: boolean;
 	readonly playbacks: Array<Playback>;
 	readonly nav: NavOption;
 	readonly activeConversationId: number | null | undefined;

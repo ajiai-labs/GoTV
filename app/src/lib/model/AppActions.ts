@@ -5,7 +5,9 @@ import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGameProposalPlayer, proposalsEqual } from './game';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
+import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
 import type {
+	AutomatchPrefs,
 	GameChannel,
 	KgsClientState,
 	GameFilter,
@@ -67,6 +69,8 @@ export class AppActions {
 		});
 	};
 	onReceiveServerMessages = (msgs: Array<KgsMessage>) => {
+		// KGS may switch the search off in the same batch that brings the game.
+		const wasAutomatching = this._store.getState().automatchEnabled;
 		this._store.dispatch(msgs);
 
 		// Follow-up actions we know we need to take, even without user interaction
@@ -89,6 +93,8 @@ export class AppActions {
 				this.onCheckRoomNames(msg.games);
 			} else if (msg.type === 'GAME_TIME_EXPIRED' && msg.channelId) {
 				this.onGameTimeExpired(msg.channelId);
+			} else if (msg.type === 'GAME_JOIN' && msg.channelId && wasAutomatching) {
+				this.onAutomatchGameJoined(msg.channelId);
 			}
 		}
 	};
@@ -898,6 +904,33 @@ export class AppActions {
 		});
 
 		this.onChangeNav('tv');
+	};
+	// Automatic opponent selection (see ./automatch.ts).
+	onSetAutomatchPrefs = (prefs: AutomatchPrefs) => {
+		this._client.sendMessage(automatchMessage('AUTOMATCH_SET_PREFS', prefs) as KgsMessage);
+		this._store.dispatch({ ...prefs, type: 'AUTOMATCH_PREFS' });
+	};
+	onStartAutomatch = () => {
+		const prefs = this._store.getState().automatchPrefs || DEFAULT_AUTOMATCH_PREFS;
+		this._client.sendMessage(automatchMessage('AUTOMATCH_CREATE', prefs) as KgsMessage);
+		// Shown right away; KGS confirms or corrects with AUTOMATCH_STATUS.
+		this._store.dispatch({ type: 'AUTOMATCH_STATUS', enabled: true });
+	};
+	onCancelAutomatch = () => {
+		this._client.sendMessage({ type: 'AUTOMATCH_CANCEL' });
+		this._store.dispatch({ type: 'AUTOMATCH_STATUS', enabled: false });
+	};
+	// A game KGS joined us to while searching: our own game, opened like an
+	// accepted challenge (there is no CHALLENGE_FINAL for automatch).
+	onAutomatchGameJoined = (gameId: number) => {
+		const state = this._store.getState();
+		const game = state.gamesById[gameId];
+		const name = state.currentUser && state.currentUser.name;
+		if (!game || !name || !isGamePlayer(name, game.players)) {
+			return;
+		}
+		this._store.dispatch({ type: 'PLAY_GAME', gameId });
+		this.onChangeNav('play');
 	};
 	onClickContribute = () => {
 		window.open('https://github.com/jkk/shinkgs', '_blank');

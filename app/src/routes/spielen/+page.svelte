@@ -16,6 +16,7 @@
 	import GameScreen from '#lib/ui/game/GameScreen.svelte';
 	import { isGamePlaying } from '#lib/model/game/tree.ts';
 	import ChallengeEditor from '#lib/ui/game/ChallengeEditor.svelte';
+	import AutomatchPanel from '#lib/ui/game/AutomatchPanel.svelte';
 
 	let appState = $derived(app.state);
 	let creatingChallenge = $state(false);
@@ -131,6 +132,8 @@
 						<span aria-hidden="true">+</span> Herausforderung erstellen
 					</button>
 				</header>
+
+				<AutomatchPanel />
 
 				{#if appState.unfinishedGames.length}
 					<section class="panel" aria-labelledby="unfinished-title">

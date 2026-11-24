@@ -32,6 +32,7 @@ export function getEmptyServerState(): ServerState {
 		conversationsById: {},
 		channelMembership: {},
 		automatchPrefs: null,
+		automatchEnabled: false,
 		playbacks: [],
 		activeConversationId: null,
 		userDetailsRequest: null,

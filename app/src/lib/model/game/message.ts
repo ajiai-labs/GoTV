@@ -137,6 +137,8 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 		return { ...prevState, gamesById };
 	} else if (msg.type === 'AUTOMATCH_PREFS') {
 		return { ...prevState, automatchPrefs: msg as unknown as AutomatchPrefs };
+	} else if (msg.type === 'AUTOMATCH_STATUS') {
+		return { ...prevState, automatchEnabled: !!msg.enabled };
 	} else if (msg.type === 'ARCHIVE_JOIN' && chanId) {
 		const gameSummariesByUser: Index<Array<GameSummary>> = { ...prevState.gameSummariesByUser };
 		const name = msg.user.name;

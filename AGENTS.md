@@ -632,6 +632,29 @@ Offen bleibt außerdem:
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
    IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.
 
+## Bewusst NICHT bauen (Entscheidungen des Nutzers)
+
+- **Keine KataGo-Analyse laufender Partien** (Live, Beobachten, Übertragungen) - Nutzer,
+  24.11.2026: damit könnte man betrügen (Beispiel Bundesliga: Partie läuft auf KGS, ein zweites
+  Fenster mit GoTV zeigt den besseren Zug). KataGo gibt es nur beim Nachspielen beendeter Partien.
+  Auch nicht "verzögert" oder als Option.
+- **Spielern folgen nur auf KGS** (24.11.2026): der Nutzer spielt nicht auf OGS, OGS ist nur
+  Quelle für Übertragungen.
+
+## Automatische Gegnerwahl (KGS-Automatch, 24.11.2026)
+
+Neu in GoTV (gab es in Shin KGS nicht), Vorbild CGoban: Spielen-Seite, Schalter
+"Automatische Gegnerwahl" und Fenster "Autowahleinstellungen" (Gegnerwahl: Mensch, Bot,
+Gegner ohne Rang, Max. Rangunterschied; Spielart: Gewertet, Frei; Spielgeschwindigkeit:
+Mittel, Schnell, Blitz). `app/src/lib/model/automatch.ts`, Aktionen `onSetAutomatchPrefs`,
+`onStartAutomatch`, `onCancelAutomatch`, `onAutomatchGameJoined` in AppActions, Zustand
+`automatchEnabled` aus `AUTOMATCH_STATUS`. Protokoll laut gokgs.com/json/upstream.html:
+`AUTOMATCH_SET_PREFS`, `AUTOMATCH_CREATE`, `AUTOMATCH_CANCEL`; die Einstellungen gehen so
+zurück, wie KGS sie in `AUTOMATCH_PREFS` geschickt hat (die Doku schreibt das Rangfeld
+"estiamtedRank"). Wie KGS einen gefundenen Gegner meldet, sagt die Doku nicht: GoTV öffnet
+jede Partie, der KGS den Nutzer während der Suche als Spieler beitreten lässt (`GAME_JOIN`),
+wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüft.
+
 ## Offene Entscheidungen (Produkt, Stand heute)
 
 - **Wöchentlicher Event-Scanner:** Idee, die Quellen EGF-Twitch-Zeitplan, KGS-Events
