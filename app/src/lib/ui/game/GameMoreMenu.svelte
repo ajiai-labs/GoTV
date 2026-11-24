@@ -10,6 +10,7 @@
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import Modal from '#lib/ui/Modal.svelte';
 	import GameInfo from './GameInfo.svelte';
+	import { BOARD_RESIZE_MODES, boardResizeMode } from './boardResizeMode.svelte.ts';
 
 	const MORE_INFO_PROPS: Record<string, MessageKey> = {
 		ANNOTATOR: 'game.moreMenu.annotator',
@@ -24,11 +25,13 @@
 
 	let {
 		game,
-		roomsById
+		roomsById,
+		showBoardSizing = false
 	}: {
 		game: GameChannel;
 		// Default: the rooms the app knows.
 		roomsById?: Index<Room>;
+		showBoardSizing?: boolean;
 	} = $props();
 
 	const uid = $props.id();
@@ -122,6 +125,23 @@
 			<button type="button" class="GameMoreMenu-dropdown-item" onclick={showGameInfo}>
 				{t('game.moreMenu.gameInfo')}
 			</button>
+			{#if showBoardSizing}
+				<fieldset class="GameMoreMenu-board-sizing">
+					<legend>{t('settings.boardResize')}</legend>
+					{#each BOARD_RESIZE_MODES as mode (mode)}
+						<label class="GameMoreMenu-dropdown-item">
+							<input
+								type="radio"
+								name="{uid}-board-sizing"
+								value={mode}
+								checked={boardResizeMode.current === mode}
+								onchange={() => boardResizeMode.set(mode)}
+							/>
+							{t(`settings.boardResize.${mode}.name`)}
+						</label>
+					{/each}
+				</fieldset>
+			{/if}
 		</div>
 	{/if}
 	{#if gameInfoShowing}
@@ -189,6 +209,30 @@
 
 	.GameMoreMenu-dropdown-item:hover {
 		background: var(--accent-soft);
+	}
+
+	.GameMoreMenu-board-sizing {
+		margin: 4px 0 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.GameMoreMenu-board-sizing legend {
+		padding: 0 12px;
+		color: var(--ink-soft);
+		font-size: 0.85em;
+	}
+
+	.GameMoreMenu-board-sizing label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		white-space: nowrap;
+	}
+
+	.GameMoreMenu-board-sizing input {
+		margin: 0;
+		accent-color: var(--accent);
 	}
 
 	.GameMoreMenu-game-info {

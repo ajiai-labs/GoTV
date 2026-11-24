@@ -18,6 +18,7 @@ export const game = {
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Brett größer oder kleiner',
 	'game.screen.splitterValue': 'Brettbreite {width} Pixel',
+	'game.screen.splitterFitValue': 'Brettbreite {width} Pixel, Seitenleiste {side} Pixel',
 	'game.screen.tabs': 'Ansicht',
 	'game.screen.tabChat': 'Chat',
 	'game.screen.tabInfo': 'Info',

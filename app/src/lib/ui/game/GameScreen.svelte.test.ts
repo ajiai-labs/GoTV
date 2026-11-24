@@ -340,6 +340,48 @@ describe('GameScreen', () => {
 		await page.viewport(414, 896);
 	});
 
+	it('switches from scrolling to a compact, fully visible board using Mehr', async () => {
+		const actions = mockActions();
+		localStorage.removeItem('gotv.gameSideWidth');
+		localStorage.removeItem('gotv.gameBoardWidth');
+		await page.viewport(1900, 1000);
+		await render(GameScreen, { game: fixtureGame() });
+		const more = page.getByRole('button', { name: 'Mehr' });
+		const board = page.getByRole('img', { name: /Zug 2/ });
+		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
+		const frame = page.getByRole('region', { name: 'Brett', exact: true });
+		const chat = page.getByRole('textbox');
+		const bounds = () => board.element().getBoundingClientRect();
+		await expect.element(board).toBeVisible();
+		await userEvent.dragAndDrop(splitter, chat);
+		await expect.poll(() => bounds().width).toBeGreaterThan(1300);
+		const top = bounds().top;
+		const chatWidth = chat.element().clientWidth;
+
+		await more.click();
+		await expect.element(page.getByRole('button', { name: 'Partieinfo' })).toBeVisible();
+		await page.getByText('Ans Fenster anpassen', { exact: true }).click();
+		await expect.element(page.getByRole('radio', { name: 'Ans Fenster anpassen' })).toBeChecked();
+		await expect.poll(() => bounds().bottom).toBeLessThanOrEqual(window.innerHeight);
+		expect(bounds().top).toBeLessThan(top);
+		expect(bounds().width).toBeCloseTo(bounds().height);
+		expect(frame.element().scrollHeight).toBe(frame.element().clientHeight);
+		expect(chat.element().clientWidth).toBe(chatWidth);
+
+		await more.click();
+		await page.viewport(1500, 700);
+		await expect.poll(() => bounds().bottom).toBeLessThanOrEqual(window.innerHeight);
+		expect(actions.onChangeCurrentNode).not.toHaveBeenCalled();
+		await more.click();
+		await page.getByText('Mit Scrollen vergrößern', { exact: true }).click();
+		await expect
+			.poll(() => frame.element().scrollHeight - frame.element().clientHeight)
+			.toBeGreaterThan(0);
+		localStorage.removeItem('gotv.gameBoardMode');
+		localStorage.removeItem('gotv.gameBoardWidth');
+		await page.viewport(414, 896);
+	});
+
 	it('sends game chat', async () => {
 		const actions = mockActions();
 		await render(GameScreen, { game: fixtureGame() });

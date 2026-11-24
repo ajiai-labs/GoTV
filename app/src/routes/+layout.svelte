@@ -292,6 +292,35 @@
 		max-width: none;
 	}
 
+	@media (min-width: 901px) {
+		/* Let the board use the remaining height, including after a banner
+		   appears or changes height while the game is open. */
+		.app:has(> main > :global(.GameScreen-fit)) {
+			display: flex;
+			flex-direction: column;
+			height: 100dvh;
+		}
+
+		.app:has(> main > :global(.GameScreen-fit)) > main {
+			display: flex;
+			flex: 1;
+			flex-direction: column;
+			min-height: 0;
+		}
+
+		.app:has(> main > :global(.GameScreen-compact-header)) {
+			padding-bottom: 8px;
+		}
+
+		.app:has(> main > :global(.GameScreen-compact-header)) .top {
+			padding-block: max(4px, env(safe-area-inset-top)) 4px;
+		}
+
+		.app:has(> main > :global(.GameScreen-compact-header)) .top :is(nav, .account) a {
+			padding-block: 4px;
+		}
+	}
+
 	.top {
 		display: flex;
 		align-items: center;

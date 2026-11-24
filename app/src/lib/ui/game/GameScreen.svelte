@@ -46,6 +46,7 @@
 	import GameUndoPrompt from './GameUndoPrompt.svelte';
 	import { formatScoreDe } from './gameText.ts';
 	import Splitter from '#lib/ui/Splitter.svelte';
+	import { boardResizeMode } from './boardResizeMode.svelte.ts';
 
 	type Tab = 'chat' | 'info' | 'users';
 
@@ -98,6 +99,7 @@
 	let chatScroll: HTMLElement | undefined = $state();
 	let topOffset = $state(0);
 	let innerHeight = $state(0);
+	let fitBoard = $derived(boardResizeMode.current === 'fit');
 
 	let tree = $derived(game.tree);
 	let users = $derived.by(() => {
@@ -159,7 +161,9 @@
 
 	onMount(measure);
 
-	let screenHeight = $derived(Math.max(MIN_HEIGHT, innerHeight - topOffset - BOTTOM_SPACE));
+	let screenHeight = $derived(
+		Math.max(fitBoard ? 0 : MIN_HEIGHT, innerHeight - topOffset - BOTTOM_SPACE)
+	);
 
 	let mainEl: HTMLElement | undefined = $state();
 	let mainWidth = $state(0);
@@ -168,8 +172,7 @@
 	const savedSideWidth = loadWidth('gotv.gameSideWidth', SIDE_WIDTH_MIN);
 	let boardMaxWidth = $derived(Math.max(0, mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN));
 	let boardMinWidth = $derived(Math.min(BOARD_MIN_WIDTH, boardMaxWidth));
-	// Start with the whole board visible. The splitter can make a larger,
-	// scrollable board and reduce the chat to its minimum width.
+	// Start with the whole board visible in either mode.
 	let fittedBoardWidth = $derived(Math.min(boardMaxWidth, boardAreaHeight));
 	let defaultBoardWidth = $derived(
 		savedSideWidth === null
@@ -179,6 +182,12 @@
 	let boardWidth = $derived(
 		Math.max(boardMinWidth, Math.min(boardMaxWidth, preferredBoardWidth ?? defaultBoardWidth))
 	);
+	// Once the board is large, reclaim vertical space above it. The threshold
+	// uses the column width, so compacting the header does not change it.
+	let compactHeader = $derived(
+		fitBoard && preferredBoardWidth !== null && boardWidth >= innerHeight * 0.75
+	);
+	let scrollableBoard = $derived(!fitBoard && boardWidth > boardAreaHeight);
 
 	function setBoardWidth(value: number) {
 		preferredBoardWidth = Math.max(boardMinWidth, Math.min(boardMaxWidth, Math.round(value)));
@@ -261,6 +270,8 @@
 	class:GameScreen-watching={!playing}
 	class:GameScreen-rengo={isRengo}
 	class:GameScreen-has-tv-stream={!!liveEvent}
+	class:GameScreen-fit={fitBoard}
+	class:GameScreen-compact-header={compactHeader}
 	style:--game-height="{screenHeight}px"
 	bind:this={screenEl}
 >
@@ -273,7 +284,7 @@
 		{/if}
 		<h1 class="GameScreen-title">{title}</h1>
 		{#if !playing}
-			<GameMoreMenu {game} {roomsById} />
+			<GameMoreMenu {game} {roomsById} showBoardSizing />
 		{/if}
 	</header>
 
@@ -293,19 +304,24 @@
 					<StreamEmbed event={liveEvent} />
 				</section>
 			{/if}
-			<div class="GameScreen-board-area" bind:clientHeight={boardAreaHeight}>
+			<div
+				class="GameScreen-board-area"
+				bind:clientHeight={boardAreaHeight}
+				style:--board-area-height="{boardAreaHeight}px"
+			>
 				<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (Focus enables native keyboard scrolling when the board overflows.) -->
 				<div
-					class="GameScreen-board-scroll"
+					class="GameScreen-board-frame"
+					class:GameScreen-board-scroll={!fitBoard}
 					role="region"
 					aria-label={t('game.screen.board')}
-					tabindex={boardWidth > boardAreaHeight ? 0 : undefined}
-					onkeydown={boardWidth > boardAreaHeight ? onBoardScrollKey : undefined}
+					tabindex={scrollableBoard ? 0 : undefined}
+					onkeydown={scrollableBoard ? onBoardScrollKey : undefined}
 				>
 					<BoardContainer
 						{game}
 						{playing}
-						embedded
+						embedded={!fitBoard}
 						ghost={isOurMove && !scoring ? playerColor : null}
 						onClickPoint={isOurMove || scoring ? onClickPoint : undefined}
 					/>
@@ -339,7 +355,12 @@
 				valuenow={boardWidth}
 				valuemin={boardMinWidth}
 				valuemax={boardMaxWidth}
-				valuetext={t('game.screen.splitterValue', { width: boardWidth })}
+				valuetext={fitBoard
+					? t('game.screen.splitterFitValue', {
+							width: Math.min(boardWidth, boardAreaHeight),
+							side: Math.max(0, mainWidth - SPLITTER_WIDTH - boardWidth)
+						})
+					: t('game.screen.splitterValue', { width: boardWidth })}
 				onpointer={onSplitterPointer}
 				onkey={onSplitterKey}
 			/>
@@ -492,9 +513,12 @@
 		min-height: 0;
 	}
 
-	.GameScreen-board-scroll {
+	.GameScreen-board-frame {
 		position: absolute;
 		inset: 0;
+	}
+
+	.GameScreen-board-scroll {
 		overflow-y: auto;
 	}
 
@@ -609,7 +633,7 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	/* Wide screens: the chat stays in view while a large board scrolls. */
+	/* Desktop layout with the chat in its own column. */
 	@media (min-width: 901px) {
 		.GameScreen {
 			height: var(--game-height);
@@ -621,6 +645,45 @@
 
 		.GameScreen-side {
 			height: 100%;
+		}
+
+		.GameScreen-fit {
+			flex: 1;
+			min-height: 0;
+		}
+
+		.GameScreen-fit .GameScreen-main {
+			grid-template-rows: minmax(0, 1fr);
+		}
+
+		.GameScreen-fit .GameScreen-board-area {
+			align-self: flex-end;
+			width: min(100%, var(--board-area-height));
+		}
+
+		.GameScreen-fit .GameScreen-side {
+			overflow-y: auto;
+		}
+
+		.GameScreen-fit .GameScreen-chat {
+			min-height: 0;
+		}
+
+		.GameScreen-fit .GameScreen-players-users {
+			min-height: 0;
+			overflow-y: auto;
+		}
+
+		.GameScreen-compact-header {
+			gap: 4px;
+		}
+
+		.GameScreen-compact-header .GameScreen-header {
+			min-height: 0;
+		}
+
+		.GameScreen-compact-header .GameScreen-header :global(.button) {
+			padding-block: 4px;
 		}
 	}
 

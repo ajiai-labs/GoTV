@@ -7,6 +7,7 @@
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 	import DesktopDownloads from '#lib/ui/DesktopDownloads.svelte';
 	import { config } from '#lib/config.ts';
+	import { BOARD_RESIZE_MODES, boardResizeMode } from '#lib/ui/game/boardResizeMode.svelte.ts';
 
 	// Fixed colours per option, so each card shows its own design whatever
 	// is chosen right now.
@@ -84,6 +85,27 @@
 		{/each}
 	</div>
 </fieldset>
+
+{#if !config.guestOnly}
+	<fieldset class="board-resize">
+		<legend>{t('settings.boardResize')}</legend>
+		<div class="choices">
+			{#each BOARD_RESIZE_MODES as mode (mode)}
+				<label class="choice" class:chosen={boardResizeMode.current === mode}>
+					<input
+						type="radio"
+						name="game-board-mode"
+						value={mode}
+						checked={boardResizeMode.current === mode}
+						onchange={() => boardResizeMode.set(mode)}
+					/>
+					<span class="name">{t(`settings.boardResize.${mode}.name`)}</span>
+					<span class="muted">{t(`settings.boardResize.${mode}.description`)}</span>
+				</label>
+			{/each}
+		</div>
+	</fieldset>
+{/if}
 
 <fieldset>
 	<legend>{t('settings.design')}</legend>
@@ -251,7 +273,8 @@
 		border-radius: 9px;
 	}
 
-	.nav-order {
+	.nav-order,
+	.board-resize {
 		margin-bottom: calc(var(--gap) * 1.6);
 	}
 
