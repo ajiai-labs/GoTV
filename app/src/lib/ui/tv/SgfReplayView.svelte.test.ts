@@ -1,9 +1,10 @@
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { parseSgf } from '#lib/model/sgf.ts';
 import { getKataGoEngine } from '#lib/model/KataGoEngine.ts';
 import type { KataGoAnalysis } from '#lib/model/KataGoEngine.ts';
+import { getMainLine } from '#lib/model/ReplayVariation.ts';
 import { language } from '#lib/i18n/index.svelte.ts';
 import SgfReplayView from './SgfReplayView.svelte';
 import * as replayModule from './SgfReplayView.svelte';
@@ -27,9 +28,10 @@ const last = () => page.getByRole('button', { name: 'Zum letzten Zug' }).click()
 
 describe('SgfReplayView', () => {
 	beforeEach(() => window.localStorage.clear());
-	afterEach(() => {
+	afterEach(async () => {
 		vi.restoreAllMocks();
 		window.localStorage.clear();
+		await page.viewport(414, 896);
 	});
 
 	it('loads pasted SGF text and steps through the moves', async () => {
@@ -192,6 +194,67 @@ describe('SgfReplayView', () => {
 		expect(document.body.textContent).not.toContain('KataGo-Analyse');
 		expect(document.body.textContent).not.toContain('SGF einfügen');
 		expect(document.body.textContent).not.toContain('Als SGF speichern');
+		await expect
+			.element(page.getByRole('slider', { name: 'Brett größer oder kleiner' }))
+			.not.toBeInTheDocument();
+	});
+
+	it('shows the interactive win curve below the board at board width', async () => {
+		await page.viewport(1500, 950);
+		window.localStorage.setItem('gotv.katago', '1');
+		const engine = getKataGoEngine();
+		vi.spyOn(engine, 'analyze').mockResolvedValue({
+			winRate: 0.5,
+			scoreLead: 0,
+			visits: 100,
+			toPlay: 'black',
+			backend: 'wasm',
+			moves: []
+		});
+		vi.spyOn(engine, 'cancel').mockImplementation(() => {});
+		vi.spyOn(engine, 'evaluateGame').mockImplementation((tree) =>
+			Promise.resolve(
+				getMainLine(tree).map((nodeId, move) => ({ nodeId, move, winRate: 0.5, scoreLead: 0 }))
+			)
+		);
+		vi.spyOn(engine, 'verifyMistakes').mockResolvedValue([]);
+		await render(SgfReplayView, { initialTree: parseSgf(GAME) });
+		await page.getByRole('button', { name: 'Ganze Partie auswerten' }).click();
+		const graph = page.getByRole('slider', { name: 'Gewinnchance Schwarz über die ganze Partie' });
+		await expect.element(graph).toBeVisible();
+		const boardBox = page
+			.getByRole('img', { name: /Brett nach Zug/ })
+			.element()
+			.getBoundingClientRect();
+		const graphBox = graph.element().getBoundingClientRect();
+		expect(graphBox.top).toBeGreaterThan(boardBox.bottom);
+		expect(graphBox.width).toBeGreaterThan(boardBox.width * 0.9);
+		await graph.click();
+		await expect.element(page.getByText(/Zug 1 · Gefangene/)).toBeVisible();
+	});
+
+	it('resizes the board with the splitter and remembers the width', async () => {
+		await page.viewport(1500, 950);
+		const tree = parseSgf(GAME);
+		const view = await render(SgfReplayView, { initialTree: tree });
+		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
+		const board = page.getByRole('img', { name: /Brett nach Zug/ });
+		const boardWidth = () => board.element().getBoundingClientRect().width;
+		const initialWidth = boardWidth();
+		(splitter.element() as HTMLElement).focus();
+		await userEvent.keyboard('{End}');
+		await expect.poll(boardWidth).toBeGreaterThan(initialWidth + 150);
+		const maxWidth = boardWidth();
+		await userEvent.dragAndDrop(splitter, board);
+		await expect.poll(boardWidth).toBeLessThan(maxWidth - 150);
+		await expect.element(page.getByText(/Zug 0 · Gefangene/)).toBeVisible();
+		const adjustedWidth = boardWidth();
+		await view.unmount();
+		await render(SgfReplayView, { initialTree: tree });
+		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
+		await page.viewport(414, 896);
+		await expect.element(splitter).not.toBeInTheDocument();
+		await expect.poll(boardWidth).toBeLessThan(414);
 	});
 
 	it("lays KataGo's line as a variation and switches between the lines", async () => {

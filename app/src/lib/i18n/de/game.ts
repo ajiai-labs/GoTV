@@ -16,7 +16,7 @@ export const game = {
 	'game.screen.broadcast': 'Übertragung',
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Brett größer oder kleiner',
-	'game.screen.splitterValue': 'Brettbereich {percent} Prozent der Breite',
+	'game.screen.splitterValue': 'Brettbreite {width} Pixel',
 	'game.screen.tabs': 'Ansicht',
 	'game.screen.tabChat': 'Chat',
 	'game.screen.tabInfo': 'Info',

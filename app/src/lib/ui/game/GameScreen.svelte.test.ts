@@ -283,24 +283,41 @@ describe('GameScreen', () => {
 		await expect.element(page.getByText('danke')).toBeVisible();
 	});
 
-	it('makes the board bigger or smaller with the splitter, remembered', async () => {
+	it('grows the actual board with the splitter on a wide screen and remembers the width', async () => {
 		mockActions();
 		localStorage.removeItem('gotv.gameSideWidth');
-		await page.viewport(1180, 820);
-		await render(GameScreen, { game: fixtureGame(), playing: true });
+		localStorage.removeItem('gotv.gameBoardWidth');
+		await page.viewport(1900, 1100);
+		const props = { game: fixtureGame(), playing: true };
+		const view = await render(GameScreen, props);
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
-		const before = Number(splitter.element().getAttribute('aria-valuenow'));
-		(splitter.element() as HTMLElement).focus();
-		await userEvent.keyboard('{ArrowRight}{ArrowRight}');
-		const after = Number(splitter.element().getAttribute('aria-valuenow'));
-		expect(after).toBeGreaterThan(before);
-		expect(Number(localStorage.getItem('gotv.gameSideWidth'))).toBe(340);
+		const board = page.getByRole('img', { name: /Zug 2/ });
+		const boardWidth = () => board.element().getBoundingClientRect().width;
+		await expect.element(board).toBeVisible();
+		const sliderValue = (name: 'now' | 'max') =>
+			Number(splitter.element().getAttribute(`aria-value${name}`));
+		await expect.poll(() => sliderValue('max') - sliderValue('now')).toBeGreaterThan(10);
+		await expect.poll(() => boardWidth() - sliderValue('now')).toBeCloseTo(0);
+		const before = boardWidth();
+		await userEvent.dragAndDrop(splitter, page.getByRole('textbox'));
+		await expect.poll(boardWidth).toBeGreaterThan(before + 10);
+		expect(boardWidth()).toBeGreaterThan(950);
+		await userEvent.dragAndDrop(splitter, board);
+		await expect.poll(boardWidth).toBeLessThan(before - 100);
+		const adjustedWidth = boardWidth();
+		await page.viewport(1500, 950);
+		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
+		await view.unmount();
+		await render(GameScreen, props);
+		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
+		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(414, 896);
 	});
 
 	it('dragging the splitter onto the board places no stone', async () => {
 		const actions = mockActions();
 		localStorage.removeItem('gotv.gameSideWidth');
+		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(1180, 820);
 		await render(GameScreen, { game: fixtureGame(), playing: true });
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
@@ -309,6 +326,7 @@ describe('GameScreen', () => {
 		await userEvent.dragAndDrop(splitter, page.getByRole('img', { name: /Brett|board/i }).first());
 		expect(actions.onPlayMove).not.toHaveBeenCalled();
 		expect(Number(splitter.element().getAttribute('aria-valuenow'))).not.toBe(before);
+		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(414, 896);
 	});
 

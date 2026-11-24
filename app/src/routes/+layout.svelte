@@ -96,6 +96,17 @@
 	}
 
 	let appState = $derived(app.state);
+	let wideBoard = $derived(
+		page.route.id === '/nachspielen' ||
+			(!config.guestOnly &&
+				!!appState.currentUser &&
+				((page.route.id === '/beobachten' &&
+					appState.watchGameId != null &&
+					!!appState.gamesById[appState.watchGameId]) ||
+					(page.route.id === '/spielen' &&
+						appState.playGameId != null &&
+						!!appState.gamesById[appState.playGameId])))
+	);
 
 	// Unseen chat messages: direct messages count "major", rooms "minor".
 	let chatBadge = $derived.by(() => {
@@ -174,7 +185,7 @@
 	{/each}
 {/snippet}
 
-<div class="app">
+<div class="app" class:wide-board={wideBoard}>
 	<header class="top">
 		<a
 			class="brand"
@@ -275,6 +286,10 @@
 		padding: 0 max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left));
 		max-width: 1440px;
 		margin: 0 auto;
+	}
+
+	.app.wide-board {
+		max-width: none;
 	}
 
 	.top {

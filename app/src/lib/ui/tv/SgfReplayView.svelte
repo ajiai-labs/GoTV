@@ -19,8 +19,10 @@
 	// are remembered per game. `compact`: board and navigation only (Live).
 	// "Link kopieren" shares a game from an address at the current move.
 	import { onDestroy, tick, untrack } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import Board from '#lib/ui/Board.svelte';
 	import BoardNav from '#lib/ui/BoardNav.svelte';
+	import Splitter from '#lib/ui/Splitter.svelte';
 	import { config } from '#lib/config.ts';
 	import { parseSgf, SgfParseError, getSgfPlayerNames, getSgfRootProp } from '#lib/model/sgf.ts';
 	import { computeGameNodeStates, getGameLine } from '#lib/model/game/tree.ts';
@@ -88,6 +90,50 @@
 
 	// How long "Link kopiert" stays.
 	const COPIED_MS = 3000;
+	const BOARD_WIDTH_KEY = 'gotv.replayBoardWidth';
+	const BOARD_MIN_WIDTH = 320;
+	const BOARD_WIDTH_STEP = 24;
+	const SIDE_MIN_WIDTH = 300;
+	const SPLITTER_WIDTH = 24;
+
+	function loadBoardWidth(): number | null {
+		try {
+			const width = Number(window.localStorage.getItem(BOARD_WIDTH_KEY));
+			return Number.isFinite(width) && width >= BOARD_MIN_WIDTH ? width : null;
+		} catch {
+			return null;
+		}
+	}
+
+	let gameEl: HTMLDivElement | undefined = $state();
+	let gameWidth = $state(0);
+	let windowHeight = $state(0);
+	let preferredBoardWidth = $state(untrack(() => (compact ? null : loadBoardWidth())));
+	let boardMaxWidth = $derived(
+		Math.max(BOARD_MIN_WIDTH, gameWidth - SIDE_MIN_WIDTH - SPLITTER_WIDTH)
+	);
+	let boardWidth = $derived(
+		Math.min(boardMaxWidth, preferredBoardWidth ?? Math.max(BOARD_MIN_WIDTH, windowHeight - 230))
+	);
+
+	function setBoardWidth(width: number) {
+		preferredBoardWidth = Math.max(BOARD_MIN_WIDTH, Math.min(boardMaxWidth, Math.round(width)));
+		try {
+			window.localStorage.setItem(BOARD_WIDTH_KEY, String(preferredBoardWidth));
+		} catch {
+			// not remembered without storage
+		}
+	}
+
+	function onSplitterPointer(clientX: number) {
+		if (gameEl) setBoardWidth(clientX - gameEl.getBoundingClientRect().left - SPLITTER_WIDTH / 2);
+	}
+
+	function onSplitterKey(step: -1 | 1 | 'min' | 'max') {
+		if (step === 'min') setBoardWidth(BOARD_MIN_WIDTH);
+		else if (step === 'max') setBoardWidth(boardMaxWidth);
+		else setBoardWidth(boardWidth + step * BOARD_WIDTH_STEP);
+	}
 
 	let status = $state<'empty' | 'ready' | 'error'>('empty');
 	// The error text, built when shown (it follows a language switch).
@@ -508,6 +554,8 @@
 	);
 </script>
 
+<svelte:window bind:innerHeight={windowHeight} />
+
 {#snippet info()}
 	<p class="info">
 		{#if playerNames.black && playerNames.white}
@@ -719,6 +767,28 @@
 	</section>
 {/snippet}
 
+{#snippet board(position: NonNullable<typeof computed>)}
+	<div class="board-side" class:panel={!compact}>
+		{#if compact}
+			{@render info()}
+		{/if}
+		<Board
+			board={position.board}
+			markup={position.markup}
+			{labels}
+			label={boardLabel}
+			onpoint={onClickPoint}
+		/>
+		<BoardNav
+			bind:move={() => moveNum, (move: number) => changeCurrentNode(line[move])}
+			total={Math.max(0, line.length - 1)}
+		/>
+		{#if compact}
+			{@render captures()}
+		{/if}
+	</div>
+{/snippet}
+
 <div class="replay" class:compact>
 	{#if compact && status === 'empty'}
 		<p class="notice muted" role="status">{t('replay.view.loadingExample')}</p>
@@ -728,53 +798,62 @@
 	{/if}
 
 	{#if status === 'ready' && tree && computed}
-		<div class="game">
-			<div class="board-side" class:panel={!compact}>
-				{#if compact}
-					{@render info()}
-				{/if}
-				<Board
-					board={computed.board}
-					markup={computed.markup}
-					{labels}
-					label={boardLabel}
-					onpoint={onClickPoint}
-				/>
-				<BoardNav
-					bind:move={() => moveNum, (move: number) => changeCurrentNode(line[move])}
-					total={Math.max(0, line.length - 1)}
-				/>
-				{#if compact}
-					{@render captures()}
-				{/if}
-			</div>
-
-			{#if compact}
+		{@const position = computed}
+		{#if compact}
+			<div class="game">
+				{@render board(position)}
 				{@render navigation()}
 				{@render commentBox()}
-			{:else}
-				<div class="side">
-					<header class="head">
-						{@render info()}
-						{@render captures()}
-					</header>
-					{@render navigation()}
-					{#key progressKey || 'replay'}
-						<KataGoPanel
-							{tree}
-							nodeId={currentNode}
-							startEnabled={kataGoStart}
-							onMoves={onKataGoMoves}
-							{onLayLine}
-							onJump={changeCurrentNode}
-						/>
-					{/key}
-					{@render progress()}
-					{@render commentBox()}
-					{@render sources()}
-				</div>
-			{/if}
-		</div>
+			</div>
+		{:else}
+			{#key progressKey || 'replay'}
+				<KataGoPanel
+					{tree}
+					nodeId={currentNode}
+					startEnabled={kataGoStart}
+					onMoves={onKataGoMoves}
+					{onLayLine}
+					onJump={changeCurrentNode}
+				>
+					{#snippet layout(controls: Snippet, graph: Snippet)}
+						<div
+							class="game"
+							bind:this={gameEl}
+							bind:clientWidth={gameWidth}
+							style:--board-width="{boardWidth}px"
+							style:--splitter-width="{SPLITTER_WIDTH}px"
+						>
+							<div class="board-column">
+								{@render board(position)}
+								{@render graph()}
+							</div>
+							<div class="board-splitter">
+								<Splitter
+									label={t('game.screen.splitter')}
+									valuenow={boardWidth}
+									valuemin={BOARD_MIN_WIDTH}
+									valuemax={boardMaxWidth}
+									valuetext={t('game.screen.splitterValue', { width: boardWidth })}
+									onpointer={onSplitterPointer}
+									onkey={onSplitterKey}
+								/>
+							</div>
+							<div class="side">
+								<header class="head">
+									{@render info()}
+									{@render captures()}
+								</header>
+								{@render navigation()}
+								{@render controls()}
+								{@render progress()}
+								{@render commentBox()}
+								{@render sources()}
+							</div>
+						</div>
+					{/snippet}
+				</KataGoPanel>
+			{/key}
+		{/if}
 	{:else if !compact}
 		{@render sources()}
 	{/if}
@@ -793,10 +872,22 @@
 
 	.game {
 		display: grid;
-		/* The board column never gets taller than the screen (iPad landscape). */
-		grid-template-columns: minmax(0, max(340px, calc(100dvh - 230px))) minmax(300px, 1fr);
-		gap: var(--gap);
+		grid-template-columns: minmax(0, var(--board-width)) var(--splitter-width) minmax(0, 1fr);
 		align-items: start;
+	}
+
+	.board-column {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	.board-splitter {
+		display: flex;
+		justify-content: center;
+		/* Keep the grip beside the board even when the analysis makes the page taller. */
+		height: min(var(--board-width), 70dvh);
 	}
 
 	.compact .game {
@@ -1154,6 +1245,11 @@
 	@media (max-width: 900px) {
 		.game {
 			grid-template-columns: minmax(0, 1fr);
+			gap: var(--gap);
+		}
+
+		.board-splitter {
+			display: none;
 		}
 	}
 </style>

@@ -15,7 +15,7 @@ export const game: Translation<typeof de> = {
 	'game.screen.broadcast': 'Broadcast',
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Make the board bigger or smaller',
-	'game.screen.splitterValue': 'Board area {percent} percent of the width',
+	'game.screen.splitterValue': 'Board width {width} pixels',
 	'game.screen.tabs': 'View',
 	'game.screen.tabChat': 'Chat',
 	'game.screen.tabInfo': 'Info',

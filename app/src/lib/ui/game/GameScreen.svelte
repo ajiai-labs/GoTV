@@ -53,21 +53,20 @@
 	const BOTTOM_SPACE = 32;
 	const MIN_HEIGHT = 420;
 
-	// Width of the side column (players, chat) on wide screens; the board gets
-	// the rest. Dragged with the splitter, remembered in this browser.
-	const SIDE_WIDTH_KEY = 'gotv.gameSideWidth';
+	const BOARD_WIDTH_KEY = 'gotv.gameBoardWidth';
 	const SIDE_WIDTH_DEFAULT = 380;
 	const SIDE_WIDTH_MIN = 280;
-	const SIDE_WIDTH_STEP = 20;
-	// The board keeps at least this share of the width.
-	const BOARD_MIN_SHARE = 0.4;
+	const BOARD_MIN_WIDTH = 320;
+	const BOARD_WIDTH_STEP = 20;
+	const SPLITTER_WIDTH = 24;
+	const DEFAULT_GROWTH = 24;
 
-	function loadSideWidth(): number {
+	function loadWidth(key: string, minWidth: number): number | null {
 		try {
-			const value = Number(localStorage.getItem(SIDE_WIDTH_KEY));
-			return value >= SIDE_WIDTH_MIN ? value : SIDE_WIDTH_DEFAULT;
+			const value = Number(localStorage.getItem(key));
+			return Number.isFinite(value) && value >= minWidth ? value : null;
 		} catch {
-			return SIDE_WIDTH_DEFAULT; // storage disabled
+			return null;
 		}
 	}
 
@@ -163,15 +162,27 @@
 	let screenHeight = $derived(Math.max(MIN_HEIGHT, innerHeight - topOffset - BOTTOM_SPACE));
 
 	let mainEl: HTMLElement | undefined = $state();
-	let sideWidth = $state(loadSideWidth());
 	let mainWidth = $state(0);
-	let sideMax = $derived(Math.max(SIDE_WIDTH_MIN, Math.round(mainWidth * (1 - BOARD_MIN_SHARE))));
-	let shownSideWidth = $derived(Math.min(sideWidth, sideMax));
+	let boardAreaHeight = $state(0);
+	let preferredBoardWidth = $state(loadWidth(BOARD_WIDTH_KEY, BOARD_MIN_WIDTH));
+	const savedSideWidth = loadWidth('gotv.gameSideWidth', SIDE_WIDTH_MIN);
+	let boardMaxWidth = $derived(
+		Math.max(0, Math.min(mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN, boardAreaHeight))
+	);
+	let boardMinWidth = $derived(Math.min(BOARD_MIN_WIDTH, boardMaxWidth));
+	let defaultBoardWidth = $derived(
+		savedSideWidth === null
+			? Math.min(mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_DEFAULT, boardMaxWidth - DEFAULT_GROWTH)
+			: mainWidth - SPLITTER_WIDTH - savedSideWidth
+	);
+	let boardWidth = $derived(
+		Math.max(boardMinWidth, Math.min(boardMaxWidth, preferredBoardWidth ?? defaultBoardWidth))
+	);
 
-	function setSideWidth(value: number) {
-		sideWidth = Math.max(SIDE_WIDTH_MIN, Math.min(sideMax, Math.round(value)));
+	function setBoardWidth(value: number) {
+		preferredBoardWidth = Math.max(boardMinWidth, Math.min(boardMaxWidth, Math.round(value)));
 		try {
-			localStorage.setItem(SIDE_WIDTH_KEY, String(sideWidth));
+			localStorage.setItem(BOARD_WIDTH_KEY, String(preferredBoardWidth));
 		} catch {
 			// not remembered without storage
 		}
@@ -179,14 +190,13 @@
 
 	function onSplitterPointer(clientX: number) {
 		if (!mainEl) return;
-		setSideWidth(mainEl.getBoundingClientRect().right - clientX);
+		setBoardWidth(clientX - mainEl.getBoundingClientRect().left - SPLITTER_WIDTH / 2);
 	}
 
 	function onSplitterKey(step: -1 | 1 | 'min' | 'max') {
-		if (step === 'min') setSideWidth(sideMax);
-		else if (step === 'max') setSideWidth(SIDE_WIDTH_MIN);
-		// Arrow right moves the edge right: a bigger board, a narrower side.
-		else setSideWidth(shownSideWidth - step * SIDE_WIDTH_STEP);
+		if (step === 'min') setBoardWidth(boardMinWidth);
+		else if (step === 'max') setBoardWidth(boardMaxWidth);
+		else setBoardWidth(boardWidth + step * BOARD_WIDTH_STEP);
 	}
 
 	function onLeave() {
@@ -264,7 +274,8 @@
 		class="GameScreen-main"
 		bind:this={mainEl}
 		bind:clientWidth={mainWidth}
-		style:--side-width="{shownSideWidth}px"
+		style:--board-width="{boardWidth}px"
+		style:--splitter-width="{SPLITTER_WIDTH}px"
 	>
 		<div class="GameScreen-board-column">
 			{#if liveEvent}
@@ -275,7 +286,7 @@
 					<StreamEmbed event={liveEvent} />
 				</section>
 			{/if}
-			<div class="GameScreen-board-area">
+			<div class="GameScreen-board-area" bind:clientHeight={boardAreaHeight}>
 				<BoardContainer
 					{game}
 					{playing}
@@ -308,12 +319,10 @@
 		<div class="GameScreen-splitter">
 			<Splitter
 				label={t('game.screen.splitter')}
-				valuenow={mainWidth ? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth) : 0}
-				valuemin={Math.round(BOARD_MIN_SHARE * 100)}
-				valuemax={100}
-				valuetext={t('game.screen.splitterValue', {
-					percent: mainWidth ? Math.round((100 * (mainWidth - shownSideWidth)) / mainWidth) : 0
-				})}
+				valuenow={boardWidth}
+				valuemin={boardMinWidth}
+				valuemax={boardMaxWidth}
+				valuetext={t('game.screen.splitterValue', { width: boardWidth })}
 				onpointer={onSplitterPointer}
 				onkey={onSplitterKey}
 			/>
@@ -427,14 +436,13 @@
 
 	.GameScreen-main {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto var(--side-width, 380px);
-		gap: calc(var(--gap) / 2);
+		grid-template-columns: minmax(0, var(--board-width)) var(--splitter-width) minmax(0, 1fr);
 		min-height: 0;
 	}
 
 	.GameScreen-splitter {
 		display: flex;
-		align-items: stretch;
+		justify-content: center;
 	}
 
 	.GameScreen-board-column {
@@ -603,6 +611,7 @@
 	@media (max-width: 900px) {
 		.GameScreen-main {
 			grid-template-columns: minmax(0, 1fr);
+			gap: calc(var(--gap) / 2);
 		}
 
 		/* One column: board on top, nothing to resize. */
