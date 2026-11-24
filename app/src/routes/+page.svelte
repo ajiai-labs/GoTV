@@ -1,315 +1,369 @@
 <script lang="ts">
-	// Live (draft): the stage - stream next to the board - and what comes next.
-	import Board from '#lib/ui/Board.svelte';
-	import PlayerBar from '#lib/ui/PlayerBar.svelte';
-	import WinCurve from '#lib/ui/WinCurve.svelte';
-	import BoardNav from '#lib/ui/BoardNav.svelte';
-	import { finalPosition, sampleCurve, upcoming } from '#lib/demo/index.ts';
+	// Live: the broadcasts running right now - stream on the left, boards on
+	// the right - and below them what is on the channels, the tournaments
+	// that just ended, "Mein GoTV" and "Meine Daten". Works without a KGS
+	// login: streams, OGS boards and replays need none; KGS boards appear
+	// once logged in. Nothing running: the next event and an example.
+	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { app } from '#lib/app.svelte.ts';
+	import {
+		fetchTvChannels,
+		fetchTvEvents,
+		getBroadcastForStream,
+		getNextUpcomingEvent
+	} from '#lib/model/tv.ts';
+	import type { TvBroadcast, TvChannel, TvEvent } from '#lib/model/tv.ts';
+	import { getChannelsOnAir } from '#lib/model/tvChannels.ts';
+	import { kgsTvSource } from '#lib/model/TvSource.ts';
+	import { applyOgsLinks, loadOgsLinks, saveOgsLinks } from '#lib/model/OgsLinks.ts';
+	import {
+		loadFavorites,
+		loadRemindersEnabled,
+		saveFavorites,
+		saveRemindersEnabled,
+		toggleFavorite
+	} from '#lib/model/TvFavorites.ts';
+	import Spinner from '#lib/ui/Spinner.svelte';
+	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
+	import BroadcastCard from '#lib/ui/tv/BroadcastCard.svelte';
+	import { formatEventDateRange } from '#lib/ui/tv/eventDate.ts';
+	import CinemaExample from '#lib/ui/tv/CinemaExample.svelte';
+	import MyGoTv from '#lib/ui/tv/MyGoTv.svelte';
+	import OfflineNotice from '#lib/ui/tv/OfflineNotice.svelte';
+	import RecentReplays from '#lib/ui/tv/RecentReplays.svelte';
+	import { getNotificationPermission } from '#lib/ui/tv/reminders.ts';
+	import StreamEmbed from '#lib/ui/tv/StreamEmbed.svelte';
 
-	// The draft pretends the game is live at move 142: you can step back
-	// through it and return to the current move, like on a real live board.
-	const LIVE_MOVE = 142;
-	const curve = sampleCurve(LIVE_MOVE);
-	let move = $state(LIVE_MOVE);
-	let position = $derived(finalPosition(move));
-	let streamLoaded = $state(false);
+	// "now" and the calendar are refreshed every minute, as before.
+	const REFRESH_MS = 60000;
+
+	let eventsStatus: 'loading' | 'ready' | 'error' = $state('loading');
+	let rawEvents = $state.raw<Array<TvEvent>>([]);
+	let channels = $state.raw<Array<TvChannel>>([]);
+	let now = $state(Date.now());
+	// OGS boards the viewer assigned to events by hand (this browser only).
+	let ogsLinks = $state.raw(loadOgsLinks());
+	// "Mein GoTV" stars and reminders (this browser only).
+	let favorites = $state.raw(loadFavorites());
+	let remindersEnabled = $state(loadRemindersEnabled());
+	let notificationPermission: string | null = $state(getNotificationPermission());
+	let mounted = false;
+
+	function loadChannels() {
+		fetchTvChannels().then(
+			(loaded) => {
+				if (mounted) channels = loaded;
+			},
+			(err: unknown) => console.warn('[tv] Failed to load channels:', err)
+		);
+	}
+
+	function loadEvents() {
+		loadChannels();
+		fetchTvEvents().then(
+			(loaded) => {
+				if (!mounted) return;
+				rawEvents = loaded;
+				eventsStatus = 'ready';
+			},
+			(err: unknown) => {
+				console.warn('[tv] Failed to load live calendar events:', err);
+				if (mounted && !rawEvents.length) eventsStatus = 'error';
+			}
+		);
+	}
+
+	onMount(() => {
+		mounted = true;
+		window.scrollTo(0, 0);
+		loadEvents();
+		const timer = setInterval(() => {
+			now = Date.now();
+			loadEvents();
+		}, REFRESH_MS);
+		return () => {
+			mounted = false;
+			clearInterval(timer);
+		};
+	});
+
+	function onToggleEventFavorite(eventId: string) {
+		favorites = toggleFavorite(favorites, 'events', eventId);
+		saveFavorites(favorites);
+	}
+
+	function onToggleReminders() {
+		const enabled = !(remindersEnabled && notificationPermission === 'granted');
+		saveRemindersEnabled(enabled);
+		remindersEnabled = enabled;
+		if (enabled && notificationPermission === 'default') {
+			void Promise.resolve(window.Notification.requestPermission()).then((permission) => {
+				if (mounted) notificationPermission = permission;
+			});
+		}
+	}
+
+	function onAssignOgsLink(eventId: string, gameId: number | null) {
+		const next = { ...ogsLinks };
+		if (gameId) next[eventId] = gameId;
+		else delete next[eventId];
+		saveOgsLinks(next);
+		ogsLinks = next;
+	}
+
+	let date = $derived(new Date(now));
+	let tvEvents = $derived(applyOgsLinks(rawEvents, ogsLinks));
+	let broadcasts = $derived(
+		kgsTvSource.getLiveBroadcasts(app.state.activeGames, tvEvents, app.state.roomsById, date)
+	);
+	let onAirChannels = $derived(getChannelsOnAir(channels, date));
+	let nextEvent = $derived(getNextUpcomingEvent(tvEvents, date));
+	let tvStreamUrl = $derived(app.state.tvStreamUrl);
+	let openedBroadcast = $derived(
+		tvStreamUrl ? getBroadcastForStream(broadcasts, tvStreamUrl) : null
+	);
+	// The broadcast opened from the chat stands on top, not twice.
+	let listedBroadcasts = $derived(
+		openedBroadcast
+			? broadcasts.filter(({ event }) => event.id !== openedBroadcast.event.id)
+			: broadcasts
+	);
 </script>
 
 <svelte:head>
 	<title>Live – GoTV</title>
 </svelte:head>
 
-<section class="stage" aria-label="Übertragung">
-	<div class="main-column">
-		<div class="video panel">
-			{#if streamLoaded}
-				<div class="video-frame">
-					<p>Hier läuft der Player der EGF.</p>
-				</div>
-			{:else}
-				<div class="video-frame">
-					<p class="live"><span class="dot" aria-hidden="true"></span>Läuft gerade</p>
-					<h1>Europameisterschaft 2026</h1>
-					<p class="who">Finale: Andrii Kravets gegen Ali Jabarin</p>
-					<button class="button button-primary" onclick={() => (streamLoaded = true)}>
-						Stream laden
-					</button>
-					<p class="privacy">Erst dann verbindet sich GoTV mit Twitch.</p>
-				</div>
-			{/if}
-		</div>
+{#snippet broadcastCard(broadcast: TvBroadcast)}
+	<BroadcastCard
+		{broadcast}
+		onOpenReplay={(url: string) => app.openReplay(url)}
+		{now}
+		{onAssignOgsLink}
+		hasManualOgsLink={!!ogsLinks[broadcast.event.id]}
+		favorite={favorites.events.includes(broadcast.event.id)}
+		onToggleFavorite={onToggleEventFavorite}
+	/>
+{/snippet}
 
-		<section class="next" aria-labelledby="next-title">
-			<h2 id="next-title" class="panel-title">Als Nächstes</h2>
-			<ul>
-				{#each upcoming as item (item.id)}
-					<li>
-						<time datetime={item.day}>
-							{new Date(item.day).toLocaleDateString('de-DE', {
-								weekday: 'short',
-								day: 'numeric',
-								month: 'short'
-							})}
-							<span>{item.time}</span>
-						</time>
-						<div>
-							<strong>{item.title}</strong>
-							<span class="muted">{item.detail}</span>
-						</div>
-						<span class="where">{item.where}</span>
-						<button
-							class="star"
-							class:on={item.starred}
-							aria-pressed={item.starred}
-							aria-label="{item.title} merken"
-						>
-							{item.starred ? '★' : '☆'}
-						</button>
-					</li>
-				{/each}
-			</ul>
+<div class="live">
+	<OfflineNotice />
+
+	{#if tvStreamUrl}
+		<section class="opened" aria-labelledby="opened-title">
+			<header class="opened-head">
+				<h2 id="opened-title" class="panel-title">Stream aus dem Chat</h2>
+				<button
+					type="button"
+					class="button opened-close"
+					aria-label="Stream schließen"
+					title="Stream schließen"
+					onclick={() => app.actions.onCloseTvStream()}
+				>
+					×
+				</button>
+			</header>
+			{#if openedBroadcast}
+				{#key openedBroadcast.event.id}
+					{@render broadcastCard(openedBroadcast)}
+				{/key}
+			{:else}
+				{#key tvStreamUrl}
+					<div class="opened-stream">
+						<StreamEmbed url={tvStreamUrl} />
+						<p class="muted">Diesem Stream ist kein KGS-Brett zugeordnet.</p>
+					</div>
+				{/key}
+			{/if}
 		</section>
-	</div>
+	{/if}
 
-	<div class="board-panel panel">
-		<PlayerBar color="white" name="Ali Jabarin" rank="3p" clock="0:41" />
-		<Board
-			board={position.board}
-			lastMove={position.lastMove}
-			label="Partie Kravets gegen Jabarin nach Zug {move}"
-		/>
-		<PlayerBar color="black" name="Andrii Kravets" rank="3p" clock="1:12" toMove />
-		<BoardNav bind:move total={LIVE_MOVE} latest={LIVE_MOVE} />
-		<div class="move-line">
-			{#if move < LIVE_MOVE}
-				<span>Zug {move}, live ist Zug {LIVE_MOVE}</span>
-				<button class="link" onclick={() => (move = LIVE_MOVE)}>Zum aktuellen Zug</button>
-			{:else}
-				<span>Zug {move}</span>
-				<span class="muted">OGS, live verbunden</span>
+	{#if eventsStatus === 'loading'}
+		<Spinner label="Übertragungen werden geladen …" />
+	{:else if broadcasts.length}
+		<h1 class="live-title"><span class="dot" aria-hidden="true"></span>Läuft gerade</h1>
+		{#each listedBroadcasts as broadcast (broadcast.event.id)}
+			{@render broadcastCard(broadcast)}
+		{/each}
+	{:else}
+		<section class="empty" aria-labelledby="empty-title">
+			<div>
+				<h1 id="empty-title">Gerade keine Übertragung.</h1>
+				{#if eventsStatus === 'error'}
+					<p class="muted" role="alert">
+						Der Kalender konnte nicht geladen werden (events.json nicht erreichbar).
+					</p>
+				{:else if nextEvent}
+					<p class="next">
+						Nächstes Event: <strong>{nextEvent.name}</strong> ({formatEventDateRange(nextEvent)})
+					</p>
+				{/if}
+			</div>
+			<a class="button button-primary" href={resolve('/kalender')}>Zum Kalender</a>
+		</section>
+		<CinemaExample />
+	{/if}
+
+	<div class="below">
+		<div class="below-main">
+			{#if onAirChannels.length}
+				<p class="on-air">
+					<span>
+						Jetzt auf den Kanälen (geplant):
+						<strong>{onAirChannels.map((channel) => channel.name).join(', ')}</strong>
+					</span>
+					<a class="button" href={resolve('/kanaele')}>Zu den Kanälen</a>
+				</p>
 			{/if}
+			<RecentReplays
+				events={tvEvents}
+				{now}
+				onOpenReplay={(url: string) => app.openReplay(url)}
+				justEnded
+			/>
+			<MyGoTv
+				{favorites}
+				{channels}
+				events={tvEvents}
+				{now}
+				{remindersEnabled}
+				{notificationPermission}
+				{onToggleReminders}
+			/>
 		</div>
-		<WinCurve values={curve} current={move} onmove={(m: number) => (move = m)} />
+		<div class="below-side">
+			<BackupPanel />
+		</div>
 	</div>
-</section>
+</div>
 
 <style>
-	.stage {
-		display: grid;
-		grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
-		gap: var(--gap);
-		align-items: start;
-	}
-
-	.video {
-		background: var(--stage);
-		color: var(--stage-ink);
-		border-color: var(--stage);
-	}
-
-	.video-frame {
-		aspect-ratio: 16 / 9;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		justify-content: flex-end;
-		gap: 10px;
-		padding: clamp(20px, 4vw, 44px);
-	}
-
-	.video-frame h1 {
-		margin: 0;
-		font-size: clamp(1.6rem, 3.4vw, 2.6rem);
-		line-height: 1.05;
-		letter-spacing: -0.02em;
-		font-weight: 700;
-		max-width: 16ch;
-	}
-
-	.video-frame p {
-		margin: 0;
-	}
-
-	.who {
-		opacity: 0.8;
-		font-size: 1.05rem;
-	}
-
 	.live {
 		display: flex;
+		flex-direction: column;
+		gap: calc(var(--gap) * 1.2);
+	}
+
+	.live-title {
+		display: flex;
 		align-items: center;
-		gap: 8px;
-		font-weight: 600;
+		gap: 10px;
+		margin: 4px 0 -8px;
+		font-size: var(--title-size);
+		font-weight: var(--title-weight);
 	}
 
 	.dot {
 		width: 10px;
 		height: 10px;
 		border-radius: 50%;
-		background: #7fd3b2;
-		box-shadow: 0 0 0 4px rgba(127, 211, 178, 0.25);
+		background: var(--live);
+		box-shadow: 0 0 0 4px var(--accent-soft);
 	}
 
-	.privacy {
-		font-size: 0.85em;
-		opacity: 0.65;
-	}
-
-	.board-panel {
-		padding: 10px 14px 14px;
-	}
-
-	.move-line {
+	.opened {
 		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.opened-head {
+		display: flex;
+		align-items: center;
 		justify-content: space-between;
-		padding: 6px 2px 10px;
-		font-size: 0.9em;
+		gap: 10px;
 	}
 
-	.main-column {
-		display: flex;
-		flex-direction: column;
-		gap: calc(var(--gap) * 1.2);
-		min-width: 0;
-	}
-
-	.link {
-		border: 0;
-		padding: 0;
-		background: none;
-		color: var(--accent);
-		font-weight: 600;
-		cursor: pointer;
-		text-decoration: underline;
-		text-underline-offset: 2px;
-	}
-
-	.next .panel-title {
-		padding-left: 0;
-	}
-
-	ul {
-		list-style: none;
-		margin: 0;
+	.opened-head .panel-title {
 		padding: 0;
 	}
 
-	li {
-		display: grid;
-		grid-template-columns: 7.5rem minmax(0, 1fr) auto auto;
-		align-items: center;
-		gap: 16px;
-		padding: 12px 0;
-		border-bottom: 1px solid var(--rule);
-	}
-
-	li div {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-	}
-
-	time {
-		display: flex;
-		flex-direction: column;
-		font-weight: 600;
-	}
-
-	time span {
-		font-weight: 400;
-		color: var(--ink-soft);
-	}
-
-	.where {
-		color: var(--ink-soft);
-		font-size: 0.9em;
-	}
-
-	.star {
-		border: 0;
-		background: none;
-		font-size: 1.3rem;
-		color: var(--ink-soft);
-		cursor: pointer;
-		padding: 4px 6px;
-	}
-
-	.star.on {
-		color: #c8962b;
-	}
-
-	/* Oldschool: framed windows, a black video area, a list like a table */
-	:global([data-design='oldschool']) .stage {
-		grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr);
-	}
-
-	:global([data-design='oldschool']) .video-frame {
-		align-items: center;
+	.opened-close {
+		min-width: 40px;
 		justify-content: center;
-		text-align: center;
+		font-size: 1.2rem;
+		line-height: 1;
 	}
 
-	:global([data-design='oldschool']) .video-frame h1 {
-		font-size: 20px;
-		max-width: none;
-		letter-spacing: 0;
+	.opened-stream {
+		max-width: 900px;
+	}
+
+	.opened-stream p {
+		margin: 6px 0 0;
+	}
+
+	.empty {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 10px 20px;
+	}
+
+	.empty h1 {
+		margin: 4px 0 0;
+		font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+		letter-spacing: -0.015em;
+	}
+
+	.empty p {
+		margin: 4px 0 0;
+	}
+
+	.below {
+		display: grid;
+		grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
+		gap: var(--gap);
+		align-items: start;
+	}
+
+	.below-main,
+	.below-side {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gap);
+		min-width: 0;
+	}
+
+	.on-air {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px 16px;
+		margin: 0;
+		padding: 10px 14px;
+		border-left: 4px solid var(--live);
+		border-radius: var(--radius-s);
+		background: var(--surface);
+	}
+
+	:global([data-design='oldschool']) .live-title {
+		margin: 0 0 -4px;
 	}
 
 	:global([data-design='oldschool']) .dot {
-		background: var(--live);
+		border-radius: 0;
 		box-shadow: none;
+	}
+
+	:global([data-design='oldschool']) .empty h1 {
+		font-size: 16px;
+		letter-spacing: 0;
+	}
+
+	:global([data-design='oldschool']) .on-air {
+		border: 2px solid;
+		border-color: #ffffff #808080 #808080 #ffffff;
+		border-left: 4px solid var(--live);
 		border-radius: 0;
 	}
 
-	:global([data-design='oldschool']) .board-panel {
-		padding: 4px;
-	}
-
-	:global([data-design='oldschool']) .next {
-		background: var(--surface);
-		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
-	}
-
-	:global([data-design='oldschool']) .next .panel-title {
-		padding-left: 6px;
-	}
-
-	:global([data-design='oldschool']) li {
-		padding: 4px 6px;
-		gap: 10px;
-		background: var(--surface-sunk);
-		border-bottom: 1px solid #d4d0c8;
-	}
-
 	@media (max-width: 900px) {
-		.stage {
+		.below {
 			grid-template-columns: minmax(0, 1fr);
-		}
-
-		/* Portrait: video, then the board, then what comes next */
-		.main-column {
-			display: contents;
-		}
-
-		.next {
-			order: 3;
-		}
-
-		.board-panel {
-			max-width: 640px;
-			width: 100%;
-			justify-self: center;
-		}
-	}
-
-	@media (max-width: 560px) {
-		li {
-			grid-template-columns: 5.5rem minmax(0, 1fr) auto;
-		}
-
-		.where {
-			display: none;
 		}
 	}
 </style>

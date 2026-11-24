@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Settings (draft): choose the design. More settings follow in phase 2b.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 
 	// Fixed colours per option, so each card shows its own design whatever
 	// is chosen right now.
@@ -44,6 +45,10 @@
 		{/each}
 	</div>
 </fieldset>
+
+<section class="data" aria-label="Meine Daten">
+	<BackupPanel />
+</section>
 
 <style>
 	h1 {
@@ -155,6 +160,11 @@
 		width: 22%;
 		height: 18px;
 		border-radius: 9px;
+	}
+
+	.data {
+		max-width: 760px;
+		margin-top: calc(var(--gap) * 1.6);
 	}
 
 	:global([data-design='oldschool']) h1 {

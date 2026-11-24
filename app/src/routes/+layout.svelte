@@ -12,6 +12,7 @@
 	import UserDetailsModal from '#lib/ui/user/UserDetailsModal.svelte';
 	import FeedbackModal from '#lib/ui/FeedbackModal.svelte';
 	import UnderConstructionModal from '#lib/ui/UnderConstructionModal.svelte';
+	import ReminderWatcher from '#lib/ui/tv/ReminderWatcher.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -144,6 +145,9 @@
 	{#if state.userDetailsRequest}
 		<UserDetailsModal />
 	{/if}
+	<!-- "Mein GoTV": notifications 10 min before a starred event, app-wide -->
+	<ReminderWatcher />
+
 	{#if state.showUnderConstruction}
 		<UnderConstructionModal onClose={() => app.actions.onHideUnderConstruction()} />
 	{/if}
