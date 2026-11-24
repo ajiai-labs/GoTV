@@ -1,3 +1,5 @@
+import { config } from '../config';
+
 // Offline support of the web version (GitHub Pages, "yarn build:pages"):
 // registers public/gotv-sw.js. The desktop app serves itself from this
 // computer and needs no service worker; the development server must not
@@ -21,11 +23,16 @@ export function shouldRegisterOffline(env: Record<string, any>): boolean {
 export function registerOfflineSupport() {
 	const container = navigator.serviceWorker;
 
-	if (!shouldRegisterOffline(process.env) || !container) {
+	const env = {
+		NODE_ENV: config.dev ? 'development' : 'production',
+		REACT_APP_GUEST_ONLY: config.guestOnly ? 'true' : ''
+	};
+
+	if (!shouldRegisterOffline(env) || !container) {
 		return;
 	}
 
-	const base = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
+	const base = config.basePath.replace(/\/+$/, '');
 	const url = base + '/gotv-sw.js?v=' + getBuildVersion();
 	container
 		.register(url, {

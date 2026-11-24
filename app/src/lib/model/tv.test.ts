@@ -1,3 +1,4 @@
+import { config } from '../config';
 import {
 	getLiveGames,
 	getLiveEventGames,
@@ -1093,18 +1094,14 @@ describe('fetchTvEvents', () => {
 
 	beforeEach(() => {
 		originalFetch = global.fetch;
-		originalApiUrl = process.env.REACT_APP_API_URL;
+		originalApiUrl = config.apiUrl;
 
 		_resetTvEventsCache();
 	});
 	afterEach(() => {
 		global.fetch = originalFetch;
 
-		if (originalApiUrl === undefined) {
-			delete process.env.REACT_APP_API_URL;
-		} else {
-			process.env.REACT_APP_API_URL = originalApiUrl;
-		}
+		config.apiUrl = originalApiUrl;
 
 		vi.restoreAllMocks();
 	});
@@ -1178,7 +1175,7 @@ describe('fetchTvEvents', () => {
 		expect(global.fetch).toHaveBeenCalledTimes(1);
 	});
 	it('uses the timer-updated local calendar on desktop and refreshes it after five minutes', async () => {
-		process.env.REACT_APP_API_URL = '/json/access';
+		config.apiUrl = '/json/access';
 		const clock = vi.spyOn(Date, 'now').mockReturnValue(0);
 		global.fetch = vi.fn(() =>
 			okResponse({

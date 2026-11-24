@@ -3,6 +3,7 @@ import { normalizeUrl } from '../util/urls';
 import type { GameChannel, GameRole, Room, Index } from './types';
 import { validateChannelKind, validateChannelSchedule } from './tvChannels';
 import type { ChannelKind, ChannelSlot } from './tvChannels';
+import { config, isDesktop } from '../config';
 // All games from the received game lists that are actually in progress:
 // not over and with both a black and a white player
 export function getLiveGames(games: Array<GameChannel>): Array<GameChannel> {
@@ -410,7 +411,7 @@ export const REMOTE_EVENTS_URL =
 	'https://raw.githubusercontent.com/ajiai-labs/GoTV/master/public/tv/events.json';
 // Absolute, so it also resolves when the page itself is at /tv/; under a
 // sub-path (GitHub Pages: /GoTV) PUBLIC_URL carries it.
-const LOCAL_EVENTS_URL = (process.env.PUBLIC_URL || '') + '/tv/events.json';
+const LOCAL_EVENTS_URL = config.basePath + '/tv/events.json';
 const EVENTS_CACHE_MS = 60 * 60 * 1000; // 1 hour
 
 type TvData = {
@@ -531,7 +532,7 @@ function fetchAndValidateTvData(url: string): Promise<TvData> {
 // memory for an hour.
 function fetchTvData(): Promise<TvData> {
 	// The desktop timer updates the installed local copy without a new build.
-	const desktop = process.env.REACT_APP_API_URL === '/json/access';
+	const desktop = isDesktop();
 	const cacheMs = desktop ? 5 * 60 * 1000 : EVENTS_CACHE_MS;
 
 	if (_tvDataCache && Date.now() - _tvDataCache.fetchedAt < cacheMs) {

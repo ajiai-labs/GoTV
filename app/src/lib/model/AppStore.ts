@@ -1,5 +1,6 @@
 import { get, set } from 'idb-keyval';
 import type { AppState, KgsMessage } from './types';
+import { config } from '../config';
 export class AppStore {
 	_state: {
 		appState: AppState;
@@ -15,7 +16,7 @@ export class AppStore {
 		this._state = {
 			appState: initialState
 		};
-		this._debug = process.env.NODE_ENV === 'development';
+		this._debug = config.dev;
 		this._recording = false;
 		this._recordedMessages = [];
 	}

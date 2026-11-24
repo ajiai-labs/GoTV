@@ -6,6 +6,7 @@ import { handleUserMessage } from './user';
 import { handleChannelMessage } from './channel';
 import { handleConversationMessage } from './conversation';
 import { handlePlaybackMessage } from './playback';
+import { config } from '../config';
 export * from './types';
 export * from './appState';
 export * from './AppStore';
@@ -30,7 +31,7 @@ export function handleMessage(prevState: AppState, msg: KgsMessage): AppState {
 	nextState = handleConversationMessage(nextState, msg);
 	nextState = handlePlaybackMessage(nextState, msg);
 
-	if (process.env.NODE_ENV === 'development') {
+	if (config.dev) {
 		if (prevState === nextState && !IGNORED_MESSAGE_TYPES[msg.type]) {
 			console.log('No change', msg.type, msg);
 		}

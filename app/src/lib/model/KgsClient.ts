@@ -1,6 +1,7 @@
 import type { KgsClientState, KgsMessage } from './types';
 import { isJsError, isRecord } from '../util/error';
 import { escapeUnicode } from '../util/string';
+import { config } from '../config';
 export class ApiError extends Error {
 	type: string;
 	xhr: XMLHttpRequest;
@@ -24,14 +25,14 @@ export class KgsClient {
 	state: KgsClientState;
 	_onChange: StateChangeListener | null | undefined = null;
 	_onMessages: ((messages: Array<KgsMessage>) => any) | null | undefined;
-	_debug: boolean = process.env.NODE_ENV === 'development';
+	_debug: boolean = config.dev;
 	_apiUrl: string;
 
 	constructor(state: KgsClientState = initialClientState) {
 		this.state = state;
 
-		if (process.env.REACT_APP_API_URL) {
-			this._apiUrl = process.env.REACT_APP_API_URL;
+		if (config.apiUrl) {
+			this._apiUrl = config.apiUrl;
 		} else {
 			const isProd = window.location.host.indexOf('gokgs.com') !== -1;
 			const isSafari = window.navigator.vendor && window.navigator.vendor.indexOf('Apple') > -1;
