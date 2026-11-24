@@ -4,8 +4,10 @@
 
 <h1 align="center">GoTV</h1>
 
-GoTV adds live Go broadcasts, a tournament calendar, and SGF replay on top
-of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
+GoTV is a Go TV app: live Go broadcasts with the game board next to the
+stream, a tournament calendar, Go channels, and game replay with KataGo
+analysis. It runs in the browser, on a tablet, and as a desktop app on Linux,
+and it is also a full client for the [KGS Go Server](http://www.gokgs.com/).
 
 <p align="center">
   <a href="https://ajiai-labs.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a><br>
@@ -14,17 +16,12 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
 </p>
 
-> **Note:** GoTV is an independent project that grew out of
-> [jkk/shinkgs](https://github.com/jkk/shinkgs) (Shin KGS by Justin Kramer, no
-> longer maintained since 2023). It is **not** the official Shin KGS client, it
-> is **not** operated by or affiliated with KGS Go Server, and it uses **no**
-> KGS logos or trademarks. The code taken from Shin KGS stays under its MIT
-> license - see `LICENSE.txt`.
+**New interface in progress:** GoTV is moving to Svelte 5 + TypeScript with two
+designs to choose from, "Modern" and "Oldschool". Preview with sample data:
+https://ajiai-labs.github.io/GoTV/neu/ - plan and status in
+[`docs/umbau-svelte.md`](docs/umbau-svelte.md).
 
-- The upstream project's **official stable version** is available at https://shin.gokgs.com.
-- The upstream project's **development version** (less stable) is available at https://shinkgs-master.now.sh.
-
-## What GoTV adds
+## What GoTV does
 
 - **Live:** tournaments that are running right now - with the official
   YouTube/Twitch player where a stream exists, and with the game boards
@@ -105,40 +102,38 @@ click (two-click solution).
 
 <img src="./docs/screenshots/tv-nachspielen.png" width="700">
 
-## Goals
+## KGS client
 
-* First-class web and mobile experience
-* Retain community vibe of KGS
-* Start small, release early
-* Work towards native versions (Electron, React Native, Cordova)
-* [Bus factor](https://en.wikipedia.org/wiki/Bus_factor) > 1
+Logged in to KGS, GoTV is a complete KGS client: game lists, watching games with
+chat, room chat, direct messages, user details, challenges (create, propose,
+negotiate) and playing. Not yet available: automatch, rengo/simul and
+admin tools.
 
-## Progress
+## New interface (Svelte 5)
 
-- [x] Game lists
-- [x] Game spectating and chat
-- [x] Room chat
-- [x] User chat (direct messaging)
-- [x] View and edit user details
-- [x] Submit challenge proposal (no negotiating)
-- [x] Create challenge
-- [x] Negotiate challenge
-- [ ] Automatch
-- [x] Basic game playing
-- [ ] Full-featured game playing (fine-tuned UI, rengo, simul)
-- [ ] Review tools
-- [ ] Admin/moderation tools
-- [ ] Everything else
+The current app (React, in the repository root) keeps running until the new one
+in [`app/`](app/) can do everything it does - including on the iPad and in the
+desktop app. Phases:
 
-For more details, look at [the milestones](https://github.com/jkk/shinkgs/milestones)
+- [x] Phase 0 - new app set up (SvelteKit, TypeScript, Vite, tests also in WebKit)
+- [x] Phase 1 - all logic moved to TypeScript
+- [ ] Phase 2a - two designs, "Modern" and "Oldschool", switchable in the settings:
+  draft online at https://ajiai-labs.github.io/GoTV/neu/, waiting for approval
+- [ ] Phase 2b - KGS core in the new design
+- [ ] Phase 3 - playing
+- [ ] Phase 4 - GoTV parts (Live, Kalender, Kanäle, Nachspielen, KataGo, ...)
+- [ ] Phase 5 - desktop app builds the new interface
+- [ ] Phase 6 - switch over
+
+Details: [`docs/umbau-svelte.md`](docs/umbau-svelte.md), developer notes:
+[`app/README.md`](app/README.md).
 
 ## Contributing
 
-Contributions welcome. Please check the [milestones](https://github.com/jkk/shinkgs/milestones) and the [issues](https://github.com/jkk/shinkgs/issues) to help coordinate efforts. Feel free to create an issue if there isn't one already for what you have in mind.
-
-Issues with the ["difficulty-easy"](https://github.com/jkk/shinkgs/issues?q=is%3Aopen+is%3Aissue+label%3Adifficulty-easy) label are good tasks to get started on. Reach out if you need any guidance!
-
-Discord chat group for anyone interested in helping: https://discord.gg/vwzxdVr
+Pull requests are welcome at [ajiai-labs/GoTV](https://github.com/ajiai-labs/GoTV).
+The easiest start is a calendar entry or a channel in `public/tv/events.json` - see
+"Events eintragen" below. Every pull request runs the full CI (lint, Flow, tests,
+build, and the new app's tests in Chromium and WebKit).
 
 ## Desktop-Installation (Linux, GNOME)
 
@@ -341,80 +336,46 @@ live check - hence "(geplant)".
 
 ## Code Overview
 
-This project uses JavaScript, React, and ES6+ with [Flow](https://flow.org/) types. [VS Code](https://code.visualstudio.com/) (with eslint and flow extensions added) is a great editor for this setup.
+The current app (repository root) uses JavaScript, React, and ES6+ with [Flow](https://flow.org/) types. [VS Code](https://code.visualstudio.com/) (with eslint and flow extensions added) is a great editor for this setup.
 
 State is managed with a Redux-like pattern: there is a single, primary source of truth for app state, plus a bit of component-local state. Messages describing actions are dispatched, which handlers then process to produce the next app state. Unlike typical Redux, no implicit context is used. Everything is passed down through props.
 
+The new interface in [`app/`](app/) uses Svelte 5, SvelteKit (static, no server),
+TypeScript and Vite; its logic (`app/src/lib/model`, `app/src/lib/util`) is the same
+as in `src/model` and `src/util`, moved to TypeScript.
+
 ## Development Setup
 
-You'll need [Node.js](https://nodejs.org/en/) and [Yarn V1](https://classic.yarnpkg.com/en/).
-
-To install and start a local dev server, run:
+You'll need [Node.js](https://nodejs.org/en/) 24 and Yarn 1 (via corepack:
+`corepack enable`).
 
 ```
 yarn install
-yarn start
+yarn start            # dev server on port 3000 (PORT=3100 yarn start for another port)
 ```
 
-Requests are sent to the official KGS API by default and are proxied through the Webpack development server. If you would prefer to send requests to the KGS beta server, use the alternative `start:beta` script:
+Requests go to the official KGS API and are proxied through the development
+server. `yarn start:beta` uses the KGS beta server instead (HTTPS with a
+self-signed certificate; accounts at https://beta.gokgs.com/register/index.html).
+
+Before pushing, the same checks as the CI:
 
 ```
-yarn start:beta
+yarn lint && yarn flow && CI=true yarn build
+CI=true yarn test --watchAll=false --testPathPattern="src/(model|util|ui)"
+python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo
 ```
 
-Making requests to the beta server will require HTTPS, so you will need to tell your browser to accept the self-signed certificate in order to access the page.
-
-If you're password from the regular KGS server doesn't work (or you want another
-account to test with) you can create a new one at
-https://beta.gokgs.com/register/index.html.
-
-For setting up a standalone web server you can generate just the optimized production code with ```yarn build```.  This creates a build folder which can be run locally with ```yarn start:server``` or you can copy the tree to another server and run them from there.  The production/beta service is currently served by nginx with a simple config like this:
-
-```
-server {
-  server_name shin.gokgs.com;
-  listen [::]:80; # if you want to allow unsecure access, o/w redirect
-  location / {
-    root /var/www/shinkgs/;
-    add_header  X-nginx-rule 80-shinkgs always;
-    try_files $uri $uri/ /;
-  }
-  # add letsencrypt config here for https
-```
-
-We use Travis as a continuous integration service. The [Travis job](.travis.yml) will run `yarn lint` and `yarn flow` and fails if those fail. So make sure to use those commands locally before pushing.
+The new interface has its own commands, see [`app/README.md`](app/README.md).
 
 ## Deployment
 
-The official and stable build lives at https://shin.gokgs.com. Each commit is also built and deployed using [Vercel](https://www.vercel.com) (previosly called *Now*) on:
-
-```
-https://shinkgs-BRANCH.now.sh
-```
-
-With `BRANCH` being one of the Git branches of this repository. For example, a live version of master is always available at https://shinkgs-master.now.sh. **Warning**: the `master` branch should always work but is certainly not bullet-proof and bug-free. Use the [official build](https://shin.gokgs.com) for any sensitive games (such as tournaments).
-
-If you are developing the app and want to deploy in the cloud, use the [Vercel service](https://www.vercel.com):
-
-```
-# Install `vercel` globally
-yarn global add vercel 
-
-# Deploy the project.
-vercel
-```
-
-This builds the app then pushes it out to the cloud. If you have not used Vercel before, you will be prompted to log-in using your email before deploying.
-
-## Troubleshooting
-
-### Installing Node.js on Windows
-
-It is highly recommended that you install the [Chocolatey package manager](https://chocolatey.org/) before installing Node.js on Windows. After Chocolatey is installed, make sure to check the 'Automatically install the necessary tools' checkbox when prompted during the Node.js installation. These tools are needed to build some ShinKGS dependencies.
-
-### Vercel is not recognized
-
-If your system does not recognize `vercel` as a command after running `yarn global add vercel`, make sure that the Yarn `bin` directory is a part of your `path` environment variable. For MacOS/Linux, this directory is usually `~/.yarn/bin`. For Windows, it will be something like `C:\Users\username\AppData\Local\Yarn\bin`. Most of the time this directory should get added to your path automatically when installing Yarn.
+- **Web version:** every push to `master` runs the CI (`.github/workflows/ci.yml`)
+  and publishes https://ajiai-labs.github.io/GoTV/ (guest TV, `yarn build:pages`)
+  plus the preview of the new interface under `/GoTV/neu/`.
+- **Calendar data:** a daily workflow imports new events into
+  `public/tv/events.json`; the web version loads that file at runtime.
+- **Desktop app:** `desktop/install.sh` builds and installs it locally (see above).
 
 ## References
 
@@ -426,3 +387,11 @@ If your system does not recognize `vercel` as a command after running `yarn glob
 
 * [Go Universe](https://github.com/IlyaKirillov/GoUniverse)
 * [KGS Leben](https://github.com/stephenmartindale/kgs-leben)
+
+## Origin and license
+
+GoTV is an independent project. It started from the code of
+[jkk/shinkgs](https://github.com/jkk/shinkgs) (Shin KGS by Justin Kramer, no longer
+maintained since 2023); that code stays under its MIT license, see `LICENSE.txt`.
+GoTV is not the official Shin KGS client, it is not operated by or affiliated with
+KGS Go Server, and it uses no KGS logos or trademarks.

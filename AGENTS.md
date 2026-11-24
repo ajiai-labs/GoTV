@@ -1,13 +1,19 @@
-# GoTV (hervorgegangen aus ShinKGS)
+# GoTV
 
-Eigenständiges Projekt `ajiai-labs/GoTV`, hervorgegangen aus jkk/shinkgs (React 16,
-Flow, react-scripts 3.4.1, SCSS); die Fork-Verbindung hat der Nutzer am 24.11.2026 gelöst
-("Leave fork network"). `LICENSE.txt` (MIT, Justin Kramer) bleibt für den übernommenen Code.
-Web-Client für den KGS Go Server über die JSON-API, erweitert zu "GoTV" — drei Bausteine:
+Eigenständige App `ajiai-labs/GoTV` (Wunsch 24.11.2026: nach außen als eigene App auftreten,
+nicht als Fork - README, Seitenbeschreibung und Repo-Beschreibung entsprechend). Go-TV:
+Übertragungen mit Brett neben dem Stream, Turnierkalender, Go-Kanäle, Nachspielen mit
+KataGo; dazu vollständiger KGS-Client. Entstanden aus jkk/shinkgs (React 16, Flow,
+react-scripts 3.4.1, SCSS); die Fork-Verbindung hat der Nutzer am 24.11.2026 gelöst
+("Leave fork network"). `LICENSE.txt` (MIT, Justin Kramer) bleibt für den übernommenen
+Code, der Herkunftshinweis steht in der README unter "Origin and license".
+Neue Oberfläche (Svelte 5) in `app/`, siehe "Umbau auf Svelte 5" unten.
 
-1. **Live:** starke Partien, die gerade auf KGS laufen, prominent anzeigen und beobachten.
+Ursprüngliche drei Bausteine:
+
+1. **Live:** laufende Übertragungen mit Video und Brettern (KGS/OGS).
 2. **Kalender:** Turniere mit Übertragung (YouTube/Twitch), Stream direkt in der App.
-3. **Nachspielen:** SGF einer Profipartie laden und Zug für Zug auf dem ShinKGS-Brett durchgehen.
+3. **Nachspielen:** SGF einer Profipartie laden und Zug für Zug durchgehen.
 
 Referenz-Logik (Rust, funktioniert bereits): `~/Projekte/aktiv/Tiger-s-Mouth`
 Nur LOGIK und Datenschemata übernehmen, portiert nach JavaScript/Flow im ShinKGS-Stil.
@@ -608,6 +614,14 @@ ausdrücklichen Wunsch). Erledigt aus dem externen Feedback: cmdtest-Hinweis.
 in `app/` (SvelteKit + TypeScript + Vite), eigenes modernes Design (kein CGoban-/Shin-KGS-
 Nachbau), Logik wird übernommen, die alte App läuft bis zum Umschalten weiter. Vor dem Bau der
 Oberfläche gibt der Nutzer einen Design-Entwurf frei (Phase 2a).
+Stand 24.11.2026: Phasen 0 und 1 fertig; Phase 2a als Entwurf gebaut (Commit 1ca80f7) und
+online unter https://ajiai-labs.github.io/GoTV/neu/ (CI legt `app/` mit
+`BASE_PATH=/GoTV/neu` neben die alte Web-Version, `gotv-sw.js` lässt `/neu/` aus). Zwei
+Designs "Modern" und "Oldschool" in Einstellungen umschaltbar; GoTV-Logo
+(`desktop/icons/gotv.svg`) oben links auf jeder Seite (Wunsch des Nutzers). Details in
+`docs/umbau-svelte.md` ("Phase 2a – Stand"). Wartet auf Freigabe durch den Nutzer, dann
+Phase 2b. Gate der neuen App: `cd app && npm run check && npm run lint && npm test &&
+npm run build`. Imports aus `src/lib` als `#lib/...` mit Dateiendung (SvelteKit 3).
 
 Offen bleibt außerdem:
 
