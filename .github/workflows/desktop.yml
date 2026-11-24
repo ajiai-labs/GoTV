@@ -67,17 +67,30 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft \
-              --target "$GITHUB_SHA" \
-              --title "GoTV Desktop $VERSION" \
-              --notes "GoTV als Desktop-App für Windows, macOS und Linux.
+          # An existing release for this tag (also a draft from an earlier
+          # run) is reused; the release list can lag right after creating,
+          # so it is read a few times.
+          find_id() {
+            gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+              --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n 1
+          }
+          ID=$(find_id)
+          if [ -z "$ID" ]; then
+            NOTES="GoTV als Desktop-App für Windows, macOS und Linux.
 
           Installation und Hinweise zur Warnung beim ersten Start (die Apps sind nicht signiert):
           https://github.com/ajiai-labs/GoTV/blob/master/desktop/tauri/README.md"
+            # The id comes straight from the answer - no waiting for the list.
+            ID=$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases" \
+              -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" \
+              -f name="GoTV Desktop $VERSION" -f body="$NOTES" \
+              -F draft=true -F prerelease=false --jq .id)
           fi
-          ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n 1)
+          for attempt in 1 2 3 4 5; do
+            [ -n "$ID" ] && break
+            sleep 5
+            ID=$(find_id)
+          done
           test -n "$ID"
           echo "release_id=$ID" >> "$GITHUB_OUTPUT"
 
