@@ -1,213 +1,136 @@
 <script lang="ts">
-	// Nachspielen (draft): the board large, beside it moves, KataGo and the curve.
-	import Board from '#lib/ui/Board.svelte';
-	import PlayerBar from '#lib/ui/PlayerBar.svelte';
-	import WinCurve from '#lib/ui/WinCurve.svelte';
-	import BoardNav from '#lib/ui/BoardNav.svelte';
-	import { finalMoveCount, finalPosition, sampleCurve } from '#lib/demo/index.ts';
+	// Nachspielen: the board large, beside it the game, variations, KataGo and
+	// the curve; below the games played last and the tournament games.
+	// Opens, in this order: ?sgf=<address>, the KGS game handed over after it
+	// ended (app.state.tvReplayGameId), else the loader (file or SGF text).
+	import { onDestroy, onMount, tick } from 'svelte';
+	import { page } from '$app/state';
+	import { app } from '#lib/app.svelte.ts';
+	import { fetchTvEvents } from '#lib/model/tv.ts';
+	import type { TvEvent } from '#lib/model/tv.ts';
+	import { applyOgsLinks, loadOgsLinks } from '#lib/model/OgsLinks.ts';
+	import SgfReplayView from '#lib/ui/tv/SgfReplayView.svelte';
+	import RecentlyReplayed from '#lib/ui/tv/RecentlyReplayed.svelte';
+	import RecentReplays from '#lib/ui/tv/RecentReplays.svelte';
 
-	const total = finalMoveCount();
-	const curve = sampleCurve(total);
-	let move = $state(87);
-	let position = $derived(finalPosition(move));
+	// Calendar data and "now" are refreshed like the old TV screen did.
+	const REFRESH_MS = 60000;
 
-	// Draft KataGo suggestions (real ones come from the engine in phase 4):
-	// three empty points of the current position, worded from the curve.
-	const CANDIDATES = [
-		{ x: 15, y: 9 },
-		{ x: 13, y: 13 },
-		{ x: 5, y: 12 },
-		{ x: 14, y: 6 },
-		{ x: 9, y: 15 },
-		{ x: 3, y: 9 },
-		{ x: 10, y: 3 },
-		{ x: 16, y: 13 },
-		{ x: 6, y: 16 },
-		{ x: 11, y: 7 },
-		{ x: 2, y: 17 },
-		{ x: 17, y: 8 }
-	];
-	const COLUMNS = 'ABCDEFGHJKLMNOPQRST';
-	let black = $derived(Math.round((curve[move] ?? 0.5) * 100));
-	let suggestions = $derived(
-		CANDIDATES.filter((p) => !position.board[p.y][p.x])
-			.slice(0, 3)
-			.map((p, i) => ({
-				...p,
-				text: String(i + 1),
-				point: COLUMNS[p.x] + String(19 - p.y),
-				black: black - i * 3,
-				lead: '+' + ((black - 50) / 5 - i * 0.8).toFixed(1).replace('.', ',')
-			}))
+	let sgfUrl = $derived(page.url.searchParams.get('sgf') || null);
+	let replayGameId = $derived(app.state.tvReplayGameId ?? null);
+	let replayTree = $derived(
+		!sgfUrl && replayGameId ? (app.state.gamesById[replayGameId]?.tree ?? null) : null
 	);
+	let viewKey = $derived(
+		sgfUrl ? 'url:' + sgfUrl : replayTree ? 'game-' + String(replayGameId) : 'manual'
+	);
+
+	let events = $state.raw<Array<TvEvent>>([]);
+	let now = $state(Date.now());
+	let mounted = true;
+	let timer: ReturnType<typeof setInterval> | null = null;
+
+	function loadEvents() {
+		fetchTvEvents().then(
+			(loaded) => {
+				if (mounted) events = applyOgsLinks(loaded, loadOgsLinks());
+			},
+			(err: unknown) => {
+				console.warn('[tv] Failed to load calendar events:', err);
+			}
+		);
+	}
+
+	onMount(() => {
+		loadEvents();
+		timer = setInterval(() => {
+			now = Date.now();
+			loadEvents();
+		}, REFRESH_MS);
+	});
+
+	onDestroy(() => {
+		mounted = false;
+		if (timer) clearInterval(timer);
+	});
+
+	// The board sits above the game lists: bring it into view after a game
+	// was opened from them.
+	let replayElement: HTMLElement | undefined = $state();
+	let scrollPending = false;
+
+	function scrollToReplay() {
+		void tick().then(() => replayElement?.scrollIntoView({ block: 'start' }));
+	}
+
+	function openReplay(url: string) {
+		if (url === sgfUrl) {
+			scrollToReplay();
+			return;
+		}
+		scrollPending = true;
+		app.openReplay(url);
+	}
+
+	$effect(() => {
+		void sgfUrl;
+		if (scrollPending) {
+			scrollPending = false;
+			scrollToReplay();
+		}
+	});
 </script>
 
 <svelte:head>
 	<title>Nachspielen – GoTV</title>
 </svelte:head>
 
-<div class="replay">
-	<div class="board-side panel">
-		<PlayerBar color="white" name="Ali Jabarin" rank="3p" />
-		<Board
-			board={position.board}
-			lastMove={position.lastMove}
-			labels={suggestions}
-			label="Europameisterschaft 2026, Finale, nach Zug {move}"
-		/>
-		<PlayerBar color="black" name="Andrii Kravets" rank="3p" />
-		<BoardNav bind:move {total} />
+<h1 class="visually-hidden">Nachspielen</h1>
+
+<div class="page">
+	<div class="replay" bind:this={replayElement}>
+		{#key viewKey}
+			<SgfReplayView
+				initialUrl={sgfUrl}
+				initialTree={replayTree}
+				replayKey={replayTree ? 'kgs-' + String(replayGameId) : null}
+			/>
+		{/key}
 	</div>
 
-	<aside class="analysis">
-		<header class="game-head">
-			<h1>Europameisterschaft 2026, Finale</h1>
-			<p class="muted">Kravets gegen Jabarin, Zug {move} von {total}</p>
-		</header>
-
-		<section class="panel katago" aria-labelledby="katago-title">
-			<h2 id="katago-title" class="panel-title">KataGo</h2>
-			<div class="katago-body">
-				<p class="verdict">
-					{black >= 50 ? 'Schwarz' : 'Weiß'} steht besser, Gewinnchance Schwarz {black} %.
-				</p>
-				<ol>
-					{#each suggestions as s (s.point)}
-						<li>
-							<span class="badge">{s.text}</span>
-							<strong>{s.point}</strong>
-							<span class="muted">Schwarz {s.black} %, {s.lead}</span>
-							<button class="button">Variante legen</button>
-						</li>
-					{/each}
-				</ol>
-				{#if suggestions[0]}
-					<p class="compare">
-						Die Partie spielte R9, laut KataGo 1,3 Punkte schlechter als {suggestions[0].point}.
-					</p>
-				{/if}
-			</div>
-		</section>
-
-		<section class="panel" aria-labelledby="curve-title">
-			<h2 id="curve-title" class="panel-title">Partieverlauf</h2>
-			<div class="curve-body">
-				<WinCurve values={curve} current={move} onmove={(m: number) => (move = m)} />
-			</div>
-		</section>
-	</aside>
+	<div class="lists">
+		<RecentlyReplayed onOpenReplay={openReplay} refreshKey={sgfUrl} />
+		<RecentReplays {events} {now} onOpenReplay={openReplay} />
+	</div>
 </div>
 
 <style>
-	.replay {
-		display: grid;
-		/* The board column never gets taller than the screen (iPad landscape). */
-		grid-template-columns: minmax(0, max(340px, calc(100dvh - 250px))) minmax(300px, 1fr);
-		gap: var(--gap);
-		align-items: start;
-	}
-
-	.board-side {
-		padding: 10px 14px 14px;
-	}
-
-	.analysis {
+	.page {
 		display: flex;
 		flex-direction: column;
 		gap: var(--gap);
 	}
 
-	.game-head h1 {
-		margin: 0;
-		font-size: clamp(1.4rem, 2.4vw, 2rem);
-		line-height: 1.1;
-		letter-spacing: -0.015em;
+	.replay {
+		scroll-margin-top: 8px;
 	}
 
-	.game-head p {
-		margin: 6px 0 0;
+	.lists {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+		gap: var(--gap);
+		align-items: start;
 	}
 
-	.katago-body,
-	.curve-body {
-		padding: 4px 16px 16px;
-	}
-
-	.verdict {
-		margin: 4px 0 12px;
-		font-size: 1.1rem;
-		font-weight: 600;
-	}
-
-	ol {
-		list-style: none;
-		margin: 0;
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
 		padding: 0;
-	}
-
-	ol li {
-		display: grid;
-		grid-template-columns: auto auto minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 10px;
-		padding: 8px 0;
-		border-top: 1px solid var(--rule);
-	}
-
-	.badge {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		background: var(--accent);
-		color: var(--accent-ink);
-		font-weight: 700;
-		font-size: 0.85em;
-	}
-
-	.compare {
-		margin: 12px 0 0;
-		padding: 10px 12px;
-		border-radius: var(--radius-s);
-		background: var(--accent-soft);
-	}
-
-	:global([data-design='oldschool']) .game-head h1 {
-		font-size: 16px;
-		letter-spacing: 0;
-	}
-
-	:global([data-design='oldschool']) .board-side {
-		padding: 4px;
-	}
-
-	:global([data-design='oldschool']) .katago-body,
-	:global([data-design='oldschool']) .curve-body {
-		padding: 6px;
-	}
-
-	:global([data-design='oldschool']) .verdict {
-		font-size: 13px;
-	}
-
-	:global([data-design='oldschool']) .badge {
-		border-radius: 0;
-	}
-
-	:global([data-design='oldschool']) ol li {
-		padding: 3px 0;
-		border-top-color: #b9b3a5;
-	}
-
-	:global([data-design='oldschool']) .compare {
-		border: 1px solid #808080;
-		background: #ffffe1;
-	}
-
-	@media (max-width: 900px) {
-		.replay {
-			grid-template-columns: minmax(0, 1fr);
-		}
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
 	}
 </style>
