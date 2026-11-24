@@ -162,8 +162,10 @@ export class KgsClient {
 			messages = await this._receiveMessages();
 
 			if (this.state.retryTimes) {
-				// Reconnected
-				if (messages[messages.length - 1].type === 'LOGOUT') {
+				// Reconnected. KGS may answer with no messages at all (e.g. after a
+				// network switch or standby) - that must not stop the loop.
+				const last = messages.length ? messages[messages.length - 1] : null;
+				if (last && last.type === 'LOGOUT') {
 					// We reconnected only to be immediately logged out. Ensure an
 					// appropriate error is shown to the user
 					messages.push({
