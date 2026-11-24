@@ -802,6 +802,9 @@
 	.compact .game {
 		display: flex;
 		flex-direction: column;
+		/* The board takes the whole column (Kinomodus, splitter), not the
+		   width of its content. */
+		align-items: stretch;
 		gap: 8px;
 	}
 

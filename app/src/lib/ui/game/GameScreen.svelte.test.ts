@@ -298,6 +298,20 @@ describe('GameScreen', () => {
 		await page.viewport(414, 896);
 	});
 
+	it('dragging the splitter onto the board places no stone', async () => {
+		const actions = mockActions();
+		localStorage.removeItem('gotv.gameSideWidth');
+		await page.viewport(1180, 820);
+		await render(GameScreen, { game: fixtureGame(), playing: true });
+		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
+		const before = Number(splitter.element().getAttribute('aria-valuenow'));
+		// A real mouse drag (press on the edge, move onto the board, release there).
+		await userEvent.dragAndDrop(splitter, page.getByRole('img', { name: /Brett|board/i }).first());
+		expect(actions.onPlayMove).not.toHaveBeenCalled();
+		expect(Number(splitter.element().getAttribute('aria-valuenow'))).not.toBe(before);
+		await page.viewport(414, 896);
+	});
+
 	it('sends game chat', async () => {
 		const actions = mockActions();
 		await render(GameScreen, { game: fixtureGame() });
