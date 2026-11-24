@@ -104,8 +104,10 @@
 		selectedNode = tree && nodeId === tree.activeNode ? null : nodeId;
 	}
 
+	// KGS profiles only for KGS boards: an OGS name is an OGS account, the
+	// same name on KGS may be someone else (the old app mixed them up).
 	function onUserDetail(user: User) {
-		if (app.started) app.actions.onUserDetail(user.name);
+		if (app.started && !isOgs) app.actions.onUserDetail(user.name);
 	}
 
 	function onChat(body: string) {
@@ -171,7 +173,7 @@
 					chatSections={sections}
 					{usersByName}
 					onUserDetail={(name: string) => {
-						if (app.started) app.actions.onUserDetail(name);
+						if (app.started && !isOgs) app.actions.onUserDetail(name);
 					}}
 					onOpenTv={(url: string) => {
 						if (app.started) app.actions.onOpenTvStream(url);
