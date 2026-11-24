@@ -12,6 +12,7 @@ export const game: Translation<typeof de> = {
 	'game.screen.over': 'Game over',
 	'game.screen.overWithScore': 'Game over: {score}',
 	'game.screen.back': 'Back',
+	'game.screen.board': 'Board',
 	'game.screen.broadcast': 'Broadcast',
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Make the board bigger or smaller',

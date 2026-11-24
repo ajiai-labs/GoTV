@@ -13,6 +13,7 @@ export const game = {
 	'game.screen.over': 'Partie beendet',
 	'game.screen.overWithScore': 'Partie beendet: {score}',
 	'game.screen.back': 'Zurück',
+	'game.screen.board': 'Brett',
 	'game.screen.broadcast': 'Übertragung',
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Brett größer oder kleiner',

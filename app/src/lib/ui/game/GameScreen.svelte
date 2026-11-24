@@ -166,14 +166,15 @@
 	let boardAreaHeight = $state(0);
 	let preferredBoardWidth = $state(loadWidth(BOARD_WIDTH_KEY, BOARD_MIN_WIDTH));
 	const savedSideWidth = loadWidth('gotv.gameSideWidth', SIDE_WIDTH_MIN);
-	let boardMaxWidth = $derived(
-		Math.max(0, Math.min(mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN, boardAreaHeight))
-	);
+	let boardMaxWidth = $derived(Math.max(0, mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN));
 	let boardMinWidth = $derived(Math.min(BOARD_MIN_WIDTH, boardMaxWidth));
+	// Start with the whole board visible. The splitter can make a larger,
+	// scrollable board and reduce the chat to its minimum width.
+	let fittedBoardWidth = $derived(Math.min(boardMaxWidth, boardAreaHeight));
 	let defaultBoardWidth = $derived(
 		savedSideWidth === null
-			? Math.min(mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_DEFAULT, boardMaxWidth - DEFAULT_GROWTH)
-			: mainWidth - SPLITTER_WIDTH - savedSideWidth
+			? Math.min(mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_DEFAULT, fittedBoardWidth - DEFAULT_GROWTH)
+			: Math.min(mainWidth - SPLITTER_WIDTH - savedSideWidth, fittedBoardWidth)
 	);
 	let boardWidth = $derived(
 		Math.max(boardMinWidth, Math.min(boardMaxWidth, preferredBoardWidth ?? defaultBoardWidth))
@@ -197,6 +198,12 @@
 		if (step === 'min') setBoardWidth(boardMinWidth);
 		else if (step === 'max') setBoardWidth(boardMaxWidth);
 		else setBoardWidth(boardWidth + step * BOARD_WIDTH_STEP);
+	}
+
+	function onBoardScrollKey(event: KeyboardEvent) {
+		if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+			event.stopPropagation(); // scroll the focused board instead of changing the move
+		}
 	}
 
 	function onLeave() {
@@ -287,12 +294,22 @@
 				</section>
 			{/if}
 			<div class="GameScreen-board-area" bind:clientHeight={boardAreaHeight}>
-				<BoardContainer
-					{game}
-					{playing}
-					ghost={isOurMove && !scoring ? playerColor : null}
-					onClickPoint={isOurMove || scoring ? onClickPoint : undefined}
-				/>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (Focus enables native keyboard scrolling when the board overflows.) -->
+				<div
+					class="GameScreen-board-scroll"
+					role="region"
+					aria-label={t('game.screen.board')}
+					tabindex={boardWidth > boardAreaHeight ? 0 : undefined}
+					onkeydown={boardWidth > boardAreaHeight ? onBoardScrollKey : undefined}
+				>
+					<BoardContainer
+						{game}
+						{playing}
+						embedded
+						ghost={isOurMove && !scoring ? playerColor : null}
+						onClickPoint={isOurMove || scoring ? onClickPoint : undefined}
+					/>
+				</div>
 				{#if game.accessDenied}
 					<p class="GameScreen-access-denied" role="alert">{game.accessDenied}</p>
 				{/if}
@@ -475,10 +492,10 @@
 		min-height: 0;
 	}
 
-	.GameScreen-board-area > :global(.BoardContainer) {
+	.GameScreen-board-scroll {
 		position: absolute;
 		inset: 0;
-		height: auto;
+		overflow-y: auto;
 	}
 
 	.GameScreen-access-denied {
@@ -592,7 +609,7 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	/* Wide screens: the whole screen fits the window, the board as high as it goes. */
+	/* Wide screens: the chat stays in view while a large board scrolls. */
 	@media (min-width: 901px) {
 		.GameScreen {
 			height: var(--game-height);

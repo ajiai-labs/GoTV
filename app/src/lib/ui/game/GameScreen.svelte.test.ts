@@ -283,15 +283,16 @@ describe('GameScreen', () => {
 		await expect.element(page.getByText('danke')).toBeVisible();
 	});
 
-	it('grows the actual board with the splitter on a wide screen and remembers the width', async () => {
-		mockActions();
+	it('grows the board past the window height while keeping a narrower chat visible', async () => {
+		const actions = mockActions();
 		localStorage.removeItem('gotv.gameSideWidth');
 		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(1900, 1100);
-		const props = { game: fixtureGame(), playing: true };
+		const props = { game: fixtureGame({ over: true, score: 'W+RESIGN' }) };
 		const view = await render(GameScreen, props);
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
 		const board = page.getByRole('img', { name: /Zug 2/ });
+		const chat = page.getByRole('textbox');
 		const boardWidth = () => board.element().getBoundingClientRect().width;
 		await expect.element(board).toBeVisible();
 		const sliderValue = (name: 'now' | 'max') =>
@@ -299,9 +300,18 @@ describe('GameScreen', () => {
 		await expect.poll(() => sliderValue('max') - sliderValue('now')).toBeGreaterThan(10);
 		await expect.poll(() => boardWidth() - sliderValue('now')).toBeCloseTo(0);
 		const before = boardWidth();
-		await userEvent.dragAndDrop(splitter, page.getByRole('textbox'));
-		await expect.poll(boardWidth).toBeGreaterThan(before + 10);
-		expect(boardWidth()).toBeGreaterThan(950);
+		await userEvent.dragAndDrop(splitter, chat);
+		await expect.poll(boardWidth).toBeGreaterThan(1300);
+		const scroller = page.getByRole('region', { name: 'Brett' }).element();
+		const chatBox = chat.element().getBoundingClientRect();
+		expect(chatBox.width).toBeLessThan(500);
+		expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+		(scroller as HTMLElement).focus();
+		await userEvent.keyboard('{ArrowDown}');
+		await expect.poll(() => scroller.scrollTop).toBeGreaterThan(0);
+		expect(actions.onChangeCurrentNode).not.toHaveBeenCalled();
+		expect(chat.element().getBoundingClientRect().y).toBe(chatBox.y);
+		scroller.scrollTop = 0;
 		await userEvent.dragAndDrop(splitter, board);
 		await expect.poll(boardWidth).toBeLessThan(before - 100);
 		const adjustedWidth = boardWidth();
