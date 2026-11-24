@@ -32,6 +32,12 @@ export class AppActions {
 	_client: KgsClient;
 	_history: Record<string, any>;
 	_tvGameSubscriptions: TvGameSubscriptions;
+	// Channels KGS closed itself (UNJOIN/CLOSE). An UNJOIN_REQUEST for one of
+	// them makes KGS log the user out ("Unknown channel N").
+	_closedChannels = new Set<number>();
+	_isClosedByServer = (channelId: unknown): boolean =>
+		typeof channelId === 'number' && this._closedChannels.has(channelId);
+
 	// When KGS ended a running automatch search on its own (it found a game),
 	// 0 otherwise. The game itself may arrive in a later answer.
 	_automatchEndedAt = 0;
@@ -42,7 +48,12 @@ export class AppActions {
 		this._history = history;
 		this._tvGameSubscriptions = new TvGameSubscriptions(
 			() => this._store.getState(),
-			(message) => this._client.sendMessage(message)
+			(message) => {
+				if (message.type === 'UNJOIN_REQUEST' && this._isClosedByServer(message.channelId)) {
+					return;
+				}
+				this._client.sendMessage(message);
+			}
 		);
 	}
 
@@ -80,6 +91,14 @@ export class AppActions {
 		const wasAutomatching =
 			this._store.getState().automatchEnabled ||
 			Date.now() - this._automatchEndedAt < AUTOMATCH_JOIN_GRACE_MS;
+		for (const msg of Array.isArray(msgs) ? msgs : [msgs]) {
+			if (typeof msg.channelId !== 'number') continue;
+			if (msg.type === 'UNJOIN' || msg.type === 'CLOSE') {
+				this._closedChannels.add(msg.channelId);
+			} else if (/_JOIN$/.test(msg.type)) {
+				this._closedChannels.delete(msg.channelId);
+			}
+		}
 		this._store.dispatch(msgs);
 		if (this._store.getState().automatchEnabled) {
 			this._automatchEndedAt = 0;
@@ -745,7 +764,7 @@ export class AppActions {
 		this.onUnjoin(channelId);
 	};
 	onUnjoin = (channelId: number) => {
-		if (this._isOffline()) {
+		if (this._isOffline() || this._isClosedByServer(channelId)) {
 			return;
 		}
 
