@@ -605,7 +605,7 @@ Kein eigener Server vorhanden (Nutzer, 24.11.2026). Deshalb NICHT weiterverfolgt
   `video_id`) in events.json schreibt - nur so oft wie der Lauf, also kein Live-Status
   in Echtzeit. Braucht einen YouTube-API-Schlüssel vom Nutzer.
 
-Bewusst so gelassen (Nutzer, 24.11.2026): kein AppImage/.deb - die Desktop-App läuft
+Bewusst so gelassen (Nutzer, 24.11.2026, vormittags - am Abend ersetzt durch die Tauri-Desktop-Apps, siehe oben): kein AppImage/.deb - die Desktop-App läuft
 über `desktop/install.sh`, andere nutzen die Web-Version (GitHub Pages). Damit entfallen
 auch Vite-Umstieg und Einreich-Formular als offene Punkte (wieder aufgreifen nur auf
 ausdrücklichen Wunsch). Erledigt aus dem externen Feedback: cmdtest-Hinweis.
@@ -640,6 +640,39 @@ Offen bleibt außerdem:
   Auch nicht "verzögert" oder als Option.
 - **Spielern folgen nur auf KGS** (24.11.2026): der Nutzer spielt nicht auf OGS, OGS ist nur
   Quelle für Übertragungen.
+
+## Desktop-Apps Windows/macOS/Linux (Tauri 2, 24.11.2026)
+
+Entscheidung des Nutzers: herunterladbare Desktop-Apps (ersetzt "kein AppImage" vom
+24.11. vormittags). `desktop/tauri/`: `gotv-server` (Rust, Gegenstück zu goTV_local.py:
+127.0.0.1, freier Port, Host-/Origin-Prüfung, `/json/access` ohne Origin zu KGS, Cookies ohne
+Domain/Secure/SameSite für den lokalen http-Weg, 18 Tests gegen ein Fake-KGS, CI-Job
+`desktop-server`) und `gotv-desktop` (Tauri-Fenster auf diesem Server). Frontend:
+`VITE_API_URL=/json/access VITE_EVENTS_REMOTE_FIRST=true` (Kalender zuerst von GitHub, kein
+Timer). Release: Tag `desktop-vX.Y.Z` pushen → `.github/workflows/desktop.yml` baut
+Windows (.exe/.msi), macOS universal (.dmg), Linux (.AppImage/.deb), lädt sie zusätzlich mit
+festen Namen hoch und veröffentlicht erst, wenn alle drei Builds grün sind. Fremd-Actions per
+Commit-SHA gepinnt, Tauri-CLI exakt. Nicht signiert (Warnung beim ersten Start, Anleitung in
+`desktop/tauri/README.md`). iPad: keine App möglich, Web-Version. Download-Bereich in der
+Web-Version: `app/src/lib/ui/DesktopDownloads.svelte` (KGS-Seiten, Einstellungen), Links
+`releases/latest/download/<fester Name>`. Lokale Rust-Werkzeuge nur per `nix shell
+nixpkgs#cargo nixpkgs#rustc` (nichts global). Die Linux-Skriptinstallation (`install.sh`)
+bleibt daneben bestehen.
+
+## Sprachen, Teilen, Lieblingsräume, Home-Bildschirm (24.11.2026)
+
+- Oberfläche Deutsch/Englisch: `app/src/lib/i18n/` (eigene kleine Schicht, `t()`, Typprüfung
+  erzwingt gleiche Schlüssel), Sprache nach Browser, Wahl in Einstellungen (`gotv.language`).
+- Nachspielen "Link kopieren": öffentliche Web-Adresse aus `app/src/lib/publicUrl.ts`
+  (beim Umschalten der Web-Version auf `/GoTV` anpassen), `?sgf=…&zug=N`.
+- "Mit KataGo auswerten" nur nach Ende einer eigenen KGS-Partie (`?katago=1`), nie während.
+- Lieblingsräume (`gotv.favoriteRooms`), nach jeder Anmeldung betreten.
+- Web-Version auf iPad/iPhone: Hinweis "Zum Home-Bildschirm", Web-App-Manifest.
+- Externe Analyse (24.11.2026, `docs/analyse-prompt-neubau.md`) - behobene Befunde: leere
+  KGS-Antwort stoppte den Empfang (auch alte App), Automatch über zwei Antworten,
+  Verzögerung spoilerte beim Einstieg, YouTube-@handle blockierte das OGS-Brett,
+  Offline-Caches beider Apps löschten sich gegenseitig, zweiter Klick auf Beobachten.
+- Kinomodus: Nachspielbrett wächst mit der Trennkante; Partie-Ansicht mit eigener Trennkante.
 
 ## Spielern folgen (nur KGS, 24.11.2026)
 

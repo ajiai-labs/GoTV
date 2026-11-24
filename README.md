@@ -10,11 +10,28 @@ analysis. It runs in the browser, on a tablet, and as a desktop app on Linux,
 and it is also a full client for the [KGS Go Server](http://www.gokgs.com/).
 
 <p align="center">
-  <a href="https://ajiai-labs.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a><br>
-  <sub>No installation - works on desktop, tablet and phone, and offline for games you
-  have opened. Everything except KGS boards and the KGS login; for those, install the
-  <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
+  <a href="https://ajiai-labs.github.io/GoTV/neu/"><b>▶ Open GoTV in your browser</b></a>
+  &nbsp;·&nbsp;
+  <a href="#download-the-desktop-app"><b>⬇ Download the desktop app</b></a><br>
+  <sub>The browser version needs no installation and works on desktop, tablet and phone,
+  offline too for games you have opened - everything except KGS, which only answers its
+  own website. The desktop app for Windows, macOS and Linux adds KGS: watching,
+  playing, chat.</sub>
 </p>
+
+## Download the desktop app
+
+| System | Download |
+|---|---|
+| Windows | [Installer (.exe)](https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-windows-x64-setup.exe) · [.msi](https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-windows-x64.msi) |
+| macOS (Apple Silicon and Intel) | [.dmg](https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-macos-universal.dmg) |
+| Linux | [AppImage](https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-linux-x86_64.AppImage) · [.deb](https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-linux-amd64.deb) |
+
+The apps are free and not signed, so Windows and macOS warn on the first start - how
+to open them: [`desktop/tauri/README.md`](desktop/tauri/README.md). All versions:
+[Releases](https://github.com/ajiai-labs/GoTV/releases). iPad and iPhone: use the
+browser version and "Add to Home Screen" (Apple allows no apps outside the App
+Store). On Linux the script install below works as well.
 
 **New interface:** GoTV has been rebuilt with Svelte 5 + TypeScript, with three
 designs to choose from: "Modern", "Modern dunkel" (dark) and "Classic". The desktop
@@ -50,7 +67,14 @@ and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
   edge between board and side column can be dragged to make the board bigger.
 - **Follow KGS players:** "Folgen" in a player's profile; "Gefolgte Spieler"
   shows who plays right now with a link to the game, and GoTV notifies you
-  when one starts a game (while GoTV is open).
+  when one starts a game (while GoTV is open). Favourite KGS rooms are joined
+  automatically after login.
+- **After your own game:** "Mit KataGo auswerten" opens it in Nachspielen with
+  KataGo on - only once the game is over, never during a game.
+- **Share a game:** "Link kopieren" in Nachspielen gives a link that opens the
+  same game at the same move in the browser version.
+- **German and English:** the language follows the browser and can be switched
+  in the settings.
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
   daily (DGoB, EGF Grand Prix, the EGF Twitch schedule and the Speed Go
   Championship bracket, whose OGS games are linked automatically), and SGF
