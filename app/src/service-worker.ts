@@ -33,7 +33,8 @@ const NETWORK_TIMEOUT_MS = 6000;
 const SCOPE = sw.registration.scope; // ends with "/"
 
 // Static files worth having offline (others, like robots.txt, are not).
-const OFFLINE_FILES = /\/(tv\/(events\.json|em-finale-2026\.sgf|demo\.sgf)|katago\/.+)$/;
+const OFFLINE_FILES =
+	/\/(tv\/(events\.json|em-finale-2026\.sgf|demo\.sgf)|katago\/.+|manifest\.webmanifest|icons\/.+)$/;
 
 // Manifest paths are relative to the base path, like the scope.
 function appFiles(): Array<string> {

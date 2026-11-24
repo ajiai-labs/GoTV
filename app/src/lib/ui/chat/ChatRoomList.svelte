@@ -1,9 +1,12 @@
 <script lang="ts">
-	// All KGS rooms by category, with a search field. A click joins the room.
+	// All KGS rooms by category, with a search field. A click joins the room;
+	// the star beside it marks a favourite, joined after every login
+	// (FavoriteRoomsWatcher).
 	import type { Index, Room, RoomCategory } from '#lib/model/types.ts';
 	import { isMobileScreen } from '#lib/util/dom.ts';
 	import { quoteRegExpPattern } from '#lib/util/string.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+	import { favoriteRooms } from './favoriteRooms.svelte.ts';
 
 	const CAT_LABELS: Record<RoomCategory, MessageKey> = {
 		MAIN: 'chat.rooms.main',
@@ -65,14 +68,30 @@
 		aria-label={t('chat.rooms.search')}
 		autocomplete="off"
 	/>
+	<p class="ChatRoomList-hint muted">{t('chat.rooms.favoritesHint')}</p>
 	{#each categories as category (category.cat)}
 		<section class="ChatRoomList-cat">
 			<h3 class="ChatRoomList-cat-title">{category.label}</h3>
 			<ul class="ChatRoomList-rooms">
 				{#each category.rooms as room (room.id)}
-					<li>
+					{@const favorite = favoriteRooms.has(room.id)}
+					{@const starLabel = favorite
+						? t('chat.rooms.favoriteRemove', { name: room.name })
+						: t('chat.rooms.favoriteAdd', { name: room.name })}
+					<li class="ChatRoomList-item">
 						<button type="button" class="ChatRoomList-room" onclick={() => onJoinRoom(room)}>
 							{room.name}{#if room.private}<span title={t('chat.rooms.private')}> 🔒</span>{/if}
+						</button>
+						<button
+							type="button"
+							class="ChatRoomList-star"
+							class:ChatRoomList-star-active={favorite}
+							aria-pressed={favorite}
+							aria-label={starLabel}
+							title={starLabel}
+							onclick={() => favoriteRooms.toggle(room)}
+						>
+							{favorite ? '★' : '☆'}
 						</button>
 					</li>
 				{/each}
@@ -104,6 +123,11 @@
 		outline-offset: 0;
 	}
 
+	.ChatRoomList-hint {
+		margin: 6px 4px 0;
+		font-size: 0.85em;
+	}
+
 	.ChatRoomList-cat {
 		padding-top: 16px;
 	}
@@ -124,13 +148,16 @@
 		column-gap: 12px;
 	}
 
-	.ChatRoomList-rooms li {
+	.ChatRoomList-item {
+		display: flex;
+		align-items: center;
 		break-inside: avoid;
 	}
 
 	.ChatRoomList-room {
 		display: block;
-		width: 100%;
+		flex: 1;
+		min-width: 0;
 		min-height: 32px;
 		padding: 4px 8px;
 		border: 0;
@@ -143,6 +170,25 @@
 
 	.ChatRoomList-room:hover {
 		background: var(--accent-soft);
+	}
+
+	.ChatRoomList-star {
+		flex: none;
+		min-width: 36px;
+		min-height: 32px;
+		padding: 0 6px;
+		border: 0;
+		border-radius: var(--radius-s);
+		background: none;
+		color: var(--ink-soft);
+		font-size: 1.15rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.ChatRoomList-star:hover,
+	.ChatRoomList-star-active {
+		color: #c8962b;
 	}
 
 	@media (max-width: 480px) {
@@ -167,6 +213,11 @@
 		min-height: 24px;
 		padding: 2px 6px;
 		color: var(--ink);
+	}
+
+	:global([data-design='oldschool']) .ChatRoomList-star {
+		min-height: 24px;
+		border-radius: 0;
 	}
 
 	:global([data-design='oldschool']) .ChatRoomList-room:hover {

@@ -94,6 +94,7 @@ export const game: Translation<typeof de> = {
 	// GameReplaySuggestion
 	'game.replay.over': 'Game over.',
 	'game.replay.replay': 'Replay',
+	'game.replay.review': 'Review with KataGo',
 	'game.replay.close': 'Close',
 
 	// GameTypeIcon

@@ -95,6 +95,7 @@ export const game = {
 	// GameReplaySuggestion
 	'game.replay.over': 'Partie beendet.',
 	'game.replay.replay': 'Nachspielen',
+	'game.replay.review': 'Mit KataGo auswerten',
 	'game.replay.close': 'Schließen',
 
 	// GameTypeIcon

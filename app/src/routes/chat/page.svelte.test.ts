@@ -204,16 +204,16 @@ describe('Chat page', () => {
 		expect(actions.onFetchRoomList).toHaveBeenCalled();
 		const dialog = page.getByRole('dialog', { name: 'Räume' });
 		await expect.element(dialog.getByRole('heading', { name: 'Vereine' })).toBeVisible();
-		await expect.element(dialog.getByRole('button', { name: /Go-Club Berlin/ })).toBeVisible();
+		await expect.element(dialog.getByRole('button', { name: /^Go-Club Berlin/ })).toBeVisible();
 		await dialog.getByRole('searchbox', { name: 'Räume suchen' }).fill('o');
 		await expect
 			.element(dialog.getByRole('button', { name: 'Turnierraum' }))
 			.not.toBeInTheDocument();
 		// Every match stays (the old "gi" regex skipped every second one).
-		await expect.element(dialog.getByRole('button', { name: /Go-Club Berlin/ })).toBeVisible();
-		await expect.element(dialog.getByRole('button', { name: /Deutscher Go-Bund/ })).toBeVisible();
-		await expect.element(dialog.getByRole('button', { name: /English Game Room/ })).toBeVisible();
-		await dialog.getByRole('button', { name: /Go-Club Berlin/ }).click();
+		await expect.element(dialog.getByRole('button', { name: /^Go-Club Berlin/ })).toBeVisible();
+		await expect.element(dialog.getByRole('button', { name: /^Deutscher Go-Bund/ })).toBeVisible();
+		await expect.element(dialog.getByRole('button', { name: /^English Game Room/ })).toBeVisible();
+		await dialog.getByRole('button', { name: /^Go-Club Berlin/ }).click();
 		expect(actions.onJoinRoom).toHaveBeenCalledWith(expect.objectContaining({ id: 30 }));
 		await expect.element(dialog).not.toBeInTheDocument();
 	});

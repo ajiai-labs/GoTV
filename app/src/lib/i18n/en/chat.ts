@@ -38,6 +38,9 @@ export const chat: Translation<typeof de> = {
 	'chat.rooms.other': 'Other',
 	'chat.rooms.search': 'Search rooms',
 	'chat.rooms.private': 'Private room',
+	'chat.rooms.favoritesHint': '★ = join the room automatically after every login',
+	'chat.rooms.favoriteAdd': 'Join {name} after every login',
+	'chat.rooms.favoriteRemove': 'Stop joining {name} automatically',
 	// RoomGameLinks
 	'chat.roomGames.games': { one: '{count} game', other: '{count} games' },
 	'chat.roomGames.challenges': { one: '{count} challenge', other: '{count} challenges' },

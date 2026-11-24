@@ -39,6 +39,9 @@ export const chat = {
 	'chat.rooms.other': 'Sonstige',
 	'chat.rooms.search': 'Räume suchen',
 	'chat.rooms.private': 'Privater Raum',
+	'chat.rooms.favoritesHint': '★ = Raum nach jeder Anmeldung automatisch betreten',
+	'chat.rooms.favoriteAdd': 'Raum {name} nach jeder Anmeldung betreten',
+	'chat.rooms.favoriteRemove': 'Raum {name} nicht mehr automatisch betreten',
 	// RoomGameLinks
 	'chat.roomGames.games': { one: '{count} Partie', other: '{count} Partien' },
 	'chat.roomGames.challenges': {

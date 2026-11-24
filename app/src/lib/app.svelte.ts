@@ -126,10 +126,16 @@ class GoTvApp {
 	}
 
 	// "Nachspielen" after a KGS game ended (old onSuggestGameReplay): the
-	// game's tree goes to the Nachspielen page.
-	suggestGameReplay(game: GameChannel) {
+	// game's tree goes to the Nachspielen page. `kataGo`: "Mit KataGo
+	// auswerten" (an own game) - KataGo starts switched on there, but only for
+	// a game that is over: no help during a running game.
+	suggestGameReplay(game: GameChannel, options: { kataGo?: boolean } = {}) {
 		this.store?.dispatch({ type: 'TV_REPLAY_GAME', gameId: game.id });
-		goto(resolve('/nachspielen')).catch(() => {});
+		const target = new URL(resolve('/nachspielen'), window.location.href);
+		if (options.kataGo && game.over) target.searchParams.set('katago', '1');
+		// The path comes from resolve(); only the query is added.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(target.pathname + target.search).catch(() => {});
 	}
 
 	// Keep state.nav in line with the page shown (back/forward, links).

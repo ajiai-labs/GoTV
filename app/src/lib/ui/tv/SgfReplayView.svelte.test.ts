@@ -245,3 +245,121 @@ describe('getReadableComment', () => {
 		expect(getReadableComment(undefined)).toBe(null);
 	});
 });
+
+describe('SgfReplayView: sharing and opening at a move', () => {
+	const URL_SGF = 'https://example.org/final.sgf';
+	const LONG = '(;SZ[9]PB[Ann]PW[Bob];B[aa];W[bb];B[cc];W[dd])';
+	const shareLink = (sgf: string, move?: number) =>
+		'https://ajiai-labs.github.io/GoTV/neu/nachspielen?sgf=' +
+		encodeURIComponent(sgf) +
+		(move ? '&zug=' + String(move) : '');
+
+	beforeEach(() => window.localStorage.clear());
+	afterEach(() => {
+		vi.restoreAllMocks();
+		window.localStorage.clear();
+	});
+
+	it('copies a link to the public web version at the current move', async () => {
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(LONG));
+		const write = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+		await render(SgfReplayView, { initialUrl: URL_SGF });
+		await expect.element(page.getByText(/Zug 0 · Gefangene/)).toBeVisible();
+		await next();
+		await next();
+		await page.getByRole('button', { name: 'Link kopieren' }).click();
+		expect(write).toHaveBeenCalledWith(shareLink(URL_SGF, 2));
+		await expect.element(page.getByRole('status').getByText('Link kopiert')).toBeVisible();
+	});
+
+	it('makes bundled files absolute with the public address', async () => {
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(LONG));
+		const write = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+		await render(SgfReplayView, { initialUrl: '/tv/em-finale-2026.sgf' });
+		await expect.element(page.getByText(/Zug 0 · Gefangene/)).toBeVisible();
+		await page.getByRole('button', { name: 'Link kopieren' }).click();
+		const link = write.mock.calls[0][0];
+		expect(link).toBe(shareLink('https://ajiai-labs.github.io/GoTV/neu/tv/em-finale-2026.sgf'));
+		expect(link).not.toContain(window.location.host);
+	});
+
+	it('shows the link selected in a field when the clipboard refuses', async () => {
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(LONG));
+		vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+		await render(SgfReplayView, { initialUrl: URL_SGF });
+		await expect.element(page.getByText(/Zug 0 · Gefangene/)).toBeVisible();
+		await next();
+		await page.getByRole('button', { name: 'Link kopieren' }).click();
+		const field = page.getByRole('textbox', { name: 'Link zu dieser Partie bei Zug 1' });
+		await expect.element(field).toHaveValue(shareLink(URL_SGF, 1));
+		await expect.element(field).toHaveAttribute('readonly');
+		await expect.element(field).toHaveFocus();
+		await expect.element(page.getByText(/Der Link ist markiert/)).toBeVisible();
+	});
+
+	it('cannot share pasted SGF or a KGS game, and says why', async () => {
+		const pasted = await render(SgfReplayView, {});
+		await page.getByLabelText('SGF einfügen:').fill(LONG);
+		await page.getByRole('button', { name: 'Laden', exact: true }).click();
+		await expect.element(page.getByRole('button', { name: 'Link kopieren' })).toBeDisabled();
+		await expect.element(page.getByText(/nicht bei Dateien oder eingefügtem SGF/)).toBeVisible();
+		await pasted.unmount();
+
+		await render(SgfReplayView, { initialTree: parseSgf(LONG), replayKey: 'kgs-5' });
+		await expect.element(page.getByRole('button', { name: 'Link kopieren' })).toBeDisabled();
+		await expect
+			.element(page.getByText(/KGS-Partien haben keine öffentliche Adresse/))
+			.toBeVisible();
+	});
+
+	it('opens a shared link at its move, before "Weiter bei Zug N"', async () => {
+		window.localStorage.setItem(
+			'gotv.replays',
+			JSON.stringify({
+				['url:' + URL_SGF]: {
+					move: 1,
+					title: 'Ann – Bob',
+					url: URL_SGF,
+					updatedAt: 1,
+					bookmarks: []
+				}
+			})
+		);
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(LONG));
+		await render(SgfReplayView, { initialUrl: URL_SGF, initialMove: 3 });
+		await expect.element(page.getByText(/Zug 3 · Gefangene/)).toBeVisible();
+		expect(document.body.textContent).not.toContain('Weiter bei Zug');
+	});
+
+	it('ignores a move beyond the game and resumes as usual', async () => {
+		window.localStorage.setItem(
+			'gotv.replays',
+			JSON.stringify({
+				['url:' + URL_SGF]: {
+					move: 1,
+					title: 'Ann – Bob',
+					url: URL_SGF,
+					updatedAt: 1,
+					bookmarks: []
+				}
+			})
+		);
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(LONG));
+		await render(SgfReplayView, { initialUrl: URL_SGF, initialMove: 99 });
+		await expect.element(page.getByText(/Weiter bei Zug 1/)).toBeVisible();
+		await expect.element(page.getByText(/Zug 1 · Gefangene/)).toBeVisible();
+	});
+
+	it('switches KataGo on for the opened game without changing the stored default', async () => {
+		const engine = getKataGoEngine();
+		vi.spyOn(engine, 'analyze').mockReturnValue(new Promise(() => {}));
+		vi.spyOn(engine, 'cancel').mockImplementation(() => {});
+		await render(SgfReplayView, {
+			initialTree: parseSgf(LONG),
+			replayKey: 'kgs-8',
+			kataGo: true
+		});
+		await expect.element(page.getByRole('checkbox', { name: 'KataGo-Analyse' })).toBeChecked();
+		expect(window.localStorage.getItem('gotv.katago')).toBeNull();
+	});
+});

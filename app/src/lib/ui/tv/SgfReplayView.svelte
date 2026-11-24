@@ -17,7 +17,8 @@
 	// already in memory (a KGS game watched to the end). Own moves become side
 	// branches, KataGo helps on request, the place, bookmarks and variations
 	// are remembered per game. `compact`: board and navigation only (Live).
-	import { untrack } from 'svelte';
+	// "Link kopieren" shares a game from an address at the current move.
+	import { onDestroy, tick, untrack } from 'svelte';
 	import Board from '#lib/ui/Board.svelte';
 	import BoardNav from '#lib/ui/BoardNav.svelte';
 	import { config } from '#lib/config.ts';
@@ -50,6 +51,7 @@
 	} from '#lib/model/ReplayProgress.ts';
 	import type { ReplayBookmark } from '#lib/model/ReplayProgress.ts';
 	import { getSgfFileName, writeSgf } from '#lib/model/SgfWriter.ts';
+	import { getReplayShareLink } from '#lib/model/ReplayLink.ts';
 	import type { GameTree, PlayerColor, Point, SgfProp } from '#lib/model/types.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import KataGoPanel from './KataGoPanel.svelte';
@@ -58,6 +60,8 @@
 		initialUrl = null,
 		initialTree = null,
 		replayKey = null,
+		initialMove = null,
+		kataGo = false,
 		compact = false
 	}: {
 		initialUrl?: string | null;
@@ -65,6 +69,12 @@
 		// Remembers progress and bookmarks of an initialTree game (e.g. a KGS
 		// game id); an URL or pasted text names itself.
 		replayKey?: string | null;
+		// Move of the main line to open initialUrl at (a shared link's "zug");
+		// wins over "Weiter bei Zug N". Out of range: ignored.
+		initialMove?: number | null;
+		// KataGo switched on for the first game shown (a KGS game of the
+		// viewer, after it ended) - the stored default stays as it is.
+		kataGo?: boolean;
 		compact?: boolean;
 	} = $props();
 
@@ -75,6 +85,9 @@
 	};
 
 	const COLOR_LABEL = { black: 'replay.black', white: 'replay.white' } as const;
+
+	// How long "Link kopiert" stays.
+	const COPIED_MS = 3000;
 
 	let status = $state<'empty' | 'ready' | 'error'>('empty');
 	// The error text, built when shown (it follows a language switch).
@@ -93,11 +106,25 @@
 	let kataGoMoves = $state.raw<{ nodeId: number; moves: Array<KataGoMove> } | null>(null);
 	// Why the last click on the board was not played (ko, suicide).
 	let moveNotice = $state<MessageKey | null>(null);
+	// Where the shown game came from: only games from an address can be shared.
+	let source = $state<'url' | 'text' | 'game' | null>(null);
+	// "Link kopieren": copied, or shown in a field to copy by hand.
+	let shareState = $state<'idle' | 'copied' | 'manual'>('idle');
+	let shareField: HTMLInputElement | undefined = $state();
+	// KataGo on for the first game shown (prop kataGo), not for later ones.
+	let kataGoStart = $state(false);
 
 	const uid = $props.id();
 	let loadCount = 0;
 	let prevTree: GameTree | null | undefined;
 	let prevUrl: string | null | undefined;
+	let initialMoveUsed = false;
+	let kataGoUsed = false;
+	let copiedTimer: ReturnType<typeof setTimeout> | null = null;
+
+	onDestroy(() => {
+		if (copiedTimer) clearTimeout(copiedTimer);
+	});
 
 	// Opens initialTree / initialUrl at the start and whenever one changes.
 	$effect(() => {
@@ -136,11 +163,22 @@
 	// regardless of where the live view's currentNode happened to be.
 	function applyTree(game: GameTree) {
 		loadCount++;
-		showTree(game, replayKey ? 'game:' + replayKey : null, null);
+		showTree(game, replayKey ? 'game:' + replayKey : null, null, true);
 	}
 
-	// Opens a parsed game, at the move where the viewer stopped last time.
-	function showTree(parsed: GameTree, key: string | null, url: string | null) {
+	// The move of a shared link, once, for the game of initialUrl only.
+	function takeLinkedMove(url: string | null, moves: number): number | null {
+		if (initialMoveUsed || compact || !url || url !== initialUrl) return null;
+		initialMoveUsed = true;
+		const move = initialMove;
+		return typeof move === 'number' && Number.isInteger(move) && move >= 0 && move < moves
+			? move
+			: null;
+	}
+
+	// Opens a parsed game, at the move of a shared link or where the viewer
+	// stopped last time.
+	function showTree(parsed: GameTree, key: string | null, url: string | null, fromGame = false) {
 		const progress = key && !compact ? loadReplayProgress(key) : null;
 		let opened = parsed;
 		if (progress?.variations?.length) {
@@ -148,12 +186,16 @@
 			opened = applyVariationEntries(opened, progress.variations);
 		}
 		const mainLine = getMainLine(opened);
+		const linkedMove = takeLinkedMove(url, mainLine.length);
 		const resumeMove =
-			progress && progress.move > 0 && progress.move < mainLine.length ? progress.move : null;
+			linkedMove === null && progress && progress.move > 0 && progress.move < mainLine.length
+				? progress.move
+				: null;
+		const startMove = linkedMove ?? resumeMove;
 		let node = opened.rootNode;
 		let shown = { ...opened, currentNode: node, currentLine: getGameLine(opened, node) };
-		if (resumeMove) {
-			node = mainLine[resumeMove];
+		if (startMove) {
+			node = mainLine[startMove];
 			shown = {
 				...opened,
 				computedState: computeGameNodeStates(opened, node),
@@ -174,10 +216,14 @@
 		bookmarkDraft = null;
 		kataGoMoves = null;
 		moveNotice = null;
+		source = url ? 'url' : fromGame ? 'game' : 'text';
+		shareState = 'idle';
+		kataGoStart = kataGo && !compact && !kataGoUsed;
+		kataGoUsed = true;
 		// A game from an address goes straight into "Zuletzt nachgespielt",
 		// so it can be found again (also offline) before a move was played.
 		if (key && url && !compact) {
-			saveReplayMove(key, resumeMove || 0, getTitle(shown), url);
+			saveReplayMove(key, startMove || 0, getTitle(shown), url);
 		}
 	}
 
@@ -352,6 +398,27 @@
 		bookmarkDraft = null;
 	}
 
+	// Copies the link; without the Clipboard API (or when it is refused) the
+	// link appears selected in a read-only field to copy by hand.
+	async function onCopyLink() {
+		const link = shareLink;
+		if (!link) return;
+		if (copiedTimer) clearTimeout(copiedTimer);
+		try {
+			if (typeof navigator.clipboard?.writeText !== 'function') throw new Error('no clipboard');
+			await navigator.clipboard.writeText(link);
+			shareState = 'copied';
+			copiedTimer = setTimeout(() => {
+				if (shareState === 'copied') shareState = 'idle';
+			}, COPIED_MS);
+		} catch {
+			shareState = 'manual';
+			await tick();
+			shareField?.focus();
+			shareField?.select();
+		}
+	}
+
 	function onFileChange(event: Event) {
 		const field = event.currentTarget as HTMLInputElement;
 		const file = field.files?.[0];
@@ -413,6 +480,22 @@
 					: t('replay.view.continuationVariation', { point });
 			return { nodeId: continuation.nodeId, label, shown: continuation.nodeId === shownNext };
 		});
+	});
+	// The move of the main line shown (inside a variation: where it left the
+	// game) - a shared link opens the game there.
+	let linkMove = $derived(
+		Math.max(0, mainLine.indexOf(typeof branchPoint === 'number' ? branchPoint : currentNode))
+	);
+	let shareLink = $derived(
+		source === 'url' && progressUrl
+			? getReplayShareLink(progressUrl, linkMove, config.basePath)
+			: null
+	);
+	let shareReason = $derived.by((): MessageKey | null => {
+		if (shareLink) return null;
+		if (source === 'game') return 'replay.view.linkNoKgs';
+		if (source === 'url') return 'replay.view.linkNotPublic';
+		return 'replay.view.linkNoFile';
 	});
 	let boardLabel = $derived(
 		playerNames.black && playerNames.white
@@ -543,7 +626,16 @@
 			<button type="button" class="small-button" onclick={onExportSgf}>
 				{t('replay.view.exportSgf')}
 			</button>
-			{#if bookmarkDraft === null}
+			<button
+				type="button"
+				class="small-button"
+				disabled={!shareLink}
+				aria-describedby={shareReason ? `${uid}-share-reason` : undefined}
+				onclick={onCopyLink}
+			>
+				{t('replay.view.copyLink')}
+			</button>
+			{#if progressKey && bookmarkDraft === null}
 				<button
 					type="button"
 					class="small-button"
@@ -554,6 +646,26 @@
 				</button>
 			{/if}
 		</div>
+		{#if shareReason}
+			<p id="{uid}-share-reason" class="share-note muted">{t(shareReason)}</p>
+		{/if}
+		{#if shareState === 'copied'}
+			<p class="share-note share-copied" role="status">{t('replay.view.linkCopied')}</p>
+		{/if}
+		{#if shareState === 'manual' && shareLink}
+			<div class="share-manual">
+				<input
+					bind:this={shareField}
+					type="text"
+					class="share-field"
+					readonly
+					value={shareLink}
+					aria-label={t('replay.view.linkField', { move: linkMove })}
+					onfocus={(e) => e.currentTarget.select()}
+				/>
+				<p class="muted">{t('replay.view.linkSelect')}</p>
+			</div>
+		{/if}
 		{#if bookmarkDraft !== null}
 			<form class="bookmark-form" onsubmit={onSaveBookmark}>
 				<input
@@ -651,14 +763,13 @@
 						<KataGoPanel
 							{tree}
 							nodeId={currentNode}
+							startEnabled={kataGoStart}
 							onMoves={onKataGoMoves}
 							{onLayLine}
 							onJump={changeCurrentNode}
 						/>
 					{/key}
-					{#if progressKey}
-						{@render progress()}
-					{/if}
+					{@render progress()}
 					{@render commentBox()}
 					{@render sources()}
 				</div>
@@ -888,6 +999,35 @@
 		gap: 8px;
 	}
 
+	.share-note,
+	.share-manual p {
+		margin: 0;
+		font-size: 0.9em;
+	}
+
+	.share-copied {
+		color: var(--accent);
+		font-weight: 650;
+	}
+
+	.share-manual {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.share-field {
+		width: 100%;
+		min-width: 0;
+		padding: 6px 8px;
+		border: 1px solid var(--accent);
+		border-radius: var(--radius-s);
+		background: var(--surface);
+		color: var(--ink);
+		font: inherit;
+		font-size: max(16px, 0.9em);
+	}
+
 	.bookmark-form {
 		display: flex;
 		flex-wrap: wrap;
@@ -1001,7 +1141,8 @@
 	}
 
 	:global([data-design='oldschool']) textarea,
-	:global([data-design='oldschool']) .bookmark-input {
+	:global([data-design='oldschool']) .bookmark-input,
+	:global([data-design='oldschool']) .share-field {
 		border: 2px inset #ece9e2;
 		border-radius: 0;
 		background: var(--paper, #ffffff);

@@ -3,6 +3,9 @@
 	// the curve; below the games played last and the tournament games.
 	// Opens, in this order: ?sgf=<address>, the KGS game handed over after it
 	// ended (app.state.tvReplayGameId), else the loader (file or SGF text).
+	// &zug=<n> (a shared link) opens ?sgf= at move n of the main line;
+	// ?katago=1 switches KataGo on for the handed-over KGS game - only once
+	// that game is over (no help during a running game).
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { page } from '$app/state';
@@ -10,6 +13,7 @@
 	import { fetchTvEvents } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import { applyOgsLinks, loadOgsLinks } from '#lib/model/OgsLinks.ts';
+	import { parseMoveParam } from '#lib/model/ReplayLink.ts';
 	import SgfReplayView from '#lib/ui/tv/SgfReplayView.svelte';
 	import RecentlyReplayed from '#lib/ui/tv/RecentlyReplayed.svelte';
 	import RecentReplays from '#lib/ui/tv/RecentReplays.svelte';
@@ -18,12 +22,21 @@
 	const REFRESH_MS = 60000;
 
 	let sgfUrl = $derived(page.url.searchParams.get('sgf') || null);
+	let linkedMove = $derived(sgfUrl ? parseMoveParam(page.url.searchParams.get('zug')) : null);
 	let replayGameId = $derived(app.state.tvReplayGameId ?? null);
-	let replayTree = $derived(
-		!sgfUrl && replayGameId ? (app.state.gamesById[replayGameId]?.tree ?? null) : null
+	let replayGame = $derived(
+		!sgfUrl && replayGameId ? (app.state.gamesById[replayGameId] ?? null) : null
+	);
+	let replayTree = $derived(replayGame?.tree ?? null);
+	let replayKataGo = $derived(
+		!!replayTree && !!replayGame?.over && page.url.searchParams.get('katago') === '1'
 	);
 	let viewKey = $derived(
-		sgfUrl ? 'url:' + sgfUrl : replayTree ? 'game-' + String(replayGameId) : 'manual'
+		sgfUrl
+			? 'url:' + sgfUrl + (linkedMove === null ? '' : '@' + String(linkedMove))
+			: replayTree
+				? 'game-' + String(replayGameId)
+				: 'manual'
 	);
 
 	let events = $state.raw<Array<TvEvent>>([]);
@@ -95,6 +108,8 @@
 				initialUrl={sgfUrl}
 				initialTree={replayTree}
 				replayKey={replayTree ? 'kgs-' + String(replayGameId) : null}
+				initialMove={linkedMove}
+				kataGo={replayKataGo}
 			/>
 		{/key}
 	</div>

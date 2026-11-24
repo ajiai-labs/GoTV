@@ -16,6 +16,8 @@
 	import UnderConstructionModal from '#lib/ui/UnderConstructionModal.svelte';
 	import ReminderWatcher from '#lib/ui/tv/ReminderWatcher.svelte';
 	import FollowWatcher from '#lib/ui/user/FollowWatcher.svelte';
+	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
+	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -159,6 +161,9 @@
 		<OfflineAlert />
 	{/if}
 
+	<!-- Web version on iPad/iPhone Safari: how to add GoTV to the home screen -->
+	<HomeScreenHint />
+
 	<main>
 		{@render children()}
 	</main>
@@ -180,6 +185,7 @@
 	<!-- Followed KGS players: a notification when one starts a game -->
 	{#if !config.guestOnly}
 		<FollowWatcher />
+		<FavoriteRoomsWatcher />
 	{/if}
 
 	{#if state.showUnderConstruction}

@@ -202,4 +202,31 @@ describe('restoreBackup', () => {
 		expect(changed).toBe(0);
 		expect(tablet.getItem('gotv.favorites')).toBe('{"channels":["egf"]}');
 	});
+	it('joins favourite KGS rooms as a union', () => {
+		const tablet = storageFrom({
+			'gotv.favoriteRooms': JSON.stringify([{ id: 3, name: 'Deutscher Raum' }])
+		});
+		restoreBackup(tablet, {
+			format: 'gotv-backup',
+			version: 1,
+			createdAt: '',
+			data: {
+				'gotv.favoriteRooms': JSON.stringify([
+					{ id: 9, name: 'Go Club' },
+					{ id: 3, name: 'Deutscher Raum' }
+				])
+			}
+		});
+		expect(JSON.parse(tablet.getItem('gotv.favoriteRooms'))).toEqual([
+			{ id: 3, name: 'Deutscher Raum' },
+			{ id: 9, name: 'Go Club' }
+		]);
+	});
+	it('leaves the closed home screen hint on this device', () => {
+		const backup = collectBackup(
+			storageFrom({ 'gotv.homeHintDismissed': '1', 'gotv.katago': '1' }),
+			NOW
+		);
+		expect(Object.keys(backup.data)).toEqual(['gotv.katago']);
+	});
 });

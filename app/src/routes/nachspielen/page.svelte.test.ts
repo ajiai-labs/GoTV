@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import { app } from '#lib/app.svelte.ts';
 import { getInitialState } from '#lib/model/appState.ts';
 import { parseSgf } from '#lib/model/sgf.ts';
+import { getKataGoEngine } from '#lib/model/KataGoEngine.ts';
 import type { GameChannel } from '#lib/model/types.ts';
 import type { TvEvent } from '#lib/model/tv.ts';
 
@@ -78,6 +79,62 @@ describe('Nachspielen', () => {
 		expect(
 			Object.keys(JSON.parse(window.localStorage.getItem('gotv.replays') ?? '{}') as object)
 		).toEqual(['game:kgs-77']);
+	});
+
+	it('opens a shared link at its move (zug)', async () => {
+		mocked.url = new URL(
+			'http://localhost/nachspielen?sgf=' +
+				encodeURIComponent('https://example.org/g.sgf') +
+				'&zug=2'
+		);
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+			new Response('(;SZ[9]PB[Ann]PW[Bob];B[aa];W[bb];B[cc])')
+		);
+		await render(Page);
+		await expect
+			.element(page.getByRole('img', { name: /Ann gegen Bob, Brett nach Zug 2/ }))
+			.toBeVisible();
+	});
+
+	it('ignores an invalid zug', async () => {
+		mocked.url = new URL(
+			'http://localhost/nachspielen?sgf=' +
+				encodeURIComponent('https://example.org/g.sgf') +
+				'&zug=abc'
+		);
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+			new Response('(;SZ[9]PB[Ann]PW[Bob];B[aa];W[bb];B[cc])')
+		);
+		await render(Page);
+		await expect
+			.element(page.getByRole('img', { name: /Ann gegen Bob, Brett nach Zug 0/ }))
+			.toBeVisible();
+	});
+
+	it('switches KataGo on with katago=1 only for a KGS game that is over', async () => {
+		const engine = getKataGoEngine();
+		vi.spyOn(engine, 'analyze').mockReturnValue(new Promise(() => {}));
+		vi.spyOn(engine, 'cancel').mockImplementation(() => {});
+		mocked.url = new URL('http://localhost/nachspielen?katago=1');
+		const tree = parseSgf('(;SZ[9]PB[kim]PW[lee];B[aa])');
+		app.state = {
+			...getInitialState(LOGGED_OUT),
+			tvReplayGameId: 77,
+			gamesById: { 77: { id: 77, type: 'free', over: true, tree } as unknown as GameChannel }
+		};
+		const over = await render(Page);
+		await expect.element(page.getByRole('checkbox', { name: 'KataGo-Analyse' })).toBeChecked();
+		expect(window.localStorage.getItem('gotv.katago')).toBeNull();
+		await over.unmount();
+
+		// A running game: KataGo stays off.
+		app.state = {
+			...getInitialState(LOGGED_OUT),
+			tvReplayGameId: 78,
+			gamesById: { 78: { id: 78, type: 'free', tree } as unknown as GameChannel }
+		};
+		await render(Page);
+		await expect.element(page.getByRole('checkbox', { name: 'KataGo-Analyse' })).not.toBeChecked();
 	});
 
 	it('opens a tournament game on this page', async () => {

@@ -197,6 +197,40 @@ describe('GameScreen', () => {
 		suggest.mockRestore();
 	});
 
+	it('offers a KataGo review after an own game is over', async () => {
+		mockActions();
+		const suggest = vi.spyOn(app, 'suggestGameReplay').mockImplementation(() => {});
+		// gotvfan (the viewer) played black.
+		const game = fixtureGame({ over: true, score: 'W+RESIGN' });
+		await render(GameScreen, { game });
+		await page.getByRole('button', { name: 'Mit KataGo auswerten' }).click();
+		expect(suggest).toHaveBeenCalledWith(game, { kataGo: true });
+		suggest.mockRestore();
+	});
+
+	it('never offers KataGo while the own game runs', async () => {
+		mockActions();
+		await render(GameScreen, { game: fixtureGame(), playing: true });
+		await expect.element(page.getByRole('button', { name: 'Passen' })).toBeVisible();
+		await expect
+			.element(page.getByRole('button', { name: 'Mit KataGo auswerten' }))
+			.not.toBeInTheDocument();
+	});
+
+	it('offers no KataGo review for a watched game of others', async () => {
+		mockActions();
+		const game = fixtureGame({
+			over: true,
+			score: 'W+RESIGN',
+			players: { white: anna, black: kibitz }
+		});
+		await render(GameScreen, { game });
+		await expect.element(page.getByRole('button', { name: 'Nachspielen' })).toBeVisible();
+		await expect
+			.element(page.getByRole('button', { name: 'Mit KataGo auswerten' }))
+			.not.toBeInTheDocument();
+	});
+
 	it('fills the height on an iPad in landscape, players beside the board', async () => {
 		mockActions();
 		await page.viewport(1180, 820);

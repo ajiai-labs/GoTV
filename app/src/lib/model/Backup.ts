@@ -7,13 +7,15 @@
 // keeps its newer state, plain settings come from the file.
 import { MAX_REMEMBERED_GAMES } from './ReplayProgress';
 import { mergeFollowed } from './FollowedPlayers';
+import { mergeFavoriteRooms } from './FavoriteRooms';
 import { t } from '#lib/i18n/index.svelte.ts';
 export const BACKUP_FORMAT = 'gotv-backup';
 export const BACKUP_VERSION = 1;
 const KEY_RE = /^gotv\.[A-Za-z]+$/;
 // Reminders already shown here: carrying them over would silence the
-// other device's own reminders.
-const LOCAL_ONLY_KEYS = ['gotv.notified'];
+// other device's own reminders. The closed "Zum Home-Bildschirm" hint
+// belongs to this device too (the tablet should still show it).
+const LOCAL_ONLY_KEYS = ['gotv.notified', 'gotv.homeHintDismissed'];
 const MAX_VALUE_LENGTH = 1024 * 1024;
 const MAX_KEYS = 100;
 export type BackupData = Record<string, string>;
@@ -215,6 +217,8 @@ const MERGERS: Record<string, (own: any, incoming: any) => any> = {
 	'gotv.replays': mergeReplays,
 	// Followed KGS players: both lists together.
 	'gotv.followedPlayers': mergeFollowed,
+	// Favourite KGS rooms: both lists together.
+	'gotv.favoriteRooms': mergeFavoriteRooms,
 	// Per event / per channel: the file's value wins, others stay.
 	'gotv.ogsLinks': (own, incoming) => ({
 		...(isPlainObject(own) ? own : {}),

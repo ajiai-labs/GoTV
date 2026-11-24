@@ -29,10 +29,14 @@
 		nodeId,
 		onMoves,
 		onJump,
-		onLayLine
+		onLayLine,
+		startEnabled = false
 	}: {
 		tree: GameTree;
 		nodeId: number;
+		// On from the start for this game only (review of an own KGS game after
+		// it ended); the stored default (gotv.katago) is left as it is.
+		startEnabled?: boolean;
 		// Top moves for the board labels (null: none to show).
 		onMoves: (nodeId: number, moves: Array<KataGoMove> | null) => unknown;
 		// Shows a position of the game (curve and mistake list).
@@ -104,7 +108,7 @@
 		return game.computedState[id]?.board.length ?? 19;
 	}
 
-	let enabled = $state(loadEnabled());
+	let enabled = $state(untrack(() => startEnabled) || loadEnabled());
 	let status = $state<'idle' | 'running' | 'ready' | 'error'>('idle');
 	let analysis = $state.raw<KataGoAnalysis | null>(null);
 	let analysedNode = $state<number | null>(null);

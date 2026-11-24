@@ -18,6 +18,12 @@ export const app: Translation<typeof de> = {
 	'app.layout.github': 'GoTV on GitHub',
 	'app.layout.openProject': 'An open project – bug reports and ideas are welcome there.',
 
+	// HomeScreenHint (web version on iPad and iPhone)
+	'app.homeHint.title': 'GoTV as an app',
+	'app.homeHint.text':
+		'Tap Share {icon}, then “Add to Home Screen”. GoTV then opens like an app, without the address bar.',
+	'app.homeHint.close': 'Close hint',
+
 	// Live (routes/+page.svelte)
 	'app.live.pageTitle': 'Live – GoTV',
 	'app.live.streamFromChat': 'Stream from the chat',

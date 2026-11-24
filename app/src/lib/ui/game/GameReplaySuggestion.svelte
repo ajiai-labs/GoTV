@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { t } from '#lib/i18n/index.svelte.ts';
-	// Shown once a watched (not played) game ends: replay exactly this game on
-	// the Nachspielen page - with the tree already in memory, no SGF needed.
+	// Shown once a game ends: replay exactly this game on the Nachspielen page -
+	// with the tree already in memory, no SGF needed. For a game the viewer
+	// played (onReview given) also "Mit KataGo auswerten": the same with KataGo
+	// switched on. Never offered while a game runs (no help during a game).
 	let {
 		onReplay,
+		onReview,
 		onDismiss
 	}: {
 		onReplay: () => unknown;
+		onReview?: () => unknown;
 		onDismiss: () => unknown;
 	} = $props();
 </script>
@@ -17,6 +21,11 @@
 		<button type="button" class="button button-primary" onclick={() => onReplay()}>
 			{t('game.replay.replay')}
 		</button>
+		{#if onReview}
+			<button type="button" class="button" onclick={() => onReview()}>
+				{t('game.replay.review')}
+			</button>
+		{/if}
 		<button type="button" class="button" onclick={() => onDismiss()}>
 			{t('game.replay.close')}
 		</button>
@@ -41,6 +50,8 @@
 
 	.GameReplaySuggestion-buttons {
 		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: 8px;
 	}
 

@@ -1,0 +1,16 @@
+{
+	"name": "GoTV",
+	"short_name": "GoTV",
+	"description": "Live Go broadcasts with the board next to the stream, a tournament calendar, Go channels and game replay with KataGo.",
+	"lang": "de",
+	"start_url": "./",
+	"scope": "./",
+	"display": "standalone",
+	"background_color": "#eef1ec",
+	"theme_color": "#1f7a5c",
+	"icons": [
+		{ "src": "icons/gotv-128.png", "sizes": "128x128", "type": "image/png" },
+		{ "src": "icons/gotv-256.png", "sizes": "256x256", "type": "image/png" },
+		{ "src": "icons/gotv-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+	]
+}

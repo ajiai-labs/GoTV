@@ -19,6 +19,12 @@ export const app = {
 	'app.layout.github': 'GoTV auf GitHub',
 	'app.layout.openProject': 'Offenes Projekt – Fehler und Ideen gern dort melden.',
 
+	// HomeScreenHint (web version on iPad and iPhone)
+	'app.homeHint.title': 'GoTV als App',
+	'app.homeHint.text':
+		'Tippe auf Teilen {icon} und dann auf „Zum Home-Bildschirm“. GoTV startet dann wie eine App, ohne Adressleiste.',
+	'app.homeHint.close': 'Hinweis schließen',
+
 	// Live (routes/+page.svelte)
 	'app.live.pageTitle': 'Live – GoTV',
 	'app.live.streamFromChat': 'Stream aus dem Chat',

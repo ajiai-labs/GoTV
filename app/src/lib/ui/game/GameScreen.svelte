@@ -127,6 +127,9 @@
 	let showReplaySuggestion = $derived(
 		!playing && !!game.over && !!tree && dismissedReplayForGameId !== game.id
 	);
+	// "Mit KataGo auswerten" only for a game the viewer played, and only once
+	// it is over - never KataGo while a game runs.
+	let canReview = $derived(!!game.over && !!playerColor);
 	let title = $derived.by(() => {
 		if (game.over || game.score) {
 			const score = game.score ? formatScoreDe(game.score) : '';
@@ -294,6 +297,7 @@
 					<div class="GameScreen-overlay">
 						<GameReplaySuggestion
 							onReplay={() => app.suggestGameReplay(game)}
+							onReview={canReview ? () => app.suggestGameReplay(game, { kataGo: true }) : undefined}
 							onDismiss={() => (dismissedReplayForGameId = game.id)}
 						/>
 					</div>
