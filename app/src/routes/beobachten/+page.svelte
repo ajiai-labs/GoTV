@@ -8,6 +8,8 @@
 	import { fetchTvEvents } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
+	import FollowedPlayers from '#lib/ui/user/FollowedPlayers.svelte';
+	import { followed } from '#lib/ui/user/followed.svelte.ts';
 	import GameList from '#lib/ui/game/GameList.svelte';
 	import GameListFilter from '#lib/ui/game/GameListFilter.svelte';
 	import GameScreen from '#lib/ui/game/GameScreen.svelte';
@@ -43,6 +45,11 @@
 	{#if activeGame}
 		<GameScreen game={activeGame} {tvEvents} />
 	{:else}
+		{#if followed.names.length}
+			<div class="WatchScreen-followed">
+				<FollowedPlayers />
+			</div>
+		{/if}
 		<section class="WatchScreen-list panel" aria-labelledby="watch-title">
 			<h1 id="watch-title" class="panel-title">Partien beobachten</h1>
 			<GameListFilter
@@ -62,6 +69,10 @@
 </KgsGate>
 
 <style>
+	.WatchScreen-followed {
+		margin-bottom: var(--gap);
+	}
+
 	.WatchScreen-list {
 		max-width: 960px;
 		margin: 0 auto;

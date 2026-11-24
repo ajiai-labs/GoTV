@@ -6,6 +6,7 @@
 // Restoring merges and never deletes: lists are joined, a replayed game
 // keeps its newer state, plain settings come from the file.
 import { MAX_REMEMBERED_GAMES } from './ReplayProgress';
+import { mergeFollowed } from './FollowedPlayers';
 export const BACKUP_FORMAT = 'gotv-backup';
 export const BACKUP_VERSION = 1;
 const KEY_RE = /^gotv\.[A-Za-z]+$/;
@@ -217,6 +218,8 @@ function mergeReplays(own: any, incoming: any): any {
 const MERGERS: Record<string, (own: any, incoming: any) => any> = {
 	'gotv.favorites': mergeFavorites,
 	'gotv.replays': mergeReplays,
+	// Followed KGS players: both lists together.
+	'gotv.followedPlayers': mergeFollowed,
 	// Per event / per channel: the file's value wins, others stay.
 	'gotv.ogsLinks': (own, incoming) => ({
 		...(isPlainObject(own) ? own : {}),

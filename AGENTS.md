@@ -641,6 +641,19 @@ Offen bleibt außerdem:
 - **Spielern folgen nur auf KGS** (24.11.2026): der Nutzer spielt nicht auf OGS, OGS ist nur
   Quelle für Übertragungen.
 
+## Spielern folgen (nur KGS, 24.11.2026)
+
+Stern "Folgen" im KGS-Profil (`UserDetailsModal`), Liste "Gefolgte Spieler" auf Live und
+(sobald jemand gefolgt wird) auf Beobachten: spielt gerade gegen X [Rang] · Zug N mit
+"Ansehen", sonst "gerade keine Partie". `app/src/lib/model/FollowedPlayers.ts` (Namen ohne
+Groß/Klein, `gotv.followedPlayers`, in "Meine Daten" vereinigt), reaktiv in
+`app/src/lib/ui/user/followed.svelte.ts`. `FollowWatcher` im Layout meldet per
+Browser-Benachrichtigung neue Partien gefolgter Spieler - gleicher Schalter und dieselbe
+Erlaubnis wie die Erinnerungen in "Mein GoTV"; Partien, die bei der Anmeldung schon laufen oder
+eines gerade gefolgten Spielers, nur in der Liste. Grundlage: KGS-Liste laufender Partien
+(`activeGames`), keine zusätzlichen Anfragen; private Partien stehen dort nicht. Nicht in der
+Web-Version (dort kein KGS).
+
 ## Automatische Gegnerwahl (KGS-Automatch, 24.11.2026)
 
 Neu in GoTV (gab es in Shin KGS nicht), Vorbild CGoban: Spielen-Seite, Schalter

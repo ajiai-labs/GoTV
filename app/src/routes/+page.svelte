@@ -30,6 +30,8 @@
 	import { formatEventDateRange } from '#lib/ui/tv/eventDate.ts';
 	import CinemaExample from '#lib/ui/tv/CinemaExample.svelte';
 	import MyGoTv from '#lib/ui/tv/MyGoTv.svelte';
+	import FollowedPlayers from '#lib/ui/user/FollowedPlayers.svelte';
+	import { config } from '#lib/config.ts';
 	import OfflineNotice from '#lib/ui/tv/OfflineNotice.svelte';
 	import RecentReplays from '#lib/ui/tv/RecentReplays.svelte';
 	import { getNotificationPermission } from '#lib/ui/tv/reminders.ts';
@@ -231,6 +233,9 @@
 				{notificationPermission}
 				{onToggleReminders}
 			/>
+			{#if !config.guestOnly}
+				<FollowedPlayers />
+			{/if}
 		</div>
 		<div class="below-side">
 			<BackupPanel />

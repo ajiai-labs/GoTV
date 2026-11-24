@@ -14,6 +14,7 @@
 	import FeedbackModal from '#lib/ui/FeedbackModal.svelte';
 	import UnderConstructionModal from '#lib/ui/UnderConstructionModal.svelte';
 	import ReminderWatcher from '#lib/ui/tv/ReminderWatcher.svelte';
+	import FollowWatcher from '#lib/ui/user/FollowWatcher.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -168,6 +169,10 @@
 	{/if}
 	<!-- "Mein GoTV": notifications 10 min before a starred event, app-wide -->
 	<ReminderWatcher />
+	<!-- Followed KGS players: a notification when one starts a game -->
+	{#if !config.guestOnly}
+		<FollowWatcher />
+	{/if}
 
 	{#if state.showUnderConstruction}
 		<UnderConstructionModal onClose={() => app.actions.onHideUnderConstruction()} />

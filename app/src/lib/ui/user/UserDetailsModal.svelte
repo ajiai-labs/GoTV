@@ -82,6 +82,7 @@
 	import UserDetailsEditForm from './UserDetailsEditForm.svelte';
 	import UserGameSummary from './UserGameSummary.svelte';
 	import UserRankGraph from './UserRankGraph.svelte';
+	import { followed } from './followed.svelte.ts';
 
 	const MAX_GAME_SUMMARIES = 500;
 
@@ -207,6 +208,16 @@
 							{:else if isMe}
 								<button class="button" type="button" onclick={() => (editing = true)}>
 									Profil bearbeiten
+								</button>
+							{/if}
+							{#if !isMe}
+								<button
+									class="button"
+									type="button"
+									aria-pressed={followed.has(user.name)}
+									onclick={() => user && followed.toggle(user.name)}
+								>
+									{followed.has(user.name) ? '★ Gefolgt' : '☆ Folgen'}
 								</button>
 							{/if}
 						</div>
