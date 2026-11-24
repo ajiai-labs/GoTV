@@ -214,6 +214,86 @@
       ]
     },
     {
+      "id": "speedgo-2026-11-29-krushelnytskyi-dobranis",
+      "name": "Speed Go Championship: Valerii Krushelnytskyi 7d – Denis Dobranis 6d",
+      "date_start": "2026-11-29",
+      "start": "2026-11-29T18:00:00+01:00",
+      "duration_minutes": 180,
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
+      "source": "speedgo"
+    },
+    {
+      "id": "speedgo-2026-12-01-podpera-drean-guenaizia",
+      "name": "Speed Go Championship: Lukáš Podpěra 7d – Benjamin Dréan-Guénaïzia 1p",
+      "date_start": "2026-12-01",
+      "start": "2026-12-01T18:00:00+01:00",
+      "duration_minutes": 180,
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
+      "source": "speedgo"
+    },
+    {
+      "id": "speedgo-2026-12-06-frejlak-debarre",
+      "name": "Speed Go Championship: Stanisław Frejlak 2p – Thomas Debarre 7d",
+      "date_start": "2026-12-06",
+      "start": "2026-12-06T18:00:00+01:00",
+      "duration_minutes": 180,
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
+      "source": "speedgo"
+    },
+    {
+      "id": "speedgo-2026-12-13-kravets-woo",
+      "name": "Speed Go Championship: Andrii Kravets 4p – Damen Woo 7d",
+      "date_start": "2026-12-13",
+      "start": "2026-12-13T18:00:00+01:00",
+      "duration_minutes": 180,
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
+      "source": "speedgo"
+    },
+    {
+      "id": "speedgo-2026-12-20-dai-komin",
+      "name": "Speed Go Championship: Junfu Dai 8d – Jan Komin 5d",
+      "date_start": "2026-12-20",
+      "start": "2026-12-20T18:00:00+01:00",
+      "duration_minutes": 180,
+      "platform": "twitch",
+      "stream_url": "https://www.twitch.tv/europeangofederation",
+      "channel": {
+        "platform": "twitch",
+        "id": "europeangofederation"
+      },
+      "region": "intl",
+      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
+      "source": "speedgo"
+    },
+    {
       "id": "twitch-egf-6bcc6ac9-c589-487c-a412-0beaa8128e51",
       "name": "European Women's Go Championship R1 | Live with Mateusz Surma 4p",
       "date_start": "2026-10-03",
@@ -435,84 +515,69 @@
       "source": "twitch-egf"
     },
     {
-      "id": "speedgo-2026-11-29-krushelnytskyi-dobranis",
-      "name": "Speed Go Championship: Valerii Krushelnytskyi 7d – Denis Dobranis 6d",
+      "id": "twitch-egf-90b480e2-c2e7-44a6-82ce-ed2714567fbb",
+      "name": "Speed Go Championship powered by Factorio | Valerii Krushelnytskyi 7d vs Denis Dobranis 6d | Live with Lukas Podpera 7d",
       "date_start": "2026-11-29",
       "start": "2026-11-29T18:00:00+01:00",
-      "duration_minutes": 180,
       "platform": "twitch",
       "stream_url": "https://www.twitch.tv/europeangofederation",
       "channel": {
         "platform": "twitch",
         "id": "europeangofederation"
       },
-      "region": "intl",
-      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
-      "source": "speedgo"
+      "source": "twitch-egf"
     },
     {
-      "id": "speedgo-2026-12-01-podpera-drean-guenaizia",
-      "name": "Speed Go Championship: Lukáš Podpěra 7d – Benjamin Dréan-Guénaïzia 1p",
+      "id": "twitch-egf-511cf1b2-80f3-4b00-848c-3c0800f36f0a",
+      "name": "/! TUESDAY!\\ Speed Go Championship powered by Factorio | Lukáš Podpěra 7d vs Benjamin Dréan-Guénaïzia 1p | Live with Tanguy Le Calvé 2p",
       "date_start": "2026-12-01",
       "start": "2026-12-01T18:00:00+01:00",
-      "duration_minutes": 180,
       "platform": "twitch",
       "stream_url": "https://www.twitch.tv/europeangofederation",
       "channel": {
         "platform": "twitch",
         "id": "europeangofederation"
       },
-      "region": "intl",
-      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
-      "source": "speedgo"
+      "source": "twitch-egf"
     },
     {
-      "id": "speedgo-2026-12-06-frejlak-debarre",
-      "name": "Speed Go Championship: Stanisław Frejlak 2p – Thomas Debarre 7d",
+      "id": "twitch-egf-bc4b4fc8-5d93-4eb0-8b4f-648788edba2f",
+      "name": "Speed Go Championship powered by Factorio | Stanisław Frejlak 2p vs Thomas Debarre 7d | Live with Benjamin Dréan-Guénaïzia 1p",
       "date_start": "2026-12-06",
       "start": "2026-12-06T18:00:00+01:00",
-      "duration_minutes": 180,
       "platform": "twitch",
       "stream_url": "https://www.twitch.tv/europeangofederation",
       "channel": {
         "platform": "twitch",
         "id": "europeangofederation"
       },
-      "region": "intl",
-      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
-      "source": "speedgo"
+      "source": "twitch-egf"
     },
     {
-      "id": "speedgo-2026-12-13-kravets-woo",
-      "name": "Speed Go Championship: Andrii Kravets 4p – Damen Woo 7d",
+      "id": "twitch-egf-46956edb-881b-4e34-8f89-359644cc013c",
+      "name": "Speed Go Championship powered by Factorio | Andrii Kravets 4p vs Damen Woo 7d | Live with Ali Jabarin 3p",
       "date_start": "2026-12-13",
       "start": "2026-12-13T18:00:00+01:00",
-      "duration_minutes": 180,
       "platform": "twitch",
       "stream_url": "https://www.twitch.tv/europeangofederation",
       "channel": {
         "platform": "twitch",
         "id": "europeangofederation"
       },
-      "region": "intl",
-      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
-      "source": "speedgo"
+      "source": "twitch-egf"
     },
     {
-      "id": "speedgo-2026-12-20-dai-komin",
-      "name": "Speed Go Championship: Junfu Dai 8d – Jan Komin 5d",
+      "id": "twitch-egf-4740de84-7147-4f16-97c8-24245d748cbc",
+      "name": "Speed Go Championship powered by Factorio | Junfu Dai 8d vs Jan Komin 5d | Live with Rémi Campagnie 6d",
       "date_start": "2026-12-20",
       "start": "2026-12-20T18:00:00+01:00",
-      "duration_minutes": 180,
       "platform": "twitch",
       "stream_url": "https://www.twitch.tv/europeangofederation",
       "channel": {
         "platform": "twitch",
         "id": "europeangofederation"
       },
-      "region": "intl",
-      "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
-      "source": "speedgo"
+      "source": "twitch-egf"
     }
   ],
   "channels": [
