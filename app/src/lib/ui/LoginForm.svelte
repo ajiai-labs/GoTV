@@ -5,6 +5,7 @@
 	import { get, set } from 'idb-keyval';
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { kgsMessage } from './kgsText.ts';
 
 	type SavedLogin = {
 		username: string | null;
@@ -18,7 +19,7 @@
 
 	let loggingIn = $derived(app.state.clientState.status === 'loggingIn');
 	let error = $derived(
-		app.state.loginError ||
+		kgsMessage(app.state.loginError) ||
 			(app.state.clientState.network !== 'online'
 				? 'KGS ist nicht erreichbar. Versuche es noch einmal oder prüfe die Internetverbindung.'
 				: null)

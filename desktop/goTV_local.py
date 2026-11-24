@@ -9,8 +9,8 @@ non-browser clients (measured: POST with Origin https://shin.gokgs.com ->
 200, Origin http://127.0.0.1:8788 -> HTTP 403; no Origin -> 200 + cookie).
 Even /json/access enforces the CORS origin whitelist, so the proxy keeps
 stripping the Origin header - forwarding it breaks the login (403).
-So the desktop build is compiled with REACT_APP_API_URL=/json/access
-and this server forwards POST/GET/OPTIONS to
+So the desktop build is compiled with VITE_API_URL=/json/access (the
+old React build: REACT_APP_API_URL=/json/access) and this server forwards POST/GET/OPTIONS to
 https://www.gokgs.com/json/access, passing session cookies (JSESSIONID,
 Path=/json matches the local /json/access) and keeping GET requests open
 for long-polling. Measurement + rationale: AGENTS.md.
@@ -223,6 +223,11 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
         if os.path.isdir(file_path):
             file_path = os.path.join(file_path, "index.html")
 
+        # Pages written one file each (SvelteKit prerender): /kalender ->
+        # kalender.html. Still inside the build directory (checked above).
+        if not os.path.isfile(file_path) and os.path.isfile(file_path + ".html"):
+            file_path = file_path + ".html"
+
         if os.path.isfile(file_path):
             self._serve_file(file_path, method)
         else:
@@ -292,7 +297,7 @@ def main(argv=None):
     if not os.path.isfile(os.path.join(build_dir, "index.html")):
         sys.stderr.write(
             "No build found in %s. Run install.sh first "
-            "(it builds with REACT_APP_API_URL=.../json/access).\n" % build_dir
+            "(it builds with VITE_API_URL=/json/access).\n" % build_dir
         )
         return 1
 

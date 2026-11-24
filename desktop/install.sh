@@ -15,10 +15,17 @@ else
   echo "python3 fehlt. Installation abgebrochen."
   exit 1
 fi
-if command -v yarn > /dev/null 2>&1; then
+if command -v npm > /dev/null 2>&1; then
   :
 else
-  echo "yarn fehlt. Mit Node.js 18 oder neuer: 'corepack enable' (oder 'npm install -g yarn')."
+  echo "npm fehlt. Bitte Node.js 20 oder neuer installieren."
+  exit 1
+fi
+
+if [ "${1:-}" = "--alt" ] && command -v yarn > /dev/null 2>&1; then
+  :
+elif [ "${1:-}" = "--alt" ]; then
+  echo "yarn fehlt (nur fuer --alt, die alte Oberflaeche). Mit Node.js 18 oder neuer: 'corepack enable' (oder 'npm install -g yarn')."
   echo "Nicht 'sudo apt install cmdtest' - das schlägt Ubuntu vor, ist aber ein anderes Programm."
   echo "Details: README.md, Abschnitt 'Quick start'."
   exit 1
@@ -30,11 +37,25 @@ else
   exit 1
 fi
 
-echo "1/4 Production-Build fuer den Desktop (REACT_APP_API_URL=/json/access)..."
 cd "$ROOT_DIR" || exit 1
-REACT_APP_API_URL=/json/access yarn build || exit 1
-rm -rf build-desktop
-mv build build-desktop
+if [ "${1:-}" = "--alt" ]; then
+  # The old React interface, as a way back until it is removed
+  # (docs/umbau-svelte.md, phase 6).
+  echo "1/4 Production-Build der alten Oberflaeche (REACT_APP_API_URL=/json/access)..."
+  REACT_APP_API_URL=/json/access yarn build || exit 1
+  rm -rf build-desktop
+  mv build build-desktop
+else
+  echo "1/4 Production-Build der Oberflaeche (app/, VITE_API_URL=/json/access)..."
+  if [ -d "$ROOT_DIR/app/node_modules" ]; then
+    :
+  else
+    (cd "$ROOT_DIR/app" && npm ci) || exit 1
+  fi
+  (cd "$ROOT_DIR/app" && VITE_API_URL=/json/access npm run build) || exit 1
+  rm -rf build-desktop
+  cp -rL app/build build-desktop
+fi
 
 echo "2/4 Launcher, Icon und Desktop-Datei..."
 mkdir -p "$HOME_DIR/.local/bin" \

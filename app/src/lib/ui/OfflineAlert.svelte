@@ -1,11 +1,12 @@
 <script lang="ts">
 	// Shown while logged in but the KGS connection is gone (old OfflineAlert).
 	import { app } from '#lib/app.svelte.ts';
+	import { kgsMessage } from './kgsText.ts';
 
 	let text = $derived.by(() => {
 		const { logoutError, clientState } = app.state;
 		let result = 'Verbindung zu KGS getrennt';
-		if (logoutError) result += ` – ${logoutError.replace(/\.$/, '')}`;
+		if (logoutError) result += ` – ${(kgsMessage(logoutError) ?? '').replace(/\.$/, '')}`;
 		if (clientState.retryTimes) result += '. Neuer Verbindungsversuch läuft …';
 		if (!logoutError && !clientState.retryTimes) result += '. Bitte melde dich neu an.';
 		return result;

@@ -74,7 +74,8 @@ class GoTvApp {
 	state: AppState = $state.raw(getInitialState(LOGGED_OUT));
 	store: AppStore | null = null;
 	client: KgsClient | null = null;
-	_actions: AppActions | null = null;
+	// Reactive, so pages waiting for the start (KgsGate) update once it ran.
+	_actions: AppActions | null = $state.raw(null);
 
 	get actions(): AppActions {
 		if (!this._actions) throw new Error('GoTV app not started');
