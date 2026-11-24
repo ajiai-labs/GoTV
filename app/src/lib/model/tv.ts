@@ -929,6 +929,16 @@ export function getLiveBroadcasts(
 			games: eventGames.filter((game) => gameMatchesEvent(game, event, roomsById))
 		}));
 }
+// Is anything on Live right now? Same rule as the Live page (a broadcast
+// with stream or boards in its live window) - lights the "Live" menu item.
+export function hasLiveBroadcast(
+	games: Array<GameChannel>,
+	events: Array<TvEvent>,
+	roomsById: Index<Room>,
+	now: Date
+): boolean {
+	return getLiveBroadcasts(games, events, roomsById, now).length > 0;
+}
 // ---------------------------------------------------------------------------
 // Stream URLs from chat
 // ---------------------------------------------------------------------------

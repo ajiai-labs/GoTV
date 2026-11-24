@@ -11,6 +11,7 @@ export const app: Translation<typeof de> = {
 	'app.nav.play': 'Play',
 	'app.nav.chat': 'Chat',
 	'app.nav.search': 'Search',
+	'app.nav.liveNow': 'a broadcast is on right now',
 	'app.layout.home': 'GoTV, to Live',
 	'app.layout.areas': 'Sections',
 	'app.layout.login': 'Log in',

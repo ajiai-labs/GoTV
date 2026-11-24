@@ -4,6 +4,7 @@ import {
 	getLiveEventGames,
 	getLiveEventForGame,
 	getLiveBroadcasts,
+	hasLiveBroadcast,
 	getBroadcastForStream,
 	getLiveWindow,
 	hasVideoStream,
@@ -1313,5 +1314,25 @@ describe('fetchTvChannels', () => {
 		expect(events.map((e) => e.id)).toEqual(['e1']);
 		expect(channels).toEqual([]);
 		expect(global.fetch).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('hasLiveBroadcast', () => {
+	const now = new Date('2026-11-29T18:30:00+01:00');
+	const event = {
+		id: 'speedgo',
+		name: 'Speed Go',
+		date_start: '2026-11-29',
+		start: '2026-11-29T18:00:00+01:00',
+		duration_minutes: 180,
+		platform: 'twitch',
+		stream_url: 'https://www.twitch.tv/europeangofederation'
+	};
+
+	it('is true while a broadcast is in its live window, false before', () => {
+		const events = [validateTvEvent(event)!];
+		expect(hasLiveBroadcast([], events, {}, now)).toBe(true);
+		expect(hasLiveBroadcast([], events, {}, new Date('2026-11-28T18:30:00+01:00'))).toBe(false);
+		expect(hasLiveBroadcast([], [], {}, now)).toBe(false);
 	});
 });

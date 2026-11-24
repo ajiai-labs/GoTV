@@ -1,6 +1,8 @@
 <script lang="ts">
 	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
+	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 	import DesktopDownloads from '#lib/ui/DesktopDownloads.svelte';
@@ -13,6 +15,23 @@
 		'modern-dark': { bg: '#121816', ink: '#e4ebe7', board: '#cfa86c', accent: '#3fb68b' },
 		oldschool: { bg: '#d4d0c8', ink: '#000000', board: '#d9a54a', accent: '#1c3f7a' }
 	} as const;
+
+	const ORDERS: Array<{ id: NavOrder; groups: Array<Array<string>> }> = [
+		{
+			id: 'gotv',
+			groups: [
+				['app.nav.live', 'app.nav.calendar', 'app.nav.channels', 'app.nav.replay'],
+				['app.nav.watch', 'app.nav.play', 'app.nav.chat', 'app.nav.search']
+			]
+		},
+		{
+			id: 'kgs',
+			groups: [
+				['app.nav.watch', 'app.nav.play', 'app.nav.chat', 'app.nav.search'],
+				['app.nav.live', 'app.nav.calendar', 'app.nav.channels', 'app.nav.replay']
+			]
+		}
+	];
 </script>
 
 <svelte:head>
@@ -35,6 +54,32 @@
 					onchange={() => language.set(option.id)}
 				/>
 				<span class="name" lang={option.id}>{option.name}</span>
+			</label>
+		{/each}
+	</div>
+</fieldset>
+
+<fieldset class="nav-order">
+	<legend>{t('settings.navOrder')}</legend>
+	<p class="muted">{t('settings.navOrderHint')}</p>
+	<div class="choices">
+		{#each ORDERS as option (option.id)}
+			<label class="choice" class:chosen={navOrder.current === option.id}>
+				<input
+					type="radio"
+					name="nav-order"
+					value={option.id}
+					checked={navOrder.current === option.id}
+					onchange={() => navOrder.set(option.id)}
+				/>
+				<span class="name">{t(`settings.navOrder.${option.id}.name`)}</span>
+				<span class="order" aria-hidden="true">
+					{#each option.groups as group, index (index)}
+						{#if index}<span class="sep">|</span>{/if}
+						{group.map((key) => t(key as 'app.nav.live')).join(' · ')}
+					{/each}
+				</span>
+				<span class="muted">{t(`settings.navOrder.${option.id}.description`)}</span>
 			</label>
 		{/each}
 	</div>
@@ -204,6 +249,20 @@
 		width: 22%;
 		height: 18px;
 		border-radius: 9px;
+	}
+
+	.nav-order {
+		margin-bottom: calc(var(--gap) * 1.6);
+	}
+
+	.order {
+		font-size: 0.85em;
+		line-height: 1.5;
+	}
+
+	.sep {
+		margin: 0 6px;
+		color: var(--ink-soft);
 	}
 
 	.desktop {

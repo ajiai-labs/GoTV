@@ -8,6 +8,13 @@ export const settings: Translation<typeof de> = {
 	'settings.languageHint': 'Applies at once and is remembered in this browser.',
 	'settings.design': 'Design',
 	'settings.designHint': 'Applies at once and is remembered in this browser.',
+	'settings.navOrder': 'Menu order',
+	'settings.navOrderHint':
+		'What comes first at the top. While a broadcast is on, "Live" lights up in both orders.',
+	'settings.navOrder.gotv.name': 'GoTV',
+	'settings.navOrder.gotv.description': 'Broadcasts first, then KGS.',
+	'settings.navOrder.kgs.name': 'KGS',
+	'settings.navOrder.kgs.description': 'Like a KGS client: Watch, Play, Chat, Search first.',
 	'settings.myData': 'My data',
 	'settings.design.modern.name': 'Modern',
 	'settings.design.modern.description':

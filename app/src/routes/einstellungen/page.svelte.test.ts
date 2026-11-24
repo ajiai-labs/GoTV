@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { language } from '#lib/i18n/index.svelte.ts';
 import Page from './+page.svelte';
+import { navOrder } from '#lib/ui/navOrder.svelte.ts';
 
 describe('Einstellungen', () => {
 	beforeEach(() => {
@@ -38,5 +39,16 @@ describe('Einstellungen', () => {
 			.toHaveTextContent('Einstellungen');
 		expect(window.localStorage.getItem('gotv.language')).toBe('de');
 		expect(document.documentElement.lang).toBe('de');
+	});
+
+	it('switches the menu order and remembers it', async () => {
+		localStorage.removeItem('gotv.navOrder');
+		navOrder.set('gotv');
+		await render(Page);
+		await page.getByText('Wie ein KGS-Programm', { exact: false }).click();
+		expect(navOrder.current).toBe('kgs');
+		expect(localStorage.getItem('gotv.navOrder')).toBe('kgs');
+		await page.getByText('Übertragungen zuerst, dann KGS.').click();
+		expect(localStorage.getItem('gotv.navOrder')).toBe('gotv');
 	});
 });

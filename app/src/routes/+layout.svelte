@@ -18,6 +18,9 @@
 	import FollowWatcher from '#lib/ui/user/FollowWatcher.svelte';
 	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
 	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
+	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
+	import { fetchTvEvents, hasLiveBroadcast } from '#lib/model/tv.ts';
+	import type { TvEvent } from '#lib/model/tv.ts';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -35,6 +38,27 @@
 		{ path: '/chat', name: 'app.nav.chat', badge: 'chat' },
 		{ path: '/suche', name: 'app.nav.search', badge: null }
 	] as const;
+
+	// "Live" lights up while a broadcast runs (same rule as the Live page), so
+	// it is noticed also when the KGS order puts it further back.
+	let tvEvents: Array<TvEvent> = $state([]);
+	let now = $state(Date.now());
+	let liveNow = $derived(
+		hasLiveBroadcast(app.state.activeGames, tvEvents, app.state.roomsById, new Date(now))
+	);
+	function refreshLive() {
+		now = Date.now();
+		fetchTvEvents()
+			.then((events) => (tvEvents = events))
+			.catch(() => {
+				// no calendar (offline): no light
+			});
+	}
+	onMount(() => {
+		refreshLive();
+		const timer = setInterval(refreshLive, 60000);
+		return () => clearInterval(timer);
+	});
 
 	onMount(() => {
 		app.start();
@@ -61,14 +85,14 @@
 		return path === '/' ? here === '/' : here === path || here.startsWith(path + '/');
 	}
 
-	let state = $derived(app.state);
+	let appState = $derived(app.state);
 
 	// Unseen chat messages: direct messages count "major", rooms "minor".
 	let chatBadge = $derived.by(() => {
 		let major = 0;
 		let minor = 0;
-		for (const [id, convo] of Object.entries(state.conversationsById)) {
-			const chan = state.channelMembership[id];
+		for (const [id, convo] of Object.entries(appState.conversationsById)) {
+			const chan = appState.channelMembership[id];
 			if (!chan || (chan.type !== 'room' && chan.type !== 'conversation')) continue;
 			if (!convo.unseenCount) continue;
 			if (convo.user) major += convo.unseenCount;
@@ -79,11 +103,13 @@
 
 	// The challenge being negotiated: received proposals and its chat.
 	let playBadge = $derived.by(() => {
-		const challenge = state.playChallengeId ? state.gamesById[state.playChallengeId] : null;
+		const challenge = appState.playChallengeId
+			? appState.gamesById[appState.playChallengeId]
+			: null;
 		if (!challenge) return { major: 0, minor: 0 };
 		return {
 			major: challenge.receivedProposals ? challenge.receivedProposals.length : 0,
-			minor: state.conversationsById[challenge.id]?.unseenCount ?? 0
+			minor: appState.conversationsById[challenge.id]?.unseenCount ?? 0
 		};
 	});
 
@@ -96,14 +122,47 @@
 	});
 
 	let offline = $derived(
-		!!state.currentUser &&
-			(state.clientState.status === 'loggedOut' || state.clientState.network !== 'online')
+		!!appState.currentUser &&
+			(appState.clientState.status === 'loggedOut' || appState.clientState.network !== 'online')
 	);
 </script>
 
 <svelte:head>
 	<link rel="icon" href={logo} type="image/svg+xml" />
 </svelte:head>
+
+{#snippet tvNav()}
+	{#each tvSections as section (section.path)}
+		{@const live = section.path === '/' && liveNow}
+		<a
+			href={resolve(section.path)}
+			aria-current={isCurrent(section.path) ? 'page' : undefined}
+			class:live
+			title={live ? t('app.nav.liveNow') : undefined}
+		>
+			{#if live}<span class="live-dot" aria-hidden="true"></span>{/if}
+			{t(section.name)}
+			{#if live}<span class="visually-hidden">– {t('app.nav.liveNow')}</span>{/if}
+		</a>
+	{/each}
+{/snippet}
+
+{#snippet kgsNav()}
+	{#each kgsSections as section (section.path)}
+		{@const badge =
+			section.badge === 'chat' ? chatBadge : section.badge === 'play' ? playBadge : null}
+		<a
+			href={resolve(section.path)}
+			aria-current={isCurrent(section.path) ? 'page' : undefined}
+			onclick={() => onReselect(section.path)}
+		>
+			{t(section.name)}
+			{#if badge && !isCurrent(section.path)}
+				<UnseenBadge major={badge.major} minor={badge.minor} />
+			{/if}
+		</a>
+	{/each}
+{/snippet}
 
 <div class="app">
 	<header class="top">
@@ -112,35 +171,24 @@
 			<span>GoTV</span>
 		</a>
 		<nav aria-label={t('app.layout.areas')}>
-			{#each tvSections as section (section.path)}
-				<a href={resolve(section.path)} aria-current={isCurrent(section.path) ? 'page' : undefined}>
-					{t(section.name)}
-				</a>
-			{/each}
-			<span class="divider" aria-hidden="true"></span>
-			{#each kgsSections as section (section.path)}
-				{@const badge =
-					section.badge === 'chat' ? chatBadge : section.badge === 'play' ? playBadge : null}
-				<a
-					href={resolve(section.path)}
-					aria-current={isCurrent(section.path) ? 'page' : undefined}
-					onclick={() => onReselect(section.path)}
-				>
-					{t(section.name)}
-					{#if badge && !isCurrent(section.path)}
-						<UnseenBadge major={badge.major} minor={badge.minor} />
-					{/if}
-				</a>
-			{/each}
+			{#if navOrder.current === 'kgs'}
+				{@render kgsNav()}
+				<span class="divider" aria-hidden="true"></span>
+				{@render tvNav()}
+			{:else}
+				{@render tvNav()}
+				<span class="divider" aria-hidden="true"></span>
+				{@render kgsNav()}
+			{/if}
 		</nav>
 		<div class="account">
-			{#if state.currentUser}
+			{#if appState.currentUser}
 				<a
 					class="who"
 					href={resolve('/konto')}
 					aria-current={isCurrent('/konto') ? 'page' : undefined}
 				>
-					<UserName user={state.currentUser} />
+					<UserName user={appState.currentUser} />
 				</a>
 			{:else if !config.guestOnly}
 				<a class="who" href={resolve('/beobachten')}>{t('app.layout.login')}</a>
@@ -177,7 +225,7 @@
 		</footer>
 	{/if}
 
-	{#if state.userDetailsRequest}
+	{#if appState.userDetailsRequest}
 		<UserDetailsModal />
 	{/if}
 	<!-- "Mein GoTV": notifications 10 min before a starred event, app-wide -->
@@ -188,12 +236,12 @@
 		<FavoriteRoomsWatcher />
 	{/if}
 
-	{#if state.showUnderConstruction}
+	{#if appState.showUnderConstruction}
 		<UnderConstructionModal onClose={() => app.actions.onHideUnderConstruction()} />
 	{/if}
-	{#if state.showFeedbackModal}
+	{#if appState.showFeedbackModal}
 		<FeedbackModal
-			currentUser={state.currentUser}
+			currentUser={appState.currentUser}
 			onClose={() => app.actions.onHideFeedbackModal()}
 		/>
 	{/if}
@@ -239,6 +287,39 @@
 		min-width: 0;
 		overflow-x: auto;
 		scrollbar-width: none;
+	}
+
+	/* "Live" while a broadcast runs: an on-air light. */
+	.live {
+		color: var(--ink);
+		font-weight: 650;
+	}
+
+	.live-dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--live);
+		box-shadow: 0 0 0 0 var(--live);
+		animation: on-air 1.6s ease-out infinite;
+	}
+
+	@keyframes on-air {
+		0% {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 70%, transparent);
+		}
+		100% {
+			box-shadow: 0 0 0 8px transparent;
+		}
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 
 	.divider {

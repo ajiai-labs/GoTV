@@ -8,6 +8,14 @@ export const settings = {
 	'settings.languageHint': 'Gilt sofort und bleibt in diesem Browser gespeichert.',
 	'settings.design': 'Design',
 	'settings.designHint': 'Gilt sofort und bleibt in diesem Browser gespeichert.',
+	'settings.navOrder': 'Menü-Anordnung',
+	'settings.navOrderHint':
+		'Was oben zuerst steht. Läuft eine Übertragung, leuchtet „Live“ in beiden Anordnungen.',
+	'settings.navOrder.gotv.name': 'GoTV',
+	'settings.navOrder.gotv.description': 'Übertragungen zuerst, dann KGS.',
+	'settings.navOrder.kgs.name': 'KGS',
+	'settings.navOrder.kgs.description':
+		'Wie ein KGS-Programm: erst Beobachten, Spielen, Chat, Suche.',
 	'settings.myData': 'Meine Daten',
 	'settings.design.modern.name': 'Modern',
 	'settings.design.modern.description': 'Hell und ruhig, Brett und Stream stehen im Mittelpunkt.',

@@ -12,6 +12,7 @@ export const app = {
 	'app.nav.play': 'Spielen',
 	'app.nav.chat': 'Chat',
 	'app.nav.search': 'Suche',
+	'app.nav.liveNow': 'gerade läuft eine Übertragung',
 	'app.layout.home': 'GoTV, zu Live',
 	'app.layout.areas': 'Bereiche',
 	'app.layout.login': 'Anmelden',
