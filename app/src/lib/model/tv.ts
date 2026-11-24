@@ -532,8 +532,10 @@ function fetchAndValidateTvData(url: string): Promise<TvData> {
 // memory for an hour.
 function fetchTvData(): Promise<TvData> {
 	// The desktop timer updates the installed local copy without a new build.
-	const desktop = isDesktop();
-	const cacheMs = desktop ? 5 * 60 * 1000 : EVENTS_CACHE_MS;
+	// The Tauri desktop apps have no such timer: VITE_EVENTS_REMOTE_FIRST
+	// makes them load from GitHub first, like the web version.
+	const localFirst = isDesktop() && !config.eventsRemoteFirst;
+	const cacheMs = localFirst ? 5 * 60 * 1000 : EVENTS_CACHE_MS;
 
 	if (_tvDataCache && Date.now() - _tvDataCache.fetchedAt < cacheMs) {
 		return Promise.resolve(_tvDataCache.data);
@@ -543,10 +545,10 @@ function fetchTvData(): Promise<TvData> {
 		return _tvDataPending;
 	}
 
-	const pending = fetchAndValidateTvData(desktop ? LOCAL_EVENTS_URL : REMOTE_EVENTS_URL)
+	const pending = fetchAndValidateTvData(localFirst ? LOCAL_EVENTS_URL : REMOTE_EVENTS_URL)
 		.catch((err) => {
 			console.log('[tv] Primary events.json unavailable, trying fallback:', err);
-			return fetchAndValidateTvData(desktop ? REMOTE_EVENTS_URL : LOCAL_EVENTS_URL);
+			return fetchAndValidateTvData(localFirst ? REMOTE_EVENTS_URL : LOCAL_EVENTS_URL);
 		})
 		.then(
 			(data) => {

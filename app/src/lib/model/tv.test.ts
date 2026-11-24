@@ -1083,6 +1083,7 @@ describe('getBroadcastForStream', () => {
 describe('fetchTvEvents', () => {
 	let originalFetch;
 	let originalApiUrl;
+	let originalRemoteFirst;
 
 	function okResponse(body) {
 		return Promise.resolve({
@@ -1095,6 +1096,7 @@ describe('fetchTvEvents', () => {
 	beforeEach(() => {
 		originalFetch = global.fetch;
 		originalApiUrl = config.apiUrl;
+		originalRemoteFirst = config.eventsRemoteFirst;
 
 		_resetTvEventsCache();
 	});
@@ -1102,6 +1104,7 @@ describe('fetchTvEvents', () => {
 		global.fetch = originalFetch;
 
 		config.apiUrl = originalApiUrl;
+		config.eventsRemoteFirst = originalRemoteFirst;
 
 		vi.restoreAllMocks();
 	});
@@ -1187,6 +1190,24 @@ describe('fetchTvEvents', () => {
 		clock.mockReturnValue(5 * 60 * 1000);
 		await fetchTvEvents();
 		expect(global.fetch).toHaveBeenCalledTimes(2);
+	});
+	it('loads from GitHub first on desktop with VITE_EVENTS_REMOTE_FIRST (Tauri apps)', async () => {
+		config.apiUrl = '/json/access';
+		config.eventsRemoteFirst = true;
+		global.fetch = vi.fn((url) => {
+			if (url === REMOTE_EVENTS_URL) {
+				return Promise.reject(new Error('offline'));
+			}
+
+			return okResponse({
+				events: []
+			});
+		});
+		await fetchTvEvents();
+		expect(global.fetch.mock.calls.map((call) => call[0])).toEqual([
+			REMOTE_EVENTS_URL,
+			'/tv/events.json'
+		]);
 	});
 	it('refetches once the cache expires', async () => {
 		global.fetch = vi.fn(() =>

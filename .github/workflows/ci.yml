@@ -106,6 +106,31 @@ jobs:
         env:
           BASE_PATH: /GoTV
 
+  # Local server of the Tauri desktop apps (desktop/tauri/, released by
+  # desktop.yml): routing, DNS-rebinding guard, KGS proxy against a fake
+  # upstream. Needs no webkit - gotv-server has no Tauri dependency.
+  desktop-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop/tauri
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (2026-11-15)
+        with:
+          toolchain: stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: desktop/tauri -> target
+
+      - name: Tests
+        run: cargo test -p gotv-server --locked
+
   pages-build:
     needs: [test, app]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'

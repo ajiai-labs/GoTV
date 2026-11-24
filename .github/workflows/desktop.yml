@@ -1,0 +1,216 @@
+name: Desktop-Apps
+
+# GoTV desktop apps (Tauri 2) for Windows, macOS and Linux, published as a
+# GitHub Release "GoTV Desktop <version>". Details: desktop/tauri/README.md.
+#
+# Start: push a tag desktop-vX.Y.Z (the version comes from the tag), or run
+# the workflow by hand with a version - the tag desktop-v<version> is then
+# created on the chosen commit when the release is published.
+#
+# Flow: "release" creates the release as a draft, the three builds upload
+# into it, "publish" makes it public (not a draft, not a prerelease) once
+# all three succeeded - so no half-filled release is ever the "latest".
+#
+# Besides the installers with the version in their name, every release gets
+# copies with fixed names, so the app and the README can link to
+# https://github.com/ajiai-labs/GoTV/releases/latest/download/<fixed name>.
+
+on:
+  push:
+    tags:
+      - "desktop-v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, z. B. 1.0.0 (nur Zahlen X.Y.Z - Windows-MSI verlangt das)"
+        required: true
+
+# Read-only by default; only the jobs that create, fill and publish the
+# release get write access. Third-party actions are pinned to commit SHAs.
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_id: ${{ steps.create.outputs.release_id }}
+    steps:
+      - name: Version
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF_NAME#desktop-v}"
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Version '$VERSION' ist nicht X.Y.Z" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: desktop-v${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft \
+              --target "$GITHUB_SHA" \
+              --title "GoTV Desktop $VERSION" \
+              --notes "GoTV als Desktop-App für Windows, macOS und Linux.
+
+          Installation und Hinweise zur Warnung beim ersten Start (die Apps sind nicht signiert):
+          https://github.com/ajiai-labs/GoTV/blob/master/desktop/tauri/README.md"
+          fi
+          ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n 1)
+          test -n "$ID"
+          echo "release_id=$ID" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+            args: ""
+          - os: macos-latest
+            name: macos
+            args: "--target universal-apple-darwin"
+          - os: ubuntu-22.04
+            name: linux
+            args: ""
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const file = "desktop/tauri/gotv-desktop/tauri.conf.json";
+            const conf = JSON.parse(fs.readFileSync(file, "utf8"));
+            conf.version = process.argv[1];
+            fs.writeFileSync(file, JSON.stringify(conf, null, 2) + "\n");
+          ' "$VERSION"
+
+      - name: Linux system packages (Tauri 2)
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+            librsvg2-dev patchelf libssl-dev libxdo-dev build-essential file
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable (2026-11-15)
+        with:
+          toolchain: stable
+          targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: desktop/tauri -> target
+
+      # Desktop build of the app: KGS through the local proxy, calendar from
+      # GitHub first (no daily calendar timer as with desktop/install.sh).
+      - name: Build frontend
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_API_URL: /json/access
+          VITE_EVENTS_REMOTE_FIRST: "true"
+
+      - name: Server tests
+        working-directory: desktop/tauri
+        run: cargo test -p gotv-server
+
+      - name: Build installers and upload
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop/tauri/gotv-desktop
+          tauriScript: npx --yes @tauri-apps/cli@2.12.6
+          args: ${{ matrix.args }}
+          releaseId: ${{ needs.release.outputs.release_id }}
+
+      # Fixed names for https://github.com/ajiai-labs/GoTV/releases/latest/download/...
+      - name: Upload installers with fixed names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: desktop-v${{ needs.release.outputs.version }}
+          PLATFORM: ${{ matrix.name }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p fixed
+          BUNDLE=desktop/tauri/target/release/bundle
+          case "$PLATFORM" in
+            windows)
+              for f in "$BUNDLE"/nsis/*-setup.exe; do cp "$f" fixed/GoTV-windows-x64-setup.exe; done
+              for f in "$BUNDLE"/msi/*.msi; do cp "$f" fixed/GoTV-windows-x64.msi; done
+              ;;
+            macos)
+              for f in desktop/tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg; do
+                cp "$f" fixed/GoTV-macos-universal.dmg
+              done
+              ;;
+            linux)
+              for f in "$BUNDLE"/appimage/*.AppImage; do cp "$f" fixed/GoTV-linux-x86_64.AppImage; done
+              for f in "$BUNDLE"/deb/*.deb; do cp "$f" fixed/GoTV-linux-amd64.deb; done
+              ;;
+          esac
+          ls -l fixed
+          if [ -z "$(ls fixed)" ]; then
+            echo "Keine Installer gefunden" >&2
+            exit 1
+          fi
+          gh release upload "$TAG" fixed/* --clobber --repo "$GITHUB_REPOSITORY"
+
+  publish:
+    needs: [release, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: desktop-v${{ needs.release.outputs.version }}
+        run: |
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --draft=false --prerelease=false --latest

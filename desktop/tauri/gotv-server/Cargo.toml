@@ -1,0 +1,12 @@
+[package]
+name = "gotv-server"
+version = "0.1.0"
+description = "Local HTTP server of the GoTV desktop apps: static files + KGS proxy, 127.0.0.1 only"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+tiny_http = "0.12"
+# rustls (ring), no gzip: KGS bodies pass through unchanged.
+ureq = { version = "3", default-features = false, features = ["rustls"] }

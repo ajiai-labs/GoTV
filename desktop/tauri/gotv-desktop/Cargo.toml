@@ -1,0 +1,19 @@
+[package]
+name = "gotv-desktop"
+# The released version comes from tauri.conf.json (set from the tag in CI).
+version = "0.1.0"
+description = "GoTV - Go broadcasts, tournament calendar and KGS client"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "gotv"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+gotv-server = { path = "../gotv-server" }
