@@ -72,6 +72,28 @@ Gesamt grob 57 Arbeitsstunden.
 
 Freigabe der beiden Design-Entwürfe (Modern, Oldschool) aus Phase 2a.
 
+## Phase 2a – Stand (24.11.2026)
+
+Entwurf gebaut, zum Ansehen unter https://ajiai-labs.github.io/GoTV/neu/ (CI baut die neue
+Oberfläche mit `BASE_PATH=/GoTV/neu` und legt sie neben die alte Web-Version; der
+Offline-Speicher der alten App lässt `/neu/` in Ruhe). Seiten Live, Kalender, Kanäle,
+Nachspielen, Einstellungen - mit Beispieldaten (EM-Finale Kravets–Jabarin über den
+übernommenen SGF-Parser, echte Termine/Kanäle), noch ohne echte Daten.
+
+- Design-Wahl: `src/lib/ui/design.svelte.ts` (`gotv.design` in localStorage, auf
+  `<html data-design>`; `app.html` setzt es vor dem ersten Bild). Alle Farben, Schriften,
+  Abstände als CSS-Variablen in `src/app.css`.
+- Modern: helles Grau-Grün, Schiefer, Jade als Akzent, Schrift Bricolage Grotesque
+  (Fontsource, liegt im Build, kein Google-CDN). Video auf dunkler Bühne, Brett daneben.
+- Oldschool: Fenstergrau, Titelleisten in Marineblau, 3D-Rahmen, Tahoma/Verdana, Holzbrett mit
+  Maserung (SVG-Filter) und plastischen Steinen, Uhren als Digitalanzeige.
+- Brett: `src/lib/ui/Board.svelte` (SVG, scharf in jeder Größe, Koordinaten ohne I,
+  Sternpunkte 19/13/9, letzter Zug, Ziffern-Markierungen, Klick auf Punkte).
+- Logo oben links: das GoTV-Logo aus `desktop/icons/gotv.svg` (Wunsch 24.11.2026), auch als
+  Tab-Symbol.
+- Seiten werden als eigene Dateien geschrieben (`prerender = true`), damit Neuladen von
+  z. B. `/neu/kalender` auf GitHub Pages funktioniert.
+
 ## Nicht Teil des Umbaus
 
 - Rust/Tauri: später möglich (dieselbe Svelte-App in Tauri), jetzt nicht.

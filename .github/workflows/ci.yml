@@ -107,7 +107,7 @@ jobs:
           BASE_PATH: /GoTV
 
   pages-build:
-    needs: test
+    needs: [test, app]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
@@ -124,6 +124,14 @@ jobs:
           corepack enable
           yarn install --frozen-lockfile
           yarn build:pages
+
+      # Preview of the new interface (docs/umbau-svelte.md) under /GoTV/neu/
+      - name: Build new interface preview
+        working-directory: app
+        run: |
+          npm ci
+          BASE_PATH=/GoTV/neu npm run build
+          cp -r build ../build/neu
 
       - name: Upload
         uses: actions/upload-pages-artifact@v3

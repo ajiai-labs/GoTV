@@ -191,6 +191,12 @@ self.addEventListener("fetch", function (event) {
   }
   var url = new URL(request.url);
 
+  // The new interface (preview under /neu/, docs/umbau-svelte.md) is its own
+  // app - this worker must not answer for it with the old start page.
+  if (url.href.indexOf(SCOPE + "neu/") === 0) {
+    return;
+  }
+
   if (request.mode === "navigate" && url.href.indexOf(SCOPE) === 0) {
     event.respondWith(networkFirst(request, APP_CACHE, SCOPE + "index.html"));
     return;
