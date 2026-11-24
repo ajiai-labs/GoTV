@@ -142,6 +142,11 @@ describe('GameScreen', () => {
 		await page.getByRole('button', { name: 'Passen' }).click();
 		expect(actions.onPass).toHaveBeenCalledWith(game);
 		await page.getByRole('button', { name: 'Aufgeben' }).click();
+		expect(actions.onResign).not.toHaveBeenCalled();
+		await page.getByRole('button', { name: 'Weiter spielen' }).click();
+		expect(actions.onResign).not.toHaveBeenCalled();
+		await page.getByRole('button', { name: 'Aufgeben' }).click();
+		await page.getByRole('button', { name: 'Ja, aufgeben' }).click();
 		expect(actions.onResign).toHaveBeenCalledWith(game);
 		await page.getByRole('button', { name: 'Zug zurück' }).click();
 		expect(actions.onUndo).toHaveBeenCalledWith(game);

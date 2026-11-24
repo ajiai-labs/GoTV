@@ -1,12 +1,14 @@
 <script lang="ts">
 	// The buttons of a game you play: pass (only on your move; while scoring
 	// "Fertig" instead), ask to take back a move, resign, and under "Mehr"
-	// give the opponent time or leave the game. As in the old app, resigning
-	// needs no confirmation.
+	// give the opponent time or leave the game. Resigning asks once more (new
+	// in GoTV - the old app resigned on the first tap, easy to hit on a tablet).
 	import { getGamePlayerOtherRole } from '#lib/model/game/tree.ts';
 	import type { GameChannel, GameRole, User } from '#lib/model/types.ts';
 
 	const ONE_MINUTE = 60;
+
+	let confirmingResign = $state(false);
 	const FIVE_MINUTES = 5 * 60;
 
 	let {
@@ -93,9 +95,32 @@
 	>
 		Zug zurück
 	</button>
-	<button type="button" class="button GamePlayActions-resign" onclick={() => onResign(game)}>
-		Aufgeben
-	</button>
+	{#if confirmingResign}
+		<span class="GamePlayActions-confirm" role="group" aria-label="Wirklich aufgeben?">
+			<span>Wirklich aufgeben?</span>
+			<button
+				type="button"
+				class="button GamePlayActions-resign"
+				onclick={() => {
+					confirmingResign = false;
+					onResign(game);
+				}}
+			>
+				Ja, aufgeben
+			</button>
+			<button type="button" class="button" onclick={() => (confirmingResign = false)}>
+				Weiter spielen
+			</button>
+		</span>
+	{:else}
+		<button
+			type="button"
+			class="button GamePlayActions-resign"
+			onclick={() => (confirmingResign = true)}
+		>
+			Aufgeben
+		</button>
+	{/if}
 	<div class="GamePlayActions-more-container" bind:this={moreEl}>
 		<button
 			type="button"
@@ -225,5 +250,13 @@
 			padding-left: 6px;
 			padding-right: 6px;
 		}
+	}
+
+	.GamePlayActions-confirm {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		font-weight: 600;
 	}
 </style>
