@@ -41,7 +41,7 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 |---|---|---|---|
 | 0 ✅ | Gerüst: SvelteKit 3 + Svelte 5 + TS 6 + Vite 8 + Vitest 5 in `app/`, SPA (`adapter-static`, Fallback index.html, `BASE_PATH=/GoTV` für Pages, `ssr = false`), CI-Job `app` (Check, Lint, Tests in Chromium + WebKit, Build) | `npm run build` und Tests grün in der CI | erledigt 24.11.2026 |
 | 1 ✅ | Logik umziehen: `src/model`, `src/model/game`, `src/util`, `src/sound` -> `app/src/lib/` als TypeScript, mit allen Tests | alle übernommenen Tests grün | erledigt 24.11.2026 |
-| 2a | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | der Nutzer hat beide Entwürfe freigegeben (Entwurf steht, siehe "Phase 2a – Stand") | ~6 Std. |
+| 2a | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | ✅ freigegeben 24.11.2026 (siehe "Phase 2a – Stand") | ~6 Std. |
 | 2b | **KGS-Kern im neuen Design:** Anmelden, Räume (Chat, Nutzer, Partien), Partien beobachten, Brett (neu als SVG), Nutzerinfo | man kann sich anmelden, Räume betreten und Partien beobachten | ~12 Std. |
 | 3 | Spielen: Herausforderungen, eigene Partie, Zählen | eine Partie gegen einen Menschen läuft durch | ~5 Std. |
 | 4 | GoTV-Teile: Live, Kalender, Kanäle, Nachspielen mit KataGo und Varianten, Mein GoTV, Meine Daten, Offline | alles, was die heutige App kann, geht auch in der neuen | ~20 Std. |
@@ -70,9 +70,31 @@ Gesamt grob 57 Arbeitsstunden.
 
 ## Vom Nutzer zu klären (vor Phase 2b)
 
-Freigabe der beiden Design-Entwürfe (Modern, Oldschool) aus Phase 2a.
+Erledigt: Der Nutzer hat beide Design-Entwürfe am 24.11.2026 freigegeben („gefällt mir sehr gut“).
 
-## Phase 2a – Stand (24.11.2026)
+## Phase 2a – Stand (24.11.2026, freigegeben)
+
+Die Entwurfsseiten zeigen nur das Aussehen. Der Funktionsumfang der alten Seiten kommt in
+Phase 4 und muss dann 1:1 nachgebaut werden. Für den Kalender heißt das: Monat/Liste
+umschaltbar (`gotv.calendarView`), Blättern und „Heute“, Legende (mit/ohne Stream, ▶),
+„+N weitere“, Klick auf einen Tag scrollt zu dessen Karten mit offener Partieliste, Liste
+nach Regionen Deutschland/International plus Archiv, echte Einträge aus events.json
+(60-s-Aktualisierung, Fehler mit „Erneut versuchen“). Karte: Stern, Plattform-Badge,
+Zeitraum, Notizen, Brett-Status, Stream per Zwei-Klick, Stream-Chat im Live-Fenster,
+Partieliste G1, G2, … (OGS), „SGF nachspielen“. Vorlage: `src/ui/tv/CalendarView.js`,
+`CalendarMonth.js`, `CalendarEventCard.js`, `StreamEmbed.js`, `ReplayGameList.js`,
+`FavoriteStar.js`, `StreamChat.js`.
+
+Gefunden beim Durchgehen (vor Phase 2b/4 beheben): die übernommene Logik liest noch
+`process.env` (CRA), das es im Browser der neuen App nicht gibt - `tv.ts` (PUBLIC_URL,
+REACT_APP_API_URL), `KataGoEngine.ts` (PUBLIC_URL), `KgsClient.ts` (REACT_APP_API_URL,
+NODE_ENV), `AppStore.ts`, `model/index.ts` (NODE_ENV), `util/offline.ts`. In den Tests
+fällt das nicht auf (Node kennt `process`). Ersatz: eine Konfigurationsdatei mit
+`import.meta.env` und dem SvelteKit-Pfad (`$app/paths`).
+
+Live-Brett im Entwurf: zurückspulen und „Zum aktuellen Zug“ (gemeinsame Zugleiste
+`src/lib/ui/BoardNav.svelte`, auch in Nachspielen), Wunsch des Nutzers.
+
 
 Entwurf gebaut, zum Ansehen unter https://ajiai-labs.github.io/GoTV/neu/ (CI baut die neue
 Oberfläche mit `BASE_PATH=/GoTV/neu` und legt sie neben die alte Web-Version; der

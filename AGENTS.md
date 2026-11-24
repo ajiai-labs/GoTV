@@ -619,8 +619,8 @@ online unter https://ajiai-labs.github.io/GoTV/neu/ (CI legt `app/` mit
 `BASE_PATH=/GoTV/neu` neben die alte Web-Version, `gotv-sw.js` lässt `/neu/` aus). Zwei
 Designs "Modern" und "Oldschool" in Einstellungen umschaltbar; GoTV-Logo
 (`desktop/icons/gotv.svg`) oben links auf jeder Seite (Wunsch des Nutzers). Details in
-`docs/umbau-svelte.md` ("Phase 2a – Stand"). Wartet auf Freigabe durch den Nutzer, dann
-Phase 2b. Gate der neuen App: `cd app && npm run check && npm run lint && npm test &&
+`docs/umbau-svelte.md` ("Phase 2a – Stand"). Vom Nutzer freigegeben (24.11.2026),
+nächster Schritt Phase 2b; vorher `process.env` in der übernommenen Logik ersetzen. Gate der neuen App: `cd app && npm run check && npm run lint && npm test &&
 npm run build`. Imports aus `src/lib` als `#lib/...` mit Dateiendung (SvelteKit 3).
 
 Offen bleibt außerdem:

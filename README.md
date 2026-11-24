@@ -117,8 +117,8 @@ desktop app. Phases:
 
 - [x] Phase 0 - new app set up (SvelteKit, TypeScript, Vite, tests also in WebKit)
 - [x] Phase 1 - all logic moved to TypeScript
-- [ ] Phase 2a - two designs, "Modern" and "Oldschool", switchable in the settings:
-  draft online at https://ajiai-labs.github.io/GoTV/neu/, waiting for approval
+- [x] Phase 2a - two designs, "Modern" and "Oldschool", switchable in the settings:
+  draft online at https://ajiai-labs.github.io/GoTV/neu/ (sample data, approved)
 - [ ] Phase 2b - KGS core in the new design
 - [ ] Phase 3 - playing
 - [ ] Phase 4 - GoTV parts (Live, Kalender, Kanäle, Nachspielen, KataGo, ...)
