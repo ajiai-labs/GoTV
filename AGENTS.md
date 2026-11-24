@@ -583,24 +583,27 @@ Policy, von dir als "Stufe 1" bezeichnet:
 - [x] **(c) KataGo-Analyse:** umgesetzt im Browser (WebGPU/WASM, kein
   Backend-Dienst), nur beim Nachspielen - siehe "KataGo im Browser" oben.
 
-## Nächste Schritte (Stand 23.11.2026, vom Nutzer so abgelegt)
+## Nächste Schritte (Stand 24.11.2026, vom Nutzer so abgelegt)
 
 Erledigt am 23.11.: Ko-Regel bei eigenen Zügen, Varianten dauerhaft speichern + SGF-Export,
 Gesamtauswertung der Partie mit KataGo, Speed-Go-Importer, Sicherungsdatei "Meine Daten",
 Offline-Nutzung der Web-Version (siehe oben). Offen, in dieser Reihenfolge:
 
-1. **Erinnerungen bei geschlossener App** (Rest von "Tablet vervollständigen"): bräuchte
-   Web-Push mit einem Server, der die Nachrichten verschickt - Architekturentscheidung.
-2. **Laufende YouTube-Sendungen erkennen:** heute nur "laut Sendeplan (geplant)". Echte
-   Erkennung braucht die YouTube Data API (Schlüssel gehört auf einen Server, nicht in den
-   Client) - damit ginge auch der YouTube-Chat für Kanäle wie JuppTube.
-3. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
+Kein eigener Server vorhanden (Nutzer, 24.11.2026). Deshalb NICHT weiterverfolgt:
+- Erinnerungen bei geschlossener App (Web-Push braucht einen Server, der sendet).
+- Echte Erkennung laufender YouTube-Sendungen (API-Schlüssel gehört auf einen Server).
+  Einzige serverlose Möglichkeit, falls gewünscht: ein geplanter GitHub-Actions-Lauf mit
+  dem Schlüssel als Repository-Secret, der angekündigte Sendungen der Kanäle (mit
+  `video_id`) in events.json schreibt - nur so oft wie der Lauf, also kein Live-Status
+  in Echtzeit. Braucht einen YouTube-API-Schlüssel vom Nutzer.
+
+1. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
    AppImage/.deb statt Selbstbauen mit Node/Yarn/Python; erledigt ist nur der
    cmdtest-Hinweis (README + install.sh). Ebenfalls dort genannt, aber Architektur-
    entscheidungen: Umstieg von react-scripts 3 auf Vite (beseitigt openssl-legacy-provider
    und Sass-Warnungen), Web-Formular zum Einreichen von Turnieren/Kanälen, gehosteter Proxy
-   für KGS in der Web-Version (braucht Server + Klärung mit KGS).
-4. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
+   für KGS in der Web-Version (braucht Server + Klärung mit KGS - entfällt ohne Server).
+2. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
    IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.
 
