@@ -7,6 +7,13 @@
 GoTV adds live Go broadcasts, a tournament calendar, and SGF replay on top
 of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 
+<p align="center">
+  <a href="https://diebugger-tech.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a><br>
+  <sub>No installation - works on desktop, tablet and phone, and offline for games you
+  have opened. Everything except KGS boards and the KGS login; for those, install the
+  <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
+</p>
+
 > **Note:** This repository is a fork of [jkk/shinkgs](https://github.com/jkk/shinkgs)
 > (the "GoTV" fork). It is **not** the official Shin KGS client, it is **not**
 > operated by or affiliated with KGS Go Server, and it uses **no** KGS logos
