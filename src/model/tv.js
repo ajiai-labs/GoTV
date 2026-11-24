@@ -399,7 +399,7 @@ export function validateTvChannel(value: Object): ?TvChannel {
 // sends Access-Control-Allow-Origin: *, so this is fetchable directly from
 // the browser - no proxy needed.
 export const REMOTE_EVENTS_URL =
-  "https://raw.githubusercontent.com/diebugger-tech/GoTV/master/public/tv/events.json";
+  "https://raw.githubusercontent.com/ajiai-labs/GoTV/master/public/tv/events.json";
 // Absolute, so it also resolves when the page itself is at /tv/; under a
 // sub-path (GitHub Pages: /GoTV) PUBLIC_URL carries it.
 const LOCAL_EVENTS_URL = (process.env.PUBLIC_URL || "") + "/tv/events.json";

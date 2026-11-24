@@ -1,6 +1,6 @@
 # GoTV (hervorgegangen aus ShinKGS)
 
-Eigenständiges Projekt `diebugger-tech/GoTV`, hervorgegangen aus jkk/shinkgs (React 16,
+Eigenständiges Projekt `ajiai-labs/GoTV`, hervorgegangen aus jkk/shinkgs (React 16,
 Flow, react-scripts 3.4.1, SCSS); die Fork-Verbindung hat der Nutzer am 24.11.2026 gelöst
 ("Leave fork network"). `LICENSE.txt` (MIT, Justin Kramer) bleibt für den übernommenen Code.
 Web-Client für den KGS Go Server über die JSON-API, erweitert zu "GoTV" — drei Bausteine:
@@ -390,7 +390,7 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   bekommen keine Erinnerung.
 - CI + Web-Version (`.github/workflows/ci.yml`, 23.11.2026): jeder Push/PR führt Lint,
   Flow, App-Tests, Python-Tool-Tests und Build aus (plus Harness-Grep). Auf master wird
-  danach `yarn build:pages` nach https://diebugger-tech.github.io/GoTV/ veröffentlicht
+  danach `yarn build:pages` nach https://ajiai-labs.github.io/GoTV/ veröffentlicht
   (fürs Tablet: Seite öffnen, "Zum Startbildschirm"). Dort gibt es nur das Gast-TV
   (`GUEST_ONLY` in `App.js`): KGS lässt Anfragen nur von seiner eigenen Webseite zu, die
   Desktop-App braucht dafür ihren lokalen Proxy. Die History bleibt unter `/GoTV`
@@ -508,7 +508,7 @@ Policy, von dir als "Stufe 1" bezeichnet:
 - [x] OGS-Bretter für Kalender-Übertragungen: `ogs_game_id`, anonymer REST-Adapter,
       Live-Polling aus `gamedata` (Züge, Uhren), OGS-Partiechat nach Partieende,
       Quellen-Badge KGS/OGS, Wiederverwendung von BoardContainer/TvGamePanel
-- [x] App-Name + Icon: GoTV (Repo diebugger-tech/GoTV, Icon `desktop/icons/gotv.svg`)
+- [x] App-Name + Icon: GoTV (Repo ajiai-labs/GoTV, Icon `desktop/icons/gotv.svg`)
 
 ## Bestand (Phase 1)
 

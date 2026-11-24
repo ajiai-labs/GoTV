@@ -5,7 +5,7 @@ describe("offline support", () => {
     let doc = document.implementation.createHTMLDocument("x");
     let script = doc.createElement("script");
     script.src =
-      "https://diebugger-tech.github.io/GoTV/static/js/main.4341e0f5.chunk.js";
+      "https://ajiai-labs.github.io/GoTV/static/js/main.4341e0f5.chunk.js";
     doc.body.appendChild(script);
     expect(getBuildVersion(doc)).toBe("4341e0f5");
     expect(

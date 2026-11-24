@@ -21,10 +21,10 @@ const YOUTUBE = validateTvChannel({
 
 describe("stream chat embeds", () => {
   it("embeds a Twitch channel's chat with the page as parent", () => {
-    expect(getChannelChat(TWITCH, "diebugger-tech.github.io")).toEqual({
+    expect(getChannelChat(TWITCH, "ajiai-labs.github.io")).toEqual({
       platform: "twitch",
       embedUrl:
-        "https://www.twitch.tv/embed/europeangofederation/chat?parent=diebugger-tech.github.io",
+        "https://www.twitch.tv/embed/europeangofederation/chat?parent=ajiai-labs.github.io",
     });
   });
 

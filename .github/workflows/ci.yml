@@ -3,7 +3,7 @@ name: Tests und Web-Version
 # Every push and pull request: lint, Flow, unit tests (app + Python tools)
 # and the production build. On master the web version without KGS
 # ("yarn build:pages", guest TV only) is then published on GitHub Pages:
-# https://diebugger-tech.github.io/GoTV/
+# https://ajiai-labs.github.io/GoTV/
 #
 # The daily calendar import commits with GITHUB_TOKEN, which starts no
 # workflow - the web version still shows new dates, because it loads

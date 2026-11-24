@@ -25,7 +25,7 @@ import urllib.request
 SPEEDGO_SOURCE = "speedgo"
 SPEEDGO_URL = "https://speedgochampionship.com/bracket"
 SPEEDGO_USER_AGENT = (
-    "shinkgs-go-tv-speedgo-importer/1.0 (+https://github.com/diebugger-tech/GoTV)"
+    "shinkgs-go-tv-speedgo-importer/1.0 (+https://github.com/ajiai-labs/GoTV)"
 )
 # Played matches leave the page's dates; their entries stay this long for
 # the replay lists (REPLAY_KEEP_DAYS in src/model/tv.js is 90).

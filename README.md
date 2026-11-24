@@ -8,7 +8,7 @@ GoTV adds live Go broadcasts, a tournament calendar, and SGF replay on top
 of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
 
 <p align="center">
-  <a href="https://diebugger-tech.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a><br>
+  <a href="https://ajiai-labs.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a><br>
   <sub>No installation - works on desktop, tablet and phone, and offline for games you
   have opened. Everything except KGS boards and the KGS login; for those, install the
   <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
@@ -49,7 +49,7 @@ of a JavaScript client for [KGS Go Server](http://www.gokgs.com/).
   Championship bracket, whose OGS games are linked automatically), and SGF
   replay move by move - including the finished OGS games of tournaments
   from the last three months.
-- **In any browser, also on a tablet:** https://diebugger-tech.github.io/GoTV/
+- **In any browser, also on a tablet:** https://ajiai-labs.github.io/GoTV/
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
   only its own website; for those, use the desktop app below.
@@ -143,7 +143,7 @@ Discord chat group for anyone interested in helping: https://discord.gg/vwzxdVr
 ## Desktop-Installation (Linux, GNOME)
 
 **Linux only** (tested on Ubuntu/GNOME); on other systems use the
-[web version](https://diebugger-tech.github.io/GoTV/). GoTV can be installed
+[web version](https://ajiai-labs.github.io/GoTV/). GoTV can be installed
 as a local desktop app: a Go-board-themed icon in the app grid opens the
 login screen in its own window (no browser chrome).
 
@@ -167,7 +167,7 @@ install the `cmdtest` package that Ubuntu suggests when `yarn` is
 missing - it is a different program with the same command name.
 
 ```bash
-git clone https://github.com/diebugger-tech/GoTV.git
+git clone https://github.com/ajiai-labs/GoTV.git
 cd GoTV
 yarn install
 sh desktop/install.sh
@@ -232,7 +232,7 @@ in place by the uninstaller.
 ## Events eintragen
 
 The GoTV calendar (`public/tv/events.json`) is loaded from
-[`diebugger-tech/GoTV`](https://github.com/diebugger-tech/GoTV) on
+[`ajiai-labs/GoTV`](https://github.com/ajiai-labs/GoTV) on
 GitHub first, falling back to the bundled local copy when offline or
 unreachable (`fetchTvEvents()` in `src/model/tv.js`, cached for an hour).
 To add or update an event, edit `public/tv/events.json` in this repo and
