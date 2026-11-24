@@ -41,18 +41,18 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 |---|---|---|---|
 | 0 ✅ | Gerüst: SvelteKit 3 + Svelte 5 + TS 6 + Vite 8 + Vitest 5 in `app/`, SPA (`adapter-static`, Fallback index.html, `BASE_PATH=/GoTV` für Pages, `ssr = false`), CI-Job `app` (Check, Lint, Tests in Chromium + WebKit, Build) | `npm run build` und Tests grün in der CI | erledigt 24.11.2026 |
 | 1 | Logik umziehen: `src/model`, `src/model/game`, `src/util` -> `app/src/lib/` als TypeScript, mit allen Tests; `AppStore`/`AppActions` werden Svelte-Stores | alle übernommenen Tests grün | ~8 Std. |
-| 2a | **Design-Entwurf:** Gestaltungsrichtung, Farben/Schrift (hell/dunkel), Brett und Hauptansichten als klickbarer Entwurf zum Ansehen | der Nutzer hat den Entwurf freigegeben | ~4 Std. |
+| 2a | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | der Nutzer hat beide Entwürfe freigegeben | ~6 Std. |
 | 2b | **KGS-Kern im neuen Design:** Anmelden, Räume (Chat, Nutzer, Partien), Partien beobachten, Brett (neu als SVG), Nutzerinfo | man kann sich anmelden, Räume betreten und Partien beobachten | ~12 Std. |
 | 3 | Spielen: Herausforderungen, eigene Partie, Zählen | eine Partie gegen einen Menschen läuft durch | ~5 Std. |
 | 4 | GoTV-Teile: Live, Kalender, Kanäle, Nachspielen mit KataGo und Varianten, Mein GoTV, Meine Daten, Offline | alles, was die heutige App kann, geht auch in der neuen | ~20 Std. |
 | 5 | Desktop: `install.sh` baut `app/`, Proxy unverändert | Desktop-App startet die neue Oberfläche | ~2 Std. |
 | 6 | Umschalten: GitHub Pages auf `app/`, alte React-App entfernen (nur nach ausdrücklicher Bestätigung) | eine App, ein Build | ~2 Std. |
 
-Gesamt grob 55 Arbeitsstunden.
+Gesamt grob 57 Arbeitsstunden.
 
 ## Vom Nutzer zu klären (vor Phase 2b)
 
-Freigabe des Design-Entwurfs aus Phase 2a.
+Freigabe der beiden Design-Entwürfe (Modern, Oldschool) aus Phase 2a.
 
 ## Nicht Teil des Umbaus
 
