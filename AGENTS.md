@@ -597,13 +597,14 @@ Kein eigener Server vorhanden (Nutzer, 24.11.2026). Deshalb NICHT weiterverfolgt
   `video_id`) in events.json schreibt - nur so oft wie der Lauf, also kein Live-Status
   in Echtzeit. Braucht einen YouTube-API-Schlüssel vom Nutzer.
 
-1. **Einstieg für andere Linux-Nutzer** (aus externem Feedback, 23.11.2026): fertiges
-   AppImage/.deb statt Selbstbauen mit Node/Yarn/Python; erledigt ist nur der
-   cmdtest-Hinweis (README + install.sh). Ebenfalls dort genannt, aber Architektur-
-   entscheidungen: Umstieg von react-scripts 3 auf Vite (beseitigt openssl-legacy-provider
-   und Sass-Warnungen), Web-Formular zum Einreichen von Turnieren/Kanälen, gehosteter Proxy
-   für KGS in der Web-Version (braucht Server + Klärung mit KGS - entfällt ohne Server).
-2. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
+Bewusst so gelassen (Nutzer, 24.11.2026): kein AppImage/.deb - die Desktop-App läuft
+über `desktop/install.sh`, andere nutzen die Web-Version (GitHub Pages). Damit entfallen
+auch Vite-Umstieg und Einreich-Formular als offene Punkte (wieder aufgreifen nur auf
+ausdrücklichen Wunsch). Erledigt aus dem externen Feedback: cmdtest-Hinweis.
+
+Offen bleibt nur:
+
+1. **Weitere Brettquellen:** Fox hat keine offene Schnittstelle (Nutzer wartet auf
    Rückmeldung von Fox) - für FJ Dickhuts Fox-Partien fehlt das Brett neben dem Video.
    IGS bleibt blockiert, bis die Nutzungsbedingungen geklärt sind.
 
