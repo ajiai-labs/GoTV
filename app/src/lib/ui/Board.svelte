@@ -2,25 +2,34 @@
 	// The Go board of GoTV, drawn as SVG so it is sharp at any size (phone,
 	// iPad, desktop). Its look follows the chosen design: flat and calm in
 	// "modern", wood grain and shaded stones in "oldschool".
-	import type { BoardState, Point } from '#lib/model/types.ts';
-	import { design } from './design.svelte';
+	//
+	// Everything the old board showed is here: the last move ("active"), a
+	// move waiting for the server (pendingBlack/White), territory, dead
+	// stones, triangle/square/circle/cross, letters. With `ghost` set, a
+	// see-through stone follows the pointer (playing).
+	import type { BoardMarkup, BoardPointMark, BoardState, Point } from '#lib/model/types.ts';
+	import { design } from './design.svelte.ts';
 
 	type Label = { x: number; y: number; text: string };
 
 	let {
 		board,
+		markup = null,
 		lastMove = null,
 		labels = [],
 		coordinates = true,
 		label = 'Go-Brett',
+		ghost = null,
 		onpoint
 	}: {
 		board: BoardState;
+		markup?: BoardMarkup | null;
 		lastMove?: Point | null;
 		labels?: Array<Label>;
 		coordinates?: boolean;
 		label?: string;
-		onpoint?: (point: Point) => void;
+		ghost?: 'black' | 'white' | null;
+		onpoint?: (point: Point, color: 'black' | 'white' | null, mark: BoardPointMark | null) => void;
 	} = $props();
 
 	const uid = $props.id();
@@ -30,6 +39,9 @@
 		13: [3, 6, 9],
 		9: [2, 4, 6]
 	};
+	const SHAPES = new Set<BoardPointMark>(['triangle', 'square', 'circle', 'cross']);
+
+	type Mark = { x: number; y: number; mark: BoardPointMark };
 
 	let size = $derived(board.length);
 	let margin = $derived(coordinates ? 1.15 : 0.62);
@@ -41,22 +53,67 @@
 		let points = lines.flatMap((y) => lines.map((x) => ({ x, y })));
 		return size === 9 ? points.filter((p) => (p.x === 4) === (p.y === 4)) : points;
 	});
+	let marks = $derived.by(() => {
+		let list: Array<Mark> = [];
+		for (const [y, row] of Object.entries(markup?.marks ?? {})) {
+			for (const [x, mark] of Object.entries(row)) {
+				if (mark) list.push({ x: Number(x), y: Number(y), mark });
+			}
+		}
+		return list;
+	});
+	let markAt = (x: number, y: number) => markup?.marks[y]?.[x] ?? null;
 	let stones = $derived.by(() => {
-		let list: Array<{ x: number; y: number; color: 'black' | 'white' }> = [];
+		let list: Array<{ x: number; y: number; color: 'black' | 'white'; dead: boolean }> = [];
 		board.forEach((row, y) =>
 			row.forEach((color, x) => {
-				if (color) {
-					list.push({ x, y, color });
-				}
+				if (color) list.push({ x, y, color, dead: markAt(x, y) === 'dead' });
 			})
 		);
 		return list;
 	});
+	let texts = $derived.by(() => {
+		let list: Array<Label> = [];
+		for (const [y, row] of Object.entries(markup?.labels ?? {})) {
+			for (const [x, text] of Object.entries(row)) {
+				if (text) list.push({ x: Number(x), y: Number(y), text });
+			}
+		}
+		return list;
+	});
+	// The last move: given directly, or the "active" mark of the markup.
+	let last = $derived(lastMove ?? marks.find((m) => m.mark === 'active') ?? null);
 	let oldschool = $derived(design.current === 'oldschool');
-	let lastColor = $derived(lastMove ? board[lastMove.y]?.[lastMove.x] : null);
+	let colorAt = (x: number, y: number) => board[y]?.[x] ?? null;
+	// Marks on a black stone are drawn light, everywhere else dark.
+	let ink = (x: number, y: number) => (colorAt(x, y) === 'black' ? '#ffffff' : '#1d2421');
+
+	let hover = $state<Point | null>(null);
+	let showGhost = $derived(
+		!!ghost && !!hover && !colorAt(hover.x, hover.y) && !markAt(hover.x, hover.y)
+	);
+
+	function pointFrom(event: PointerEvent): Point | null {
+		const svg = event.currentTarget as SVGSVGElement;
+		const matrix = svg.getScreenCTM();
+		if (!matrix) return null;
+		const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+		const x = Math.round(p.x);
+		const y = Math.round(p.y);
+		return x >= 0 && y >= 0 && x < size && y < size ? { x, y } : null;
+	}
 </script>
 
-<svg class="board" class:oldschool viewBox={view} role="img" aria-label={label}>
+<svg
+	class="board"
+	class:oldschool
+	class:clickable={!!onpoint}
+	viewBox={view}
+	role="img"
+	aria-label={label}
+	onpointermove={ghost ? (e) => (hover = pointFrom(e)) : undefined}
+	onpointerleave={ghost ? () => (hover = null) : undefined}
+>
 	<defs>
 		<radialGradient id="{uid}-black" cx="0.36" cy="0.32" r="0.75">
 			<stop offset="0" stop-color={oldschool ? '#6e6e6e' : '#3d4642'} />
@@ -131,6 +188,7 @@
 		{#each stones as stone (stone.x + '-' + stone.y)}
 			<circle
 				class="stone {stone.color}"
+				class:dead={stone.dead}
 				cx={stone.x}
 				cy={stone.y}
 				r="0.475"
@@ -139,9 +197,63 @@
 		{/each}
 	</g>
 
-	{#if lastMove && lastColor}
-		<circle class="last {lastColor}" cx={lastMove.x} cy={lastMove.y} r={oldschool ? 0.2 : 0.24} />
+	{#each marks as m (m.x + '-' + m.y)}
+		{#if m.mark === 'pendingBlack' || m.mark === 'pendingWhite'}
+			<circle
+				class="pending"
+				cx={m.x}
+				cy={m.y}
+				r="0.475"
+				fill="url(#{uid}-{m.mark === 'pendingBlack' ? 'black' : 'white'})"
+			/>
+		{:else if m.mark === 'blackTerritory' || m.mark === 'whiteTerritory'}
+			<rect
+				class="territory {m.mark === 'blackTerritory' ? 'black' : 'white'}"
+				x={m.x - 0.16}
+				y={m.y - 0.16}
+				width="0.32"
+				height="0.32"
+			/>
+		{:else if m.mark === 'dead'}
+			<g class="shape" stroke={ink(m.x, m.y)}>
+				<line x1={m.x - 0.18} y1={m.y - 0.18} x2={m.x + 0.18} y2={m.y + 0.18} />
+				<line x1={m.x - 0.18} y1={m.y + 0.18} x2={m.x + 0.18} y2={m.y - 0.18} />
+			</g>
+		{:else if SHAPES.has(m.mark)}
+			<g class="shape" stroke={ink(m.x, m.y)}>
+				{#if m.mark === 'triangle'}
+					<polygon
+						points="{m.x},{m.y - 0.26} {m.x + 0.23},{m.y + 0.15} {m.x - 0.23},{m.y + 0.15}"
+					/>
+				{:else if m.mark === 'square'}
+					<rect x={m.x - 0.18} y={m.y - 0.18} width="0.36" height="0.36" />
+				{:else if m.mark === 'circle'}
+					<circle cx={m.x} cy={m.y} r="0.2" />
+				{:else}
+					<line x1={m.x - 0.18} y1={m.y - 0.18} x2={m.x + 0.18} y2={m.y + 0.18} />
+					<line x1={m.x - 0.18} y1={m.y + 0.18} x2={m.x + 0.18} y2={m.y - 0.18} />
+				{/if}
+			</g>
+		{/if}
+	{/each}
+
+	{#if last && colorAt(last.x, last.y)}
+		<circle
+			class="last {colorAt(last.x, last.y)}"
+			cx={last.x}
+			cy={last.y}
+			r={oldschool ? 0.2 : 0.24}
+		/>
 	{/if}
+
+	{#each texts as t (t.x + '-' + t.y)}
+		<g class="text">
+			{#if !colorAt(t.x, t.y)}
+				<circle class="text-bg" cx={t.x} cy={t.y} r="0.34" />
+			{/if}
+			<text x={t.x} y={t.y + 0.16} fill={ink(t.x, t.y)}>{t.text}</text>
+		</g>
+	{/each}
 
 	{#each labels as item (item.x + '-' + item.y)}
 		<g class="label">
@@ -150,16 +262,22 @@
 		</g>
 	{/each}
 
+	{#if showGhost && hover && ghost}
+		<circle class="ghost" cx={hover.x} cy={hover.y} r="0.475" fill="url(#{uid}-{ghost})" />
+	{/if}
+
 	{#if onpoint}
 		{#each { length: size * size }, i (i)}
+			{@const x = i % size}
+			{@const y = Math.floor(i / size)}
 			<rect
 				class="hit"
-				x={(i % size) - 0.5}
-				y={Math.floor(i / size) - 0.5}
+				x={x - 0.5}
+				y={y - 0.5}
 				width="1"
 				height="1"
 				role="presentation"
-				onclick={() => onpoint({ x: i % size, y: Math.floor(i / size) })}
+				onclick={() => onpoint({ x, y }, colorAt(x, y), markAt(x, y))}
 			/>
 		{/each}
 	{/if}
@@ -173,6 +291,7 @@
 		aspect-ratio: 1;
 		user-select: none;
 		-webkit-user-select: none;
+		touch-action: manipulation;
 	}
 
 	.wood {
@@ -184,7 +303,6 @@
 	.grid line,
 	.grid .edge {
 		stroke: var(--board-line);
-		stroke-width: 0.035;
 		fill: none;
 		vector-effect: non-scaling-stroke;
 	}
@@ -219,6 +337,31 @@
 		stroke-width: 0.02;
 	}
 
+	.stone.dead {
+		opacity: 0.45;
+	}
+
+	.pending,
+	.ghost {
+		opacity: 0.55;
+		pointer-events: none;
+	}
+
+	.territory.black {
+		fill: #111;
+	}
+
+	.territory.white {
+		fill: #fff;
+		stroke: rgba(0, 0, 0, 0.45);
+		stroke-width: 0.03;
+	}
+
+	.shape {
+		fill: none;
+		stroke-width: 0.07;
+	}
+
 	.last {
 		fill: none;
 		stroke: var(--accent);
@@ -239,16 +382,24 @@
 		stroke-width: 0.06;
 	}
 
+	.text text,
+	.label text {
+		font-family: var(--font-ui);
+		font-size: 0.42px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.text-bg {
+		fill: var(--board);
+	}
+
 	.label circle {
 		fill: var(--accent);
 	}
 
 	.label text {
 		fill: var(--accent-ink);
-		font-family: var(--font-ui);
-		font-size: 0.42px;
-		font-weight: 700;
-		text-anchor: middle;
 	}
 
 	.oldschool .label circle {
@@ -263,6 +414,9 @@
 
 	.hit {
 		fill: transparent;
+	}
+
+	.clickable .hit {
 		cursor: pointer;
 	}
 </style>

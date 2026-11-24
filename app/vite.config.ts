@@ -29,6 +29,22 @@ export default defineConfig({
 			paths: { base }
 		})
 	],
+	// Development: KGS through the non-browser endpoint /json/access, like the
+	// desktop proxy (desktop/goTV_local.py). KGS answers 403 as soon as an
+	// Origin header other than its own website is present, so the proxy drops
+	// it - measured and explained in AGENTS.md ("Proxy-Begründung").
+	server: {
+		proxy: {
+			'/json/access': {
+				target: 'https://www.gokgs.com',
+				changeOrigin: true,
+				cookieDomainRewrite: '',
+				configure: (proxy) => {
+					proxy.on('proxyReq', (request) => request.removeHeader('origin'));
+				}
+			}
+		}
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
