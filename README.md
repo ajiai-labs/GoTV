@@ -16,10 +16,10 @@ and it is also a full client for the [KGS Go Server](http://www.gokgs.com/).
   <a href="#quick-start-gotv-on-your-linux-desktop">desktop app</a>.</sub>
 </p>
 
-**New interface in progress:** GoTV is moving to Svelte 5 + TypeScript with two
-designs to choose from, "Modern" and "Oldschool". Preview with sample data:
-https://ajiai-labs.github.io/GoTV/neu/ - plan and status in
-[`docs/umbau-svelte.md`](docs/umbau-svelte.md).
+**New interface:** GoTV has been rebuilt with Svelte 5 + TypeScript, with two
+designs to choose from, "Modern" and "Oldschool". The desktop app already uses it;
+the web version shows it under https://ajiai-labs.github.io/GoTV/neu/ until the
+switch-over - plan and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
 
 ## What GoTV does
 
@@ -111,19 +111,22 @@ admin tools.
 
 ## New interface (Svelte 5)
 
-The current app (React, in the repository root) keeps running until the new one
-in [`app/`](app/) can do everything it does - including on the iPad and in the
-desktop app. Phases:
+The old app (React, in the repository root) keeps running until the switch-over;
+the new one in [`app/`](app/) does everything it did - including on the iPad and in
+the desktop app. Phases:
 
 - [x] Phase 0 - new app set up (SvelteKit, TypeScript, Vite, tests also in WebKit)
 - [x] Phase 1 - all logic moved to TypeScript
 - [x] Phase 2a - two designs, "Modern" and "Oldschool", switchable in the settings:
   draft online at https://ajiai-labs.github.io/GoTV/neu/ (sample data, approved)
-- [ ] Phase 2b - KGS core in the new design
-- [ ] Phase 3 - playing
-- [ ] Phase 4 - GoTV parts (Live, Kalender, Kanäle, Nachspielen, KataGo, ...)
-- [ ] Phase 5 - desktop app builds the new interface
-- [ ] Phase 6 - switch over
+- [x] Phase 2b - KGS core in the new design (login, Beobachten, Chat, Suche, profiles)
+- [x] Phase 3 - playing (challenges, own games, scoring)
+- [x] Phase 4 - GoTV parts (Live, Kalender, Kanäle, Nachspielen with KataGo, Mein GoTV,
+  Meine Daten, offline web version)
+- [x] Phase 5 - desktop app builds the new interface (`sh desktop/install.sh --alt`
+  still installs the old one)
+- [ ] Phase 6 - switch the web version over and remove the old app (needs the
+  maintainer's go-ahead)
 
 Details: [`docs/umbau-svelte.md`](docs/umbau-svelte.md), developer notes:
 [`app/README.md`](app/README.md).
@@ -200,8 +203,10 @@ Install (no sudo, user-scoped only):
 sh desktop/install.sh
 ```
 
-Then launch "GoTV" from the app grid. The app serves the production build
-from `build-desktop/` on `127.0.0.1:8788` only; KGS traffic is proxied
+Then launch "GoTV" from the app grid. The installer builds the new interface
+(`app/`, `VITE_API_URL=/json/access`); `sh desktop/install.sh --alt` builds the
+old React interface instead, until it is removed. The app serves the production
+build from `build-desktop/` on `127.0.0.1:8788` only; KGS traffic is proxied
 through the local server at `/json/access` (KGS only allows a whitelist
 of CORS origins, so direct browser access from localhost is rejected).
 

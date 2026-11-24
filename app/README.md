@@ -38,3 +38,25 @@ Imports from `src/lib` use `#lib/...` with the file extension
 The CI builds this app with `BASE_PATH=/GoTV/neu` next to the current web version:
 https://ajiai-labs.github.io/GoTV/neu/. Pages are prerendered one file per route, so
 reloading a sub-page works on GitHub Pages.
+
+## Structure
+
+- `src/lib/model/`, `src/lib/util/` - the logic of the old app in TypeScript (unchanged
+  behaviour, with its tests).
+- `src/lib/app.svelte.ts` - the running app: store, KGS connection, actions, navigation.
+- `src/lib/config.ts` - build settings (`VITE_API_URL`, `VITE_GUEST_ONLY`, base path).
+- `src/lib/ui/` - components: `game/`, `chat/`, `user/`, `tv/`, the board and shared parts.
+- `src/routes/` - one page per area: Live (`/`), Kalender, Kanäle, Nachspielen,
+  Beobachten, Spielen, Chat, Suche, Konto, Einstellungen.
+- `src/service-worker.ts` - offline support of the web version.
+
+Rules for changing or adding screens: [`../docs/neubau-regeln.md`](../docs/neubau-regeln.md).
+
+## Builds
+
+| Target | Command |
+|---|---|
+| Development (KGS through the dev proxy) | `npm run dev` |
+| Desktop app | `sh ../desktop/install.sh` (`VITE_API_URL=/json/access`) |
+| Web preview (CI) | `BASE_PATH=/GoTV/neu npm run build` |
+| Web version after the switch-over | `VITE_GUEST_ONLY=true BASE_PATH=/GoTV npm run build` |

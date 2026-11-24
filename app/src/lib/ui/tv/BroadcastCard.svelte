@@ -683,6 +683,10 @@
 			{/if}
 			{#if streamLoaded && recordingUrl}
 				<SgfReplayView initialUrl={recordingUrl} compact />
+			{:else if recordingUrl}
+				<p class="BroadcastCard-recording-hint muted">
+					Das Brett erscheint nach „Stream laden“ neben dem Video.
+				</p>
 			{/if}
 		</div>
 	</div>
@@ -1091,5 +1095,10 @@
 		.BroadcastCard-cinema .BroadcastCard-splitter {
 			display: none;
 		}
+	}
+
+	.BroadcastCard-recording-hint {
+		margin: 8px 0 0;
+		font-size: 0.9em;
 	}
 </style>

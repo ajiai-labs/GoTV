@@ -26,7 +26,10 @@ export default defineConfig({
 			// /watch etc. work on GitHub Pages (404.html) and behind the desktop
 			// server's SPA fallback.
 			adapter: adapter({ fallback: 'index.html' }),
-			paths: { base }
+			paths: { base },
+			// Offline support only for the web version (src/lib/util/serviceWorker.ts);
+			// the desktop app serves itself and the dev server must not cache.
+			serviceWorker: { register: false }
 		})
 	],
 	// Development: KGS through the non-browser endpoint /json/access, like the

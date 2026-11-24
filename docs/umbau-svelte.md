@@ -41,11 +41,11 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 |---|---|---|---|
 | 0 ✅ | Gerüst: SvelteKit 3 + Svelte 5 + TS 6 + Vite 8 + Vitest 5 in `app/`, SPA (`adapter-static`, Fallback index.html, `BASE_PATH=/GoTV` für Pages, `ssr = false`), CI-Job `app` (Check, Lint, Tests in Chromium + WebKit, Build) | `npm run build` und Tests grün in der CI | erledigt 24.11.2026 |
 | 1 ✅ | Logik umziehen: `src/model`, `src/model/game`, `src/util`, `src/sound` -> `app/src/lib/` als TypeScript, mit allen Tests | alle übernommenen Tests grün | erledigt 24.11.2026 |
-| 2a | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | ✅ freigegeben 24.11.2026 (siehe "Phase 2a – Stand") | ~6 Std. |
-| 2b | **KGS-Kern im neuen Design:** Anmelden, Räume (Chat, Nutzer, Partien), Partien beobachten, Brett (neu als SVG), Nutzerinfo | man kann sich anmelden, Räume betreten und Partien beobachten | ~12 Std. |
-| 3 | **Spielen auf KGS, alles wie in der alten App** (Wunsch 24.11.2026): Herausforderung erstellen, Vorschläge abgeben/annehmen/ablehnen und durchblättern, Rolle tauschen; eigene Partie: Zug setzen, Passen, Aufgeben, Undo bitten/annehmen/ablehnen, Zeit hinzufügen, Partie verlassen; Zählen: Gruppen tot/lebendig markieren, „Fertig“; Uhren; Partiechat. Vorlage: `src/ui/game/`, `src/ui/challenge/` | eine Partie gegen einen Menschen läuft vom Herausfordern bis zum Ergebnis durch | ~5 Std. |
-| 4 | GoTV-Teile: Live, Kalender, Kanäle, Nachspielen mit KataGo und Varianten, Mein GoTV, Meine Daten, Offline | alles, was die heutige App kann, geht auch in der neuen | ~20 Std. |
-| 5 | Desktop: `install.sh` baut `app/`, Proxy unverändert | Desktop-App startet die neue Oberfläche | ~2 Std. |
+| 2a ✅ | **Design-Entwurf, zwei Designs** (Wunsch 24.11.2026): **"Modern"** (eigenes, sehr modernes Design, Stand 2026) und **"Oldschool"** (angelehnt an das klassische KGS-Brett: Holz, klare Linien, schlicht - selbst gezeichnet, nichts aus KGS kopiert). Beide umschaltbar in den Einstellungen, ohne Neustart (Themes über CSS-Variablen + eigenes Brett-Aussehen je Design). Entwurf zum Ansehen: Brett und Hauptansichten in beiden Designs | ✅ freigegeben 24.11.2026 (siehe "Phase 2a – Stand") | ~6 Std. |
+| 2b ✅ | **KGS-Kern im neuen Design:** Anmelden, Räume (Chat, Nutzer, Partien), Partien beobachten, Brett (neu als SVG), Nutzerinfo | man kann sich anmelden, Räume betreten und Partien beobachten | ~12 Std. |
+| 3 ✅ | **Spielen auf KGS, alles wie in der alten App** (Wunsch 24.11.2026): Herausforderung erstellen, Vorschläge abgeben/annehmen/ablehnen und durchblättern, Rolle tauschen; eigene Partie: Zug setzen, Passen, Aufgeben, Undo bitten/annehmen/ablehnen, Zeit hinzufügen, Partie verlassen; Zählen: Gruppen tot/lebendig markieren, „Fertig“; Uhren; Partiechat. Vorlage: `src/ui/game/`, `src/ui/challenge/` | eine Partie gegen einen Menschen läuft vom Herausfordern bis zum Ergebnis durch | ~5 Std. |
+| 4 ✅ | GoTV-Teile: Live, Kalender, Kanäle, Nachspielen mit KataGo und Varianten, Mein GoTV, Meine Daten, Offline | alles, was die heutige App kann, geht auch in der neuen | ~20 Std. |
+| 5 ✅ | Desktop: `install.sh` baut `app/`, Proxy unverändert | Desktop-App startet die neue Oberfläche | ~2 Std. |
 | 6 | Umschalten: GitHub Pages auf `app/`, alte React-App entfernen (nur nach ausdrücklicher Bestätigung) | eine App, ein Build | ~2 Std. |
 
 Gesamt grob 57 Arbeitsstunden.
@@ -71,6 +71,39 @@ Gesamt grob 57 Arbeitsstunden.
 ## Vom Nutzer zu klären (vor Phase 2b)
 
 Erledigt: Der Nutzer hat beide Design-Entwürfe am 24.11.2026 freigegeben („gefällt mir sehr gut“).
+
+## Phasen 2b–5 – Stand (24.11.2026)
+
+Alle Seiten der alten App sind in `app/` nachgebaut (Regeln: `docs/neubau-regeln.md`), in
+Wellen: gemeinsame Bausteine, dann Beobachten/Partie, Chat, Nutzerinfo/Suche/Konto,
+Spielen, Kalender/Kanäle, Nachspielen, zuletzt Live. Gate grün (svelte-check, Lint,
+429+ Tests), CI grün inkl. WebKit.
+
+- App-Zustand: `app/src/lib/app.svelte.ts` verbindet AppStore, KgsClient und AppActions
+  (unverändert übernommen) mit Svelte; ein History-Adapter übersetzt die alten "navs" in
+  Seiten (tv → `/`, watch → `/beobachten`, play → `/spielen`, chat, search → `/suche`,
+  more → `/konto`). `app.openReplay(url)` / `app.suggestGameReplay(game)` öffnen
+  Nachspielen. KGS-Seiten stecken in `KgsGate` (Anmeldung; Web-Version: Hinweis).
+- Einstellungen: `app/src/lib/config.ts` (`VITE_API_URL`, `VITE_GUEST_ONLY`, Basis-Pfad)
+  ersetzt `process.env`. `app/static/tv` und `app/static/katago` verweisen auf `public/`.
+- Dev-Server: KGS über den Proxy in `app/vite.config.ts` (`/json/access`, Origin entfernt
+  wie beim Desktop-Proxy), `.env.development` setzt `VITE_API_URL`.
+- Desktop (Phase 5): `desktop/install.sh` baut `app/` nach `build-desktop/`,
+  `install.sh --alt` die alte Oberfläche. `goTV_local.py` liefert vorgerenderte Seiten
+  (`/kalender` → `kalender.html`).
+- Offline (Web-Version): `app/src/service-worker.ts` mit denselben Strategien wie
+  `public/gotv-sw.js`, registriert nur mit `VITE_GUEST_ONLY` im Production-Build.
+  Geprüft mit Playwright offline: Live, Kalender, Nachspielen der EM-Finalpartie.
+- Unterwegs behobene Fehler der alten App: Raumsuche übersprang jeden zweiten Treffer,
+  Byo-yomi-„+“ immer 5 s, E-Mail-Änderung ging verloren, private Chats als Räume angeboten,
+  Absturz ohne Raum/Vorschlag, Filter ohne Raum.
+- Bewusste Abweichungen stehen in den Commit-Texten der einzelnen Wellen.
+
+Für Phase 6 (nur nach Bestätigung): Pages-Build auf `app/` mit `VITE_GUEST_ONLY=true`
+und `BASE_PATH=/GoTV`; der alte Service Worker `gotv-sw.js` muss dann abgemeldet werden
+(neuer Worker unter gleichem Scope ersetzt ihn, alte Caches `gotv-app-*` räumt der neue
+beim Aktivieren mit ab); alte React-App, `public/gotv-sw.js`, `.flowconfig`, CRA-Build und
+`app/src/lib/demo/` (nicht mehr benutzt) entfernen.
 
 ## Phase 2a – Stand (24.11.2026, freigegeben)
 

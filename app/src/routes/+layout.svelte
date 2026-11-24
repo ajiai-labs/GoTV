@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { app, currentPath } from '#lib/app.svelte.ts';
 	import { config } from '#lib/config.ts';
+	import { registerServiceWorker } from '#lib/util/serviceWorker.ts';
 	import UnseenBadge from '#lib/ui/UnseenBadge.svelte';
 	import UserName from '#lib/ui/UserName.svelte';
 	import OfflineAlert from '#lib/ui/OfflineAlert.svelte';
@@ -31,7 +32,10 @@
 		{ path: '/suche', name: 'Suche', badge: null }
 	] as const;
 
-	onMount(() => app.start());
+	onMount(() => {
+		app.start();
+		registerServiceWorker();
+	});
 
 	// The old app's "nav" follows the page (links, back/forward).
 	$effect(() => {
