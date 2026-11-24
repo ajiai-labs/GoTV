@@ -118,7 +118,11 @@ class GoTvApp {
 	// Opens an SGF (tournament game, calendar entry, recent replay) on the
 	// Nachspielen page - in the old app this switched the TV tab.
 	openReplay(url: string) {
-		goto(`${resolve('/nachspielen')}?sgf=${encodeURIComponent(url)}`).catch(() => {});
+		const target = new URL(resolve('/nachspielen'), window.location.href);
+		target.searchParams.set('sgf', url);
+		// The path comes from resolve(); only the query is added.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(target.pathname + target.search).catch(() => {});
 	}
 
 	// "Nachspielen" after a KGS game ended (old onSuggestGameReplay): the

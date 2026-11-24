@@ -1,19 +1,6 @@
 <script lang="ts" module>
-	import { formatLocaleDate, formatLocaleTime } from '#lib/util/date.ts';
+	import { formatEventDateRange } from './eventDate.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
-
-	export function formatEventDateRange(event: TvEvent): string {
-		let start = formatLocaleDate(event.date_start);
-		if (event.start) {
-			// "start" carries the precise time (with timezone) - shown in the
-			// viewer's local time, unlike date_start which is date-only.
-			start += ' ' + formatLocaleTime(event.start);
-		}
-		if (event.date_end) {
-			return start + ' – ' + formatLocaleDate(event.date_end);
-		}
-		return start;
-	}
 </script>
 
 <script lang="ts">

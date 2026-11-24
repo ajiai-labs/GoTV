@@ -1,7 +1,7 @@
 <script module lang="ts">
 	import { getLiveWindow, hasOgsReplay, REPLAY_KEEP_DAYS, REPLAY_KEEP_MS } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
-	import { formatEventDateRange } from './CalendarEventCard.svelte';
+	import { formatEventDateRange } from './eventDate.ts';
 
 	// How long a finished tournament is offered under Live.
 	export const JUST_ENDED_MS = 24 * 60 * 60 * 1000;
