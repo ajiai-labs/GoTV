@@ -3,6 +3,8 @@
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
 	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
+	import DesktopDownloads from '#lib/ui/DesktopDownloads.svelte';
+	import { config } from '#lib/config.ts';
 
 	// Fixed colours per option, so each card shows its own design whatever
 	// is chosen right now.
@@ -66,6 +68,12 @@
 		{/each}
 	</div>
 </fieldset>
+
+{#if config.guestOnly}
+	<div class="desktop">
+		<DesktopDownloads />
+	</div>
+{/if}
 
 <section class="data" aria-label={t('settings.myData')}>
 	<BackupPanel />
@@ -196,6 +204,11 @@
 		width: 22%;
 		height: 18px;
 		border-radius: 9px;
+	}
+
+	.desktop {
+		max-width: 760px;
+		margin-top: calc(var(--gap) * 1.6);
 	}
 
 	.data {

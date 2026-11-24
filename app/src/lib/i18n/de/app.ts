@@ -88,7 +88,23 @@ export const app = {
 	'app.gate.title': 'KGS nur in der Desktop-App',
 	'app.gate.text':
 		'KGS beantwortet Anfragen nur von seiner eigenen Webseite. Beobachten, Spielen und Chat auf KGS gibt es deshalb in der Desktop-App von GoTV. Übertragungen, Kalender, Kanäle und Nachspielen funktionieren hier ohne Anmeldung.',
-	'app.gate.install': 'Desktop-App installieren',
+	'app.downloads.title': 'GoTV-Desktop-App herunterladen',
+	'app.downloads.intro':
+		'Mit der Desktop-App gibt es zusätzlich KGS: beobachten, spielen, chatten, automatische Gegnerwahl. Kostenlos, ohne Konto bei uns.',
+	'app.downloads.mobile':
+		'Auf iPad und iPhone gibt es keine Desktop-App - nutze diese Web-Version (Teilen → „Zum Home-Bildschirm“).',
+	'app.downloads.os.windows': 'Windows',
+	'app.downloads.os.macos': 'macOS',
+	'app.downloads.os.linux': 'Linux',
+	'app.downloads.kind.exe': 'Installer (.exe)',
+	'app.downloads.kind.msi': '.msi',
+	'app.downloads.kind.dmg': 'Apple Silicon und Intel (.dmg)',
+	'app.downloads.kind.appimage': 'AppImage',
+	'app.downloads.kind.deb': '.deb (Debian, Ubuntu)',
+	'app.downloads.unsigned':
+		'Die Apps sind nicht signiert: Windows und macOS warnen beim ersten Start.',
+	'app.downloads.help': 'So öffnest du sie',
+	'app.downloads.allVersions': 'Alle Versionen',
 	'app.offline.disconnected': 'Verbindung zu KGS getrennt',
 	'app.offline.retrying': 'Neuer Verbindungsversuch läuft …',
 	'app.offline.loginAgain': 'Bitte melde dich neu an.',

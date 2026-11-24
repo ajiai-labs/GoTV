@@ -85,7 +85,22 @@ export const app: Translation<typeof de> = {
 	'app.gate.title': 'KGS only in the desktop app',
 	'app.gate.text':
 		'KGS only answers requests from its own website, so watching, playing and chatting on KGS is available in the GoTV desktop app. Broadcasts, calendar, channels and replay work here without logging in.',
-	'app.gate.install': 'Install the desktop app',
+	'app.downloads.title': 'Download the GoTV desktop app',
+	'app.downloads.intro':
+		'The desktop app adds KGS: watch, play, chat, automatic opponent selection. Free, no account with us.',
+	'app.downloads.mobile':
+		'There is no desktop app for iPad and iPhone - use this web version (Share → "Add to Home Screen").',
+	'app.downloads.os.windows': 'Windows',
+	'app.downloads.os.macos': 'macOS',
+	'app.downloads.os.linux': 'Linux',
+	'app.downloads.kind.exe': 'Installer (.exe)',
+	'app.downloads.kind.msi': '.msi',
+	'app.downloads.kind.dmg': 'Apple Silicon and Intel (.dmg)',
+	'app.downloads.kind.appimage': 'AppImage',
+	'app.downloads.kind.deb': '.deb (Debian, Ubuntu)',
+	'app.downloads.unsigned': 'The apps are not signed: Windows and macOS warn on first start.',
+	'app.downloads.help': 'How to open them',
+	'app.downloads.allVersions': 'All versions',
 	'app.offline.disconnected': 'Disconnected from KGS',
 	'app.offline.retrying': 'Reconnecting …',
 	'app.offline.loginAgain': 'Please log in again.',

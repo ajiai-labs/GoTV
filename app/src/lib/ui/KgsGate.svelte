@@ -9,6 +9,7 @@
 	import { config } from '#lib/config.ts';
 	import LoginForm from './LoginForm.svelte';
 	import Spinner from './Spinner.svelte';
+	import DesktopDownloads from './DesktopDownloads.svelte';
 
 	let { children }: { children: Snippet } = $props();
 </script>
@@ -19,11 +20,9 @@
 		<p>
 			{t('app.gate.text')}
 		</p>
-		<p>
-			<a href="https://github.com/ajiai-labs/GoTV#desktop-installation-linux-gnome">
-				{t('app.gate.install')}
-			</a>
-		</p>
+		<div class="downloads">
+			<DesktopDownloads />
+		</div>
 	</section>
 {:else if !app.started || !app.state.initialized}
 	<Spinner />
@@ -35,7 +34,11 @@
 
 <style>
 	.note {
-		max-width: 640px;
+		max-width: 720px;
+	}
+
+	.downloads {
+		margin: 0 16px 16px;
 	}
 
 	.note p {
