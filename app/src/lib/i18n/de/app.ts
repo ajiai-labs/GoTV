@@ -207,5 +207,22 @@ export const app = {
 	'app.calendarCard.kgsLinkedNone':
 		'KGS-Zuordnung hinterlegt · derzeit kein passendes Brett online',
 	'app.calendarCard.streamOnly': 'Nur Stream · keine KGS-Brettzuordnung hinterlegt',
-	'app.calendarCard.replaySgf': 'SGF nachspielen'
+	'app.calendarCard.replaySgf': 'SGF nachspielen',
+	'app.update.about': 'Über GoTV',
+	'app.update.version': 'GoTV Desktop, Version {version}',
+	'app.update.check': 'Nach Updates suchen',
+	'app.update.checking': 'Suche …',
+	'app.update.upToDate': 'Du hast die neueste Version.',
+	'app.update.error': 'GitHub ist gerade nicht erreichbar. Später noch einmal versuchen.',
+	'app.update.available': 'Neue Version {version} ist da',
+	'app.update.current': 'Du hast Version {version}.',
+	'app.update.howTo':
+		'Der Download öffnet sich im Browser – danach GoTV schließen und den Installer starten.',
+	'app.update.download': 'Herunterladen: {kind}',
+	'app.update.opened': 'Der Download wurde im Browser geöffnet.',
+	'app.update.failed': 'Der Browser ließ sich nicht öffnen. Die Dateien liegen hier:',
+	'app.update.later': 'Später',
+	'app.update.script':
+		'GoTV Desktop für Linux (Skriptinstallation). Neue Version: im GoTV-Ordner „git pull“ und „sh desktop/install.sh“.',
+	'app.update.web': 'Web-Version – sie ist immer auf dem neuesten Stand.'
 } satisfies Record<string, Message>;

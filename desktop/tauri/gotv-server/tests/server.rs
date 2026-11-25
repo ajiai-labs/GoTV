@@ -98,6 +98,7 @@ fn start(upstream_url: &str) -> Server {
     Server::start(
         Config {
             upstream_url: upstream_url.to_string(),
+            open_url: Arc::new(|_url: &str| Ok(())),
         },
         files(),
     )
@@ -437,4 +438,62 @@ fn unreachable_kgs_gives_502() {
         "x",
     );
     assert_eq!(reply.status, 502);
+}
+
+#[test]
+fn opens_a_known_installer_in_the_browser_on_post_only() {
+    let opened: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let record = Arc::clone(&opened);
+    let server = Server::start(
+        Config {
+            upstream_url: "http://127.0.0.1:9/json/access".to_string(),
+            open_url: Arc::new(move |url: &str| {
+                record.lock().unwrap().push(url.to_string());
+                Ok(())
+            }),
+        },
+        files(),
+    )
+    .unwrap();
+    let host = format!("127.0.0.1:{}", server.port());
+    let origin = format!("http://127.0.0.1:{}", server.port());
+    let path = "/desktop/open-download/GoTV-windows-x64-setup.exe";
+
+    // GET does not open anything.
+    assert_eq!(get(&server, path).status, 405);
+    // An unknown file is refused.
+    let unknown = send(
+        server.port(),
+        "POST",
+        "/desktop/open-download/other.exe",
+        &[("Host", &host), ("Origin", &origin)],
+        "",
+    );
+    assert_eq!(unknown.status, 403);
+    // Another website cannot trigger it.
+    let foreign = send(
+        server.port(),
+        "POST",
+        path,
+        &[("Host", &host), ("Origin", "https://evil.example")],
+        "",
+    );
+    assert_eq!(foreign.status, 403);
+    assert!(opened.lock().unwrap().is_empty());
+
+    let reply = send(
+        server.port(),
+        "POST",
+        path,
+        &[("Host", &host), ("Origin", &origin)],
+        "",
+    );
+    assert_eq!(reply.status, 200);
+    assert_eq!(
+        *opened.lock().unwrap(),
+        vec![
+            "https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-windows-x64-setup.exe"
+                .to_string()
+        ]
+    );
 }

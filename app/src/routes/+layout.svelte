@@ -18,6 +18,7 @@
 	import FollowWatcher from '#lib/ui/user/FollowWatcher.svelte';
 	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
 	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
+	import DesktopUpdateBanner from '#lib/ui/update/DesktopUpdateBanner.svelte';
 	import { effectiveNavOrder, navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { fetchTvEvents, hasLiveBroadcast } from '#lib/model/tv.ts';
@@ -252,6 +253,8 @@
 
 	<!-- Web version on iPad/iPhone Safari: how to add GoTV to the home screen -->
 	<HomeScreenHint />
+	<!-- Desktop apps: a newer GoTV on GitHub -->
+	<DesktopUpdateBanner />
 
 	<main>
 		{@render children()}

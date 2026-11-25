@@ -14,6 +14,7 @@
 	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 	import DesktopDownloads from '#lib/ui/DesktopDownloads.svelte';
+	import AboutGoTv from '#lib/ui/update/AboutGoTv.svelte';
 	import { config } from '#lib/config.ts';
 	import { BOARD_RESIZE_MODES, boardResizeMode } from '#lib/ui/game/boardResizeMode.svelte.ts';
 
@@ -201,6 +202,10 @@
 	<BackupPanel />
 </section>
 
+<div class="about">
+	<AboutGoTv />
+</div>
+
 <style>
 	.sound {
 		display: flex;
@@ -374,7 +379,8 @@
 		margin-top: calc(var(--gap) * 1.6);
 	}
 
-	.data {
+	.data,
+	.about {
 		max-width: 760px;
 		margin-top: calc(var(--gap) * 1.6);
 	}

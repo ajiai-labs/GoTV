@@ -8,6 +8,7 @@
 //! Tauri app can serve its embedded assets and tests can use a map - this
 //! crate has no Tauri dependency.
 
+mod open;
 mod proxy;
 pub mod routing;
 
@@ -26,16 +27,23 @@ pub const KGS_UPSTREAM_URL: &str = "https://www.gokgs.com/json/access";
 /// "_app/immutable/x.js"), or None if there is no such file.
 pub type Resolver = Arc<dyn Fn(&str) -> Option<Vec<u8>> + Send + Sync>;
 
-#[derive(Clone, Debug)]
+/// Opens an address in the system browser.
+pub type Opener = Arc<dyn Fn(&str) -> io::Result<()> + Send + Sync>;
+
+#[derive(Clone)]
 pub struct Config {
     /// Where `/json/access` goes; tests point it at a local fake.
     pub upstream_url: String,
+    /// Opens the GoTV download addresses (`/desktop/open-...`); tests record
+    /// the address instead of starting a browser.
+    pub open_url: Opener,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             upstream_url: KGS_UPSTREAM_URL.to_string(),
+            open_url: Arc::new(open::open_in_browser),
         }
     }
 }
@@ -62,6 +70,7 @@ impl Server {
             port,
             resolver,
             proxy: proxy::Proxy::new(config.upstream_url),
+            open_url: config.open_url,
         });
 
         let server = Arc::clone(&http);
@@ -109,6 +118,7 @@ struct Context {
     port: u16,
     resolver: Resolver,
     proxy: proxy::Proxy,
+    open_url: Opener,
 }
 
 impl Context {
@@ -128,6 +138,16 @@ impl Context {
                 "/igs-bridge ist reserviert fuer eine kuenftige IGS-Quelle. Solange die \
                  IGS-Nutzungsbedingungen nicht geprueft sind, wird nichts implementiert.",
             ),
+            Route::OpenUrl(url) => match method {
+                Method::Post => match (self.open_url)(&url) {
+                    Ok(()) => text_response(200, "OK"),
+                    Err(err) => {
+                        eprintln!("gotv-server: cannot open {url}: {err}");
+                        text_response(500, "Browser konnte nicht gestartet werden")
+                    }
+                },
+                _ => text_response(405, "Method not allowed"),
+            },
             Route::BadRequest => text_response(400, "Bad request"),
             Route::Forbidden => text_response(403, "Forbidden"),
             Route::Static(rel) => match method {

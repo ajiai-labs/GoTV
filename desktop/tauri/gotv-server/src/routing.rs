@@ -12,6 +12,23 @@ const IGS_BRIDGE_PATH: &str = "/igs-bridge";
 
 const INDEX: &str = "index.html";
 
+/// GoTV's releases on GitHub.
+pub const RELEASES_URL: &str = "https://github.com/ajiai-labs/GoTV/releases";
+
+/// The installers the app may open in the system browser (update notice):
+/// the fixed names every release carries (.github/workflows/desktop.yml).
+/// Only these - the endpoint never opens an address from the request.
+pub const DOWNLOAD_FILES: [&str; 5] = [
+    "GoTV-windows-x64-setup.exe",
+    "GoTV-windows-x64.msi",
+    "GoTV-macos-universal.dmg",
+    "GoTV-linux-x86_64.AppImage",
+    "GoTV-linux-amd64.deb",
+];
+
+const OPEN_DOWNLOAD_PREFIX: &str = "/desktop/open-download/";
+const OPEN_RELEASES_PATH: &str = "/desktop/open-releases";
+
 /// Where a request goes.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Route {
@@ -19,6 +36,9 @@ pub enum Route {
     Proxy,
     /// `/igs-bridge` - deliberately not implemented (501).
     IgsBridge,
+    /// `/desktop/open-download/<file>`, `/desktop/open-releases` - opens this
+    /// GitHub address in the system browser (POST only).
+    OpenUrl(String),
     /// A file of the build; the relative path ("" = the start page).
     Static(String),
     /// Characters outside `[A-Za-z0-9_\-./]` (400).
@@ -35,6 +55,15 @@ pub fn route(url: &str) -> Route {
     }
     if path == IGS_BRIDGE_PATH || path.starts_with("/igs-bridge/") {
         return Route::IgsBridge;
+    }
+    if path == OPEN_RELEASES_PATH {
+        return Route::OpenUrl(format!("{RELEASES_URL}/latest"));
+    }
+    if let Some(file) = path.strip_prefix(OPEN_DOWNLOAD_PREFIX) {
+        return match DOWNLOAD_FILES.iter().find(|name| **name == file) {
+            Some(name) => Route::OpenUrl(format!("{RELEASES_URL}/latest/download/{name}")),
+            None => Route::Forbidden,
+        };
     }
     if path.is_empty() || !path.chars().all(is_safe_path_char) {
         return Route::BadRequest;
@@ -175,6 +204,33 @@ mod tests {
     fn reserves_the_igs_bridge() {
         assert_eq!(route("/igs-bridge"), Route::IgsBridge);
         assert_eq!(route("/igs-bridge/x"), Route::IgsBridge);
+    }
+
+    #[test]
+    fn opens_only_the_known_installers_and_the_release_page() {
+        assert_eq!(
+            route("/desktop/open-download/GoTV-linux-x86_64.AppImage"),
+            Route::OpenUrl(
+                "https://github.com/ajiai-labs/GoTV/releases/latest/download/GoTV-linux-x86_64.AppImage"
+                    .into()
+            )
+        );
+        assert_eq!(
+            route("/desktop/open-releases"),
+            Route::OpenUrl("https://github.com/ajiai-labs/GoTV/releases/latest".into())
+        );
+        for file in DOWNLOAD_FILES {
+            assert!(matches!(
+                route(&format!("/desktop/open-download/{file}")),
+                Route::OpenUrl(_)
+            ));
+        }
+        assert_eq!(route("/desktop/open-download/evil.exe"), Route::Forbidden);
+        assert_eq!(route("/desktop/open-download/"), Route::Forbidden);
+        assert_eq!(
+            route("/desktop/open-download/https://evil.example/x"),
+            Route::Forbidden
+        );
     }
 
     #[test]

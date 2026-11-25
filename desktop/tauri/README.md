@@ -25,6 +25,16 @@ https://github.com/ajiai-labs/GoTV/releases/latest
 iPad/iPhone: keine App (Apple erlaubt keine Installation außerhalb des App Store) -
 dort die Web-Version https://ajiai-labs.github.io/GoTV/ öffnen und "Zum Home-Bildschirm".
 
+## Updates
+
+Beim Start fragt die App GitHub nach dem neuesten Release (`desktop-vX.Y.Z`). Ist es
+neuer, erscheint oben ein Hinweis mit "Herunterladen"; die Version steht außerdem unter
+Einstellungen → "Über GoTV" (dort auch "Nach Updates suchen"). Der Download öffnet sich
+im System-Browser: der lokale Server öffnet dafür nur die fünf festen Installer-Adressen
+(`POST /desktop/open-download/<Datei>`, keine frei wählbare Adresse). Danach GoTV
+schließen und den Installer starten. Die Version kommt beim Bauen aus dem Tag
+(`VITE_DESKTOP_VERSION`).
+
 ## Installieren
 
 **Windows:** `GoTV-windows-x64-setup.exe` starten. SmartScreen meldet "Der Computer

@@ -166,6 +166,7 @@ jobs:
         env:
           VITE_API_URL: /json/access
           VITE_EVENTS_REMOTE_FIRST: "true"
+          VITE_DESKTOP_VERSION: ${{ env.VERSION }}
 
       - name: Server tests
         working-directory: desktop/tauri

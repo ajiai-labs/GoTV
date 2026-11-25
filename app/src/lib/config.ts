@@ -10,6 +10,9 @@
 //                    macOS, Linux): no daily calendar timer there, so the
 //                    desktop case loads events.json from GitHub first and
 //                    the bundled copy only as a fallback (desktop/tauri/)
+//   VITE_DESKTOP_VERSION  version of the Tauri desktop app ("0.3.0"), set by
+//                    .github/workflows/desktop.yml; enables the update notice
+//                    (desktopUpdate.ts)
 import { resolve } from '$app/paths';
 
 const env = import.meta.env;

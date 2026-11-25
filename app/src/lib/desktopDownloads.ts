@@ -4,10 +4,10 @@ export type DesktopOs = 'windows' | 'macos' | 'linux' | 'mobile' | 'other';
 const RELEASES = 'https://github.com/ajiai-labs/GoTV/releases';
 // Fixed file names, uploaded next to the versioned ones by
 // .github/workflows/desktop.yml, so "latest" always has them.
-type Kind = 'exe' | 'msi' | 'dmg' | 'appimage' | 'deb';
+export type DownloadKind = 'exe' | 'msi' | 'dmg' | 'appimage' | 'deb';
 export const DOWNLOADS: Record<
 	'windows' | 'macos' | 'linux',
-	Array<{ file: string; kind: Kind }>
+	Array<{ file: string; kind: DownloadKind }>
 > = {
 	windows: [
 		{ file: 'GoTV-windows-x64-setup.exe', kind: 'exe' },

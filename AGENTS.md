@@ -715,3 +715,19 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   gebaut, aber NOCH NICHT an einer echten KGS-Sitzung geprüft - wie die Automatik-Gegnerwahl.
 - Desktop-Downloads aktualisieren sich NICHT von selbst: neue Version nur per Tag
   `desktop-vX.Y.Z` (Nutzer fragen, ein Release ist öffentlich).
+
+## Fortsetzen, Verlassen-Warnung, Update-Hinweis (25.11.2026, abends)
+
+- "Nicht beendete Partien" (Spielen) zeigt jetzt ALLE nicht beendeten Partien des eigenen
+  Archivs wie CGoban "Fortsetzen" (vorher nur `inPlay`, und jede Änderung der Partielisten
+  löschte die Einträge wieder): `getUnfinishedGames` in `model/game/message.ts`; offene
+  Partien (Gegner wartet, `inPlay`) zuerst und fett.
+- Eigene laufende Partie verlassen fragt nach (wie CGoban): Zurück zur Partie / Aufgeben /
+  Verlassen (`GameScreen`).
+- Desktop-Apps (Tauri): Update-Hinweis beim Start + "Über GoTV" in den Einstellungen
+  (Version, "Nach Updates suchen"); `lib/desktopUpdate.ts`, `lib/ui/update/`. GitHub-API
+  `releases/latest`, Tag `desktop-v…`. Download über `POST /desktop/open-download/<Datei>`
+  im gotv-server (nur die fünf festen Dateinamen, öffnet den System-Browser). Bewusst
+  KEIN globales Abfangen von Navigationen (`on_navigation` trifft auf macOS/Linux auch
+  Iframes, also YouTube/Twitch). Kein Tauri-Updater-Plugin (bräuchte Signaturschlüssel).
+  Wirkt erst ab dem nächsten Release (0.2.0 hat den Hinweis noch nicht).

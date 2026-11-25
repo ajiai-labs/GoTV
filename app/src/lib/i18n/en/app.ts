@@ -203,5 +203,21 @@ export const app: Translation<typeof de> = {
 	'app.calendarCard.kgsLinked': 'KGS board linked',
 	'app.calendarCard.kgsLinkedNone': 'KGS board linked · no matching board online right now',
 	'app.calendarCard.streamOnly': 'Stream only · no KGS board linked',
-	'app.calendarCard.replaySgf': 'Replay SGF'
+	'app.calendarCard.replaySgf': 'Replay SGF',
+	'app.update.about': 'About GoTV',
+	'app.update.version': 'GoTV Desktop, version {version}',
+	'app.update.check': 'Check for updates',
+	'app.update.checking': 'Checking …',
+	'app.update.upToDate': 'You have the newest version.',
+	'app.update.error': 'GitHub cannot be reached right now. Try again later.',
+	'app.update.available': 'New version {version} is available',
+	'app.update.current': 'You have version {version}.',
+	'app.update.howTo': 'The download opens in your browser – then close GoTV and run the installer.',
+	'app.update.download': 'Download: {kind}',
+	'app.update.opened': 'The download was opened in your browser.',
+	'app.update.failed': 'The browser could not be opened. The files are here:',
+	'app.update.later': 'Later',
+	'app.update.script':
+		'GoTV Desktop for Linux (script installation). New version: in the GoTV folder run "git pull" and "sh desktop/install.sh".',
+	'app.update.web': 'Web version – always up to date.'
 };
