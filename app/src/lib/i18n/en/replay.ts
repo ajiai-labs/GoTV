@@ -67,6 +67,8 @@ export const replay: Translation<typeof de> = {
 	'replay.katago.compareNotListed':
 		'The game played {played} – not among KataGo’s {count} best moves; KataGo prefers {best}.',
 	'replay.katago.title': 'KataGo analysis',
+	'replay.katago.blockedRunning':
+		'KataGo is only available after the game – this game is still running on KGS. Variations and bookmarks work already.',
 	'replay.katago.visits': 'Visits',
 	'replay.katago.visitCount': '{visits} visits',
 	'replay.katago.network': 'Network: {name}',

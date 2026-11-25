@@ -11,6 +11,7 @@
 	import Modal from '#lib/ui/Modal.svelte';
 	import GameInfo from './GameInfo.svelte';
 	import { BOARD_RESIZE_MODES, boardResizeMode } from './boardResizeMode.svelte.ts';
+	import { app } from '#lib/app.svelte.ts';
 
 	const MORE_INFO_PROPS: Record<string, MessageKey> = {
 		ANNOTATOR: 'game.moreMenu.annotator',
@@ -26,13 +27,45 @@
 	let {
 		game,
 		roomsById,
-		showBoardSizing = false
+		showBoardSizing = false,
+		kgsTools = false
 	}: {
 		game: GameChannel;
 		// Default: the rooms the app knows.
 		roomsById?: Index<Room>;
 		showBoardSizing?: boolean;
+		// A KGS game watched on Beobachten: "Lokal betrachten" and "Spiel
+		// kopieren in …" (as CGoban's Optionen menu).
+		kgsTools?: boolean;
 	} = $props();
+
+	let copyShowing = $state(false);
+	let copyRoomId: number | null = $state(null);
+	let copySent = $state(false);
+	// The rooms we are in - KGS copies the game into one of them.
+	let joinedRooms = $derived(
+		Object.keys(app.state.conversationsById)
+			.map((id) => (roomsById ?? app.state.roomsById)[id])
+			.filter((room): room is Room => !!room)
+	);
+
+	function openLocalCopy() {
+		moreShowing = false;
+		app.openLocalCopy(game);
+	}
+
+	function showCopy() {
+		moreShowing = false;
+		copySent = false;
+		copyRoomId = joinedRooms[0]?.id ?? null;
+		copyShowing = true;
+	}
+
+	function sendCopy() {
+		if (copyRoomId == null) return;
+		app.actions.onCloneGame(copyRoomId, game.id);
+		copySent = true;
+	}
 
 	const uid = $props.id();
 	let moreShowing = $state(false);
@@ -125,6 +158,14 @@
 			<button type="button" class="GameMoreMenu-dropdown-item" onclick={showGameInfo}>
 				{t('game.moreMenu.gameInfo')}
 			</button>
+			{#if kgsTools && game.tree}
+				<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
+					{t('game.moreMenu.localCopy')}
+				</button>
+				<button type="button" class="GameMoreMenu-dropdown-item" onclick={showCopy}>
+					{t('game.moreMenu.copyToRoom')}
+				</button>
+			{/if}
 			{#if showBoardSizing}
 				<fieldset class="GameMoreMenu-board-sizing">
 					<legend>{t('settings.boardResize')}</legend>
@@ -143,6 +184,35 @@
 				</fieldset>
 			{/if}
 		</div>
+	{/if}
+	{#if copyShowing}
+		<Modal title={t('game.moreMenu.copyToRoom')} onclose={() => (copyShowing = false)}>
+			{#if joinedRooms.length === 0}
+				<p class="GameMoreMenu-copy-text">{t('game.moreMenu.copyNoRoom')}</p>
+			{:else if copySent}
+				<p class="GameMoreMenu-copy-text" role="status">{t('game.moreMenu.copySent')}</p>
+			{:else}
+				<p class="GameMoreMenu-copy-text">{t('game.moreMenu.copyText')}</p>
+				<fieldset class="GameMoreMenu-copy-rooms">
+					<legend>{t('game.moreMenu.copyRoom')}</legend>
+					{#each joinedRooms as room (room.id)}
+						<label>
+							<input
+								type="radio"
+								name="{uid}-copy-room"
+								value={room.id}
+								checked={copyRoomId === room.id}
+								onchange={() => (copyRoomId = room.id)}
+							/>
+							{room.name ?? room.id}
+						</label>
+					{/each}
+				</fieldset>
+				<button type="button" class="button button-primary" onclick={sendCopy}>
+					{t('game.moreMenu.copySend')}
+				</button>
+			{/if}
+		</Modal>
 	{/if}
 	{#if gameInfoShowing}
 		<Modal title={t('game.moreMenu.gameInfo')} onclose={() => (gameInfoShowing = false)}>
@@ -176,6 +246,20 @@
 </div>
 
 <style>
+	.GameMoreMenu-copy-text {
+		margin: 0 0 12px;
+		max-width: 46ch;
+	}
+
+	.GameMoreMenu-copy-rooms {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin: 0 0 12px;
+		border: 0;
+		padding: 0;
+	}
+
 	.GameMoreMenu {
 		position: relative;
 	}

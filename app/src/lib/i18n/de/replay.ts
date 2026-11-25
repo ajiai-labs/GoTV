@@ -68,6 +68,8 @@ export const replay = {
 	'replay.katago.compareNotListed':
 		'Die Partie spielte {played} – nicht unter KataGos {count} besten Zügen; KataGo bevorzugt {best}.',
 	'replay.katago.title': 'KataGo-Analyse',
+	'replay.katago.blockedRunning':
+		'KataGo gibt es erst nach Partieende – diese Partie läuft auf KGS noch. Varianten und Lesezeichen gehen schon.',
 	'replay.katago.visits': 'Visits',
 	'replay.katago.visitCount': '{visits} Visits',
 	'replay.katago.network': 'Netz: {name}',

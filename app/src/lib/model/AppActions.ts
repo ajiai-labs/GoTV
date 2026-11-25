@@ -46,6 +46,8 @@ export class AppActions {
 	_automatchEndedAt = 0;
 	// When we last asked KGS to load a game from the archive (onLoadGame).
 	_loadRequestedAt = 0;
+	// When we last asked KGS to copy a game into a room (onCloneGame).
+	_cloneRequestedAt = 0;
 
 	constructor(store: AppStore, client: KgsClient, history: Record<string, any>) {
 		this._store = store;
@@ -139,6 +141,12 @@ export class AppActions {
 				Date.now() - this._loadRequestedAt < LOAD_JOIN_GRACE_MS
 			) {
 				this.onLoadedGameJoined(msg.channelId);
+			} else if (
+				msg.type === 'GAME_JOIN' &&
+				msg.channelId &&
+				Date.now() - this._cloneRequestedAt < LOAD_JOIN_GRACE_MS
+			) {
+				this.onClonedGameJoined(msg.channelId);
 			}
 		}
 	};
@@ -572,6 +580,28 @@ export class AppActions {
 			private: privateGame,
 			timestamp
 		});
+	};
+	// "Spiel kopieren in …" (CGoban): KGS copies the game into a room as a
+	// review we own; it opens on Beobachten when KGS brings it.
+	onCloneGame = (roomId: number, gameId: number) => {
+		if (this._isOffline()) return;
+		this._cloneRequestedAt = Date.now();
+		this._client.sendMessage({
+			type: 'ROOM_CLONE_GAME',
+			channelId: roomId,
+			gameChannelId: gameId
+		});
+	};
+	onClonedGameJoined = (gameId: number) => {
+		const state = this._store.getState();
+		const game = state.gamesById[gameId];
+		if (!game || (game.type !== 'review' && game.type !== 'rengo_review')) return;
+		this._cloneRequestedAt = 0;
+		if (typeof state.watchGameId === 'number' && state.watchGameId !== gameId) {
+			this.onLeaveGame(state.watchGameId);
+		}
+		this._store.dispatch({ type: 'WATCH_GAME', gameId });
+		this.onChangeNav('watch');
 	};
 	onUserDetail = (name: string) => {
 		if (this._isOffline()) {

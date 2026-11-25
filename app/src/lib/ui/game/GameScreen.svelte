@@ -342,7 +342,7 @@
 		{/if}
 		<h1 class="GameScreen-title">{title}</h1>
 		{#if !playing}
-			<GameMoreMenu {game} {roomsById} showBoardSizing />
+			<GameMoreMenu {game} {roomsById} showBoardSizing kgsTools />
 		{/if}
 	</header>
 

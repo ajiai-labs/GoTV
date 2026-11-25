@@ -26,7 +26,9 @@
 
 	let sgfUrl = $derived(page.url.searchParams.get('sgf') || null);
 	let linkedMove = $derived(sgfUrl ? parseMoveParam(page.url.searchParams.get('zug')) : null);
-	let replayGameId = $derived(app.state.tvReplayGameId ?? null);
+	// "Lokal betrachten" of a watched game (app.openLocalCopy).
+	let localCopy = $derived(sgfUrl ? null : app.localCopy);
+	let replayGameId = $derived(localCopy ? null : (app.state.tvReplayGameId ?? null));
 	let replayGame = $derived(
 		!sgfUrl && replayGameId ? (app.state.gamesById[replayGameId] ?? null) : null
 	);
@@ -37,14 +39,16 @@
 	let viewKey = $derived(
 		sgfUrl
 			? 'url:' + sgfUrl + (linkedMove === null ? '' : '@' + String(linkedMove))
-			: replayTree
-				? 'game-' + String(replayGameId)
-				: 'manual'
+			: localCopy
+				? 'local-' + String(localCopy.serial)
+				: replayTree
+					? 'game-' + String(replayGameId)
+					: 'manual'
 	);
 
 	// A game is open: the layout hides the top bar, this page shows the
 	// small logo and "Zurück" instead.
-	let boardOpen = $derived(!!sgfUrl || !!replayTree);
+	let boardOpen = $derived(!!sgfUrl || !!replayTree || !!localCopy);
 	// "Zurück" returns to where the game was opened from (calendar, game,
 	// list); opened directly from a link, it goes to the Nachspielen lists.
 	let cameFromApp = false;
@@ -134,13 +138,22 @@
 	{/if}
 	<div class="replay" bind:this={replayElement}>
 		{#key viewKey}
-			<SgfReplayView
-				initialUrl={sgfUrl}
-				initialTree={replayTree}
-				replayKey={replayTree ? 'kgs-' + String(replayGameId) : null}
-				initialMove={linkedMove}
-				kataGo={replayKataGo}
-			/>
+			{#if localCopy}
+				<SgfReplayView
+					initialTree={localCopy.tree}
+					replayKey={'kgs-' + String(localCopy.gameId)}
+					initialMove={localCopy.move}
+					kataGoBlocked={localCopy.running}
+				/>
+			{:else}
+				<SgfReplayView
+					initialUrl={sgfUrl}
+					initialTree={replayTree}
+					replayKey={replayTree ? 'kgs-' + String(replayGameId) : null}
+					initialMove={linkedMove}
+					kataGo={replayKataGo}
+				/>
+			{/if}
 		{/key}
 	</div>
 

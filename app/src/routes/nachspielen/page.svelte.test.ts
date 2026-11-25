@@ -154,6 +154,35 @@ describe('Nachspielen', () => {
 		await expect.element(page.getByRole('checkbox', { name: 'KataGo-Analyse' })).not.toBeChecked();
 	});
 
+	it('opens a local copy of a running game at its move, without KataGo', async () => {
+		// Even with KataGo switched on as the stored default.
+		window.localStorage.setItem('gotv.katago', '1');
+		const engine = getKataGoEngine();
+		const analyze = vi.spyOn(engine, 'analyze').mockReturnValue(new Promise(() => {}));
+		const tree = parseSgf('(;SZ[9]PB[kim]PW[lee];B[aa];W[bb];B[cc])');
+		const live = {
+			...tree,
+			currentNode: tree.currentLine[2],
+			currentLine: tree.currentLine
+		};
+		app.openLocalCopy({ id: 90, type: 'free', tree: live } as unknown as GameChannel);
+		await render(Page);
+		await expect.element(page.getByRole('img', { name: /kim gegen lee/ })).toBeVisible();
+		await expect.element(page.getByText(/Zug 2\b/).first()).toBeVisible();
+		await expect.element(page.getByText(/KataGo gibt es erst nach Partieende/)).toBeVisible();
+		expect(page.getByRole('checkbox', { name: 'KataGo-Analyse' }).elements()).toHaveLength(0);
+		expect(analyze).not.toHaveBeenCalled();
+		app.closeReplay();
+	});
+
+	it('allows KataGo in a local copy of a finished game', async () => {
+		const tree = parseSgf('(;SZ[9]PB[kim]PW[lee];B[aa])');
+		app.openLocalCopy({ id: 91, type: 'free', over: true, tree } as unknown as GameChannel);
+		await render(Page);
+		await expect.element(page.getByRole('checkbox', { name: 'KataGo-Analyse' })).toBeVisible();
+		app.closeReplay();
+	});
+
 	it('opens a tournament game on this page', async () => {
 		const event: TvEvent = {
 			id: 'finale',

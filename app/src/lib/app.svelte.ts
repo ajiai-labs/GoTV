@@ -14,7 +14,8 @@ import { AppActions } from './model/AppActions';
 import { AppStore } from './model/AppStore';
 import { KgsClient } from './model/KgsClient';
 import { getInitialState, handleMessage } from './model/index';
-import type { AppState, GameChannel, KgsClientState, NavOption } from './model/types';
+import type { AppState, GameChannel, GameTree, KgsClientState, NavOption } from './model/types';
+import { getMainLine } from './model/ReplayVariation';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
 // Nachspielen belong to it as well.
@@ -72,6 +73,17 @@ const LOGGED_OUT: KgsClientState = { status: 'loggedOut', network: 'online', ret
 class GoTvApp {
 	// The whole app state, replaced (never mutated) on every message.
 	state: AppState = $state.raw(getInitialState(LOGGED_OUT));
+	// "Lokal betrachten": a copy of a watched game for Nachspielen, taken at
+	// one moment - later moves on KGS do not change it. `running`: the game
+	// was still going on KGS, so KataGo stays off for this copy.
+	localCopy: {
+		tree: GameTree;
+		gameId: number;
+		running: boolean;
+		move: number;
+		serial: number;
+	} | null = $state.raw(null);
+	private localCopySerial = 0;
 	store: AppStore | null = null;
 	client: KgsClient | null = null;
 	// Reactive, so pages waiting for the start (KgsGate) update once it ran.
@@ -138,9 +150,30 @@ class GoTvApp {
 		goto(target.pathname + target.search).catch(() => {});
 	}
 
+	// "Lokal betrachten" (CGoban): the watched game as it stands now, on
+	// Nachspielen at the current move - variations and bookmarks as usual,
+	// KataGo only if the game is already over.
+	openLocalCopy(game: GameChannel) {
+		const tree = game.tree;
+		if (!tree) return;
+		const mainLine = getMainLine(tree);
+		const index = tree.currentLine.indexOf(tree.currentNode);
+		const move = index >= 0 ? index : mainLine.length - 1;
+		this.localCopy = {
+			tree,
+			gameId: game.id,
+			running: isRunningMatch(game),
+			move,
+			serial: ++this.localCopySerial
+		};
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() gives the path
+		goto(resolve('/nachspielen')).catch(() => {});
+	}
+
 	// "Zurück" on the Nachspielen board: forget the handed-over KGS game, so
 	// Nachspielen opens with its lists again.
 	closeReplay() {
+		this.localCopy = null;
 		const id = this.state.tvReplayGameId;
 		this.store?.dispatch({ type: 'TV_REPLAY_GAME', gameId: null });
 		// A game loaded from the archive only for Nachspielen: leave KGS's
@@ -168,6 +201,13 @@ class GoTvApp {
 			this._actions.onChangeNav(nav, { push: false });
 		}
 	}
+}
+
+// A game still being played (not over, not a review or demonstration):
+// its local copy gets no KataGo.
+function isRunningMatch(game: GameChannel): boolean {
+	if (game.over) return false;
+	return !['review', 'rengo_review', 'demonstration'].includes(game.type);
 }
 
 export const app = new GoTvApp();

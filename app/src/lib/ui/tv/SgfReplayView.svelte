@@ -64,6 +64,7 @@
 		replayKey = null,
 		initialMove = null,
 		kataGo = false,
+		kataGoBlocked = false,
 		compact = false
 	}: {
 		initialUrl?: string | null;
@@ -77,6 +78,8 @@
 		// KataGo switched on for the first game shown (a KGS game of the
 		// viewer, after it ended) - the stored default stays as it is.
 		kataGo?: boolean;
+		// A local copy of a game still running on KGS: KataGo stays off.
+		kataGoBlocked?: boolean;
 		compact?: boolean;
 	} = $props();
 
@@ -214,7 +217,9 @@
 
 	// The move of a shared link, once, for the game of initialUrl only.
 	function takeLinkedMove(url: string | null, moves: number): number | null {
-		if (initialMoveUsed || compact || !url || url !== initialUrl) return null;
+		if (initialMoveUsed || compact) return null;
+		// A shared link (initialUrl) or a local copy (initialTree) only.
+		if (url ? url !== initialUrl : !initialTree) return null;
 		initialMoveUsed = true;
 		const move = initialMove;
 		return typeof move === 'number' && Number.isInteger(move) && move >= 0 && move < moves
@@ -810,7 +815,8 @@
 				<KataGoPanel
 					{tree}
 					nodeId={currentNode}
-					startEnabled={kataGoStart}
+					startEnabled={kataGoStart && !kataGoBlocked}
+					blocked={kataGoBlocked}
 					onMoves={onKataGoMoves}
 					{onLayLine}
 					onJump={changeCurrentNode}

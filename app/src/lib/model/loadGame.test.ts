@@ -81,3 +81,25 @@ describe('loading a game from the archive', () => {
 		expect(store.getState().loadFailed).toBeNull();
 	});
 });
+
+describe('copying a watched game into a room', () => {
+	it('asks KGS to clone it and opens the copy on Beobachten', () => {
+		const { store, sendMessage, history, actions } = setup();
+		actions.onCloneGame(5, 700);
+		expect(sendMessage).toHaveBeenCalledWith({
+			type: 'ROOM_CLONE_GAME',
+			channelId: 5,
+			gameChannelId: 700
+		});
+		actions.onReceiveServerMessages([gameJoin(912, 'review', { owner: ME })]);
+		expect(store.getState().watchGameId).toBe(912);
+		expect(history.push).toHaveBeenCalledWith('/watch');
+	});
+
+	it('ignores a game join that is no copy', () => {
+		const { store, actions } = setup();
+		actions.onCloneGame(5, 700);
+		actions.onReceiveServerMessages([gameJoin(913, 'free', { white: ANNA, black: ME })]);
+		expect(store.getState().watchGameId).not.toBe(913);
+	});
+});
