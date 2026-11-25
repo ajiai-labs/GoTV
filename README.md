@@ -10,7 +10,7 @@ analysis. It runs in the browser, on a tablet, and as a desktop app on Linux,
 and it is also a full client for the [KGS Go Server](http://www.gokgs.com/).
 
 <p align="center">
-  <a href="https://ajiai-labs.github.io/GoTV/neu/"><b>▶ Open GoTV in your browser</b></a>
+  <a href="https://ajiai-labs.github.io/GoTV/"><b>▶ Open GoTV in your browser</b></a>
   &nbsp;·&nbsp;
   <a href="#download-the-desktop-app"><b>⬇ Download the desktop app</b></a><br>
   <sub>The browser version needs no installation and works on desktop, tablet and phone,
@@ -33,11 +33,13 @@ to open them: [`desktop/tauri/README.md`](desktop/tauri/README.md). All versions
 browser version and "Add to Home Screen" (Apple allows no apps outside the App
 Store). On Linux the script install below works as well.
 
-**New interface:** GoTV has been rebuilt with Svelte 5 + TypeScript, with three
-designs to choose from: "Modern", "Modern dunkel" (dark) and "Classic". The desktop
-app already uses it; in the browser try it at
-**https://ajiai-labs.github.io/GoTV/neu/** until the web version switches over - plan
-and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
+**Three designs:** "Modern", "Modern dunkel" (dark) and "Classic", switchable in the
+settings. GoTV is built with Svelte 5 + TypeScript (`app/`).
+
+**Desktop downloads and updates:** the files above always point to the latest
+release. A new release is built only when a version tag `desktop-vX.Y.Z` is pushed
+(`.github/workflows/desktop.yml`), so the desktop apps can be behind the browser
+version, which updates with every change on `master`.
 
 ## What GoTV does
 
@@ -65,6 +67,16 @@ and status in [`docs/umbau-svelte.md`](docs/umbau-svelte.md).
   as in CGoban: humans/bots, ranked/free, speed, max. rank difference). Resigning
   asks once more, so a mistaken tap on the tablet does not end the game. The
   edge between board and side column can be dragged to make the board bigger.
+  While a board is open (own game, watching, replay) the menu bar is hidden, as
+  in a separate game window; the small GoTV logo leads back.
+- **Sounds while playing:** a stone click on every move, a clear chime when your
+  game starts and a beep for each of the last 10 seconds on your clock - so you
+  hear it away from the screen. Each can be switched off in the settings.
+- **Changed challenge terms:** if the challenge's creator answers with other
+  terms, GoTV shows them with the changes highlighted to accept or decline.
+- **Unfinished and archived games:** an unfinished game of yours can be resumed
+  ("Partie fortsetzen" loads it into a room); a finished game from a player's
+  archive opens in Nachspielen ("In GoTV nachspielen") with KataGo.
 - **Follow KGS players:** "Folgen" in a player's profile; "Gefolgte Spieler"
   shows who plays right now with a link to the game, and GoTV notifies you
   when one starts a game (while GoTV is open). Favourite KGS rooms are joined
@@ -152,37 +164,24 @@ replay:
 
 Logged in to KGS, GoTV is a complete KGS client: game lists, watching games with
 chat, room chat, direct messages, user details, challenges (create, propose,
-negotiate) and playing. Not yet available: automatch, rengo/simul and
-admin tools.
+negotiate, changed terms), automatic opponent selection, resuming unfinished games
+and playing. Not available: rengo/simul, recorded KGS lectures (the KGS interface
+GoTV uses carries no sound for them) and admin tools.
 
-## New interface (Svelte 5)
+## Rebuilt interface (Svelte 5)
 
-The old app (React, in the repository root) keeps running until the switch-over;
-the new one in [`app/`](app/) does everything it did - including on the iPad and in
-the desktop app. Phases:
-
-- [x] Phase 0 - new app set up (SvelteKit, TypeScript, Vite, tests also in WebKit)
-- [x] Phase 1 - all logic moved to TypeScript
-- [x] Phase 2a - two designs, "Modern" and "Oldschool", switchable in the settings:
-  draft online at https://ajiai-labs.github.io/GoTV/neu/ (sample data, approved)
-- [x] Phase 2b - KGS core in the new design (login, Beobachten, Chat, Suche, profiles)
-- [x] Phase 3 - playing (challenges, own games, scoring)
-- [x] Phase 4 - GoTV parts (Live, Kalender, Kanäle, Nachspielen with KataGo, Mein GoTV,
-  Meine Daten, offline web version)
-- [x] Phase 5 - desktop app builds the new interface (`sh desktop/install.sh --alt`
-  still installs the old one)
-- [ ] Phase 6 - switch the web version over and remove the old app (needs the
-  maintainer's go-ahead)
-
-Details: [`docs/umbau-svelte.md`](docs/umbau-svelte.md), developer notes:
+Until 25.11.2026 GoTV ran on the React app taken over from Shin KGS. It has been
+rebuilt in [`app/`](app/) with Svelte 5, SvelteKit and TypeScript, with every
+function of the old app; the old app has been removed. How it went:
+[`docs/umbau-svelte.md`](docs/umbau-svelte.md), developer notes:
 [`app/README.md`](app/README.md).
 
 ## Contributing
 
 Pull requests are welcome at [ajiai-labs/GoTV](https://github.com/ajiai-labs/GoTV).
 The easiest start is a calendar entry or a channel in `public/tv/events.json` - see
-"Events eintragen" below. Every pull request runs the full CI (lint, Flow, tests,
-build, and the new app's tests in Chromium and WebKit).
+"Events eintragen" below. Every pull request runs the full CI (type check, lint,
+tests in Chromium and WebKit, build, the Python tools and the desktop server).
 
 ## Desktop-Installation (Linux, GNOME)
 
@@ -193,7 +192,7 @@ login screen in its own window (no browser chrome).
 
 Prerequisites:
 
-- Node.js + Yarn V1 (see `AGENTS.md` "Setup")
+- Node.js 20 or newer (npm comes with it)
 - Python 3 (standard library only), `curl`
 - A Chromium-family browser (chromium, google-chrome, brave or
   microsoft-edge; native, Flatpak or Snap are all detected automatically)
@@ -205,15 +204,12 @@ Prerequisites:
 
 <img src="./desktop/icons/png/gotv-64.png" width="48" align="right" alt="GoTV icon">
 
-You need Node.js 18 or newer, Python 3 and yarn. Get yarn with
-`corepack enable` (part of Node.js) or `npm install -g yarn`. **Do not**
-install the `cmdtest` package that Ubuntu suggests when `yarn` is
-missing - it is a different program with the same command name.
+You need Node.js 20 or newer, Python 3 and curl. The installer runs
+`npm ci` in `app/` itself.
 
 ```bash
 git clone https://github.com/ajiai-labs/GoTV.git
 cd GoTV
-yarn install
 sh desktop/install.sh
 ```
 
@@ -249,9 +245,8 @@ Install (no sudo, user-scoped only):
 sh desktop/install.sh
 ```
 
-Then launch "GoTV" from the app grid. The installer builds the new interface
-(`app/`, `VITE_API_URL=/json/access`); `sh desktop/install.sh --alt` builds the
-old React interface instead, until it is removed. The app serves the production
+Then launch "GoTV" from the app grid. The installer builds the app
+(`app/`, `VITE_API_URL=/json/access`). The app serves the production
 build from `build-desktop/` on `127.0.0.1:8788` only; KGS traffic is proxied
 through the local server at `/json/access` (KGS only allows a whitelist
 of CORS origins, so direct browser access from localhost is rejected).
@@ -280,7 +275,7 @@ in place by the uninstaller.
 The GoTV calendar (`public/tv/events.json`) is loaded from
 [`ajiai-labs/GoTV`](https://github.com/ajiai-labs/GoTV) on
 GitHub first, falling back to the bundled local copy when offline or
-unreachable (`fetchTvEvents()` in `src/model/tv.js`, cached for an hour).
+unreachable (`fetchTvEvents()` in `app/src/lib/model/tv.ts`, cached for an hour).
 To add or update an event, edit `public/tv/events.json` in this repo and
 open a pull request.
 
@@ -387,46 +382,43 @@ live check - hence "(geplant)".
 
 ## Code Overview
 
-The current app (repository root) uses JavaScript, React, and ES6+ with [Flow](https://flow.org/) types. [VS Code](https://code.visualstudio.com/) (with eslint and flow extensions added) is a great editor for this setup.
-
-State is managed with a Redux-like pattern: there is a single, primary source of truth for app state, plus a bit of component-local state. Messages describing actions are dispatched, which handlers then process to produce the next app state. Unlike typical Redux, no implicit context is used. Everything is passed down through props.
-
-The new interface in [`app/`](app/) uses Svelte 5, SvelteKit (static, no server),
-TypeScript and Vite; its logic (`app/src/lib/model`, `app/src/lib/util`) is the same
-as in `src/model` and `src/util`, moved to TypeScript.
+The app in [`app/`](app/) uses Svelte 5, SvelteKit (static, no server), TypeScript
+and Vite. State is managed with a Redux-like pattern taken over from Shin KGS: a single
+source of truth for the app state (`app/src/lib/model`), messages from KGS and from the
+interface are dispatched and handlers produce the next state; components read it from
+`app.state` and call `app.actions`. Desktop apps: Tauri 2 in `desktop/tauri/`;
+calendar importers: Python in `tools/`.
 
 ## Development Setup
 
-You'll need [Node.js](https://nodejs.org/en/) 24 and Yarn 1 (via corepack:
-`corepack enable`).
+You'll need [Node.js](https://nodejs.org/en/) 24 (npm comes with it).
 
 ```
-yarn install
-yarn start            # dev server on port 3000 (PORT=3100 yarn start for another port)
+cd app
+npm ci
+npm run dev           # dev server; KGS requests go through its proxy
 ```
-
-Requests go to the official KGS API and are proxied through the development
-server. `yarn start:beta` uses the KGS beta server instead (HTTPS with a
-self-signed certificate; accounts at https://beta.gokgs.com/register/index.html).
 
 Before pushing, the same checks as the CI:
 
 ```
-yarn lint && yarn flow && CI=true yarn build
-CI=true yarn test --watchAll=false --testPathPattern="src/(model|util|ui)"
+cd app && npm run check && npm run lint && npm test && npm run build
 python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo
 ```
 
-The new interface has its own commands, see [`app/README.md`](app/README.md).
+More in [`app/README.md`](app/README.md).
 
 ## Deployment
 
 - **Web version:** every push to `master` runs the CI (`.github/workflows/ci.yml`)
-  and publishes https://ajiai-labs.github.io/GoTV/ (guest TV, `yarn build:pages`)
-  plus the preview of the new interface under `/GoTV/neu/`.
+  and publishes https://ajiai-labs.github.io/GoTV/ (guest TV only,
+  `VITE_GUEST_ONLY=true BASE_PATH=/GoTV`). The old addresses `/GoTV/neu/` and
+  `/GoTV/tv` lead there.
 - **Calendar data:** a daily workflow imports new events into
   `public/tv/events.json`; the web version loads that file at runtime.
-- **Desktop app:** `desktop/install.sh` builds and installs it locally (see above).
+- **Desktop apps:** pushing a tag `desktop-vX.Y.Z` builds Windows, macOS and Linux
+  and publishes a release (`.github/workflows/desktop.yml`); on Linux
+  `desktop/install.sh` also builds and installs it locally (see above).
 
 ## References
 

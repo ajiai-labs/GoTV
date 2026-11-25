@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Checks every URL referenced by the Go TV calendar (public/tv/events.json)
-and by the TV UI (src/ui/tv/*.js) for dead links (4xx/5xx) or redirects
+and by the TV UI (app/src/lib/ui/tv) for dead links (4xx/5xx) or redirects
 that land on an error page. Standard library only (AGENTS.md).
 
 Usage:
@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_EVENTS_FILE = ROOT / "public" / "tv" / "events.json"
-DEFAULT_UI_DIR = ROOT / "src" / "ui" / "tv"
+DEFAULT_UI_DIR = ROOT / "app" / "src" / "lib" / "ui" / "tv"
 
 URL_RE = re.compile(r"https?://[^\s\"'`<>\\]+")
 # A redirect that lands on a 200-OK custom error/not-found page is still a
@@ -75,16 +75,17 @@ def find_urls_in_events(events_file):
 
 
 def find_urls_in_ui_dir(ui_dir):
-    """Literal http(s) URLs hardcoded in .js files under ui_dir. Today
-    there are none (URL-building lives in src/model/tv.js, not in the
-    UI layer) - this exists so a future hardcoded link doesn't go
-    unchecked. Maps each URL to the source file(s) it was found in."""
+    """Literal http(s) URLs hardcoded in .js/.ts/.svelte files under ui_dir
+    (most URL-building lives in app/src/lib/model/tv.ts, not in the UI
+    layer) - so a hardcoded link doesn't go unchecked. Maps each URL to
+    the source file(s) it was found in."""
     found = {}
     ui_dir = Path(ui_dir)
     if not ui_dir.exists():
         return found
-    for path in sorted(ui_dir.rglob("*.js")):
-        if path.name.endswith(".test.js"):
+    paths = [p for suffix in ("*.js", "*.ts", "*.svelte") for p in ui_dir.rglob(suffix)]
+    for path in sorted(paths):
+        if ".test." in path.name:
             continue  # made-up fixture URLs, never shown to anyone
         text = path.read_text(encoding="utf-8")
         for m in URL_RE.finditer(text):

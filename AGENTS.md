@@ -7,7 +7,11 @@ KataGo; dazu vollständiger KGS-Client. Entstanden aus jkk/shinkgs (React 16, Fl
 react-scripts 3.4.1, SCSS); die Fork-Verbindung hat der Nutzer am 24.11.2026 gelöst
 ("Leave fork network"). `LICENSE.txt` (MIT, Justin Kramer) bleibt für den übernommenen
 Code, der Herkunftshinweis steht in der README unter "Origin and license".
-Neue Oberfläche (Svelte 5) in `app/`, siehe "Umbau auf Svelte 5" unten.
+Oberfläche: Svelte 5 + TypeScript in `app/` - seit 25.11.2026 die einzige (Phase 6: die alte
+React-App aus `src/` ist entfernt, die Web-Version unter https://ajiai-labs.github.io/GoTV/ ist
+die neue App). **Pfade in den älteren Abschnitten unten:** `src/model/X.js` heißt jetzt
+`app/src/lib/model/X.ts`, `src/util/X.js` → `app/src/lib/util/X.ts`, `src/ui/tv/X.js` →
+`app/src/lib/ui/tv/X.svelte`; die alte Fassung steht in der Git-History (vor Commit 3ae1f06).
 
 Ursprüngliche drei Bausteine:
 
@@ -16,7 +20,7 @@ Ursprüngliche drei Bausteine:
 3. **Nachspielen:** SGF einer Profipartie laden und Zug für Zug durchgehen.
 
 Referenz-Logik (Rust, funktioniert bereits): `~/Projekte/aktiv/Tiger-s-Mouth`
-Nur LOGIK und Datenschemata übernehmen, portiert nach JavaScript/Flow im ShinKGS-Stil.
+Nur LOGIK und Datenschemata übernehmen, portiert nach TypeScript (früher JavaScript/Flow).
 Kein Rust-Code, keine Rust-Abhängigkeiten.
 
 - `data/tournaments.json` → Kalender-Schema
@@ -31,9 +35,10 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
   Pushen: jeden abgeschlossenen Schritt auf `feature/go-tv` UND `master` (Fast-Forward,
   `git push origin feature/go-tv:master`) - Wunsch des Nutzers seit 23.11.2026 (vorher galt
   "Nicht pushen"). Ein Push auf master veröffentlicht über die CI die Web-Version.
-- Nach jedem Schritt: `yarn lint && yarn flow && CI=true yarn build` müssen grün sein
-  (mit `CI=true` zählen Build-Warnungen als Fehler - wie in der GitHub-CI), dazu die
-  App-Tests und die Python-Tool-Tests.
+- Nach jedem Schritt grün (wie die GitHub-CI): `cd app && npm run check && npm run lint &&
+  npm test && npm run build`, dazu die Python-Tool-Tests (`python3 -m unittest
+  tools.test_update_events tools.test_check_links tools.test_refresh_tv_events
+  tools.test_speedgo`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -48,51 +53,25 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
   regulären Endpoint `/json/access`, nicht über eine ausgehebelte Browser-Prüfung.
   Details: Abschnitt "Proxy-Begründung" unten.
 
-## Setup (exakt, einmalig — Node 24 via Nix)
+## Setup und Befehle (Node 24 via Nix)
 
-Node kommt aus dem Nix-Store (read-only), yarn fehlt systemweit. Einmalig ausführen:
+Node kommt aus dem Nix-Store; npm ist dabei. Kein yarn mehr (die alte App ist entfernt).
 
-```bash
-corepack prepare yarn@1.22.22 --activate
-printf 'exec corepack yarn "$@"\n' > ~/.local/bin/yarn && chmod +x ~/.local/bin/yarn
-cd ~/Projekte/aktiv/shinkgs && yarn install
-```
-
-- Der Shim in `~/.local/bin/yarn` hat **kein Shebang** (kein `!` — zsh History Expansion);
-  zsh/sh führen die Datei bei ENOEXEC selbst aus.
-- `packageManager: yarn@1.22.22` in package.json → corepack wählt die Version.
-
-## Befehle
-
-| Befehl | Zweck |
+| Befehl (in `app/`) | Zweck |
 |---|---|
-| `yarn start` | Dev-Server (Port 3000) |
-| `PORT=3100 yarn start` | Port 3000 belegt → anderer Port |
-| `CI=true yarn start` | nicht-interaktiver Kontext ohne TTY (sonst beendet sich start.js beim stdin-Ende) |
-| `yarn build` | Production-Build (Web) → `build/` |
-| `yarn lint` | eslint src/ |
-| `yarn flow` | flow check |
-| `yarn test` | react-scripts test --env=jsdom |
-| `http://localhost:3100/#tv-dev` | Dev-Harness: kompletter TV-Flow ohne KGS-Login (nur Development) |
-| `desktop/install.sh` | Desktop-App bauen + installieren (siehe Desktop-Abschnitt) |
-| `yarn build:pages` | Web-Version für GitHub Pages: `PUBLIC_URL=/GoTV`, `REACT_APP_GUEST_ONLY=true` (nur Gast-TV, kein Login), `404.html` = `index.html` |
+| `npm ci` | Abhängigkeiten installieren |
+| `npm run dev` | Dev-Server, KGS über den Vite-Proxy (`.env.development`) |
+| `npm run check` | TypeScript-/Svelte-Prüfung |
+| `npm run lint` | Prettier + ESLint |
+| `npm test` | Unit-Tests (Node) + Komponententests (Chromium; CI zusätzlich WebKit) |
+| `npm run build` | Build nach `app/build/` |
+| `VITE_GUEST_ONLY=true BASE_PATH=/GoTV npm run build` | Web-Version wie auf GitHub Pages |
+| `sh desktop/install.sh` (im Hauptordner) | Linux-Desktop-App bauen + installieren |
 
-Gate nach jedem Schritt: `yarn lint && yarn flow && CI=true yarn build` plus Tests (siehe Regeln oben)
-
-## Build-Kette — bekannte Punkte
-
-- react-scripts 3.4.1 (webpack 4) braucht auf Node 17+ `NODE_OPTIONS=--openssl-legacy-provider`
-  (md4-Hash). Ist in den start/build-Scripts bereits eingebaut (cross-env).
-- node-sass 4.14.1 → `sass` (dart-sass) 1.77.8 ersetzt (baut nicht auf Node 24).
-  SCSS in `src/css/` kompiliert **unverändert**. dart-sass meldet Deprecation-Warnings
-  (Slash-Division, mixed declarations, z.B. `_board.scss:73-74`) — unschädlich, bewusst
-  nicht angefasst (minimal-invasiv).
-- Kein React-/react-scripts-Upgrade in Phase 0.
-- `BUILD_PATH` wird von react-scripts 3.4.1 ignoriert: die Desktop-Variante baut mit
-  eigener `REACT_APP_API_URL` und verschiebt danach `build/` → `build-desktop/`
-  (siehe `desktop/install.sh`). Ein späterer einfacher `yarn build` erzeugt `build/`
-  neu mit der Standard-Env und lässt `build-desktop/` unberührt — beide Konfigurationen
-  nicht verwechseln.
+- Port 3000 ist auf diesem Rechner dauerhaft fremdbelegt (firecrawl-mcp, 13.11.2026) → für
+  Dev-/Vorschau-Server einen anderen Port nehmen (z. B. `npx vite dev --port 5199`).
+- Ein Production-Build mit `VITE_GUEST_ONLY=true` überschreibt `app/build/`; `install.sh`
+  baut ohnehin neu.
 
 ## Desktop-App (GNOME, lokal)
 
@@ -394,13 +373,13 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Browser-Notification (`gotv.reminders`, schon gemeldete in `gotv.notified`), geprüft im
   60-s-Takt von TvScreen und nur solange GoTV offen ist; ganztägige Turniere ohne `start`
   bekommen keine Erinnerung.
-- CI + Web-Version (`.github/workflows/ci.yml`, 23.11.2026): jeder Push/PR führt Lint,
-  Flow, App-Tests, Python-Tool-Tests und Build aus (plus Harness-Grep). Auf master wird
-  danach `yarn build:pages` nach https://ajiai-labs.github.io/GoTV/ veröffentlicht
-  (fürs Tablet: Seite öffnen, "Zum Startbildschirm"). Dort gibt es nur das Gast-TV
-  (`GUEST_ONLY` in `App.js`): KGS lässt Anfragen nur von seiner eigenen Webseite zu, die
-  Desktop-App braucht dafür ihren lokalen Proxy. Die History bleibt unter `/GoTV`
-  (basename), `404.html` fängt Unterpfade ab. Tägliche Bot-Commits (GITHUB_TOKEN) starten
+- CI + Web-Version (`.github/workflows/ci.yml`, Stand 25.11.2026): jeder Push/PR prüft die
+  App (`check`, `lint`, Tests in Chromium + WebKit, Build), die Python-Tools und den
+  Desktop-Server. Auf master wird danach die App mit `VITE_GUEST_ONLY=true BASE_PATH=/GoTV`
+  nach https://ajiai-labs.github.io/GoTV/ veröffentlicht (fürs Tablet: Seite öffnen, "Zum
+  Startbildschirm"). Dort gibt es nur das Gast-TV: KGS lässt Anfragen nur von seiner eigenen
+  Webseite zu, die Desktop-App braucht dafür ihren lokalen Proxy. `404.html` = `index.html`
+  fängt Unterpfade ab; `/GoTV/neu/` und `/GoTV/tv` sind Weiterleitungen. Tägliche Bot-Commits (GITHUB_TOKEN) starten
   keinen Workflow - die Web-Version lädt events.json ohnehin zur Laufzeit von GitHub.
 - Doppelte Einträge: `dropImportedDuplicates` (`src/model/tv.js`) behält pro Übertragung
   (gleiche Startzeit, gleicher Kanal) nur den Eintrag mit dem besten Rang
@@ -437,17 +416,10 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
 - Nav-Punkt "tv": types.js (NavOption) + index.js (isValidNav) + meta/Nav.js + Main.js.
 - Stream-Öffnen aus dem Chat: dispatch `TV_OPEN_STREAM` {url} → nav "tv" → TvScreen zeigt
   Zwei-Klick-Platzhalter; Embed-Builder in `src/ui/tv/StreamEmbed.js`.
-- Dev-Harness: `src/index.js` enthält einen NODE_ENV-gegateten Block (`#tv-dev`), der den
-  TV-Tab mit simulierten Daten rendert (6 Fake-Partien inkl. einer Event-Vorlesung, die
-  NICHT unter Live erscheinen darf; Übertragung mit Brett, Übertragung nur mit Stream,
-  Turnierseite ohne Video; Chat-Messages mit Stream-Links, Replay). Zusätzlich lädt das
-  Event `dev-today-ogs` die historische OGS-Partie 2 real und anonym für den API-/UI-Test;
-  `dev-today-ogs-players` folgt per `ogs_players` der heutigen Partie eines OGS-Bots.
-  `TvScreen` nimmt dafür optional rohe `events` (wie `CalendarView`). Er wird im Production-Build von terser
-  weggefaltet — nach jedem Build prüfen:
-  `grep -rl "GO-TV-DEV-HARNESS" build/` darf nichts finden. Deshalb auch
-  `GENERATE_SOURCEMAP=false` im build-Script (sonst stünde der Quelltext in den .map-Dateien).
-  `public/tv/demo.sgf` ist die Demo-Fixture für den Harness und `sgf_url`.
+- Dev-Harness `#tv-dev` gab es nur in der alten App (mit ihr entfernt). Zum Ansehen eines
+  Live-Zustands: Dev-Server einer Kopie (git worktree) mit einem erfundenen laufenden Event
+  in `public/tv/events.json`, Kalender dort lokal statt von GitHub laden.
+  `public/tv/demo.sgf` bleibt Test-Fixture für `sgf_url`.
 
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 
@@ -565,16 +537,12 @@ Policy, von dir als "Stufe 1" bezeichnet:
 
 ## Bekannte Altlasten
 
-- `src/App.test.js` crasht in jsdom (indexedDB fehlt) — vorbestehend, nicht Teil des Gates;
-  neue Tests gezielt laufen lassen: `CI=true yarn test --watchAll=false --testPathPattern="src/(model|util)"`.
-- Dev-Server ohne TTY beendet sich nach dem Banner still (start.js: stdin-Ende) →
-  Hintergrundstart nur mit `CI=true`.
-- Port 3000 ist auf diesem Rechner dauerhaft fremdbelegt (firecrawl-mcp, 13.11.2026)
-  → Dev-Server mit `PORT=3100` (oder einem anderen freien Port).
-- Production-Build ohne Sourcemaps (`GENERATE_SOURCEMAP=false`) — nötig, damit der
-  Dev-Harness-Quelltext nicht über sourcesContent im Build landet.
+- `app/src/lib/util/offline.ts` (übernommene Registrierung von `gotv-sw.js`) wird nicht mehr
+  benutzt; die Web-Version nutzt `app/src/service-worker.ts`. Entfernen nur nach Rückfrage.
+- `UnderConstructionModal` / `onShowUnderConstruction` hat seit 25.11.2026 nur noch einen
+  Aufrufer (Rengo/Simul-Herausforderungen in `onSelectChallenge`).
 
-## Offene Roadmap (Phase 6, nur dokumentiert)
+## Offene Roadmap (alte "Phase 6" der TV-Planung, nur dokumentiert)
 
 - [ ] **(a) events.json von GitHub laden:** Community pflegt Events per PR,
   App lädt `raw.githubusercontent.com/<org>/<repo>/main/tv/events.json`
@@ -620,11 +588,13 @@ online unter https://ajiai-labs.github.io/GoTV/neu/ (CI legt `app/` mit
 Designs "Modern" und "Oldschool" in Einstellungen umschaltbar; GoTV-Logo
 (`desktop/icons/gotv.svg`) oben links auf jeder Seite (Wunsch des Nutzers). Details in
 `docs/umbau-svelte.md` ("Phase 2a – Stand"). Vom Nutzer freigegeben (24.11.2026).
-Phasen 2b-5 am 24.11.2026 umgesetzt (alles nachgebaut, Desktop-App nutzt die neue Oberfläche,
-`install.sh --alt` baut die alte) - Stand und Aufbau in `docs/umbau-svelte.md`
-("Phasen 2b–5 – Stand"), Regeln für weitere Arbeit in `docs/neubau-regeln.md`. Offen: Phase 6
-(Web-Version umschalten, alte App entfernen) nur nach ausdrücklicher Bestätigung. Gate der neuen App: `cd app && npm run check && npm run lint && npm test &&
-npm run build`. Imports aus `src/lib` als `#lib/...` mit Dateiendung (SvelteKit 3).
+Phasen 2b-5 am 24.11.2026 umgesetzt - Stand und Aufbau in `docs/umbau-svelte.md`
+("Phasen 2b–5 – Stand"), Regeln für weitere Arbeit in `docs/neubau-regeln.md`. **Phase 6 am
+25.11.2026 erledigt** (vom Nutzer bestätigt, Commit 3ae1f06): Web-Version = neue App unter
+`/GoTV` (`/GoTV/neu/` und `/GoTV/tv` leiten dorthin), alte React-App, Root-`package.json`,
+`yarn.lock`, Flow/ESLint-Konfig, `.travis.yml`, `server/`, alte `public/`-Dateien,
+`app/src/lib/demo/` und `install.sh --alt` entfernt; der neue Service Worker löscht die alten
+`gotv-app-*`-Caches. Imports aus `src/lib` als `#lib/...` mit Dateiendung (SvelteKit 3).
 
 Offen bleibt außerdem:
 
@@ -640,6 +610,9 @@ Offen bleibt außerdem:
   Auch nicht "verzögert" oder als Option.
 - **Spielern folgen nur auf KGS** (24.11.2026): der Nutzer spielt nicht auf OGS, OGS ist nur
   Quelle für Übertragungen.
+- **Keine KGS-Aufzeichnungen/Vorlesungen** (25.11.2026): über die JSON-Schnittstelle kommen nur
+  Züge und Markierungen, kein Ton (`START_PLAYBACK`, `PLAYBACK_DATA`), viele sind nur für
+  KGS-Plus-Abonnenten. `playback.ts` bleibt ein Gerüst.
 
 ## Desktop-Apps Windows/macOS/Linux (Tauri 2, 24.11.2026)
 
@@ -711,3 +684,34 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   Budapest (21.–22.11.), Berliner Kranich (28.–29.11.), Velika Gorica (12.–13.12.),
   Grand Prix Żołędowo (5.–6.12.). Keine Video-ID/Stream-URL eingetragen, solange eine
   Übertragung nicht bestätigt ist (kein Eintrag aus dem Gedächtnis).
+
+## Spielen: Leiste, Töne, Archiv, Gegenvorschläge (25.11.2026)
+
+- **Keine Menüleiste bei offenem Brett** (Wunsch: wie das eigene Partiefenster in CGoban):
+  eigene Partie, Beobachten und geladenes Nachspielen blenden die obere Leiste aus
+  (`boardOpen` in `app/src/routes/+layout.svelte`); stattdessen kleines GoTV-Logo
+  (`app/src/lib/ui/HomeLink.svelte`) vor „Zurück“ - auch während der eigenen Partie der Weg
+  zurück. Nachspielen hat ein eigenes „Zurück“ (zur Herkunftsseite, sonst zu den Listen;
+  `app.closeReplay`).
+- **Töne beim Spielen** (`app/src/lib/sound/gameSounds.ts`, Web Audio, keine Tondateien;
+  Einstellungen „Töne beim Spielen“, `gotv.sounds`, alles an): Steinklick bei jedem Zug der
+  eigenen Partie (`GameScreen`), Klang bei Partiebeginn (`playGameStart` in AppActions bei
+  `CHALLENGE_FINAL` als Spieler, Automatch, fortgesetzter Partie), Piepton für jede der letzten
+  10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher). Wunsch:
+  hören, dass es weitergeht, auch beim Kochen. Nicht in der Web-Version (kein KGS).
+- **Nicht beendete Partien fortsetzen** (Spielen): statt „Noch nicht verfügbar“ lädt ein
+  Dialog die Partie per `ROOM_LOAD_GAME` (nicht privat) in einen Raum;
+  `AppActions.onLoadedGameJoined` öffnet den folgenden `GAME_JOIN` (30 s nach der Anfrage, wir
+  sind Spieler, keine Besprechung) als eigene Partie. `LOAD_FAILED` → `loadFailed` im Zustand,
+  Hinweis mit „Erneut versuchen“.
+- **Archivpartien in GoTV nachspielen** (Spielerprofil): „In GoTV nachspielen“ lädt privat als
+  KGS-Besprechung und öffnet sie in Nachspielen (`app.openArchiveReplay`), KataGo per Schalter;
+  „Zurück“ verlässt die Besprechung bei KGS wieder. „Partie laden“ (KGS-Besprechung) bleibt.
+- **Gegenvorschläge**: ändert der Ersteller einer Herausforderung die Bedingungen
+  (`CHALLENGE_PROPOSAL` ≠ unser Vorschlag), schloss GoTV die Herausforderung bisher stumm.
+  Jetzt `counterProposal` an der Herausforderung, Anzeige mit hervorgehobenen Änderungen,
+  „Annehmen“ (`onAcceptCounterProposal`, `CHALLENGE_ACCEPT`) / „Ablehnen“ (verlässt sie).
+- Alle drei KGS-Abläufe (Fortsetzen, Archiv, Gegenvorschlag) sind nach der Protokoll-Doku
+  gebaut, aber NOCH NICHT an einer echten KGS-Sitzung geprüft - wie die Automatik-Gegnerwahl.
+- Desktop-Downloads aktualisieren sich NICHT von selbst: neue Version nur per Tag
+  `desktop-vX.Y.Z` (Nutzer fragen, ein Release ist öffentlich).

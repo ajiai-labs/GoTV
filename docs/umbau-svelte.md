@@ -1,5 +1,8 @@
 # Umbau auf Svelte 5 – Plan
 
+**Abgeschlossen am 25.11.2026** (Phase 6, Commit 3ae1f06): es gibt nur noch die App in `app/`;
+die alte React-App steht in der Git-History. Der Text unten ist der Plan und Verlauf.
+
 Stand 24.11.2026. Entscheidung des Nutzers: GoTV ist ein eigenes Projekt (Fork-Verbindung zu
 jkk/shinkgs gelöst) und bekommt ein neues Frontend: **Svelte 5 + TypeScript mit einem eigenen,
 modernen Design (Stand 2026)**. Ausdrücklich KEIN Nachbau von CGoban oder Shin KGS. Zuerst
@@ -46,7 +49,7 @@ Wurzelordner bleibt bis Phase 6 unberührt.
 | 3 ✅ | **Spielen auf KGS, alles wie in der alten App** (Wunsch 24.11.2026): Herausforderung erstellen, Vorschläge abgeben/annehmen/ablehnen und durchblättern, Rolle tauschen; eigene Partie: Zug setzen, Passen, Aufgeben, Undo bitten/annehmen/ablehnen, Zeit hinzufügen, Partie verlassen; Zählen: Gruppen tot/lebendig markieren, „Fertig“; Uhren; Partiechat. Vorlage: `src/ui/game/`, `src/ui/challenge/` | eine Partie gegen einen Menschen läuft vom Herausfordern bis zum Ergebnis durch | ~5 Std. |
 | 4 ✅ | GoTV-Teile: Live, Kalender, Kanäle, Nachspielen mit KataGo und Varianten, Mein GoTV, Meine Daten, Offline | alles, was die heutige App kann, geht auch in der neuen | ~20 Std. |
 | 5 ✅ | Desktop: `install.sh` baut `app/`, Proxy unverändert | Desktop-App startet die neue Oberfläche | ~2 Std. |
-| 6 | Umschalten: GitHub Pages auf `app/`, alte React-App entfernen (nur nach ausdrücklicher Bestätigung) | eine App, ein Build | ~2 Std. |
+| 6 ✅ | Umschalten: GitHub Pages auf `app/`, alte React-App entfernen (vom Nutzer bestätigt 25.11.2026) | eine App, ein Build | erledigt 25.11.2026 |
 
 Gesamt grob 57 Arbeitsstunden.
 
@@ -99,7 +102,8 @@ Spielen, Kalender/Kanäle, Nachspielen, zuletzt Live. Gate grün (svelte-check, 
   Absturz ohne Raum/Vorschlag, Filter ohne Raum.
 - Bewusste Abweichungen stehen in den Commit-Texten der einzelnen Wellen.
 
-Für Phase 6 (nur nach Bestätigung): Pages-Build auf `app/` mit `VITE_GUEST_ONLY=true`
+Phase 6 (erledigt 25.11.2026, so umgesetzt; `/GoTV/neu/` und `/GoTV/tv` leiten auf `/GoTV/`,
+`install.sh --alt` und `.travis.yml`/`server/` sind mit entfernt): Pages-Build auf `app/` mit `VITE_GUEST_ONLY=true`
 und `BASE_PATH=/GoTV`; der alte Service Worker `gotv-sw.js` muss dann abgemeldet werden
 (neuer Worker unter gleichem Scope ersetzt ihn, alte Caches `gotv-app-*` räumt der neue
 beim Aktivieren mit ab - Achtung: der neue Worker nutzt das Präfix `gotv-svelte-app-`, beim Umschalten also die alten `gotv-app-*`-Caches einmal ausdrücklich löschen); alte React-App, `public/gotv-sw.js`, `.flowconfig`, CRA-Build und

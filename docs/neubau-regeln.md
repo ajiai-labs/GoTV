@@ -1,5 +1,9 @@
 # Regeln für den Nachbau der Oberfläche (Svelte 5, `app/`)
 
+Seit 25.11.2026 ist die alte React-App entfernt (Phase 6); ihre Dateien stehen in der
+Git-History vor Commit 3ae1f06 (`git show 3ae1f06^:src/ui/<Datei>`). Die Regeln gelten weiter
+für jede Arbeit an der Oberfläche in `app/`.
+
 Gilt für jeden, der eine Seite oder einen Baustein der alten React-App (`src/ui/`) in der
 neuen App (`app/`) nachbaut. Plan: `docs/umbau-svelte.md`.
 

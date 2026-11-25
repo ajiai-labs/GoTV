@@ -28,7 +28,7 @@ SPEEDGO_USER_AGENT = (
     "shinkgs-go-tv-speedgo-importer/1.0 (+https://github.com/ajiai-labs/GoTV)"
 )
 # Played matches leave the page's dates; their entries stay this long for
-# the replay lists (REPLAY_KEEP_DAYS in src/model/tv.js is 90).
+# the replay lists (REPLAY_KEEP_DAYS in app/src/lib/model/tv.ts is 90).
 SPEEDGO_RETENTION_DAYS = 120
 STREAM_URL = "https://www.twitch.tv/europeangofederation"
 STREAM_CHANNEL = {"platform": "twitch", "id": "europeangofederation"}
@@ -185,7 +185,7 @@ def _is_same_pairing(event, match):
 
 
 def _source_rank(event):
-    """Same order as getSourceRank in src/model/tv.js: the entry the app
+    """Same order as getSourceRank in app/src/lib/model/tv.ts: the entry the app
     shows for a broadcast is the one that should carry the games."""
     if not event.get("source"):
         return 0
