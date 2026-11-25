@@ -313,7 +313,7 @@ describe('SgfReplayView: sharing and opening at a move', () => {
 	const URL_SGF = 'https://example.org/final.sgf';
 	const LONG = '(;SZ[9]PB[Ann]PW[Bob];B[aa];W[bb];B[cc];W[dd])';
 	const shareLink = (sgf: string, move?: number) =>
-		'https://ajiai-labs.github.io/GoTV/neu/nachspielen?sgf=' +
+		'https://ajiai-labs.github.io/GoTV/nachspielen?sgf=' +
 		encodeURIComponent(sgf) +
 		(move ? '&zug=' + String(move) : '');
 
@@ -342,7 +342,7 @@ describe('SgfReplayView: sharing and opening at a move', () => {
 		await expect.element(page.getByText(/Zug 0 · Gefangene/)).toBeVisible();
 		await page.getByRole('button', { name: 'Link kopieren' }).click();
 		const link = write.mock.calls[0][0];
-		expect(link).toBe(shareLink('https://ajiai-labs.github.io/GoTV/neu/tv/em-finale-2026.sgf'));
+		expect(link).toBe(shareLink('https://ajiai-labs.github.io/GoTV/tv/em-finale-2026.sgf'));
 		expect(link).not.toContain(window.location.host);
 	});
 

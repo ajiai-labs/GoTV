@@ -1,9 +1,9 @@
 name: Tests und Web-Version
 
-# Every push and pull request: lint, Flow, unit tests (app + Python tools)
-# and the production build. On master the web version without KGS
-# ("yarn build:pages", guest TV only) is then published on GitHub Pages:
-# https://ajiai-labs.github.io/GoTV/
+# Every push and pull request: the app in app/ (type check, lint, tests in
+# Chromium and WebKit, build), the Python tools and the desktop server. On
+# master the web version without KGS (guest TV only) is then published on
+# GitHub Pages: https://ajiai-labs.github.io/GoTV/
 #
 # The daily calendar import commits with GITHUB_TOKEN, which starts no
 # workflow - the web version still shows new dates, because it loads
@@ -22,52 +22,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  # Calendar importers and link check (tools/).
+  tools:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          corepack enable
-          yarn install --frozen-lockfile
-
-      - name: Lint
-        run: yarn lint
-
-      - name: Flow
-        run: yarn flow
-
-      - name: Unit tests (app)
-        run: yarn test --watchAll=false --testPathPattern="src/(model|util|ui)"
-        env:
-          CI: "true"
-
       - name: Unit tests (Python tools)
         run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo -v
 
-      - name: Build
-        run: |
-          yarn build
-          if grep -rl "GO-TV-DEV-HARNESS" build/; then
-            echo "Dev harness leaked into the production build" >&2
-            exit 1
-          fi
-
-  # The new Svelte 5 + TypeScript app in app/ (docs/umbau-svelte.md). Its
-  # component tests run in Chromium and in WebKit - Safari's engine, as on the
-  # iPad - so every change is checked for the tablet too.
+  # The GoTV app (Svelte 5 + TypeScript, app/). Its component tests run in
+  # Chromium and in WebKit - Safari's engine, as on the iPad - so every
+  # change is checked for the tablet too.
   app:
     runs-on: ubuntu-latest
     defaults:
@@ -132,9 +104,12 @@ jobs:
         run: cargo test -p gotv-server --locked
 
   pages-build:
-    needs: [test, app]
+    needs: [tools, app]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -143,25 +118,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
 
       - name: Build web version
         run: |
-          corepack enable
-          yarn install --frozen-lockfile
-          yarn build:pages
-
-      # Preview of the new interface (docs/umbau-svelte.md) under /GoTV/neu/
-      - name: Build new interface preview
-        working-directory: app
-        run: |
           npm ci
-          VITE_GUEST_ONLY=true BASE_PATH=/GoTV/neu npm run build
-          cp -r build ../build/neu
+          VITE_GUEST_ONLY=true BASE_PATH=/GoTV npm run build
+          # Unknown paths load the app (single-page fallback).
+          cp build/index.html build/404.html
+          # Old addresses lead to the same place: the preview of the new
+          # interface (/GoTV/neu/, until 25.11.2026) and the guest page of the
+          # old app (/GoTV/tv).
+          mkdir -p build/neu
+          cat > build/neu/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>GoTV</title>
+          <meta http-equiv="refresh" content="0; url=/GoTV/">
+          <script>location.replace(location.href.replace('/GoTV/neu', '/GoTV'));</script>
+          <a href="/GoTV/">GoTV</a>
+          HTML
+          sed 's#/GoTV/neu#/GoTV/tv#' build/neu/index.html > build/tv/index.html
 
       - name: Upload
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          path: app/build
 
   pages-deploy:
     needs: pages-build
