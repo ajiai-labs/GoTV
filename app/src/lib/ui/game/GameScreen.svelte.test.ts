@@ -303,7 +303,7 @@ describe('GameScreen', () => {
 		await expect.element(page.getByText('danke')).toBeVisible();
 	});
 
-	it('grows the board past the window height while keeping a narrower chat visible', async () => {
+	it('resizes the board with the splitter, always fully visible, and remembers it', async () => {
 		const actions = mockActions();
 		localStorage.removeItem('gotv.gameSideWidth');
 		localStorage.removeItem('gotv.gameBoardWidth');
@@ -313,30 +313,23 @@ describe('GameScreen', () => {
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
 		const board = page.getByRole('img', { name: /Zug 2/ });
 		const chat = page.getByRole('textbox');
-		const boardWidth = () => board.element().getBoundingClientRect().width;
+		const boardBox = () => board.element().getBoundingClientRect();
+		const boardWidth = () => boardBox().width;
 		await expect.element(board).toBeVisible();
-		const sliderValue = (name: 'now' | 'max') =>
-			Number(splitter.element().getAttribute(`aria-value${name}`));
-		await expect.poll(() => sliderValue('max') - sliderValue('now')).toBeGreaterThan(10);
-		await expect.poll(() => boardWidth() - sliderValue('now')).toBeCloseTo(0);
 		const before = boardWidth();
 		await userEvent.dragAndDrop(splitter, chat);
-		await expect.poll(boardWidth).toBeGreaterThan(1300);
-		const scroller = page.getByRole('region', { name: 'Brett' }).element();
-		const chatBox = chat.element().getBoundingClientRect();
-		expect(chatBox.width).toBeLessThan(500);
-		expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
-		(scroller as HTMLElement).focus();
-		await userEvent.keyboard('{ArrowDown}');
-		await expect.poll(() => scroller.scrollTop).toBeGreaterThan(0);
+		await expect.poll(boardWidth).toBeGreaterThanOrEqual(before);
+		// Never past the window, so nothing to scroll; the chat stays in view.
+		expect(boardBox().bottom).toBeLessThanOrEqual(window.innerHeight);
+		const frame = page.getByRole('region', { name: 'Brett' }).element();
+		expect(frame.scrollHeight).toBe(frame.clientHeight);
+		await expect.element(chat).toBeVisible();
 		expect(actions.onChangeCurrentNode).not.toHaveBeenCalled();
-		expect(chat.element().getBoundingClientRect().y).toBe(chatBox.y);
-		scroller.scrollTop = 0;
-		await userEvent.dragAndDrop(splitter, board);
+		// Smallest board by keyboard (Home), as the splitter offers.
+		(splitter.element() as HTMLElement).focus();
+		await userEvent.keyboard('{Home}');
 		await expect.poll(boardWidth).toBeLessThan(before - 100);
 		const adjustedWidth = boardWidth();
-		await page.viewport(1500, 950);
-		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
 		await view.unmount();
 		await render(GameScreen, props);
 		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
@@ -360,13 +353,12 @@ describe('GameScreen', () => {
 		await page.viewport(414, 896);
 	});
 
-	it('switches from scrolling to a compact, fully visible board using Mehr', async () => {
+	it('keeps the whole board visible when it grows with the splitter', async () => {
 		const actions = mockActions();
 		localStorage.removeItem('gotv.gameSideWidth');
 		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(1900, 1000);
 		await render(GameScreen, { game: fixtureGame() });
-		const more = page.getByRole('button', { name: 'Mehr' });
 		const board = page.getByRole('img', { name: /Zug 2/ });
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
 		const frame = page.getByRole('region', { name: 'Brett', exact: true });
@@ -374,30 +366,17 @@ describe('GameScreen', () => {
 		const bounds = () => board.element().getBoundingClientRect();
 		await expect.element(board).toBeVisible();
 		await userEvent.dragAndDrop(splitter, chat);
-		await expect.poll(() => bounds().width).toBeGreaterThan(1300);
-		const top = bounds().top;
-		const chatWidth = chat.element().clientWidth;
-
-		await more.click();
-		await expect.element(page.getByRole('button', { name: 'Partieinfo' })).toBeVisible();
-		await page.getByText('Ans Fenster anpassen', { exact: true }).click();
-		await expect.element(page.getByRole('radio', { name: 'Ans Fenster anpassen' })).toBeChecked();
+		// The board never grows past the window: no scrolling while playing.
 		await expect.poll(() => bounds().bottom).toBeLessThanOrEqual(window.innerHeight);
-		expect(bounds().top).toBeLessThan(top);
 		expect(bounds().width).toBeCloseTo(bounds().height);
 		expect(frame.element().scrollHeight).toBe(frame.element().clientHeight);
-		expect(chat.element().clientWidth).toBe(chatWidth);
 
-		await more.click();
 		await page.viewport(1500, 700);
 		await expect.poll(() => bounds().bottom).toBeLessThanOrEqual(window.innerHeight);
 		expect(actions.onChangeCurrentNode).not.toHaveBeenCalled();
-		await more.click();
-		await page.getByText('Mit Scrollen vergrößern', { exact: true }).click();
-		await expect
-			.poll(() => frame.element().scrollHeight - frame.element().clientHeight)
-			.toBeGreaterThan(0);
-		localStorage.removeItem('gotv.gameBoardMode');
+		// No choice between fitting and scrolling any more.
+		await page.getByRole('button', { name: 'Mehr' }).click();
+		expect(page.getByText('Mit Scrollen vergrößern').elements()).toHaveLength(0);
 		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(414, 896);
 	});

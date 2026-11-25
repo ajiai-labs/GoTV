@@ -16,12 +16,6 @@ export const settings = {
 	'settings.navOrder.kgs.name': 'KGS',
 	'settings.navOrder.kgs.description':
 		'Wie ein KGS-Programm: erst Beobachten, Spielen, Chat, Suche. Läuft eine Übertragung, steht Live vorn.',
-	'settings.boardResize': 'KGS-Brettgröße',
-	'settings.boardResize.fit.name': 'Ans Fenster anpassen',
-	'settings.boardResize.fit.description': 'Das ganze Brett bleibt sichtbar, auch beim Vergrößern.',
-	'settings.boardResize.scroll.name': 'Mit Scrollen vergrößern',
-	'settings.boardResize.scroll.description':
-		'Das Brett kann höher als das Fenster werden. Seitlich am Brett kannst du scrollen.',
 	'settings.myData': 'Meine Daten',
 	'settings.design.modern.name': 'Modern',
 	'settings.design.modern.description': 'Hell und ruhig, Brett und Stream stehen im Mittelpunkt.',

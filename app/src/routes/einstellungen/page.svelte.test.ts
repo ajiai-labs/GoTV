@@ -52,22 +52,6 @@ describe('Einstellungen', () => {
 		expect(localStorage.getItem('gotv.navOrder')).toBe('gotv');
 	});
 
-	it('chooses whether the KGS board fits the window or scrolls and remembers the choice', async () => {
-		const view = await render(Page);
-		const fit = page.getByText('Ans Fenster anpassen', { exact: true });
-		const scroll = page.getByText('Mit Scrollen vergrößern', { exact: true });
-		await expect
-			.element(page.getByRole('radio', { name: /Mit Scrollen vergrößern/ }))
-			.toBeChecked();
-		await fit.click();
-		expect(localStorage.getItem('gotv.gameBoardMode')).toBe('fit');
-		await view.unmount();
-		await render(Page);
-		await expect.element(page.getByRole('radio', { name: /Ans Fenster anpassen/ })).toBeChecked();
-		await scroll.click();
-		expect(localStorage.getItem('gotv.gameBoardMode')).toBe('scroll');
-	});
-
 	it('switches the sounds of an own game and remembers them', async () => {
 		localStorage.removeItem('gotv.sounds');
 		const view = await render(Page);

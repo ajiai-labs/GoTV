@@ -16,12 +16,6 @@ export const settings: Translation<typeof de> = {
 	'settings.navOrder.kgs.name': 'KGS',
 	'settings.navOrder.kgs.description':
 		'Like a KGS client: Watch, Play, Chat, Search first. While a broadcast is on, Live comes first.',
-	'settings.boardResize': 'KGS board size',
-	'settings.boardResize.fit.name': 'Fit to window',
-	'settings.boardResize.fit.description': 'The whole board stays visible as you resize it.',
-	'settings.boardResize.scroll.name': 'Resize with scrolling',
-	'settings.boardResize.scroll.description':
-		'The board can grow taller than the window. Scroll at the side of the board.',
 	'settings.myData': 'My data',
 	'settings.design.modern.name': 'Modern',
 	'settings.design.modern.description':

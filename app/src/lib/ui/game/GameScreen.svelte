@@ -49,13 +49,11 @@
 	import GameUndoPrompt from './GameUndoPrompt.svelte';
 	import { formatScoreDe } from './gameText.ts';
 	import Splitter from '#lib/ui/Splitter.svelte';
-	import { boardResizeMode } from './boardResizeMode.svelte.ts';
 
 	type Tab = 'chat' | 'info' | 'users';
 
 	// Space the layout keeps below the page (padding of the app frame).
 	const BOTTOM_SPACE = 32;
-	const MIN_HEIGHT = 420;
 
 	const BOARD_WIDTH_KEY = 'gotv.gameBoardWidth';
 	const SIDE_WIDTH_DEFAULT = 380;
@@ -102,7 +100,6 @@
 	let chatScroll: HTMLElement | undefined = $state();
 	let topOffset = $state(0);
 	let innerHeight = $state(0);
-	let fitBoard = $derived(boardResizeMode.current === 'fit');
 
 	let tree = $derived(game.tree);
 	let users = $derived.by(() => {
@@ -181,9 +178,7 @@
 
 	onMount(measure);
 
-	let screenHeight = $derived(
-		Math.max(fitBoard ? 0 : MIN_HEIGHT, innerHeight - topOffset - BOTTOM_SPACE)
-	);
+	let screenHeight = $derived(Math.max(0, innerHeight - topOffset - BOTTOM_SPACE));
 
 	let mainEl: HTMLElement | undefined = $state();
 	let mainWidth = $state(0);
@@ -192,7 +187,7 @@
 	const savedSideWidth = loadWidth('gotv.gameSideWidth', SIDE_WIDTH_MIN);
 	let boardMaxWidth = $derived(Math.max(0, mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN));
 	let boardMinWidth = $derived(Math.min(BOARD_MIN_WIDTH, boardMaxWidth));
-	// Start with the whole board visible in either mode.
+	// The whole board always stays visible (no scrolling while playing).
 	let fittedBoardWidth = $derived(Math.min(boardMaxWidth, boardAreaHeight));
 	let defaultBoardWidth = $derived(
 		savedSideWidth === null
@@ -204,10 +199,7 @@
 	);
 	// Once the board is large, reclaim vertical space above it. The threshold
 	// uses the column width, so compacting the header does not change it.
-	let compactHeader = $derived(
-		fitBoard && preferredBoardWidth !== null && boardWidth >= innerHeight * 0.75
-	);
-	let scrollableBoard = $derived(!fitBoard && boardWidth > boardAreaHeight);
+	let compactHeader = $derived(preferredBoardWidth !== null && boardWidth >= innerHeight * 0.75);
 
 	function setBoardWidth(value: number) {
 		preferredBoardWidth = Math.max(boardMinWidth, Math.min(boardMaxWidth, Math.round(value)));
@@ -227,12 +219,6 @@
 		if (step === 'min') setBoardWidth(boardMinWidth);
 		else if (step === 'max') setBoardWidth(boardMaxWidth);
 		else setBoardWidth(boardWidth + step * BOARD_WIDTH_STEP);
-	}
-
-	function onBoardScrollKey(event: KeyboardEvent) {
-		if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
-			event.stopPropagation(); // scroll the focused board instead of changing the move
-		}
 	}
 
 	function onLeave() {
@@ -322,12 +308,11 @@
 {/if}
 
 <div
-	class="GameScreen"
+	class="GameScreen GameScreen-fit"
 	class:GameScreen-playing={playing}
 	class:GameScreen-watching={!playing}
 	class:GameScreen-rengo={isRengo}
 	class:GameScreen-has-tv-stream={!!liveEvent}
-	class:GameScreen-fit={fitBoard}
 	class:GameScreen-compact-header={compactHeader}
 	style:--game-height="{screenHeight}px"
 	bind:this={screenEl}
@@ -342,7 +327,7 @@
 		{/if}
 		<h1 class="GameScreen-title">{title}</h1>
 		{#if !playing}
-			<GameMoreMenu {game} {roomsById} showBoardSizing kgsTools />
+			<GameMoreMenu {game} {roomsById} kgsTools />
 		{/if}
 	</header>
 
@@ -367,19 +352,10 @@
 				bind:clientHeight={boardAreaHeight}
 				style:--board-area-height="{boardAreaHeight}px"
 			>
-				<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (Focus enables native keyboard scrolling when the board overflows.) -->
-				<div
-					class="GameScreen-board-frame"
-					class:GameScreen-board-scroll={!fitBoard}
-					role="region"
-					aria-label={t('game.screen.board')}
-					tabindex={scrollableBoard ? 0 : undefined}
-					onkeydown={scrollableBoard ? onBoardScrollKey : undefined}
-				>
+				<div class="GameScreen-board-frame" role="region" aria-label={t('game.screen.board')}>
 					<BoardContainer
 						{game}
 						{playing}
-						embedded={!fitBoard}
 						ghost={isOurMove && !scoring ? playerColor : null}
 						onClickPoint={isOurMove || scoring ? onClickPoint : undefined}
 					/>
@@ -413,12 +389,10 @@
 				valuenow={boardWidth}
 				valuemin={boardMinWidth}
 				valuemax={boardMaxWidth}
-				valuetext={fitBoard
-					? t('game.screen.splitterFitValue', {
-							width: Math.min(boardWidth, boardAreaHeight),
-							side: Math.max(0, mainWidth - SPLITTER_WIDTH - boardWidth)
-						})
-					: t('game.screen.splitterValue', { width: boardWidth })}
+				valuetext={t('game.screen.splitterFitValue', {
+					width: Math.min(boardWidth, boardAreaHeight),
+					side: Math.max(0, mainWidth - SPLITTER_WIDTH - boardWidth)
+				})}
 				onpointer={onSplitterPointer}
 				onkey={onSplitterKey}
 			/>
@@ -585,10 +559,6 @@
 	.GameScreen-board-frame {
 		position: absolute;
 		inset: 0;
-	}
-
-	.GameScreen-board-scroll {
-		overflow-y: auto;
 	}
 
 	.GameScreen-access-denied {

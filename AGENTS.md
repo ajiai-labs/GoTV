@@ -748,6 +748,10 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   Modell: `model/community.ts`. Chat von Spielern auf der Ignorierliste blendet GoTV aus.
   Spielerprofil: Knöpfe Freund/Fan/Ignorieren, "Nachricht hinterlassen" bei Offline.
   Die Fanliste von KGS ist getrennt von GoTVs "Spielern folgen" (lokal).
+- KGS-Brett immer "ans Fenster angepasst" (Nutzer, 25.11.2026): die Wahl "Mit Scrollen
+  vergrößern" (Brett über die Fensterhöhe, seitlich scrollen) ist gestrichen - beim Spielen
+  muss das ganze Brett sichtbar sein, CGoban hat das auch nicht. Größe nur über die
+  Trennkante. Ein alter Wert `gotv.gameBoardMode` wird ignoriert.
 - Chat, Raumliste: "Neuen Raum erstellen" (`CREATE_ROOM_REQUEST`, nur TEMPORARY).
 - Nicht gebaut: "Nachricht des Tages" (die JSON-Schnittstelle hat dafür keine Nachricht),
   KGS-Plus-Vorlesungen und KGS-AI (Entscheidungen oben).
