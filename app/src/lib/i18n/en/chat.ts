@@ -91,6 +91,14 @@ export const chat: Translation<typeof de> = {
 	'chat.summary.loadsIn': 'The game is loaded into {room}.',
 	'chat.summary.private': 'Private',
 	'chat.summary.load': 'Load game',
+	'chat.summary.replay': 'Replay in GoTV',
+	'chat.summary.replayHint':
+		'With KataGo analysis, variations and bookmarks. Or load it as a review on KGS below:',
+	'chat.summary.resume': 'Resume game',
+	'chat.summary.resumeHint':
+		'KGS opens the game in the room. It goes on once both players are there.',
+	'chat.summary.loadFailed': 'KGS could not load the game.',
+	'chat.summary.retry': 'Try again',
 	// UserRankGraph
 	'chat.rankGraph.summary': 'Rank history of the last {count} days',
 	'chat.rankGraph.summaryCurrent': 'Rank history of the last {count} days, lately about {rank}',

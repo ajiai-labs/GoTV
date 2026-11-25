@@ -103,6 +103,12 @@ export function handleSessionMessage(prevState: AppState, msg: KgsMessage): AppS
 		case 'TV_REPLAY_GAME':
 			return { ...prevState, tvReplayGameId: msg.gameId };
 
+		case 'LOAD_GAME_START':
+			return { ...prevState, loadFailed: null };
+
+		case 'LOAD_FAILED':
+			return { ...prevState, loadFailed: msg.gameSummary?.timestamp ?? '' };
+
 		case 'UPDATE_PREFERENCES':
 			return { ...prevState, preferences: { ...prevState.preferences, ...msg.preferences } };
 

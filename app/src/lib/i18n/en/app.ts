@@ -55,6 +55,7 @@ export const app: Translation<typeof de> = {
 	'app.play.challenge': 'Challenge',
 	'app.play.loadingChallenge': 'Loading challenge …',
 	'app.play.unfinished': 'Unfinished games',
+	'app.play.resumeTitle': 'Unfinished game',
 	'app.play.openChallenges': 'Open challenges',
 
 	// Konto (routes/konto)

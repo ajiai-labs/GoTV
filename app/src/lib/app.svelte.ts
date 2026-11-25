@@ -141,7 +141,24 @@ class GoTvApp {
 	// "Zurück" on the Nachspielen board: forget the handed-over KGS game, so
 	// Nachspielen opens with its lists again.
 	closeReplay() {
+		const id = this.state.tvReplayGameId;
 		this.store?.dispatch({ type: 'TV_REPLAY_GAME', gameId: null });
+		// A game loaded from the archive only for Nachspielen: leave KGS's
+		// review of it too.
+		if (id != null && id === this.archiveReplayId) {
+			this.archiveReplayId = null;
+			this.actions.onLeaveGame(id);
+		}
+	}
+
+	// A finished game from a KGS archive, loaded by KGS as a review
+	// (UserGameSummary): opens on Nachspielen (KataGo, variations, bookmarks).
+	archiveReplayId: number | null = null;
+	openArchiveReplay(gameId: number) {
+		const game = this.state.gamesById[gameId];
+		if (!game) return;
+		this.archiveReplayId = gameId;
+		this.suggestGameReplay(game);
 	}
 
 	// Keep state.nav in line with the page shown (back/forward, links).

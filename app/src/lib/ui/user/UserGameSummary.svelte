@@ -2,7 +2,9 @@
 	// A finished game from a user's archive: players, result, date, type, and
 	// the form to load it into one of your rooms (KGS opens it there as a
 	// review). When KGS reports the new review, it is joined and the user
-	// details close.
+	// details close - or, with "In GoTV nachspielen", it opens on Nachspielen.
+	// `resume`: our own unfinished game; loading it lets it go on (KGS opens
+	// it in the room, AppActions.onLoadedGameJoined shows it on Spielen).
 	import { untrack } from 'svelte';
 	import type { GameChannel, GameSummary, Room } from '#lib/model/types.ts';
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
@@ -18,7 +20,10 @@
 		onLoadGame,
 		onLeaveGame,
 		reviewGameId,
-		rooms = []
+		rooms = [],
+		resume = false,
+		loadFailed = false,
+		onOpenReplay
 	}: {
 		activeConversationId: number | null | undefined;
 		game: GameSummary;
@@ -28,12 +33,18 @@
 		onLeaveGame: (game: GameChannel | number) => void;
 		reviewGameId: number | null | undefined;
 		rooms?: Array<Room>;
+		resume?: boolean;
+		loadFailed?: boolean;
+		onOpenReplay?: (gameId: number) => void;
 	} = $props();
 
 	const formId = $props.id();
 
-	let privateGame = $state(true);
+	let privateGame = $state(untrack(() => !resume));
 	let showSpinner = $state(false);
+	// What the loaded review is for: KGS's review ("Partie laden") or GoTV's
+	// Nachspielen ("In GoTV nachspielen").
+	let target: 'kgs' | 'replay' = 'kgs';
 	// The room open in the chat, else the first room you are in. (The old app
 	// also took an open private conversation here, which KGS cannot load into.)
 	let targetRoom: number | null | undefined = $state(
@@ -51,6 +62,11 @@
 	$effect(() => {
 		if (reviewGameId && reviewGameId !== initialReviewGameId) {
 			untrack(() => {
+				if (target === 'replay' && onOpenReplay) {
+					onCloseUserDetail();
+					onOpenReplay(reviewGameId);
+					return;
+				}
 				// Leave the game that was being reviewed before.
 				if (initialReviewGameId) onLeaveGame(initialReviewGameId);
 				onJoinGame(reviewGameId);
@@ -62,10 +78,12 @@
 	// "Die Partie wird in {room} geladen.": the room name in bold.
 	let loadsIn = $derived(t('chat.summary.loadsIn').split('{room}'));
 
-	function load() {
+	function load(to: 'kgs' | 'replay') {
 		if (!targetRoom) return;
+		target = to;
 		showSpinner = true;
-		onLoadGame(game.timestamp, targetRoom, privateGame);
+		// Only for GoTV: nobody else needs to see the review.
+		onLoadGame(game.timestamp, targetRoom, to === 'replay' ? true : privateGame);
 	}
 </script>
 
@@ -87,6 +105,13 @@
 
 	{#if !targetRoom}
 		<p class="note"><strong>{t('chat.summary.joinRoomFirst')}</strong></p>
+	{:else if showSpinner && loadFailed}
+		<p class="note" role="alert">{t('chat.summary.loadFailed')}</p>
+		<div>
+			<button class="button" type="button" onclick={() => (showSpinner = false)}>
+				{t('chat.summary.retry')}
+			</button>
+		</div>
 	{:else if showSpinner}
 		<Spinner label={t('chat.summary.loading')} />
 	{:else}
@@ -94,9 +119,19 @@
 			class="load"
 			onsubmit={(event) => {
 				event.preventDefault();
-				load();
+				load('kgs');
 			}}
 		>
+			{#if resume}
+				<p>{t('chat.summary.resumeHint')}</p>
+			{:else if onOpenReplay}
+				<div class="replay">
+					<button class="button button-primary" type="button" onclick={() => load('replay')}>
+						{t('chat.summary.replay')}
+					</button>
+					<p class="muted">{t('chat.summary.replayHint')}</p>
+				</div>
+			{/if}
 			{#if rooms.length > 1}
 				<label class="room" for="{formId}-room">{t('chat.summary.loadInto')}</label>
 				<select id="{formId}-room" name="rooms" bind:value={targetRoom}>
@@ -107,12 +142,16 @@
 			{:else if rooms.length === 1}
 				<p>{loadsIn[0]}<strong>{rooms[0].name}</strong>{loadsIn[1]}</p>
 			{/if}
-			<label class="check">
-				<input type="checkbox" name="privateGame" bind:checked={privateGame} />
-				<span>{t('chat.summary.private')}</span>
-			</label>
+			{#if !resume}
+				<label class="check">
+					<input type="checkbox" name="privateGame" bind:checked={privateGame} />
+					<span>{t('chat.summary.private')}</span>
+				</label>
+			{/if}
 			<div>
-				<button class="button button-primary" type="submit">{t('chat.summary.load')}</button>
+				<button class="button" class:button-primary={resume || !onOpenReplay} type="submit">
+					{resume ? t('chat.summary.resume') : t('chat.summary.load')}
+				</button>
 			</div>
 		</form>
 	{/if}
@@ -147,6 +186,16 @@
 	.load p,
 	.note {
 		margin: 0;
+	}
+
+	.replay {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding-bottom: 10px;
+		margin-bottom: 2px;
+		border-bottom: 1px solid var(--rule);
+		align-self: stretch;
 	}
 
 	select {

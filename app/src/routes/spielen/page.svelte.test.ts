@@ -47,6 +47,8 @@ function mockActions() {
 		onShowGames: vi.fn(),
 		onJoinGame: vi.fn(),
 		onShowUnderConstruction: vi.fn(),
+		onLoadGame: vi.fn(),
+		onLeaveGame: vi.fn(),
 		onUserDetail: vi.fn(),
 		onPass: vi.fn(),
 		onChangeCurrentNode: vi.fn()
@@ -72,11 +74,35 @@ describe('Spielen page', () => {
 		await unfinished.getByRole('button', { name: /Läuft gerade/ }).click();
 		expect(actions.onJoinGame).toHaveBeenCalledWith(summaries[1].timestamp);
 		await unfinished.getByRole('button', { name: /Aufgabe/ }).click();
-		expect(actions.onShowUnderConstruction).toHaveBeenCalled();
+		await expect.element(page.getByRole('dialog', { name: 'Nicht beendete Partie' })).toBeVisible();
+		await page.getByRole('button', { name: 'Schließen' }).click();
 
 		const challenges = page.getByRole('region', { name: 'Offene Herausforderungen' });
 		await challenges.getByRole('button', { name: /anna/ }).click();
 		expect(actions.onSelectChallenge).toHaveBeenCalledWith(ANNA_CHALLENGE);
+	});
+
+	it('resumes an unfinished game by loading it into a room', async () => {
+		const actions = mockActions();
+		app.state = fixtureState({
+			conversationsById: {
+				[ENGLISH_ROOM]: { messages: [] }
+			} as unknown as AppState['conversationsById']
+		});
+		await render(Page);
+		const unfinished = page.getByRole('region', { name: 'Nicht beendete Partien' });
+		await unfinished.getByRole('button', { name: /Aufgabe/ }).click();
+		const dialog = page.getByRole('dialog', { name: 'Nicht beendete Partie' });
+		await expect.element(dialog.getByText('English Game Room')).toBeVisible();
+		await expect.element(dialog.getByLabelText('Privat')).not.toBeInTheDocument();
+		await dialog.getByRole('button', { name: 'Partie fortsetzen' }).click();
+		expect(actions.onLoadGame).toHaveBeenCalledWith(summaries[0].timestamp, ENGLISH_ROOM, false);
+
+		// KGS cannot load it: say so and offer another try.
+		app.state = { ...app.state, loadFailed: summaries[0].timestamp };
+		await expect.element(dialog.getByText('KGS konnte die Partie nicht laden.')).toBeVisible();
+		await dialog.getByRole('button', { name: 'Erneut versuchen' }).click();
+		await expect.element(dialog.getByRole('button', { name: 'Partie fortsetzen' })).toBeVisible();
 	});
 
 	it('opens the editor for a new challenge and closes it again', async () => {

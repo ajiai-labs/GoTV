@@ -95,6 +95,14 @@ export const chat = {
 	'chat.summary.loadsIn': 'Die Partie wird in {room} geladen.',
 	'chat.summary.private': 'Privat',
 	'chat.summary.load': 'Partie laden',
+	'chat.summary.replay': 'In GoTV nachspielen',
+	'chat.summary.replayHint':
+		'Mit KataGo-Analyse, Varianten und Lesezeichen. Oder darunter als Besprechung bei KGS laden:',
+	'chat.summary.resume': 'Partie fortsetzen',
+	'chat.summary.resumeHint':
+		'KGS öffnet die Partie im Raum. Sie geht weiter, sobald beide Spieler da sind.',
+	'chat.summary.loadFailed': 'KGS konnte die Partie nicht laden.',
+	'chat.summary.retry': 'Erneut versuchen',
 	// UserRankGraph
 	'chat.rankGraph.summary': 'Rangverlauf der letzten {count} Tage',
 	'chat.rankGraph.summaryCurrent': 'Rangverlauf der letzten {count} Tage, zuletzt etwa {rank}',

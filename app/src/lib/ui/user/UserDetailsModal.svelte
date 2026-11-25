@@ -180,6 +180,8 @@
 				onLeaveGame={app.actions.onLeaveGame}
 				reviewGameId={appState.reviewGameId}
 				{rooms}
+				loadFailed={appState.loadFailed != null}
+				onOpenReplay={(gameId: number) => app.openArchiveReplay(gameId)}
 			/>
 		</Modal>
 	{:else}

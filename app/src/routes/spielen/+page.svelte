@@ -7,7 +7,7 @@
 	import { onMount } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { getDefaultRoom } from '#lib/model/room.ts';
-	import type { GameChannel, GameFilter, GameSummary, User } from '#lib/model/types.ts';
+	import type { GameChannel, GameFilter, GameSummary, Room, User } from '#lib/model/types.ts';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
 	import Spinner from '#lib/ui/Spinner.svelte';
@@ -18,6 +18,7 @@
 	import { isGamePlaying } from '#lib/model/game/tree.ts';
 	import ChallengeEditor from '#lib/ui/game/ChallengeEditor.svelte';
 	import AutomatchPanel from '#lib/ui/game/AutomatchPanel.svelte';
+	import UserGameSummary from '#lib/ui/user/UserGameSummary.svelte';
 
 	let appState = $derived(app.state);
 	let creatingChallenge = $state(false);
@@ -69,9 +70,22 @@
 		if (game.inPlay) {
 			app.actions.onJoinGame(game.timestamp);
 		} else {
-			app.actions.onShowUnderConstruction();
+			// Not running on KGS right now: load it into a room to go on.
+			gameToResume = game;
 		}
 	}
+
+	let gameToResume: GameSummary | null = $state(null);
+	// Rooms we are in - KGS loads the game into one of them.
+	let rooms = $derived(
+		Object.keys(appState.conversationsById)
+			.map((id) => appState.roomsById[id])
+			.filter((room): room is Room => !!room)
+	);
+	// The game is back: it shows on this page, the dialog closes.
+	$effect(() => {
+		if (activeGame) gameToResume = null;
+	});
 
 	// The heading of the challenge dialog, as the old ChallengeEditor's:
 	// our own challenge (new or created) or someone else's.
@@ -168,6 +182,22 @@
 				</section>
 			</div>
 		{/if}
+	{/if}
+	{#if gameToResume}
+		<Modal title={t('app.play.resumeTitle')} onclose={() => (gameToResume = null)}>
+			<UserGameSummary
+				activeConversationId={appState.activeConversationId}
+				game={gameToResume}
+				resume
+				loadFailed={appState.loadFailed != null}
+				onLoadGame={app.actions.onLoadGame}
+				onCloseUserDetail={() => (gameToResume = null)}
+				onJoinGame={app.actions.onJoinGame}
+				onLeaveGame={app.actions.onLeaveGame}
+				reviewGameId={appState.reviewGameId}
+				{rooms}
+			/>
+		</Modal>
 	{/if}
 </KgsGate>
 

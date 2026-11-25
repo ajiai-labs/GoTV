@@ -40,7 +40,8 @@ export function getEmptyServerState(): ServerState {
 		showFeedbackModal: false,
 		reviewGameId: null,
 		tvStreamUrl: null,
-		tvReplayGameId: null
+		tvReplayGameId: null,
+		loadFailed: null
 	};
 }
 export function getInitialState(clientState: KgsClientState): AppState {

@@ -9,6 +9,8 @@ import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
 
 // How long after KGS ended the search a joined game still counts as found.
 const AUTOMATCH_JOIN_GRACE_MS = 60000;
+// After ROOM_LOAD_GAME: how long a GAME_JOIN counts as the loaded game.
+const LOAD_JOIN_GRACE_MS = 30000;
 import type {
 	AutomatchPrefs,
 	GameChannel,
@@ -41,6 +43,8 @@ export class AppActions {
 	// When KGS ended a running automatch search on its own (it found a game),
 	// 0 otherwise. The game itself may arrive in a later answer.
 	_automatchEndedAt = 0;
+	// When we last asked KGS to load a game from the archive (onLoadGame).
+	_loadRequestedAt = 0;
 
 	constructor(store: AppStore, client: KgsClient, history: Record<string, any>) {
 		this._store = store;
@@ -128,6 +132,12 @@ export class AppActions {
 				this.onGameTimeExpired(msg.channelId);
 			} else if (msg.type === 'GAME_JOIN' && msg.channelId && wasAutomatching) {
 				this.onAutomatchGameJoined(msg.channelId);
+			} else if (
+				msg.type === 'GAME_JOIN' &&
+				msg.channelId &&
+				Date.now() - this._loadRequestedAt < LOAD_JOIN_GRACE_MS
+			) {
+				this.onLoadedGameJoined(msg.channelId);
 			}
 		}
 	};
@@ -528,6 +538,8 @@ export class AppActions {
 		this._store.dispatch(msgs);
 	};
 	onLoadGame = (timestamp: string, channelId: number, privateGame: boolean) => {
+		this._loadRequestedAt = Date.now();
+		this._store.dispatch({ type: 'LOAD_GAME_START' });
 		this._client.sendMessage({
 			type: 'ROOM_LOAD_GAME',
 			channelId,
@@ -964,6 +976,20 @@ export class AppActions {
 			return;
 		}
 		this._automatchEndedAt = 0;
+		this._store.dispatch({ type: 'PLAY_GAME', gameId });
+		this.onChangeNav('play');
+	};
+	// A game loaded from the archive (onLoadGame) arrived. Our own unfinished
+	// game opens on the Spielen page to go on with it. A review (a finished
+	// game) is opened by whoever asked for it (UserGameSummary).
+	onLoadedGameJoined = (gameId: number) => {
+		const state = this._store.getState();
+		const game = state.gamesById[gameId];
+		const name = state.currentUser && state.currentUser.name;
+		if (!game || !name || game.type === 'review' || !isGamePlayer(name, game.players)) {
+			return;
+		}
+		this._loadRequestedAt = 0;
 		this._store.dispatch({ type: 'PLAY_GAME', gameId });
 		this.onChangeNav('play');
 	};

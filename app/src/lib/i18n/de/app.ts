@@ -57,6 +57,7 @@ export const app = {
 	'app.play.challenge': 'Herausforderung',
 	'app.play.loadingChallenge': 'Herausforderung wird geladen …',
 	'app.play.unfinished': 'Nicht beendete Partien',
+	'app.play.resumeTitle': 'Nicht beendete Partie',
 	'app.play.openChallenges': 'Offene Herausforderungen',
 
 	// Konto (routes/konto)

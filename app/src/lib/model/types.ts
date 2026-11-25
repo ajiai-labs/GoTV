@@ -473,6 +473,9 @@ export type AppState = {
 	readonly reviewGameId: number | null | undefined;
 	readonly tvStreamUrl: string | null | undefined;
 	readonly tvReplayGameId: number | null | undefined;
+	// KGS could not load a game from the archive (LOAD_FAILED): the game's
+	// timestamp ('' if KGS did not say); cleared by the next load request.
+	readonly loadFailed?: string | null;
 };
 export type KgsMessage =
 	// TODO - exhaustive types
