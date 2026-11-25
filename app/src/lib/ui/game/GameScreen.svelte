@@ -11,6 +11,7 @@
 	// the board (two-click embed).
 	import { onMount, tick } from 'svelte';
 	import HomeLink from '#lib/ui/HomeLink.svelte';
+	import { playStoneClick } from '#lib/sound/gameSounds.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import {
@@ -115,6 +116,23 @@
 	);
 	let isOurMove = $derived(playing && !!tree && isPlayerMove(game, currentUser.name));
 	let scoring = $derived(isGameScoring(game));
+	// Own game: a stone click for every new move (not when it opens).
+	let heardMoveNum: number | undefined;
+	let heardGameId: number | undefined;
+	$effect(() => {
+		const current = moveNum;
+		if (
+			game.id === heardGameId &&
+			current !== undefined &&
+			heardMoveNum !== undefined &&
+			current > heardMoveNum
+		) {
+			playStoneClick();
+		}
+		heardMoveNum = current;
+		heardGameId = game.id;
+	});
+
 	let playerColor: PlayerColor | null = $derived.by(() => {
 		const role = getGamePlayerRole(currentUser.name, game.players);
 		return (role && getGameRoleColor(role)) || null;
@@ -395,7 +413,7 @@
 
 			<div class="GameScreen-players-users">
 				<div class="GameScreen-players">
-					<GamePlayersInfo {game} {onUserDetail} />
+					<GamePlayersInfo {game} {onUserDetail} countdownColor={playing ? playerColor : null} />
 				</div>
 				<div class="GameScreen-tabs" role="tablist" aria-label={t('game.screen.tabs')}>
 					{#each TABS as item (item.id)}

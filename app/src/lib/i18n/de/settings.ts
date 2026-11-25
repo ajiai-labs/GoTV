@@ -30,5 +30,17 @@ export const settings = {
 		'Das moderne Design in dunkel – angenehm am Abend und im Kinomodus.',
 	'settings.design.oldschool.name': 'Classic',
 	'settings.design.oldschool.description':
-		'Wie klassische Go-Programme: graue Fenster, Holzbrett mit plastischen Steinen.'
+		'Wie klassische Go-Programme: graue Fenster, Holzbrett mit plastischen Steinen.',
+	'settings.sounds': 'Töne beim Spielen',
+	'settings.soundsHint':
+		'Für deine eigenen KGS-Partien – damit du hörst, wenn es weitergeht, auch wenn du gerade nicht vor dem Bildschirm sitzt.',
+	'settings.sounds.stones.name': 'Steinklick',
+	'settings.sounds.stones.description': 'Bei jedem Zug, auch dem deines Gegners.',
+	'settings.sounds.gameStart.name': 'Partiebeginn',
+	'settings.sounds.gameStart.description':
+		'Ein deutlicher Klang, sobald deine Partie beginnt: automatische Gegnerwahl, angenommene Herausforderung, fortgesetzte Partie.',
+	'settings.sounds.countdown.name': 'Zeit läuft ab',
+	'settings.sounds.countdown.description':
+		'Ein Piepton für jede der letzten 10 Sekunden auf deiner Uhr, die letzten 3 höher.',
+	'settings.sounds.sample': 'Anhören'
 } satisfies Record<string, Message>;

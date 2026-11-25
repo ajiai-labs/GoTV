@@ -67,4 +67,22 @@ describe('Einstellungen', () => {
 		await scroll.click();
 		expect(localStorage.getItem('gotv.gameBoardMode')).toBe('scroll');
 	});
+
+	it('switches the sounds of an own game and remembers them', async () => {
+		localStorage.removeItem('gotv.sounds');
+		const view = await render(Page);
+		const click = page.getByRole('checkbox', { name: /Steinklick/ });
+		await expect.element(click).toBeChecked();
+		await expect.element(page.getByRole('checkbox', { name: /Partiebeginn/ })).toBeChecked();
+		await expect.element(page.getByRole('checkbox', { name: /Zeit läuft ab/ })).toBeChecked();
+		await click.click();
+		expect(JSON.parse(localStorage.getItem('gotv.sounds') ?? '{}')).toEqual({
+			stones: false,
+			gameStart: true,
+			countdown: true
+		});
+		await view.unmount();
+		await render(Page);
+		await expect.element(page.getByRole('checkbox', { name: /Steinklick/ })).not.toBeChecked();
+	});
 });

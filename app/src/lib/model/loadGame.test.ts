@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+
+const sounds = vi.hoisted(() => ({ playGameStart: vi.fn() }));
+vi.mock('../sound/gameSounds', () => ({ playGameStart: sounds.playGameStart }));
 import { AppActions } from './AppActions';
 import { AppStore } from './AppStore';
 import { getInitialState, handleMessage } from './index';
@@ -44,6 +47,8 @@ describe('loading a game from the archive', () => {
 		actions.onReceiveServerMessages([gameJoin(910, 'ranked', { white: ME, black: ANNA })]);
 		expect(store.getState().playGameId).toBe(910);
 		expect(history.push).toHaveBeenCalledWith('/play');
+		// The chime, so you hear it away from the screen.
+		expect(sounds.playGameStart).toHaveBeenCalled();
 	});
 
 	it('leaves a loaded review to whoever asked for it', () => {

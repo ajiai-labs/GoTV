@@ -23,10 +23,13 @@
 
 	let {
 		game,
-		onUserDetail = (user: User) => app.actions.onUserDetail(user.name)
+		onUserDetail = (user: User) => app.actions.onUserDetail(user.name),
+		countdownColor = null
 	}: {
 		game: GameChannel;
 		onUserDetail?: (user: User) => unknown;
+		// Own game: our colour - its clock counts the last seconds aloud.
+		countdownColor?: 'white' | 'black' | null;
 	} = $props();
 
 	let players = $derived(game.players);
@@ -139,6 +142,7 @@
 								clock={side.clock}
 								timeLeft={side.timeLeft}
 								gameRules={game.rules}
+								announce={side.color === countdownColor}
 							/>
 						</div>
 					{/if}

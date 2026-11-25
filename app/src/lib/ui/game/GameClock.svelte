@@ -21,6 +21,7 @@
 	// the stones left in Canadian overtime; under 3 seconds of sudden death
 	// the clock turns red.
 	import type { ClockState, GameRules } from '#lib/model/types.ts';
+	import { COUNTDOWN_SECONDS, playCountdown } from '#lib/sound/gameSounds.ts';
 
 	// Compensation for network and rendering lag, as in the old app.
 	const TIME_SKEW = 300;
@@ -32,13 +33,16 @@
 		active,
 		clock,
 		timeLeft,
-		gameRules = null
+		gameRules = null,
+		announce = false
 	}: {
 		nodeId: number | null | undefined;
 		active: boolean;
 		clock: ClockState;
 		timeLeft: number;
 		gameRules?: GameRules | null;
+		// Our own clock: a beep for each of the last seconds (gameSounds).
+		announce?: boolean;
 	} = $props();
 
 	let startTime = $state(Date.now() - TIME_SKEW);
@@ -115,6 +119,21 @@
 		qualifier.sd && typeof shown.seconds === 'number' && shown.seconds < URGENT_SECONDS
 	);
 	let running = $derived(active && !!clock.running && !clock.paused);
+
+	// The whole seconds shown; a beep when it drops into the last ten.
+	let wholeSeconds = $derived(
+		typeof shown.seconds === 'number' ? Math.ceil(Math.max(0, shown.seconds)) : null
+	);
+	let beeped: number | null = null;
+	$effect(() => {
+		const seconds = wholeSeconds;
+		if (!announce || !counting || seconds === null) {
+			beeped = null;
+			return;
+		}
+		if (seconds !== beeped && seconds >= 1 && seconds <= COUNTDOWN_SECONDS) playCountdown(seconds);
+		beeped = seconds;
+	});
 </script>
 
 <span

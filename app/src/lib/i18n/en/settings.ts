@@ -31,5 +31,17 @@ export const settings: Translation<typeof de> = {
 		'The modern design in dark – easy on the eyes in the evening and in cinema mode.',
 	'settings.design.oldschool.name': 'Classic',
 	'settings.design.oldschool.description':
-		'Like classic Go programs: grey windows, a wooden board with shaded stones.'
+		'Like classic Go programs: grey windows, a wooden board with shaded stones.',
+	'settings.sounds': 'Sounds while playing',
+	'settings.soundsHint':
+		'For your own KGS games – so you hear when it goes on, even away from the screen.',
+	'settings.sounds.stones.name': 'Stone click',
+	'settings.sounds.stones.description': 'On every move, your opponent’s too.',
+	'settings.sounds.gameStart.name': 'Game start',
+	'settings.sounds.gameStart.description':
+		'A clear chime as soon as your game starts: automatch, accepted challenge, resumed game.',
+	'settings.sounds.countdown.name': 'Time running out',
+	'settings.sounds.countdown.description':
+		'A beep for each of the last 10 seconds on your clock, the last 3 higher.',
+	'settings.sounds.sample': 'Listen'
 };

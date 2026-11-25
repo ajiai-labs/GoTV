@@ -3,6 +3,7 @@ import { KgsClient } from './KgsClient';
 import { tempId, isTempId } from './tempId';
 import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGameProposalPlayer, proposalsEqual } from './game';
+import { playGameStart } from '../sound/gameSounds';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -466,7 +467,9 @@ export class AppActions {
 		const name = currentUser && currentUser.name;
 		const isPlayer = name && isGameProposalPlayer(name, proposal);
 
-		if (!isPlayer) {
+		if (isPlayer) {
+			playGameStart();
+		} else {
 			// Challenge accepted by someone else
 			this.onChangeNav('watch');
 			const { channelMembership } = state;
@@ -1001,6 +1004,7 @@ export class AppActions {
 		this._automatchEndedAt = 0;
 		this._store.dispatch({ type: 'PLAY_GAME', gameId });
 		this.onChangeNav('play');
+		playGameStart();
 	};
 	// A game loaded from the archive (onLoadGame) arrived. Our own unfinished
 	// game opens on the Spielen page to go on with it. A review (a finished
@@ -1015,6 +1019,7 @@ export class AppActions {
 		this._loadRequestedAt = 0;
 		this._store.dispatch({ type: 'PLAY_GAME', gameId });
 		this.onChangeNav('play');
+		playGameStart();
 	};
 	onClickContribute = () => {
 		window.open('https://github.com/jkk/shinkgs', '_blank');

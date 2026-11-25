@@ -1,6 +1,14 @@
 <script lang="ts">
 	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import {
+		loadSoundPrefs,
+		saveSoundPrefs,
+		playCountdown,
+		playGameStart,
+		playStoneClick
+	} from '#lib/sound/gameSounds.ts';
+	import type { GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
 	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
@@ -33,6 +41,23 @@
 			]
 		}
 	];
+
+	// Sounds of an own game (gameSounds.ts), each with a short sample.
+	const SOUND_KINDS: Array<GameSoundKind> = ['stones', 'gameStart', 'countdown'];
+	let soundPrefs: GameSoundPrefs = $state(
+		typeof localStorage === 'undefined'
+			? { stones: true, gameStart: true, countdown: true }
+			: loadSoundPrefs()
+	);
+	function setSound(kind: GameSoundKind, on: boolean) {
+		soundPrefs = { ...soundPrefs, [kind]: on };
+		saveSoundPrefs(soundPrefs);
+	}
+	function sample(kind: GameSoundKind) {
+		if (kind === 'stones') playStoneClick();
+		else if (kind === 'gameStart') playGameStart();
+		else [3, 2, 1].forEach((n, i) => setTimeout(() => playCountdown(n), i * 1000));
+	}
 </script>
 
 <svelte:head>
@@ -107,6 +132,36 @@
 	</fieldset>
 {/if}
 
+{#if !config.guestOnly}
+	<fieldset class="sounds">
+		<legend>{t('settings.sounds')}</legend>
+		<p class="muted">{t('settings.soundsHint')}</p>
+		{#each SOUND_KINDS as kind (kind)}
+			<div class="sound">
+				<label class="sound-switch">
+					<input
+						type="checkbox"
+						checked={soundPrefs[kind]}
+						onchange={(event) => setSound(kind, event.currentTarget.checked)}
+					/>
+					<span>
+						<span class="name">{t(`settings.sounds.${kind}.name`)}</span>
+						<span class="muted">{t(`settings.sounds.${kind}.description`)}</span>
+					</span>
+				</label>
+				<button
+					type="button"
+					class="button"
+					disabled={!soundPrefs[kind]}
+					onclick={() => sample(kind)}
+				>
+					{t('settings.sounds.sample')}
+				</button>
+			</div>
+		{/each}
+	</fieldset>
+{/if}
+
 <fieldset>
 	<legend>{t('settings.design')}</legend>
 	<p class="muted">{t('settings.designHint')}</p>
@@ -147,6 +202,32 @@
 </section>
 
 <style>
+	.sound {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 8px 0;
+		border-top: 1px solid var(--rule);
+	}
+
+	.sound-switch {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+	}
+
+	.sound-switch input {
+		width: 18px;
+		height: 18px;
+		margin-top: 2px;
+	}
+
+	.sound-switch > span {
+		display: flex;
+		flex-direction: column;
+	}
+
 	h1 {
 		margin: 8px 0 20px;
 		font-size: clamp(1.5rem, 2.6vw, 2.1rem);
