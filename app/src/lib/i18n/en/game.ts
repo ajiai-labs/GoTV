@@ -56,6 +56,11 @@ export const game: Translation<typeof de> = {
 	'game.play.addOneMinute': 'Give 1 minute',
 	'game.play.addFiveMinutes': 'Give 5 minutes',
 	'game.play.leave': 'Leave game',
+	'game.play.leaveTitle': 'Game not finished',
+	'game.play.leaveText':
+		'The game is not finished yet. If you leave now, your opponent waits for you – you can resume it later under "Play".',
+	'game.play.leaveYes': 'Leave',
+	'game.play.leaveBack': 'Back to the game',
 
 	// GamePlayersInfo, GamePlayersList
 	'game.players.owner': 'Game owner',

@@ -157,7 +157,26 @@ describe('GameScreen', () => {
 		expect(actions.onAddGameTime).toHaveBeenCalledWith(game, 'white', 300);
 		await page.getByRole('button', { name: /Mehr/ }).click();
 		await page.getByRole('button', { name: 'Partie verlassen' }).click();
+		// The game is not finished: asks first (as CGoban), back keeps playing.
+		const dialog = page.getByRole('dialog', { name: 'Partie noch nicht beendet' });
+		await dialog.getByRole('button', { name: 'Zurück zur Partie' }).click();
+		expect(actions.onLeaveGame).not.toHaveBeenCalled();
+		await page.getByRole('button', { name: /Mehr/ }).click();
+		await page.getByRole('button', { name: 'Partie verlassen' }).click();
+		await dialog.getByRole('button', { name: 'Verlassen' }).click();
 		expect(actions.onLeaveGame).toHaveBeenCalledWith(game);
+	});
+
+	it('resigns from the leave warning', async () => {
+		const actions = mockActions();
+		const game = fixtureGame();
+		await render(GameScreen, { game, playing: true });
+		await page.getByRole('button', { name: /Mehr/ }).click();
+		await page.getByRole('button', { name: 'Partie verlassen' }).click();
+		const dialog = page.getByRole('dialog', { name: 'Partie noch nicht beendet' });
+		await dialog.getByRole('button', { name: 'Aufgeben' }).click();
+		expect(actions.onResign).toHaveBeenCalledWith(game);
+		expect(actions.onLeaveGame).not.toHaveBeenCalled();
 	});
 
 	it('marks a group while scoring and finishes with "Fertig"', async () => {

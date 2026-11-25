@@ -11,6 +11,7 @@
 	// the board (two-click embed).
 	import { onMount, tick } from 'svelte';
 	import HomeLink from '#lib/ui/HomeLink.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { playStoneClick } from '#lib/sound/gameSounds.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
@@ -238,6 +239,19 @@
 		app.actions.onLeaveGame(game);
 	}
 
+	// Leaving an own running game asks first, as CGoban does: leave anyway,
+	// resign, or back to the game.
+	let confirmingLeave = $state(false);
+
+	function onLeaveRunningGame() {
+		confirmingLeave = true;
+	}
+
+	function onResignInstead() {
+		confirmingLeave = false;
+		app.actions.onResign(game);
+	}
+
 	function onUserDetail(user: User) {
 		app.actions.onUserDetail(user.name);
 	}
@@ -282,6 +296,30 @@
 </script>
 
 <svelte:window bind:innerHeight onresize={measure} />
+
+{#if confirmingLeave}
+	<Modal title={t('game.play.leaveTitle')} onclose={() => (confirmingLeave = false)}>
+		<p class="GameScreen-leave-text">{t('game.play.leaveText')}</p>
+		<div class="GameScreen-leave-actions">
+			<button type="button" class="button button-primary" onclick={() => (confirmingLeave = false)}>
+				{t('game.play.leaveBack')}
+			</button>
+			<button type="button" class="button" onclick={onResignInstead}>
+				{t('game.play.resign')}
+			</button>
+			<button
+				type="button"
+				class="button"
+				onclick={() => {
+					confirmingLeave = false;
+					onLeave();
+				}}
+			>
+				{t('game.play.leaveYes')}
+			</button>
+		</div>
+	</Modal>
+{/if}
 
 <div
 	class="GameScreen"
@@ -397,7 +435,7 @@
 						onPass={app.actions.onPass}
 						onUndo={app.actions.onUndo}
 						onResign={app.actions.onResign}
-						onLeaveGame={onLeave}
+						onLeaveGame={onLeaveRunningGame}
 						onAddTime={app.actions.onAddGameTime}
 						onDoneScoring={app.actions.onDoneScoring}
 					/>
@@ -468,6 +506,17 @@
 </div>
 
 <style>
+	.GameScreen-leave-text {
+		margin: 0 0 14px;
+		max-width: 46ch;
+	}
+
+	.GameScreen-leave-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
 	.GameScreen {
 		display: flex;
 		flex-direction: column;

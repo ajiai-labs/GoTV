@@ -57,6 +57,11 @@ export const game = {
 	'game.play.addOneMinute': '1 Minute schenken',
 	'game.play.addFiveMinutes': '5 Minuten schenken',
 	'game.play.leave': 'Partie verlassen',
+	'game.play.leaveTitle': 'Partie noch nicht beendet',
+	'game.play.leaveText':
+		'Die Partie ist noch nicht beendet. Wenn du sie jetzt verlässt, wartet dein Gegner auf dich – unter „Spielen“ kannst du sie später fortsetzen.',
+	'game.play.leaveYes': 'Verlassen',
+	'game.play.leaveBack': 'Zurück zur Partie',
 
 	// GamePlayersInfo, GamePlayersList
 	'game.players.owner': 'Besitzer der Partie',
