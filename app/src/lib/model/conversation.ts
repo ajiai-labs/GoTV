@@ -157,6 +157,17 @@ export function handleConversationMessage(prevState: AppState, msg: KgsMessage):
 		}
 
 		return { ...prevState, conversationsById };
+	} else if (msg.type === 'CONVO_NO_CHATS' && chanId) {
+		// The other player does not want to talk right now.
+		const convo = prevState.conversationsById[chanId];
+		if (!convo) return prevState;
+		return {
+			...prevState,
+			conversationsById: {
+				...prevState.conversationsById,
+				[chanId]: { ...convo, chatsDisabled: true, declinedByOther: true }
+			}
+		};
 	} else if (msg.type === 'CONVO_NO_SUCH_USER') {
 		// TODO
 	} else if (msg.type === 'CLOSE_CONVERSATION') {

@@ -10,6 +10,7 @@
 	import UserName from '#lib/ui/UserName.svelte';
 	import FriendLists from '#lib/ui/community/FriendLists.svelte';
 	import Mailbox from '#lib/ui/community/Mailbox.svelte';
+	import NoChatsSetting from '#lib/ui/community/NoChatsSetting.svelte';
 	import { DESKTOP_VERSION } from '#lib/desktopUpdate.ts';
 
 	function showProfile() {
@@ -46,6 +47,7 @@
 
 		<Mailbox />
 		<FriendLists />
+		<NoChatsSetting />
 
 		<section class="panel about">
 			<h2 class="panel-title">{t('app.account.about')}</h2>

@@ -82,6 +82,8 @@ export type Conversation = {
 	lastSeen?: number;
 	unseenCount?: number;
 	chatsDisabled?: boolean;
+	// The other player sent CONVO_NO_CHATS ("Keine Unterhaltungen").
+	declinedByOther?: boolean;
 	messages: Array<ConversationMessage>;
 	callbackKey?: number | null | undefined;
 	status: 'pending' | 'created' | 'userNotFound' | 'closed';

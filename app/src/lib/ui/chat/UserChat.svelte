@@ -38,16 +38,27 @@
 <div class="UserChat">
 	<div class="UserChat-head">
 		<div class="UserChat-info">
-			{#if disabled}
+			{#if conversation.declinedByOther}
+				<span class="muted">{t('community.noChats.otherDeclined', { name: user.name })}</span>
+			{:else if disabled}
 				<span class="muted">{t('chat.disabled')}</span>
 			{:else}
 				<UserName {user} extraIcons />
 				<span class="muted">· {userStatusText(user)}</span>
 			{/if}
 		</div>
-		<button type="button" class="button" onclick={() => showProfile(user.name)}>
-			{t('chat.user.viewProfile')}
-		</button>
+		<span class="UserChat-buttons">
+			<button type="button" class="button" onclick={() => showProfile(user.name)}>
+				{t('chat.user.viewProfile')}
+			</button>
+			<button
+				type="button"
+				class="button"
+				onclick={() => app.actions.onDeclineConversation(conversation.id)}
+			>
+				{t('community.noChats.stop')}
+			</button>
+		</span>
 	</div>
 	<div
 		class="UserChat-messages"
@@ -61,6 +72,12 @@
 </div>
 
 <style>
+	.UserChat-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
 	.UserChat {
 		display: flex;
 		flex-direction: column;

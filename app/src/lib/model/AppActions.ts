@@ -13,6 +13,7 @@ const AUTOMATCH_JOIN_GRACE_MS = 60000;
 // After ROOM_LOAD_GAME: how long a GAME_JOIN counts as the loaded game.
 const LOAD_JOIN_GRACE_MS = 30000;
 import type { FriendType } from './community';
+import { loadNoChats } from './noChats';
 import type {
 	AutomatchPrefs,
 	GameChannel,
@@ -120,6 +121,15 @@ export class AppActions {
 		for (const msg of msgs) {
 			if (msg.type === 'LOGIN_SUCCESS') {
 				this.onLoginSuccess();
+			} else if (
+				msg.type === 'CONVO_JOIN' &&
+				msg.channelId &&
+				!msg.callbackKey &&
+				!isTempId(msg.channelId) &&
+				loadNoChats()
+			) {
+				// Someone else opened a private chat while "Keine Unterhaltungen" is on.
+				this.onDeclineConversation(msg.channelId, msg.user?.name);
 			} else if (msg.type === 'CHALLENGE_FINAL' && msg.channelId) {
 				this.onChallengeFinalized(msg.proposal, msg.channelId, msg.gameChannelId);
 			} else if (msg.type === 'CHALLENGE_PROPOSAL' && msg.channelId) {
@@ -534,8 +544,9 @@ export class AppActions {
 	};
 	onReceiveDirectMessage = (channelId: number) => {
 		const { conversationsById } = this._store.getState();
+		const convo = conversationsById[channelId];
 
-		if (conversationsById[channelId] && conversationsById[channelId].user) {
+		if (convo && convo.user && convo.status !== 'closed') {
 			SOUNDS.DIRECT_MESSAGE_RECEIVED.play();
 		}
 	};
@@ -673,6 +684,16 @@ export class AppActions {
 			type: 'SAW_CONVERSATION',
 			conversationId
 		});
+	};
+	// Tells KGS we do not want chats in this conversation (the other side
+	// sees CONVO_NO_CHATS) and closes it. `name`: shown in a short notice.
+	onDeclineConversation = (conversationId: number, name?: string) => {
+		if (this._isOffline()) return;
+		if (!isTempId(conversationId)) {
+			this._client.sendMessage({ type: 'CONVO_NO_CHATS', channelId: conversationId });
+		}
+		if (name) this._store.dispatch({ type: 'CHAT_DECLINED', name });
+		this.onCloseConversation(conversationId);
 	};
 	onCloseConversation = (conversationId: number) => {
 		if (this._isOffline()) {

@@ -70,3 +70,48 @@ describe('community actions', () => {
 		});
 	});
 });
+
+describe('no conversations', () => {
+	const convoJoin = (callbackKey?: number) => ({
+		type: 'CONVO_JOIN',
+		channelId: 321,
+		user: { name: 'chatty', rank: '3k', flags: 'c' },
+		...(callbackKey ? { callbackKey } : {})
+	});
+
+	it('declines a new private chat while switched on', () => {
+		localStorage.setItem('gotv.noChats', '1');
+		try {
+			const { store, sendMessage, actions } = setup();
+			actions.onReceiveServerMessages([
+				convoJoin(),
+				{ type: 'CHAT', channelId: 321, user: { name: 'chatty' }, text: 'Hallo?' }
+			]);
+			expect(sendMessage).toHaveBeenCalledWith({ type: 'CONVO_NO_CHATS', channelId: 321 });
+			expect(store.getState().conversationsById[321]?.status).toBe('closed');
+			expect(store.getState().communityResult).toMatchObject({
+				type: 'CHAT_DECLINED',
+				name: 'chatty'
+			});
+		} finally {
+			localStorage.removeItem('gotv.noChats');
+		}
+	});
+
+	it('keeps chats when switched off', () => {
+		const { sendMessage, actions } = setup();
+		actions.onReceiveServerMessages([convoJoin()]);
+		expect(sendMessage).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'CONVO_NO_CHATS' })
+		);
+	});
+
+	it('marks a chat the other player declined', () => {
+		const { store, actions } = setup();
+		actions.onReceiveServerMessages([convoJoin(7), { type: 'CONVO_NO_CHATS', channelId: 321 }]);
+		expect(store.getState().conversationsById[321]).toMatchObject({
+			chatsDisabled: true,
+			declinedByOther: true
+		});
+	});
+});

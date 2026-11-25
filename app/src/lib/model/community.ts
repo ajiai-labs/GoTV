@@ -35,6 +35,8 @@ export type ServerStats = {
 export type CommunityResult = {
 	type: string;
 	at: number;
+	// CHAT_DECLINED: who wanted to chat.
+	name?: string;
 };
 
 export type CommunityState = {
@@ -90,6 +92,11 @@ export function handleCommunityMessage(prevState: AppState, msg: KgsMessage): Ap
 	switch (msg.type) {
 		case 'COMMUNITY_RESULT_CLEAR':
 			return { ...state, communityResult: null };
+		case 'CHAT_DECLINED':
+			return {
+				...state,
+				communityResult: { type: 'CHAT_DECLINED', at: Date.now(), name: String(msg.name ?? '') }
+			};
 		case 'MAILBOX_CLEAR':
 			return { ...state, mailbox: [] };
 		case 'LOGIN_SUCCESS': {
