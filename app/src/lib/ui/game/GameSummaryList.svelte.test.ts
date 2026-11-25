@@ -13,6 +13,9 @@ describe('GameSummaryList', () => {
 		// Won from gotvfan's view (white, won by resignation)
 		await expect.element(items.nth(0)).toMatchTextContent('Gewonnen: W+Aufgabe');
 		await expect.element(items.nth(1)).toMatchTextContent('Läuft gerade');
+		// Open on KGS right now: bold, as in CGoban's "Fortsetzen" list.
+		await expect.element(items.nth(1)).toHaveClass('GameSummaryList-item-open');
+		await expect.element(items.nth(0)).not.toHaveClass('GameSummaryList-item-open');
 		await items.nth(1).click();
 		expect(onSelect).toHaveBeenCalledWith(summaries[1]);
 	});

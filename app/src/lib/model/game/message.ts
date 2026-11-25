@@ -398,47 +398,55 @@ export function handleGameMessage(prevState: AppState, msg: KgsMessage): AppStat
 	let nextState = _handleGameMessage(prevState, msg);
 
 	const currentUser = nextState.currentUser;
-	let unfinishedGames: Array<UnfinishedGame> | undefined;
+	const gamesChanged = prevState.gamesById !== nextState.gamesById;
 
 	// If games changed, separate active games from challenges; sort
-	if (prevState.gamesById !== nextState.gamesById) {
+	if (gamesChanged) {
 		const allGames = Object.keys(nextState.gamesById).map((id) => nextState.gamesById[id]);
 		const activeGames = allGames.filter((g) => g.type !== 'challenge' && !g.deletedTime);
 		sortGames(activeGames);
 		const challenges = allGames.filter((g) => g.type === 'challenge' && !g.deletedTime);
 		sortGames(challenges);
-
-		if (currentUser) {
-			const currentName = currentUser.name;
-			unfinishedGames = activeGames
-				.filter((g) => isGamePlayer(currentName, g.players) && isGamePlaying(g))
-				.map((g): UnfinishedGame => ({
-					type: 'channel',
-					game: g
-				}));
-		}
-
 		nextState = { ...nextState, activeGames, challenges };
 	}
 
 	if (currentUser) {
-		const nextSummaries = nextState.gameSummariesByUser[currentUser.name];
-		const prevSummaries = prevState.gameSummariesByUser[currentUser.name];
-
-		if (prevSummaries !== nextSummaries) {
-			unfinishedGames = (unfinishedGames || []).concat(
-				nextSummaries
-					.filter((summary) => summary.score === 'UNFINISHED' && summary.inPlay)
-					.map((summary): UnfinishedGame => ({
-						type: 'summary',
-						game: summary
-					}))
+		const name = currentUser.name;
+		const summariesChanged =
+			prevState.gameSummariesByUser[name] !== nextState.gameSummariesByUser[name];
+		if (gamesChanged || summariesChanged) {
+			const unfinishedGames = getUnfinishedGames(
+				nextState.activeGames,
+				nextState.gameSummariesByUser[name] || [],
+				name
 			);
-			nextState = { ...nextState, unfinishedGames };
-		} else if (unfinishedGames) {
 			nextState = { ...nextState, unfinishedGames };
 		}
 	}
 
 	return nextState;
+}
+
+// Own unfinished games, as CGoban's "Fortsetzen": games running right now
+// (from the game lists), then every unfinished game of the own archive - the
+// ones still open on KGS (opponent waiting, `inPlay`) first, then by date.
+// An open archive game that is also in the game lists is listed once.
+export function getUnfinishedGames(
+	activeGames: Array<GameChannel>,
+	summaries: Array<GameSummary>,
+	name: string
+): Array<UnfinishedGame> {
+	const channels = activeGames.filter((g) => isGamePlayer(name, g.players) && isGamePlaying(g));
+	const pairKey = (players: GameChannel['players'] | GameSummary['players']) =>
+		[players.white?.name, players.black?.name].sort().join('|');
+	const runningPairs = new Set(channels.map((g) => pairKey(g.players)));
+	const open = summaries.filter((s) => s.score === 'UNFINISHED');
+	const ordered = [
+		...open.filter((s) => s.inPlay && !runningPairs.has(pairKey(s.players))),
+		...open.filter((s) => !s.inPlay)
+	];
+	return [
+		...channels.map((game): UnfinishedGame => ({ type: 'channel', game })),
+		...ordered.map((game): UnfinishedGame => ({ type: 'summary', game }))
+	];
 }

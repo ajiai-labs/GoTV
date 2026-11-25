@@ -55,6 +55,7 @@
 			class="GameSummaryList-item"
 			class:GameSummaryList-item-won={result === 'won'}
 			class:GameSummaryList-item-lost={result === 'lost'}
+			class:GameSummaryList-item-open={playingNow}
 			onclick={() => onSelect(game)}
 		>
 			<span class="GameSummaryList-item-type">
@@ -169,6 +170,12 @@
 
 	.GameSummaryList-item-lost .GameSummaryList-item-result::before {
 		background: #c0392b;
+	}
+
+	/* Open on KGS right now (an unfinished game: the opponent is waiting) -
+	   bold, as in CGoban's "Fortsetzen" list. */
+	.GameSummaryList-item-open .GameSummaryList-item-players {
+		font-weight: 700;
 	}
 
 	.GameSummaryList-item-date-now {
