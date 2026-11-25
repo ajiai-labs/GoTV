@@ -166,7 +166,6 @@ class GoTvApp {
 			move,
 			serial: ++this.localCopySerial
 		};
-		// eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() gives the path
 		goto(resolve('/nachspielen')).catch(() => {});
 	}
 
