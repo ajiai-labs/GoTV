@@ -13,7 +13,8 @@ function lazyAudio(src: string): { play: () => void } {
 			}
 			audio = audio ?? new Audio(src);
 			// Browsers refuse sound before the first user gesture; that is fine.
-			audio.play().catch(() => {});
+			// (Older engines and jsdom return no promise from play().)
+			audio.play()?.catch(() => {});
 		}
 	};
 }

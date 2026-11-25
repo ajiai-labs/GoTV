@@ -214,6 +214,7 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 	} else if (msg.type === 'CLOSE_CHALLENGE' && chanId) {
 		const challenge = { ...prevState.gamesById[chanId] };
 		delete challenge.sentProposal;
+		delete challenge.counterProposal;
 		delete challenge.receivedProposals;
 		return {
 			...prevState,
@@ -248,7 +249,13 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 	} else if (msg.type === 'START_CHALLENGE_SUBMIT' && chanId) {
 		const gamesById: Index<GameChannel> = { ...prevState.gamesById };
 		const sentProposal = { ...msg.proposal, status: 'pending' };
-		gamesById[chanId] = { ...gamesById[chanId], sentProposal };
+		const challenge = { ...gamesById[chanId], sentProposal };
+		delete challenge.counterProposal;
+		gamesById[chanId] = challenge;
+		return { ...prevState, gamesById };
+	} else if (msg.type === 'CHALLENGE_COUNTER' && chanId && prevState.gamesById[chanId]) {
+		const gamesById: Index<GameChannel> = { ...prevState.gamesById };
+		gamesById[chanId] = { ...gamesById[chanId], counterProposal: msg.proposal };
 		return { ...prevState, gamesById };
 	} else if (msg.type === 'CHALLENGE_SUBMIT' && chanId) {
 		const gamesById: Index<GameChannel> = { ...prevState.gamesById };

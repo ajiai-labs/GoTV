@@ -23,6 +23,7 @@ function mockActions() {
 		onSubmitChallengeProposal: vi.fn(),
 		onAcceptChallengeProposal: vi.fn(),
 		onDeclineChallengeProposal: vi.fn(),
+		onAcceptCounterProposal: vi.fn(),
 		markConversationSeen: vi.fn(),
 		onSendChat: vi.fn(),
 		onUserDetail: vi.fn()
@@ -102,6 +103,38 @@ describe('ChallengeEditor', () => {
 			{ role: 'black', name: 'gotvfan' }
 		]);
 		await page.getByRole('button', { name: 'Abbrechen' }).click();
+		expect(onCancel).toHaveBeenCalled();
+	});
+
+	it('shows changed terms from the creator to accept or decline', async () => {
+		const actions = mockActions();
+		const onCancel = vi.fn();
+		const sent: GameProposal = {
+			...annaChallenge.initialProposal!,
+			status: 'pending',
+			players: [
+				{ role: 'white', name: 'anna' },
+				{ role: 'black', name: 'gotvfan' }
+			]
+		};
+		const counter: GameProposal = {
+			...sent,
+			status: undefined,
+			rules: { ...sent.rules, komi: 0.5 }
+		};
+		await render(ChallengeEditor, {
+			...base,
+			challenge: { ...annaChallenge, sentProposal: sent, counterProposal: counter },
+			onCancel
+		});
+		await expect
+			.element(
+				page.getByText('anna hat die Bedingungen geändert, die Änderungen sind hervorgehoben.')
+			)
+			.toBeVisible();
+		await page.getByRole('button', { name: 'Annehmen' }).click();
+		expect(actions.onAcceptCounterProposal).toHaveBeenCalledWith(ANNA_CHALLENGE);
+		await page.getByRole('button', { name: 'Ablehnen' }).click();
 		expect(onCancel).toHaveBeenCalled();
 	});
 

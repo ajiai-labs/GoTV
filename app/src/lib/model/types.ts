@@ -327,6 +327,8 @@ export type GameChannel = {
 	initialProposal?: GameProposal;
 	// for challenge
 	sentProposal?: GameProposal;
+	// The creator answered our proposal with changed terms (CHALLENGE_PROPOSAL)
+	counterProposal?: GameProposal;
 	receivedProposals?: Array<GameProposal>;
 	rules?: GameRules;
 	// for non-challenge

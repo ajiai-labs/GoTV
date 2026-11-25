@@ -147,6 +147,7 @@
 		| { kind: 'create' }
 		| { kind: 'submit' }
 		| { kind: 'decide'; challenger: string }
+		| { kind: 'counter'; creator: string }
 		| { kind: 'awaitChallengers' }
 		| { kind: 'awaitResponse' };
 
@@ -162,6 +163,15 @@
 				editProposal: proposal,
 				prevProposal: null,
 				buttons: { kind: 'create' }
+			};
+		}
+		if (challenge?.counterProposal && !isCreator) {
+			// The creator sent our proposal back with changed terms
+			return {
+				editMode: 'waiting',
+				editProposal: challenge.counterProposal,
+				prevProposal: challenge.sentProposal ?? proposal,
+				buttons: { kind: 'counter', creator: creator?.name ?? '' }
 			};
 		}
 		if (!pending && !isCreator) {
@@ -225,6 +235,13 @@
 	function onAcceptProposal() {
 		const received = selectedReceivedProposal();
 		if (challenge && received) app.actions.onAcceptChallengeProposal(challenge.id, received);
+	}
+
+	function onAcceptCounter() {
+		const counter = challenge?.counterProposal;
+		if (!challenge || !counter) return;
+		proposal = { ...counter, status: 'pending' };
+		app.actions.onAcceptCounterProposal(challenge.id);
 	}
 
 	function onDeclineProposal() {
@@ -300,6 +317,16 @@
 			{:else if view.buttons.kind === 'submit'}
 				<button type="button" class="button button-primary" onclick={onSubmitProposal}>
 					{t('play.editor.submit')}
+				</button>
+			{:else if view.buttons.kind === 'counter'}
+				<p class="ChallengeEditor-counter" role="status">
+					{t('play.editor.counter', { name: view.buttons.creator })}
+				</p>
+				<button type="button" class="button button-primary" onclick={onAcceptCounter}>
+					{t('play.editor.accept')}
+				</button>
+				<button type="button" class="button button-danger" onclick={() => onCancel()}>
+					{t('play.editor.decline')}
 				</button>
 			{:else if view.buttons.kind === 'decide'}
 				<button type="button" class="button button-primary" onclick={onAcceptProposal}>
@@ -421,6 +448,11 @@
 		flex-direction: column;
 		gap: 12px;
 		padding-top: 4px;
+	}
+
+	.ChallengeEditor-counter {
+		flex-basis: 100%;
+		margin: 0;
 	}
 
 	.ChallengeEditor-declined,

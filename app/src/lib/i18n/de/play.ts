@@ -61,6 +61,7 @@ export const play = {
 	'play.editor.submit': 'Vorschlag senden',
 	'play.editor.accept': 'Annehmen',
 	'play.editor.decline': 'Ablehnen',
+	'play.editor.counter': '{name} hat die Bedingungen geändert, die Änderungen sind hervorgehoben.',
 	'play.editor.awaitChallengers': 'Warte auf Herausforderer',
 	'play.editor.awaitResponse': 'Warte auf Antwort',
 	'play.editor.cancel': 'Abbrechen',

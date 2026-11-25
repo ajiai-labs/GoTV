@@ -425,6 +425,27 @@ export class AppActions {
 			channelId: challengeId
 		});
 	};
+	// We accept the changed terms the creator sent back (counterProposal).
+	onAcceptCounterProposal = (challengeId: number) => {
+		const challenge = this._store.getState().gamesById[challengeId];
+		const counter = challenge && challenge.counterProposal;
+		if (!counter) return;
+		// Users must be name-only
+		const normProposal = {
+			...counter,
+			players: counter.players.map((p) => {
+				p = { ...p, name: p.user ? p.user.name : p.name };
+				delete p.user;
+				return p;
+			})
+		};
+		this._store.dispatch({
+			type: 'START_CHALLENGE_SUBMIT',
+			channelId: challengeId,
+			proposal: counter
+		});
+		this._client.sendMessage({ ...normProposal, type: 'CHALLENGE_ACCEPT', channelId: challengeId });
+	};
 	onDeclineChallengeProposal = (challengeId: number, name: string) => {
 		this._store.dispatch({
 			type: 'START_CHALLENGE_DECLINE',
@@ -463,12 +484,13 @@ export class AppActions {
 	onReceiveChallengeProposal = (challengeId: number, proposal: GameProposal) => {
 		if (!proposal) {
 			this.onCloseChallenge(challengeId);
+			return;
 		}
 
 		const state = this._store.getState();
 
 		const challenge = state.gamesById[challengeId];
-		const sentProposal = challenge.sentProposal;
+		const sentProposal = challenge && challenge.sentProposal;
 
 		if (sentProposal) {
 			const acceptable = proposalsEqual(sentProposal, proposal);
@@ -480,9 +502,10 @@ export class AppActions {
 					channelId: challengeId
 				});
 			} else {
-				// TODO - reset challenge, show to current user for review
-				// console.log('TODO - received counter proposal', {challengeId, proposal});
-				this.onCloseChallenge(challengeId);
+				// The creator changed the terms: show them, the user accepts
+				// (onAcceptCounterProposal) or declines (onCloseChallenge).
+				this._store.dispatch({ type: 'CHALLENGE_COUNTER', channelId: challengeId, proposal });
+				SOUNDS.CHALLENGE_PROPOSAL_RECEIVED.play();
 			}
 		} else {
 			// TODO - received a revised proposal when we didn't submit a challenge.

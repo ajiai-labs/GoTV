@@ -60,6 +60,7 @@ export const play: Translation<typeof de> = {
 	'play.editor.submit': 'Send proposal',
 	'play.editor.accept': 'Accept',
 	'play.editor.decline': 'Decline',
+	'play.editor.counter': '{name} changed the terms; the changes are highlighted.',
 	'play.editor.awaitChallengers': 'Waiting for challengers',
 	'play.editor.awaitResponse': 'Waiting for an answer',
 	'play.editor.cancel': 'Cancel',
