@@ -69,4 +69,16 @@ describe('Einstellungen', () => {
 		await render(Page);
 		await expect.element(page.getByRole('checkbox', { name: /Steinklick/ })).not.toBeChecked();
 	});
+
+	it('shows all sound switches the same size, however long the text', async () => {
+		await page.viewport(560, 800);
+		await render(Page);
+		const widths = page
+			.getByRole('checkbox', { name: /Steinklick|Partiebeginn|Zeit läuft ab/ })
+			.elements()
+			.map((box) => box.getBoundingClientRect().width);
+		expect(widths).toHaveLength(3);
+		expect(new Set(widths).size).toBe(1);
+		await page.viewport(414, 896);
+	});
 });

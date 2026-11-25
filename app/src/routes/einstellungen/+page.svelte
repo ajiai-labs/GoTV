@@ -201,6 +201,8 @@
 	}
 
 	.sound-switch input {
+		/* Fixed size: a long description must not squeeze the box. */
+		flex: none;
 		width: 18px;
 		height: 18px;
 		margin-top: 2px;
