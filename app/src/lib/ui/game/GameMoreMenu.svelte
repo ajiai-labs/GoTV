@@ -12,6 +12,7 @@
 	import GameInfo from './GameInfo.svelte';
 	import { BOARD_RESIZE_MODES, boardResizeMode } from './boardResizeMode.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
+	import ScoreEstimateDialog from './ScoreEstimateDialog.svelte';
 
 	const MORE_INFO_PROPS: Record<string, MessageKey> = {
 		ANNOTATOR: 'game.moreMenu.annotator',
@@ -39,6 +40,7 @@
 		kgsTools?: boolean;
 	} = $props();
 
+	let estimateShowing = $state(false);
 	let copyShowing = $state(false);
 	let copyRoomId: number | null = $state(null);
 	let copySent = $state(false);
@@ -159,6 +161,16 @@
 				{t('game.moreMenu.gameInfo')}
 			</button>
 			{#if kgsTools && game.tree}
+				<button
+					type="button"
+					class="GameMoreMenu-dropdown-item"
+					onclick={() => {
+						moreShowing = false;
+						estimateShowing = true;
+					}}
+				>
+					{t('game.estimate.title')}
+				</button>
 				<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
 					{t('game.moreMenu.localCopy')}
 				</button>
@@ -184,6 +196,9 @@
 				</fieldset>
 			{/if}
 		</div>
+	{/if}
+	{#if estimateShowing}
+		<ScoreEstimateDialog {game} onclose={() => (estimateShowing = false)} />
 	{/if}
 	{#if copyShowing}
 		<Modal title={t('game.moreMenu.copyToRoom')} onclose={() => (copyShowing = false)}>

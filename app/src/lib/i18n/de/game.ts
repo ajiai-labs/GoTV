@@ -29,6 +29,16 @@ export const game = {
 	'game.moreMenu.openGoKibitz': 'In GoKibitz öffnen',
 	'game.moreMenu.openEidoGo': 'In EidoGo öffnen',
 	'game.moreMenu.gameInfo': 'Partieinfo',
+	'game.estimate.title': 'Ergebnis schätzen',
+	'game.estimate.boardLabel': 'Brett mit geschätztem Gebiet',
+	'game.estimate.working': 'Wird geschätzt …',
+	'game.estimate.even': 'Ungefähr ausgeglichen',
+	'game.estimate.leads': '{color} liegt etwa {points} Punkte vorn',
+	'game.estimate.points': '{points} Punkte',
+	'game.estimate.pointsKomi': '{points} Punkte (mit {komi} Komi)',
+	'game.estimate.noBoard': 'Für diese Partie gibt es noch kein Brett.',
+	'game.estimate.note':
+		'Grobe Schätzung aus vielen Zufallspartien, ohne KI. In offenen Kämpfen ungenau. Kreuze: Steine, die tot aussehen.',
 	'game.moreMenu.localCopy': 'Lokal betrachten',
 	'game.moreMenu.copyToRoom': 'Spiel kopieren in …',
 	'game.moreMenu.copyText':

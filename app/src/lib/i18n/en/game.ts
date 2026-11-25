@@ -28,6 +28,16 @@ export const game: Translation<typeof de> = {
 	'game.moreMenu.openGoKibitz': 'Open in GoKibitz',
 	'game.moreMenu.openEidoGo': 'Open in EidoGo',
 	'game.moreMenu.gameInfo': 'Game info',
+	'game.estimate.title': 'Estimate score',
+	'game.estimate.boardLabel': 'Board with estimated territory',
+	'game.estimate.working': 'Estimating …',
+	'game.estimate.even': 'About even',
+	'game.estimate.leads': '{color} leads by about {points} points',
+	'game.estimate.points': '{points} points',
+	'game.estimate.pointsKomi': '{points} points (with {komi} komi)',
+	'game.estimate.noBoard': 'This game has no board yet.',
+	'game.estimate.note':
+		'Rough estimate from many random games, no AI. Inaccurate in open fights. Crosses: stones that look dead.',
 	'game.moreMenu.localCopy': 'View locally',
 	'game.moreMenu.copyToRoom': 'Copy game to …',
 	'game.moreMenu.copyText':
