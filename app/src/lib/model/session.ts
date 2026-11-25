@@ -7,7 +7,13 @@ export function handleSessionMessage(prevState: AppState, msg: KgsMessage): AppS
 	switch (msg.type) {
 		case 'RESTORE_APP_STATE':
 			// TODO - mark appropriate data as stale
-			nextState = { ...msg.appState, loginError: null, logoutError: null };
+			// Fields added since the state was saved start empty.
+			nextState = {
+				...getEmptyServerState(),
+				...msg.appState,
+				loginError: null,
+				logoutError: null
+			};
 			return nextState;
 
 		case 'APP_STATE_INITIALIZED':

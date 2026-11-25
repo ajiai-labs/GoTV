@@ -478,6 +478,11 @@ export type AppState = {
 	// KGS could not load a game from the archive (LOAD_FAILED): the game's
 	// timestamp ('' if KGS did not say); cleared by the next load request.
 	readonly loadFailed?: string | null;
+	// Friend lists, mailbox, server statistics (community.ts).
+	readonly friends: Array<import('./community').Friend>;
+	readonly mailbox: Array<import('./community').MailboxMessage>;
+	readonly serverStats: import('./community').ServerStats | null;
+	readonly communityResult: import('./community').CommunityResult | null;
 };
 export type KgsMessage =
 	// TODO - exhaustive types

@@ -97,3 +97,20 @@ describe('ChatMessages', () => {
 		expect(onOpenTv).toHaveBeenCalledWith('https://youtu.be/abcdefghijk');
 	});
 });
+
+describe('ChatMessages with an ignore list', () => {
+	afterEach(() => {
+		app.state = { ...app.state, friends: [] };
+	});
+
+	it('hides messages of players on the Ignorierliste', async () => {
+		app.state = { ...app.state, friends: [{ type: 'censored', name: 'Troll' }] };
+		await render(ChatMessages, {
+			currentUser: me,
+			usersByName: { anna },
+			messages: [message('1', 'anna', 'Gutes Spiel', 1), message('2', 'troll', 'Spam!', 2)]
+		});
+		await expect.element(page.getByText('Gutes Spiel')).toBeVisible();
+		expect(page.getByText('Spam!').elements()).toHaveLength(0);
+	});
+});

@@ -19,6 +19,7 @@
 	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
 	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
 	import DesktopUpdateBanner from '#lib/ui/update/DesktopUpdateBanner.svelte';
+	import MailboxNotice from '#lib/ui/community/MailboxNotice.svelte';
 	import { effectiveNavOrder, navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { fetchTvEvents, hasLiveBroadcast } from '#lib/model/tv.ts';
@@ -255,6 +256,9 @@
 	<HomeScreenHint />
 	<!-- Desktop apps: a newer GoTV on GitHub -->
 	<DesktopUpdateBanner />
+	{#if !config.guestOnly}
+		<MailboxNotice />
+	{/if}
 
 	<main>
 		{@render children()}

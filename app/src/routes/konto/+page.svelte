@@ -1,12 +1,16 @@
 <script lang="ts">
 	// Konto (old MoreScreen + MoreMenu): your KGS name (opens your profile),
-	// "Profil ansehen", "Abmelden", the settings and "Über GoTV".
+	// "Profil ansehen", "Abmelden", the settings, messages, the friend lists
+	// and "Über GoTV".
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { resolve } from '$app/paths';
 	import { version } from '../../../package.json';
 	import { app } from '#lib/app.svelte.ts';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
 	import UserName from '#lib/ui/UserName.svelte';
+	import FriendLists from '#lib/ui/community/FriendLists.svelte';
+	import Mailbox from '#lib/ui/community/Mailbox.svelte';
+	import { DESKTOP_VERSION } from '#lib/desktopUpdate.ts';
 
 	function showProfile() {
 		const user = app.state.currentUser;
@@ -40,10 +44,17 @@
 			</div>
 		</section>
 
+		<Mailbox />
+		<FriendLists />
+
 		<section class="panel about">
 			<h2 class="panel-title">{t('app.account.about')}</h2>
 			<div class="body">
-				<p class="title">GoTV <span class="muted">{t('app.account.version', { version })}</span></p>
+				<p class="title">
+					GoTV <span class="muted">
+						{t('app.account.version', { version: DESKTOP_VERSION ?? version })}
+					</span>
+				</p>
 				<p class="links">
 					<button class="button" type="button" onclick={() => app.actions.onShowFeedbackModal()}>
 						{t('app.account.sendFeedback')}

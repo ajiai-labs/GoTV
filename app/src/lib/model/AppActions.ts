@@ -12,6 +12,7 @@ import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
 const AUTOMATCH_JOIN_GRACE_MS = 60000;
 // After ROOM_LOAD_GAME: how long a GAME_JOIN counts as the loaded game.
 const LOAD_JOIN_GRACE_MS = 30000;
+import type { FriendType } from './community';
 import type {
 	AutomatchPrefs,
 	GameChannel,
@@ -974,6 +975,59 @@ export class AppActions {
 			user: user.name,
 			password: newPassword
 		});
+	};
+	// Friend lists (CGoban "Benutzer" menu): Freunde = buddy, Ignorierliste
+	// = censored, Fanliste = fan. KGS answers FRIEND_ADD/REMOVE_SUCCESS.
+	onAddFriend = (friendType: FriendType, name: string, notes = '') => {
+		if (this._isOffline() || !name.trim()) return;
+		this._client.sendMessage({
+			type: 'FRIEND_ADD',
+			friendType,
+			name: name.trim(),
+			text: notes.trim().slice(0, 50)
+		});
+	};
+	onRemoveFriend = (friendType: FriendType, name: string) => {
+		if (this._isOffline()) return;
+		this._client.sendMessage({ type: 'FRIEND_REMOVE', friendType, name });
+	};
+	// "Nachricht hinterlassen": KGS keeps it for the player's next login.
+	onLeaveMessage = (name: string, text: string) => {
+		if (this._isOffline() || !name.trim() || !text.trim()) return;
+		this._store.dispatch({ type: 'COMMUNITY_RESULT_CLEAR' });
+		this._client.sendMessage({
+			type: 'MESSAGE_CREATE',
+			name: name.trim(),
+			text: text.trim().slice(0, 1000)
+		});
+	};
+	// Deletes the messages left for us (all of them, as read).
+	onDeleteMailbox = () => {
+		if (this._isOffline()) return;
+		this._client.sendMessage({ type: 'MESSAGE_DELETE' });
+		this._store.dispatch({ type: 'MAILBOX_CLEAR' });
+	};
+	onRequestServerStats = () => {
+		if (this._isOffline()) return;
+		this._client.sendMessage({ type: 'REQUEST_SERVER_STATS' });
+	};
+	// "Neuen Raum erstellen": non-admins may only create temporary rooms.
+	onCreateRoom = (name: string, description: string, privateRoom: boolean) => {
+		if (this._isOffline() || !name.trim()) return;
+		this._store.dispatch({ type: 'COMMUNITY_RESULT_CLEAR' });
+		this._client.sendMessage({
+			type: 'CREATE_ROOM_REQUEST',
+			name: name.trim().slice(0, 50),
+			description: description.trim().slice(0, 1000),
+			category: 'TEMPORARY',
+			locale: '',
+			private: privateRoom,
+			tournOnly: false,
+			globalOnly: false
+		});
+	};
+	onClearCommunityResult = () => {
+		this._store.dispatch({ type: 'COMMUNITY_RESULT_CLEAR' });
 	};
 	onShowFeedbackModal = () => {
 		this._store.dispatch({

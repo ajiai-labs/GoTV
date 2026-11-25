@@ -4,6 +4,7 @@
 	// links (YouTube/Twitch) in a message get a button "Im TV öffnen".
 	// Scrolling to the newest message is the parent's job, as before.
 	import { app } from '#lib/app.svelte.ts';
+	import { isOnList } from '#lib/model/community.ts';
 	import type { ConversationMessage, GameChannel, Index, User } from '#lib/model/types.ts';
 	import { formatLocaleTime } from '#lib/util/date.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
@@ -45,10 +46,14 @@
 		currentUserProp === undefined ? app.state.currentUser : currentUserProp
 	);
 	let usersByName = $derived(usersByNameProp ?? app.state.usersByName);
+	// Players on the own Ignorierliste (KGS "censored") are not shown.
+	let shownMessages = $derived(
+		messages.filter((message) => !isOnList(app.state.friends, 'censored', message.sender ?? ''))
+	);
 
 	let items: Array<ChatItem> = $derived.by(() => {
 		if (!games || !games.length) {
-			return messages.map((message) => ({
+			return shownMessages.map((message) => ({
 				key: 'm' + message.id,
 				time: 0,
 				type: 'message' as const,
@@ -56,7 +61,7 @@
 			}));
 		}
 		let itemId = 1;
-		const merged: Array<ChatItem> = messages.map((message) => ({
+		const merged: Array<ChatItem> = shownMessages.map((message) => ({
 			key: 'i' + itemId++,
 			time: message.date ? message.date.getTime() : 0,
 			type: 'message' as const,

@@ -1,4 +1,5 @@
 import type { AppState, KgsClientState } from './types';
+import { getEmptyCommunityState } from './community';
 // Resets on each login
 // Everything a fresh login starts from (getInitialState adds the rest).
 type ServerState = Omit<
@@ -41,7 +42,8 @@ export function getEmptyServerState(): ServerState {
 		reviewGameId: null,
 		tvStreamUrl: null,
 		tvReplayGameId: null,
-		loadFailed: null
+		loadFailed: null,
+		...getEmptyCommunityState()
 	};
 }
 export function getInitialState(clientState: KgsClientState): AppState {

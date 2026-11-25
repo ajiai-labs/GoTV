@@ -88,6 +88,16 @@
 	import UserGameSummary from './UserGameSummary.svelte';
 	import UserRankGraph from './UserRankGraph.svelte';
 	import { followed } from './followed.svelte.ts';
+	import LeaveMessageForm from '#lib/ui/community/LeaveMessageForm.svelte';
+	import { isOnList } from '#lib/model/community.ts';
+	import type { FriendType } from '#lib/model/community.ts';
+
+	// The KGS lists as toggles in a profile: Freund, Ignorieren, Fan.
+	const LIST_BUTTONS: Array<{ type: FriendType; off: MessageKey; on: MessageKey }> = [
+		{ type: 'buddy', off: 'community.profile.addBuddy', on: 'community.profile.isBuddy' },
+		{ type: 'fan', off: 'community.profile.addFan', on: 'community.profile.isFan' },
+		{ type: 'censored', off: 'community.profile.addCensored', on: 'community.profile.isCensored' }
+	];
 
 	const MAX_GAME_SUMMARIES = 500;
 
@@ -95,6 +105,7 @@
 
 	let tab = $state<Tab>('bio');
 	let editing = $state(false);
+	let leavingMessage = $state(false);
 	let gameToLoad: GameSummary | null = $state(null);
 
 	let appState = $derived(app.state);
@@ -230,10 +241,35 @@
 								>
 									{followed.has(user.name) ? t('chat.profile.following') : t('chat.profile.follow')}
 								</button>
+								{#if !user.flags?.connected}
+									<button class="button" type="button" onclick={() => (leavingMessage = true)}>
+										{t('community.profile.leaveMessage')}
+									</button>
+								{/if}
 							{/if}
 						</div>
 					{/if}
 				</div>
+
+				{#if user && !isMe}
+					{@const name = user.name}
+					<div class="lists" role="group" aria-label={t('community.profile.lists')}>
+						{#each LIST_BUTTONS as item (item.type)}
+							{@const on = isOnList(app.state.friends, item.type, name)}
+							<button
+								class="button"
+								type="button"
+								aria-pressed={on}
+								onclick={() =>
+									on
+										? app.actions.onRemoveFriend(item.type, name)
+										: app.actions.onAddFriend(item.type, name)}
+							>
+								{t(on ? item.on : item.off)}
+							</button>
+						{/each}
+					</div>
+				{/if}
 
 				{#if user && details}
 					{@const userLocale = localeText(details.locale)}
@@ -312,7 +348,20 @@
 	{/if}
 {/if}
 
+{#if leavingMessage && user}
+	<Modal title={t('community.message.title')} onclose={() => (leavingMessage = false)}>
+		<LeaveMessageForm to={user.name} />
+	</Modal>
+{/if}
+
 <style>
+	.lists {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 0 0 12px;
+	}
+
 	.UserDetailsModal {
 		padding-top: 8px;
 	}
