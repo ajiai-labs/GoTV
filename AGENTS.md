@@ -731,3 +731,25 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   KEIN globales Abfangen von Navigationen (`on_navigation` trifft auf macOS/Linux auch
   Iframes, also YouTube/Twitch). Kein Tauri-Updater-Plugin (bräuchte Signaturschlüssel).
   Wirkt erst ab dem nächsten Release (0.2.0 hat den Hinweis noch nicht).
+
+## CGoban-Funktionen aus den Videos des Nutzers (25.11.2026, abends)
+
+- Beobachten, "Mehr": "Ergebnis schätzen" (`model/scoreEstimate.ts`: Zufallspartien mit
+  Atari-Regel, tote Gruppen nach mittlerem Besitz, geschlossene Gebiete exakt - KEINE KI;
+  nur beim Beobachten, nicht in der eigenen laufenden Partie), "Lokal betrachten"
+  (`app.openLocalCopy`: Kopie auf Nachspielen ab dem aktuellen Zug; KataGo gesperrt,
+  solange die Partie auf KGS läuft - `KataGoPanel blocked`), "Spiel kopieren in …"
+  (`ROOM_CLONE_GAME`, die Kopie öffnet sich unter Beobachten).
+- Konto: Nachrichten (Postfach `MESSAGES`, "Gelesen – löschen" = `MESSAGE_DELETE`,
+  "Nachricht hinterlassen" = `MESSAGE_CREATE`), Freunde/Ignorierliste/Fanliste
+  (`FRIEND_ADD`/`FRIEND_REMOVE`, buddy/censored/fan; Liste aus `LOGIN_SUCCESS.friends`),
+  "Keine Unterhaltungen" (`gotv.noChats`; neue Privatchats werden mit `CONVO_NO_CHATS`
+  abgelehnt und geschlossen), Server-Statistik (`REQUEST_SERVER_STATS`).
+  Modell: `model/community.ts`. Chat von Spielern auf der Ignorierliste blendet GoTV aus.
+  Spielerprofil: Knöpfe Freund/Fan/Ignorieren, "Nachricht hinterlassen" bei Offline.
+  Die Fanliste von KGS ist getrennt von GoTVs "Spielern folgen" (lokal).
+- Chat, Raumliste: "Neuen Raum erstellen" (`CREATE_ROOM_REQUEST`, nur TEMPORARY).
+- Nicht gebaut: "Nachricht des Tages" (die JSON-Schnittstelle hat dafür keine Nachricht),
+  KGS-Plus-Vorlesungen und KGS-AI (Entscheidungen oben).
+- Alle neuen KGS-Abläufe sind nach der Protokoll-Doku gebaut, aber NOCH NICHT an einer
+  echten KGS-Sitzung geprüft.

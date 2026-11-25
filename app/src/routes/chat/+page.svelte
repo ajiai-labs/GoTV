@@ -14,6 +14,7 @@
 	import UserName from '#lib/ui/UserName.svelte';
 	import UserList from '#lib/ui/user/UserList.svelte';
 	import ChatRoomList from '#lib/ui/chat/ChatRoomList.svelte';
+	import CreateRoomForm from '#lib/ui/community/CreateRoomForm.svelte';
 	import RoomChat from '#lib/ui/chat/RoomChat.svelte';
 	import UserChat from '#lib/ui/chat/UserChat.svelte';
 	import { userStatusText } from '#lib/ui/chat/userStatus.ts';
@@ -28,6 +29,7 @@
 	let showingList = $state(false);
 	let showingRoomUsers = $state(false);
 	let showingRoomList = $state(false);
+	let creatingRoom = $state(false);
 
 	// The old ChatScreen._getState: rooms first, then private chats; without
 	// an active conversation the first room is the active one.
@@ -317,13 +319,37 @@
 	</div>
 
 	{#if showingRoomList}
-		<Modal title={t('chat.page.rooms')} onclose={() => (showingRoomList = false)}>
-			<ChatRoomList roomsById={app.state.roomsById} onJoinRoom={joinRoom} />
+		<Modal
+			title={t('chat.page.rooms')}
+			onclose={() => {
+				showingRoomList = false;
+				creatingRoom = false;
+			}}
+		>
+			{#if creatingRoom}
+				<CreateRoomForm />
+			{:else}
+				<button
+					type="button"
+					class="button ChatScreen-create-room"
+					onclick={() => {
+						app.actions.onClearCommunityResult();
+						creatingRoom = true;
+					}}
+				>
+					+ {t('community.room.title')}
+				</button>
+				<ChatRoomList roomsById={app.state.roomsById} onJoinRoom={joinRoom} />
+			{/if}
 		</Modal>
 	{/if}
 </KgsGate>
 
 <style>
+	.ChatScreen-create-room {
+		margin-bottom: 10px;
+	}
+
 	.visually-hidden {
 		position: absolute;
 		width: 1px;

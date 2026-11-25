@@ -68,3 +68,43 @@ describe('community', () => {
 		await expect.element(page.getByText('Die Nachricht wurde hinterlassen.')).toBeVisible();
 	});
 });
+
+describe('rooms and statistics', () => {
+	afterEach(() => {
+		app._actions = null;
+	});
+
+	it('creates a room and shows the answer of KGS', async () => {
+		const actions = { onCreateRoom: vi.fn(), onClearCommunityResult: vi.fn() };
+		app._actions = actions as unknown as AppActions;
+		app.state = {
+			...getInitialState({ status: 'loggedIn', network: 'online', retryTimes: 0 })
+		};
+		const { default: CreateRoomForm } = await import('./CreateRoomForm.svelte');
+		await render(CreateRoomForm);
+		await page.getByRole('textbox', { name: 'Name' }).fill('Andys Lernraum');
+		await page.getByRole('checkbox', { name: /Privat/ }).click();
+		await page.getByRole('button', { name: 'Raum erstellen' }).click();
+		expect(actions.onCreateRoom).toHaveBeenCalledWith('Andys Lernraum', '', true);
+		app.state = {
+			...app.state,
+			communityResult: { type: 'ROOM_CREATE_NAME_TAKEN', at: Date.now() }
+		};
+		await expect.element(page.getByText('Diesen Namen gibt es schon.')).toBeVisible();
+	});
+
+	it('loads and shows the server statistics', async () => {
+		const actions = { onRequestServerStats: vi.fn() };
+		app._actions = actions as unknown as AppActions;
+		app.state = {
+			...getInitialState({ status: 'loggedIn', network: 'online', retryTimes: 0 }),
+			serverStats: { logins: 1532, games: 301, version: '3.5.27' }
+		};
+		const { default: ServerStats } = await import('./ServerStats.svelte');
+		await render(ServerStats);
+		await page.getByRole('button', { name: 'Laden' }).click();
+		expect(actions.onRequestServerStats).toHaveBeenCalled();
+		await expect.element(page.getByText('1.532')).toBeVisible();
+		await expect.element(page.getByText('3.5.27')).toBeVisible();
+	});
+});
