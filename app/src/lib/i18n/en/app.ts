@@ -44,6 +44,7 @@ export const app: Translation<typeof de> = {
 	'app.channels.title': 'Channels',
 	'app.replay.pageTitle': 'Replay – GoTV',
 	'app.replay.title': 'Replay',
+	'app.replay.back': 'Back',
 	'app.watch.pageTitle': 'Watch – GoTV',
 	'app.watch.title': 'Watch games',
 

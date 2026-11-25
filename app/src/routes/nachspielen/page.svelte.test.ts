@@ -81,6 +81,23 @@ describe('Nachspielen', () => {
 		).toEqual(['game:kgs-77']);
 	});
 
+	it('shows the logo and "Zurück" only while a game is open', async () => {
+		await render(Page);
+		await expect.element(page.getByRole('heading', { name: 'Partie laden' })).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Zurück' })).not.toBeInTheDocument();
+
+		const game = { id: 78, type: 'free', tree: parseSgf('(;SZ[9]PB[kim]PW[lee];B[aa])') };
+		app.state = {
+			...getInitialState(LOGGED_OUT),
+			tvReplayGameId: 78,
+			gamesById: { 78: game as unknown as GameChannel }
+		};
+		await expect.element(page.getByRole('link', { name: 'GoTV, zu Live' })).toBeVisible();
+		const close = vi.spyOn(app, 'closeReplay');
+		await page.getByRole('button', { name: 'Zurück' }).click();
+		expect(close).toHaveBeenCalled();
+	});
+
 	it('opens a shared link at its move (zug)', async () => {
 		mocked.url = new URL(
 			'http://localhost/nachspielen?sgf=' +

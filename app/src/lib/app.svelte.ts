@@ -138,6 +138,12 @@ class GoTvApp {
 		goto(target.pathname + target.search).catch(() => {});
 	}
 
+	// "Zurück" on the Nachspielen board: forget the handed-over KGS game, so
+	// Nachspielen opens with its lists again.
+	closeReplay() {
+		this.store?.dispatch({ type: 'TV_REPLAY_GAME', gameId: null });
+	}
+
 	// Keep state.nav in line with the page shown (back/forward, links).
 	syncNav(path: string) {
 		const nav = navForPath(path);

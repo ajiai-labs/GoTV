@@ -9,6 +9,8 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { page } from '$app/state';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { app } from '#lib/app.svelte.ts';
 	import { fetchTvEvents } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
@@ -17,6 +19,7 @@
 	import SgfReplayView from '#lib/ui/tv/SgfReplayView.svelte';
 	import RecentlyReplayed from '#lib/ui/tv/RecentlyReplayed.svelte';
 	import RecentReplays from '#lib/ui/tv/RecentReplays.svelte';
+	import HomeLink from '#lib/ui/HomeLink.svelte';
 
 	// Calendar data and "now" are refreshed like the old TV screen did.
 	const REFRESH_MS = 60000;
@@ -38,6 +41,24 @@
 				? 'game-' + String(replayGameId)
 				: 'manual'
 	);
+
+	// A game is open: the layout hides the top bar, this page shows the
+	// small logo and "Zurück" instead.
+	let boardOpen = $derived(!!sgfUrl || !!replayTree);
+	// "Zurück" returns to where the game was opened from (calendar, game,
+	// list); opened directly from a link, it goes to the Nachspielen lists.
+	let cameFromApp = false;
+	afterNavigate(({ from }) => {
+		if (from) cameFromApp = true;
+	});
+	function onBack() {
+		app.closeReplay();
+		if (cameFromApp) {
+			history.back();
+		} else {
+			goto(resolve('/nachspielen')).catch(() => {});
+		}
+	}
 
 	let events = $state.raw<Array<TvEvent>>([]);
 	let now = $state(Date.now());
@@ -102,6 +123,15 @@
 <h1 class="visually-hidden">{t('app.replay.title')}</h1>
 
 <div class="page">
+	{#if boardOpen}
+		<div class="board-top">
+			<HomeLink />
+			<button type="button" class="button" onclick={onBack}>
+				<span aria-hidden="true">‹</span>
+				{t('app.replay.back')}
+			</button>
+		</div>
+	{/if}
 	<div class="replay" bind:this={replayElement}>
 		{#key viewKey}
 			<SgfReplayView
@@ -129,6 +159,12 @@
 
 	.replay {
 		scroll-margin-top: 8px;
+	}
+
+	.board-top {
+		display: flex;
+		align-items: center;
+		gap: 12px;
 	}
 
 	.lists {

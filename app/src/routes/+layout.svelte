@@ -107,6 +107,14 @@
 						appState.playGameId != null &&
 						!!appState.gamesById[appState.playGameId])))
 	);
+	// A board is open (own game, watching, a loaded replay): no top bar, like a
+	// separate game window. The board pages show a small logo instead (HomeLink).
+	let boardOpen = $derived(
+		(page.route.id === '/nachspielen' &&
+			(!!page.url.searchParams.get('sgf') ||
+				(appState.tvReplayGameId != null && !!appState.gamesById[appState.tvReplayGameId]))) ||
+			(wideBoard && page.route.id !== '/nachspielen')
+	);
 
 	// Unseen chat messages: direct messages count "major", rooms "minor".
 	let chatBadge = $derived.by(() => {
@@ -185,58 +193,58 @@
 	{/each}
 {/snippet}
 
-<div class="app" class:wide-board={wideBoard}>
-	<header class="top">
-		<a
-			class="brand"
-			class:on-air={liveNow}
-			href={resolve('/')}
-			aria-label={liveNow
-				? `${t('app.layout.home')} – ${t('app.nav.liveNow')}`
-				: t('app.layout.home')}
-			title={liveNow ? t('app.nav.liveNow') : undefined}
-		>
-			<img src={logo} alt="" width="34" height="34" />
-			<span>GoTV</span>
-		</a>
-		<nav
-			aria-label={t('app.layout.areas')}
-			onpointerenter={() => (pointerOnNav = true)}
-			onpointerleave={() => (pointerOnNav = false)}
-		>
-			{#if shownOrder === 'kgs'}
-				{@render kgsNav()}
-				<span class="divider" aria-hidden="true"></span>
-				{@render tvNav()}
-			{:else}
-				{@render tvNav()}
-				<span class="divider" aria-hidden="true"></span>
-				{@render kgsNav()}
-			{/if}
-		</nav>
-		<div class="account">
-			{#if appState.currentUser}
-				<a
-					class="who"
-					href={resolve('/konto')}
-					aria-current={isCurrent('/konto') ? 'page' : undefined}
-				>
-					<UserName user={appState.currentUser} />
-				</a>
-			{:else if !config.guestOnly}
-				<a class="who" href={resolve('/beobachten')}>{t('app.layout.login')}</a>
-			{/if}
+<div class="app" class:wide-board={wideBoard} class:board-open={boardOpen}>
+	{#if !boardOpen}<header class="top">
 			<a
-				class="settings"
-				href={resolve('/einstellungen')}
-				aria-current={isCurrent('/einstellungen') ? 'page' : undefined}
-				aria-label={t('app.layout.settings')}
-				title={t('app.layout.settings')}
+				class="brand"
+				class:on-air={liveNow}
+				href={resolve('/')}
+				aria-label={liveNow
+					? `${t('app.layout.home')} – ${t('app.nav.liveNow')}`
+					: t('app.layout.home')}
+				title={liveNow ? t('app.nav.liveNow') : undefined}
 			>
-				⚙
+				<img src={logo} alt="" width="34" height="34" />
+				<span>GoTV</span>
 			</a>
-		</div>
-	</header>
+			<nav
+				aria-label={t('app.layout.areas')}
+				onpointerenter={() => (pointerOnNav = true)}
+				onpointerleave={() => (pointerOnNav = false)}
+			>
+				{#if shownOrder === 'kgs'}
+					{@render kgsNav()}
+					<span class="divider" aria-hidden="true"></span>
+					{@render tvNav()}
+				{:else}
+					{@render tvNav()}
+					<span class="divider" aria-hidden="true"></span>
+					{@render kgsNav()}
+				{/if}
+			</nav>
+			<div class="account">
+				{#if appState.currentUser}
+					<a
+						class="who"
+						href={resolve('/konto')}
+						aria-current={isCurrent('/konto') ? 'page' : undefined}
+					>
+						<UserName user={appState.currentUser} />
+					</a>
+				{:else if !config.guestOnly}
+					<a class="who" href={resolve('/beobachten')}>{t('app.layout.login')}</a>
+				{/if}
+				<a
+					class="settings"
+					href={resolve('/einstellungen')}
+					aria-current={isCurrent('/einstellungen') ? 'page' : undefined}
+					aria-label={t('app.layout.settings')}
+					title={t('app.layout.settings')}
+				>
+					⚙
+				</a>
+			</div>
+		</header>{/if}
 
 	{#if offline}
 		<OfflineAlert />
@@ -290,6 +298,10 @@
 
 	.app.wide-board {
 		max-width: none;
+	}
+
+	.app.board-open {
+		padding-top: max(10px, env(safe-area-inset-top));
 	}
 
 	@media (min-width: 901px) {

@@ -111,7 +111,8 @@ describe('GameScreen', () => {
 		await page.getByRole('button', { name: 'Ein Zug zurück' }).click();
 		expect(actions.onChangeCurrentNode).toHaveBeenCalledWith(game, game.tree!.currentLine[1]);
 		await page.getByRole('button', { name: 'Zurück' }).click();
-		expect(actions.onLeaveGame).toHaveBeenCalledWith(game);
+		expect(actions.onLeaveGame).toHaveBeenCalledWith(game); // The small logo replaces the hidden top bar.
+		await expect.element(page.getByRole('link', { name: 'GoTV, zu Live' })).toBeVisible();
 	});
 
 	it('plays a free point on our move, with the colour of our role', async () => {

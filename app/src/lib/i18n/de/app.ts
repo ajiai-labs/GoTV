@@ -46,6 +46,7 @@ export const app = {
 	'app.channels.title': 'Kanäle',
 	'app.replay.pageTitle': 'Nachspielen – GoTV',
 	'app.replay.title': 'Nachspielen',
+	'app.replay.back': 'Zurück',
 	'app.watch.pageTitle': 'Beobachten – GoTV',
 	'app.watch.title': 'Partien beobachten',
 

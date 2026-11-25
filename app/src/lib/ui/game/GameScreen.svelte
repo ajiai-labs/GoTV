@@ -10,6 +10,7 @@
 	// A watched game that belongs to a live broadcast shows the stream above
 	// the board (two-click embed).
 	import { onMount, tick } from 'svelte';
+	import HomeLink from '#lib/ui/HomeLink.svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import {
@@ -276,6 +277,7 @@
 	bind:this={screenEl}
 >
 	<header class="GameScreen-header">
+		<HomeLink />
 		{#if !playing}
 			<button type="button" class="GameScreen-back button" onclick={onLeave}>
 				<span aria-hidden="true">‹</span>
