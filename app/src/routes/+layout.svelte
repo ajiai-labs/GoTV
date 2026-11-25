@@ -114,6 +114,7 @@
 	let boardOpen = $derived(
 		(page.route.id === '/nachspielen' &&
 			(!!page.url.searchParams.get('sgf') ||
+				!!app.localCopy ||
 				(appState.tvReplayGameId != null && !!appState.gamesById[appState.tvReplayGameId]))) ||
 			(wideBoard && page.route.id !== '/nachspielen')
 	);
