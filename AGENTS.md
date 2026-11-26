@@ -743,6 +743,39 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   Iframes, also YouTube/Twitch). Kein Tauri-Updater-Plugin (bräuchte Signaturschlüssel).
   Wirkt erst ab dem nächsten Release (0.2.0 hat den Hinweis noch nicht).
 
+## Mehrere Fenster, eine KGS-Verbindung (26.11.2026)
+
+Anlass: Video des Nutzers mit drei Tabs (Spielen, Beobachten, Chat). Jeder Tab stellte die
+gespeicherte Anmeldung wieder her und pollte DIESELBE KGS-Sitzung (gemeinsames Cookie) - jede
+KGS-Nachricht kam nur in einem Tab an. Wunsch: Partien in eigenen Fenstern wie CGoban; Fenster,
+die schon offen sind, kommen nach vorn statt doppelt.
+
+- `app/src/lib/windowLink.ts`: das erste Fenster hält die Verbindung (Web Lock
+  `gotv-kgs-connection`, endet mit dem Fenster), weitere Fenster sind "follower": Snapshot des
+  Zustands über `BroadcastChannel('gotv-kgs-link')`, danach dieselben Nachrichten (Folgenummer,
+  bei Lücke neuer Snapshot) durch denselben Reducer (`AppStore.setOnDispatch`/`replaceState`).
+  Aktionen eines Followers gehen als `call` an den Besitzer, nur die Partie-Aktionen in
+  `FORWARDED_ACTIONS` (nichts, was das Hauptfenster umschaltet). Schließt der Besitzer, übernimmt
+  ein wartender Follower mit seinem gespiegelten Zustand und pollt weiter. Ohne Web Locks /
+  BroadcastChannel und in Tests (`MODE === 'test'`) ist jedes Fenster Besitzer wie vorher.
+- Ein zweiter Tab zeigt auf KGS-Seiten "KGS läuft in einem anderen GoTV-Fenster" (`KgsGate`);
+  Live/Kalender/Kanäle/Nachspielen gehen normal. Follower zeigen keine Profil-Dialoge,
+  Erinnerungen, Folgen-Meldungen, Postfach- oder Update-Hinweise (nur das Hauptfenster).
+- Partiefenster `/partie?id=N` (`routes/partie`, `lib/gameWindows.ts`): Klick auf eine Partie
+  (Beobachten, Gefolgte Spieler, Raumchat, eigene laufende Partie auf Spielen) öffnet sie per
+  `window.open(url, 'gotv-partie-N')`; ein schon offenes Fenster kommt nach vorn
+  (`app.watchGame`). Blockiert der Browser, zeigt das Hauptfenster die Partie wie bisher.
+  "Eigenes Fenster" im Partiekopf verschiebt eine angezeigte Partie (`app.moveGameToWindow`,
+  `onShowGameElsewhere`). Partien, die ohne Klick beginnen (Automatch, angenommene
+  Herausforderung), öffnen im Hauptfenster - Browser blockieren Fenster ohne Klick. Schließen
+  eines Fensters verlässt eine beobachtete Partie bei KGS, die eigene läuft weiter.
+  Einstellung "Partien in eigenem Fenster öffnen" (`gotv.gameWindows`, Vorgabe an).
+- Tauri (`gotv-desktop/src/main.rs`): `on_new_window` macht aus window.open auf den lokalen
+  Server ein weiteres App-Fenster (`window_features` = verwandte Webview, gemeinsamer Speicher);
+  andere Adressen (Links aus Stream-Playern) gehen in den System-Browser. Wirkt erst ab dem
+  nächsten Desktop-Release. Die Skript-Installation (Chromium `--app`) öffnet Pop-ups selbst.
+- NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.
+
 ## Steinoptik (26.11.2026)
 
 Weiß wie Muschelsteine (gedämpftes Elfenbein statt Reinweiß, feine Wachstumslinien, 8 Varianten,

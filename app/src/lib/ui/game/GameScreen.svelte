@@ -14,6 +14,7 @@
 	import Modal from '#lib/ui/Modal.svelte';
 	import { playStoneClick } from '#lib/sound/gameSounds.ts';
 	import { app } from '#lib/app.svelte.ts';
+	import { loadGameWindows } from '#lib/gameWindows.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import {
 		getGameChatSections,
@@ -75,6 +76,7 @@
 	let {
 		game,
 		playing = false,
+		inWindow = false,
 		tvEvents = [],
 		currentUser: currentUserProp,
 		usersByName: usersByNameProp,
@@ -82,6 +84,8 @@
 	}: {
 		game: GameChannel;
 		playing?: boolean;
+		// In its own window (/partie): "Zurück" closes the window.
+		inWindow?: boolean;
 		// Calendar events: a watched game of a live broadcast shows its stream.
 		tvEvents?: Array<TvEvent>;
 		// Defaults: from the app state.
@@ -223,6 +227,14 @@
 
 	function onLeave() {
 		app.actions.onLeaveGame(game);
+		if (inWindow) window.close();
+	}
+
+	// "Eigenes Fenster": the game moves out of the main window.
+	let canMoveOut = $derived(!inWindow && loadGameWindows());
+	let windowRefused = $state(false);
+	function onMoveToWindow() {
+		windowRefused = !app.moveGameToWindow(game.id);
 	}
 
 	// Leaving an own running game asks first, as CGoban does: leave anyway,
@@ -318,18 +330,32 @@
 	bind:this={screenEl}
 >
 	<header class="GameScreen-header">
-		<HomeLink />
+		{#if !inWindow}<HomeLink />{/if}
 		{#if !playing}
 			<button type="button" class="GameScreen-back button" onclick={onLeave}>
-				<span aria-hidden="true">‹</span>
-				{t('game.screen.back')}
+				<span aria-hidden="true">{inWindow ? '×' : '‹'}</span>
+				{inWindow ? t('game.screen.closeWindow') : t('game.screen.back')}
 			</button>
 		{/if}
 		<h1 class="GameScreen-title">{title}</h1>
+		{#if canMoveOut}
+			<button
+				type="button"
+				class="GameScreen-own-window button"
+				onclick={onMoveToWindow}
+				title={t('game.screen.ownWindowHint')}
+			>
+				<span aria-hidden="true">⧉</span>
+				{t('game.screen.ownWindow')}
+			</button>
+		{/if}
 		{#if !playing}
 			<GameMoreMenu {game} {roomsById} kgsTools />
 		{/if}
 	</header>
+	{#if windowRefused}
+		<p class="GameScreen-window-refused" role="status">{t('game.screen.ownWindowRefused')}</p>
+	{/if}
 
 	<div
 		class="GameScreen-main"
@@ -502,6 +528,16 @@
 		align-items: center;
 		gap: 12px;
 		min-height: 40px;
+	}
+
+	.GameScreen-own-window {
+		white-space: nowrap;
+	}
+
+	.GameScreen-window-refused {
+		margin: 4px 0 0;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
 	}
 
 	.GameScreen-title {

@@ -40,5 +40,9 @@ export const settings: Translation<typeof de> = {
 	'settings.sounds.messages.name': 'Chat message',
 	'settings.sounds.messages.description':
 		'When someone writes to you: a private message or the chat of your running game.',
-	'settings.sounds.sample': 'Listen'
+	'settings.sounds.sample': 'Listen',
+	'settings.gameWindows': 'Game windows',
+	'settings.gameWindows.name': 'Open games in their own window',
+	'settings.gameWindows.description':
+		'As in CGoban: every game you click gets a window of its own; if it is open already, it comes to the front. The main window keeps the lists and chats.'
 };

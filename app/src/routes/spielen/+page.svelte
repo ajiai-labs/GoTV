@@ -63,7 +63,7 @@
 	}
 
 	function onSelectGameChannel(gameId: number) {
-		app.actions.onJoinGame(gameId);
+		app.watchGame(gameId);
 	}
 
 	function onSelectGameSummary(game: GameSummary) {

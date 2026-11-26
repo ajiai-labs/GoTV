@@ -39,5 +39,9 @@ export const settings = {
 	'settings.sounds.messages.name': 'Chatnachricht',
 	'settings.sounds.messages.description':
 		'Wenn dir jemand schreibt: private Nachricht oder Chat in deiner laufenden Partie.',
-	'settings.sounds.sample': 'Anhören'
+	'settings.sounds.sample': 'Anhören',
+	'settings.gameWindows': 'Partiefenster',
+	'settings.gameWindows.name': 'Partien in eigenem Fenster öffnen',
+	'settings.gameWindows.description':
+		'Wie in CGoban: jede Partie, die du anklickst, bekommt ein eigenes Fenster; ist es schon offen, kommt es nach vorn. Das Hauptfenster behält Listen und Chats.'
 } satisfies Record<string, Message>;

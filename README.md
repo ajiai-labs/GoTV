@@ -74,6 +74,9 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   While a board is open (own game, watching, replay) the menu bar is hidden, as
   in a separate game window; the small GoTV logo leads back. Leaving your own
   running game asks first: back to the game, resign or leave.
+- **Games in their own windows, as in CGoban:** a clicked game opens in a window of
+  its own (an open one comes to the front); the main window keeps lists and chats.
+  All windows share one KGS connection - a second tab says where KGS runs.
 - **Stones like a real set:** white like clam shell (muted ivory with fine
   growth lines, every stone different), black like matte slate; white is
   drawn 2 % smaller, as in real Go sets, because light stones look bigger.

@@ -63,7 +63,7 @@
 				games={appState.activeGames}
 				filter={appState.watchFilter}
 				roomsById={appState.roomsById}
-				onSelect={(id: number) => app.actions.onJoinGame(id)}
+				onSelect={(id: number) => app.watchGame(id)}
 			/>
 		</section>
 	{/if}

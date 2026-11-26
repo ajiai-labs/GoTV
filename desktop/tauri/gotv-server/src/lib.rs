@@ -12,6 +12,10 @@ mod open;
 mod proxy;
 pub mod routing;
 
+/// Opens a URL in the system browser (also used by the desktop app for
+/// links that a page opens in a new window).
+pub use open::open_in_browser;
+
 use std::io;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};

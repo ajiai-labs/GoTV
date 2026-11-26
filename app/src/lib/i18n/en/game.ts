@@ -11,6 +11,11 @@ export const game: Translation<typeof de> = {
 	// GameScreen
 	'game.screen.over': 'Game over',
 	'game.screen.overWithScore': 'Game over: {score}',
+	'game.screen.closeWindow': 'Close window',
+	'game.screen.ownWindow': 'Own window',
+	'game.screen.ownWindowHint': 'Show the game in a window of its own, as in CGoban',
+	'game.screen.ownWindowRefused':
+		'The browser did not open the window. Allow pop-ups for GoTV and try again.',
 	'game.screen.back': 'Back',
 	'game.screen.board': 'Board',
 	'game.screen.broadcast': 'Broadcast',

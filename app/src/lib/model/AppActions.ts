@@ -332,6 +332,15 @@ export class AppActions {
 			}
 		}
 	};
+	// The game moved to its own window: this window stops showing it, but
+	// stays joined (the game window needs the channel).
+	onShowGameElsewhere = (gameId: number) => {
+		const state = this._store.getState();
+		const msgs: Array<KgsMessage> = [];
+		if (state.playGameId === gameId) msgs.push({ type: 'PLAY_GAME', gameId: null });
+		if (state.watchGameId === gameId) msgs.push({ type: 'WATCH_GAME', gameId: null });
+		if (msgs.length) this._store.dispatch(msgs);
+	};
 	// A game in its own window (windowLink.ts): join it at KGS without
 	// switching this window to it. Nothing happens if it is joined already.
 	onJoinGameQuietly = (gameId: number) => {

@@ -12,6 +12,11 @@ export const game = {
 	// GameScreen
 	'game.screen.over': 'Partie beendet',
 	'game.screen.overWithScore': 'Partie beendet: {score}',
+	'game.screen.closeWindow': 'Fenster schließen',
+	'game.screen.ownWindow': 'Eigenes Fenster',
+	'game.screen.ownWindowHint': 'Die Partie in einem eigenen Fenster zeigen, wie in CGoban',
+	'game.screen.ownWindowRefused':
+		'Der Browser hat das Fenster nicht geöffnet. Erlaube Pop-ups für GoTV und versuche es noch einmal.',
 	'game.screen.back': 'Zurück',
 	'game.screen.board': 'Brett',
 	'game.screen.broadcast': 'Übertragung',

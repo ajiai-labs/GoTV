@@ -100,6 +100,7 @@
 	let appState = $derived(app.state);
 	let wideBoard = $derived(
 		page.route.id === '/nachspielen' ||
+			page.route.id === '/partie' ||
 			(!config.guestOnly &&
 				!!appState.currentUser &&
 				((page.route.id === '/beobachten' &&
@@ -111,11 +112,17 @@
 	);
 	// A board is open (own game, watching, a loaded replay): no top bar, like a
 	// separate game window. The board pages show a small logo instead (HomeLink).
+	// A game in its own window (/partie): only the game.
+	let gameWindow = $derived(page.route.id === '/partie');
+	// Windows that only mirror the KGS connection of another one: no second
+	// notification, reminder or profile dialog from them.
+	let mirror = $derived(app.role === 'follower' || gameWindow);
 	let boardOpen = $derived(
-		(page.route.id === '/nachspielen' &&
-			(!!page.url.searchParams.get('sgf') ||
-				!!app.localCopy ||
-				(appState.tvReplayGameId != null && !!appState.gamesById[appState.tvReplayGameId]))) ||
+		gameWindow ||
+			(page.route.id === '/nachspielen' &&
+				(!!page.url.searchParams.get('sgf') ||
+					!!app.localCopy ||
+					(appState.tvReplayGameId != null && !!appState.gamesById[appState.tvReplayGameId]))) ||
 			(wideBoard && page.route.id !== '/nachspielen')
 	);
 
@@ -147,7 +154,7 @@
 
 	// Chat, Beobachten and Spielen fill the window height (iPad, no scrolling):
 	// no footer there.
-	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen'];
+	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen', '/partie'];
 	let showFooter = $derived.by(() => {
 		void page.url.pathname;
 		return !FULL_HEIGHT_PAGES.some((path) => isCurrent(path));
@@ -256,8 +263,10 @@
 	<!-- Web version on iPad/iPhone Safari: how to add GoTV to the home screen -->
 	<HomeScreenHint />
 	<!-- Desktop apps: a newer GoTV on GitHub -->
-	<DesktopUpdateBanner />
-	{#if !config.guestOnly}
+	{#if !mirror}
+		<DesktopUpdateBanner />
+	{/if}
+	{#if !config.guestOnly && !mirror}
 		<MailboxNotice />
 	{/if}
 
@@ -274,13 +283,15 @@
 		</footer>
 	{/if}
 
-	{#if appState.userDetailsRequest}
+	{#if appState.userDetailsRequest && !mirror}
 		<UserDetailsModal />
 	{/if}
 	<!-- "Mein GoTV": notifications 10 min before a starred event, app-wide -->
-	<ReminderWatcher />
+	{#if !mirror}
+		<ReminderWatcher />
+	{/if}
 	<!-- Followed KGS players: a notification when one starts a game -->
-	{#if !config.guestOnly}
+	{#if !config.guestOnly && !mirror}
 		<FollowWatcher />
 		<FavoriteRoomsWatcher />
 	{/if}

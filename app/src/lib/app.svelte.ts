@@ -24,6 +24,7 @@ import {
 	waitForConnection
 } from './windowLink';
 import type { LinkMessage } from './windowLink';
+import { loadGameWindows, openGameWindow } from './gameWindows';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
 // Nachspielen belong to it as well.
@@ -230,6 +231,25 @@ class GoTvApp {
 				feed.ready ? store.getState() : undefined
 			);
 		});
+	}
+
+	// A click on a KGS game (lists, followed players, room chat): in its own
+	// window when that is switched on and the browser allows it, otherwise
+	// here as before.
+	watchGame(gameId: number | string) {
+		if (typeof gameId === 'number' && loadGameWindows()) {
+			this.actions.onJoinGameQuietly(gameId);
+			if (openGameWindow(gameId)) return;
+		}
+		this.actions.onJoinGame(gameId);
+	}
+
+	// "Eigenes Fenster" on a game shown here: the game moves to its window,
+	// this window goes back to its list. False if the browser refused.
+	moveGameToWindow(gameId: number): boolean {
+		if (!openGameWindow(gameId)) return false;
+		this.actions.onShowGameElsewhere(gameId);
+		return true;
 	}
 
 	// Opens an SGF (tournament game, calendar entry, recent replay) on the

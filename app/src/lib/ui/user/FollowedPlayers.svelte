@@ -50,7 +50,7 @@
 							<button
 								type="button"
 								class="button button-primary"
-								onclick={() => app.actions.onJoinGame(item.game.id)}
+								onclick={() => app.watchGame(item.game.id)}
 							>
 								{t('chat.followed.watch')}
 							</button>

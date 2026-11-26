@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import { loadGameWindows, saveGameWindows } from '#lib/gameWindows.ts';
 	import {
 		DEFAULT_SOUND_PREFS,
 		loadSoundPrefs,
@@ -43,6 +44,9 @@
 			]
 		}
 	];
+
+	// KGS games in their own windows (gameWindows.ts).
+	let gameWindows = $state(typeof localStorage === 'undefined' ? true : loadGameWindows());
 
 	// Sounds of an own game (gameSounds.ts), each with a short sample.
 	const SOUND_KINDS: Array<GameSoundKind> = ['stones', 'gameStart', 'countdown', 'messages'];
@@ -139,6 +143,24 @@
 				</button>
 			</div>
 		{/each}
+	</fieldset>
+
+	<fieldset class="windows">
+		<legend>{t('settings.gameWindows')}</legend>
+		<label class="sound-switch">
+			<input
+				type="checkbox"
+				checked={gameWindows}
+				onchange={(event) => {
+					gameWindows = event.currentTarget.checked;
+					saveGameWindows(gameWindows);
+				}}
+			/>
+			<span>
+				<span class="name">{t('settings.gameWindows.name')}</span>
+				<span class="muted">{t('settings.gameWindows.description')}</span>
+			</span>
+		</label>
 	</fieldset>
 {/if}
 

@@ -70,6 +70,41 @@ describe('Beobachten', () => {
 		expect(actions.onJoinGame).toHaveBeenCalledWith(12);
 	});
 
+	it('opens a clicked game in its own window when that is switched on', async () => {
+		localStorage.setItem('gotv.gameWindows', 'on');
+		const open = vi.fn(() => ({ closed: false, focus: vi.fn() }));
+		vi.stubGlobal('open', open);
+		actions.onJoinGameQuietly = vi.fn();
+		setState();
+		await render(Page);
+		await page.getByRole('button', { name: /Zweite Partie/ }).click();
+		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(12);
+		expect(open).toHaveBeenCalledWith(
+			expect.stringMatching(/\/partie\?id=12$/),
+			'gotv-partie-12',
+			expect.any(String)
+		);
+		expect(actions.onJoinGame).not.toHaveBeenCalled();
+		// Clicked again: the open window comes to the front, no second one.
+		await page.getByRole('button', { name: /Zweite Partie/ }).click();
+		expect(open).toHaveBeenCalledTimes(1);
+		localStorage.removeItem('gotv.gameWindows');
+	});
+
+	it('shows the game here when the browser blocks the window', async () => {
+		localStorage.setItem('gotv.gameWindows', 'on');
+		vi.stubGlobal(
+			'open',
+			vi.fn(() => null)
+		);
+		actions.onJoinGameQuietly = vi.fn();
+		setState();
+		await render(Page);
+		await page.getByRole('button', { name: /Erste Partie/ }).click();
+		expect(actions.onJoinGame).toHaveBeenCalledWith(11);
+		localStorage.removeItem('gotv.gameWindows');
+	});
+
 	it('changes the remembered filter', async () => {
 		setState();
 		await render(Page);

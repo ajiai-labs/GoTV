@@ -66,7 +66,7 @@
 	}
 
 	function onJoinGame(gameId: number | string) {
-		app.actions.onJoinGame(gameId);
+		app.watchGame(gameId);
 	}
 
 	function onSelectChallenge(gameId: number) {

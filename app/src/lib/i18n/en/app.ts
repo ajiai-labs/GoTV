@@ -85,6 +85,8 @@ export const app: Translation<typeof de> = {
 	'app.login.loggingIn': 'Logging in …',
 	'app.login.register': 'Register at KGS',
 	'app.login.forgotPassword': 'Forgot password',
+	'app.gameWindow.title': 'Game',
+	'app.gameWindow.missing': 'This game does not exist (any more).',
 	'app.gate.otherWindowTitle': 'KGS is running in another GoTV window',
 	'app.gate.otherWindowText':
 		'GoTV is already open in another window or tab, and only one of them can be connected to KGS – otherwise moves and messages end up in the wrong window. Carry on there or close it: this window then takes over by itself. Live, calendar, channels and replay work here as usual.',
