@@ -38,50 +38,39 @@ export function gameWindowUrl(gameId: number): string {
 	return `${resolve('/partie')}?id=${gameId}`;
 }
 
-// The windows this window opened, to bring one back instead of a second.
-const opened = new Map<number, Window>();
-
-// A window by name: one that is open already (also opened by another GoTV
-// window) comes back as it is - no reload; a new one opens empty and then
-// loads `url`.
+// A window by name. A new one opens empty and then loads `url`. One that is
+// open already (also opened by another GoTV window) is closed and opened
+// afresh: Wayland desktops (GNOME) do not let a page bring another window to
+// the front - window.focus() silently does nothing there, so the click would
+// seem to do nothing (found by the user, 26.11.2026). A new window always
+// appears in front; what it shows lives at KGS and in the browser storage.
 function openNamed(url: string, name: string): Window | null {
 	const win = window.open('', name, FEATURES);
 	if (!win) return null;
 	try {
-		if (win.location.href === 'about:blank') win.location.replace(url);
+		if (win.location.href === 'about:blank') {
+			win.location.replace(url);
+			win.focus();
+			return win;
+		}
 	} catch {
-		// not readable: leave the window as it is
+		// not readable: open it afresh below
 	}
-	return win;
+	win.close();
+	const fresh = window.open(url, name, FEATURES);
+	fresh?.focus();
+	return fresh;
 }
 
 // Opens (or brings to the front) the window of a game. False if the browser
 // refused it - then the caller shows the game here.
 export function openGameWindow(gameId: number): boolean {
-	const known = opened.get(gameId);
-	if (known && !known.closed) {
-		known.focus();
-		return true;
-	}
-	const win = openNamed(gameWindowUrl(gameId), `gotv-partie-${gameId}`);
-	if (!win) return false;
-	opened.set(gameId, win);
-	win.focus();
-	return true;
+	return !!openNamed(gameWindowUrl(gameId), `gotv-partie-${gameId}`);
 }
 
 // The Brettübersicht (routes/bretter): one window for several games.
-let boardsWindow: Window | null = null;
 export function openBoardsWindow(): boolean {
-	if (boardsWindow && !boardsWindow.closed) {
-		boardsWindow.focus();
-		return true;
-	}
-	const win = openNamed(resolve('/bretter'), 'gotv-bretter');
-	if (!win) return false;
-	boardsWindow = win;
-	win.focus();
-	return true;
+	return !!openNamed(resolve('/bretter'), 'gotv-bretter');
 }
 
 // "Zur Brettübersicht" (Beobachten, player profile): the game goes on the

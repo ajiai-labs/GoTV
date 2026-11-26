@@ -795,9 +795,13 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Die eigene laufende Partie steht (abschaltbar: "Eigene Partie zeigen", `gotv.boardsOwnGame`)
   als erstes Brett mit Rahmen in der Übersicht, nur als Vorschau: Klick holt das eigene
   Partiefenster nach vorn, gespielt wird nur dort (Nutzer: das separate Fenster kann mehr).
-  Fenster werden per Name erst leer geöffnet und dann geladen (`openNamed`), damit ein schon
-  offenes Fenster - auch aus einem anderen GoTV-Fenster geöffnet - ohne Neuladen nach vorn kommt;
-  Tauri lässt dafür `about:blank` als lokales Fenster zu. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
+  Fenster werden per Name erst leer geöffnet und dann geladen (`openNamed`; Tauri lässt dafür
+  `about:blank` als lokales Fenster zu). Ist ein Fenster des Namens schon offen, wird es
+  geschlossen und frisch geöffnet: unter Wayland (GNOME, Rechner des Nutzers) tut
+  `window.focus()` auf ein anderes Fenster stillschweigend nichts - der Klick wirkte wie tot
+  (Befund 26.11.2026, ein verstecktes altes Brettübersicht-Fenster). Partie- und
+  Brettübersicht-Seite treten einer Partie wieder bei, sobald KGS die Mitgliedschaft beendet
+  (das ersetzte Fenster verlässt beobachtete Partien beim Schließen). Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
   ("die Fenster holt man sich über Beobachten oder das Profil"). Für Turnierübertragungen
   (mehrere Bretter) später dieselbe Steuerung - noch nicht gebaut.
 - NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.

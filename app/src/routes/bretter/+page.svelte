@@ -112,7 +112,9 @@
 	$effect(() => {
 		if (!app.started || !app.loggedIn) return;
 		for (const { game } of shown) {
-			if (game && !game.over) app.actions.onJoinGameQuietly(game.id);
+			// Again when KGS ends a membership (a window of that game closed).
+			const joined = !!app.state.channelMembership[game?.id ?? -1];
+			if (game && !game.over && !joined) app.actions.onJoinGameQuietly(game.id);
 		}
 	});
 

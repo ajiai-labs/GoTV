@@ -42,7 +42,12 @@ function setState(extra: Record<string, unknown> = {}) {
 
 // A window as window.open returns it: new and still empty.
 function newPopup() {
-	return { closed: false, focus: vi.fn(), location: { href: 'about:blank', replace: vi.fn() } };
+	return {
+		closed: false,
+		focus: vi.fn(),
+		close: vi.fn(),
+		location: { href: 'about:blank', replace: vi.fn() }
+	};
 }
 
 describe('Beobachten', () => {
@@ -89,9 +94,16 @@ describe('Beobachten', () => {
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-12', expect.any(String));
 		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/partie\?id=12$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
-		// Clicked again: the open window comes to the front, no second one.
+		// Clicked again while it is open: closed and opened afresh, so it shows
+		// in front (Wayland lets no page bring another window forward).
+		popup.location.href = 'http://localhost/partie?id=12';
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
-		expect(open).toHaveBeenCalledTimes(1);
+		expect(popup.close).toHaveBeenCalled();
+		expect(open).toHaveBeenLastCalledWith(
+			expect.stringMatching(/\/partie\?id=12$/),
+			'gotv-partie-12',
+			expect.any(String)
+		);
 		localStorage.removeItem('gotv.gameWindows');
 	});
 

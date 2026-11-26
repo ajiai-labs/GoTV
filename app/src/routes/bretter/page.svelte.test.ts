@@ -88,16 +88,26 @@ describe('Brettübersicht', () => {
 			gamesById: { ...app.state.gamesById, 95: game(95, me, anna) },
 			channelMembership: { 95: { type: 'game', complete: true, stale: false } }
 		};
-		const popup = { closed: false, focus: vi.fn(), location: { href: 'http://x/partie?id=95' } };
+		const popup = {
+			closed: false,
+			focus: vi.fn(),
+			close: vi.fn(),
+			location: { href: 'http://x/partie?id=95' }
+		};
 		const open = vi.fn(() => popup);
 		vi.stubGlobal('open', open);
 		await render(Page);
 		const own = page.getByRole('region', { name: 'Deine Partie' });
 		await expect.element(own).toBeVisible();
 		await own.getByRole('button').click();
-		// The open game window comes back as it is - not loaded again.
+		// The open game window is opened afresh, so it shows in front.
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-95', expect.any(String));
-		expect(popup.focus).toHaveBeenCalled();
+		expect(popup.close).toHaveBeenCalled();
+		expect(open).toHaveBeenLastCalledWith(
+			expect.stringMatching(/\/partie\?id=95$/),
+			'gotv-partie-95',
+			expect.any(String)
+		);
 		// Switched off: no own game here.
 		await page.getByRole('checkbox', { name: 'Eigene Partie zeigen' }).click();
 		await expect.element(own).not.toBeInTheDocument();

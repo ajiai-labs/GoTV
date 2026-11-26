@@ -23,9 +23,12 @@
 		return names.length ? names.join(' – ') : t('app.gameWindow.title');
 	});
 
-	// Join once the shared state is there (nothing happens if joined).
+	// Join once the shared state is there (nothing happens if joined) - and
+	// again if KGS ends the membership, e.g. when this window replaced an
+	// older one of the same game that left it on closing.
 	$effect(() => {
-		if (game && app.loggedIn && app.started) app.actions.onJoinGameQuietly(gameId);
+		const joined = !!app.state.channelMembership[gameId];
+		if (!joined && game && app.loggedIn && app.started) app.actions.onJoinGameQuietly(gameId);
 	});
 
 	onMount(() => {
