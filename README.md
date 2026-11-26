@@ -39,7 +39,9 @@ settings. GoTV is built with Svelte 5 + TypeScript (`app/`).
 **Desktop downloads and updates:** the files above always point to the latest
 release. A new release is built only when a version tag `desktop-vX.Y.Z` is pushed
 (`.github/workflows/desktop.yml`), so the desktop apps can be behind the browser
-version, which updates with every change on `master`.
+version, which updates with every change on `master`. From version 0.3.0 the desktop
+app says at start when a newer version is out ("Update herunterladen" opens the
+download); "Einstellungen → Über GoTV" shows the version and checks by hand.
 
 ## What GoTV does
 
@@ -51,7 +53,9 @@ version, which updates with every change on `master`.
   clocks and chat arrive in real time; each board is labelled KGS or OGS.
 - **Follows a match by itself:** name the OGS players of an event, or paste
   one OGS game link at the card ("OGS-Partielink zuordnen") - after each
-  game the next game of the same players appears automatically.
+  game the next game of the same players appears automatically. For the
+  Speed Go Championship GoTV knows the players' OGS accounts, so the board
+  appears next to the stream as soon as a game starts.
 - **Several boards at once:** a team match shows small live boards with
   players, ranks and move number; a click brings one up next to the stream.
 - **Kinomodus:** stream and board fill the window side by side, with an
@@ -68,15 +72,27 @@ version, which updates with every change on `master`.
   asks once more, so a mistaken tap on the tablet does not end the game. The
   edge between board and side column can be dragged to make the board bigger.
   While a board is open (own game, watching, replay) the menu bar is hidden, as
-  in a separate game window; the small GoTV logo leads back.
+  in a separate game window; the small GoTV logo leads back. Leaving your own
+  running game asks first: back to the game, resign or leave.
+- **Stones like a real set:** white like clam shell (muted ivory with fine
+  growth lines, every stone different), black like matte slate; white is
+  drawn 2 % smaller, as in real Go sets, because light stones look bigger.
+- **Watching, as in CGoban:** "Ergebnis schätzen" (score estimate - random
+  playouts, no AI, not in your own running game), "Lokal betrachten" (a copy
+  to step through on your own; KataGo stays off while the game runs on KGS)
+  and "Spiel kopieren in …" (into one of your rooms).
 - **Sounds while playing:** a stone click on every move, a clear chime when your
   game starts and a beep for each of the last 10 seconds on your clock - so you
   hear it away from the screen. Each can be switched off in the settings.
 - **Changed challenge terms:** if the challenge's creator answers with other
   terms, GoTV shows them with the changes highlighted to accept or decline.
-- **Unfinished and archived games:** an unfinished game of yours can be resumed
-  ("Partie fortsetzen" loads it into a room); a finished game from a player's
-  archive opens in Nachspielen ("In GoTV nachspielen") with KataGo.
+- **Unfinished and archived games:** all unfinished games of yours are listed
+  as in CGoban, games whose opponent is waiting first and in bold; "Partie
+  fortsetzen" loads one into a room. A finished game from a player's archive
+  opens in Nachspielen ("In GoTV nachspielen") with KataGo.
+- **KGS community:** friends, ignore and fan lists, messages for offline
+  players and your mailbox, "Keine Unterhaltungen" (decline private chats),
+  creating a room and the KGS server statistics.
 - **Follow KGS players:** "Folgen" in a player's profile; "Gefolgte Spieler"
   shows who plays right now with a link to the game, and GoTV notifies you
   when one starts a game (while GoTV is open). Favourite KGS rooms are joined
@@ -142,7 +158,7 @@ example: the EGF channel and the bundled EM 2026 final), design "Modern":
 <img src="./docs/screenshots/app/live.png" width="800" alt="Live: Twitch player of the EGF next to the board of the EM 2026 final">
 
 **Nachspielen with KataGo** - win chance, score and the five best moves on the
-board, design "Modern dunkel":
+board, clam shell and slate stones, design "Modern dunkel":
 
 <img src="./docs/screenshots/app/nachspielen-katago.png" width="800" alt="Replay of the EM 2026 final at move 88 with KataGo's five best moves">
 
@@ -156,16 +172,19 @@ replay:
 
 <img src="./docs/screenshots/app/kanaele-classic.png" width="800" alt="Channels page with week plan in the Classic design">
 
-**Einstellungen** - three designs, switched at once:
+**Einstellungen** - language, menu order, sounds while playing and three designs,
+switched at once:
 
-<img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings with the design choice">
+<img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings: language, menu order, sounds while playing, design choice">
 
 ## KGS client
 
 Logged in to KGS, GoTV is a complete KGS client: game lists, watching games with
 chat, room chat, direct messages, user details, challenges (create, propose,
-negotiate, changed terms), automatic opponent selection, resuming unfinished games
-and playing. Not available: rengo/simul, recorded KGS lectures (the KGS interface
+negotiate, changed terms), automatic opponent selection, resuming unfinished games,
+playing, score estimate, local copies, copying a game into a room, friend/ignore/fan
+lists, messages and mailbox, declining private chats, creating rooms and server
+statistics. Not available: rengo/simul, recorded KGS lectures (the KGS interface
 GoTV uses carries no sound for them) and admin tools.
 
 ## Rebuilt interface (Svelte 5)

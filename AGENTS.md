@@ -747,6 +747,10 @@ Nachbarn nie gleich), Schwarz wie matter Schiefer; Weiß 2 % kleiner wie bei ech
 Steine wirken größer). Vom Nutzer aus drei Entwürfen gewählt, gilt für beide Designs.
 `app/src/lib/ui/board/stoneLook.ts`, gezeichnet in `Board.svelte` (Linien einmal in `<defs>`,
 pro Stein ein `<use>`; Schiefer-Korn als Muster-Kachel, nicht als Filter pro Stein).
+README-Screenshots `docs/screenshots/app/nachspielen-katago.png` und `einstellungen.png` am
+26.11.2026 neu aufgenommen (Playwright gegen den Dev-Server auf Port 5199, 1280x800,
+`gotv.design` per localStorage); `live.png`, `kalender.png`, `kanaele-classic.png` zeigen keine
+Steine und sind unverändert. README um die Funktionen vom 25./26.11. ergänzt.
 
 ## CGoban-Funktionen aus den Videos des Nutzers (25.11.2026, abends)
 

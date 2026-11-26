@@ -232,8 +232,10 @@
 		padding: 0;
 	}
 
-	.language {
-		margin-bottom: calc(var(--gap) * 1.6);
+	/* The same space between all sections (sounds and design sat right
+	   under the section above). */
+	fieldset + fieldset {
+		margin-top: calc(var(--gap) * 1.6);
 	}
 
 	.languages {
