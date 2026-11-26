@@ -305,8 +305,7 @@ describe('GameScreen', () => {
 
 	it('resizes the board with the splitter, always fully visible, and remembers it', async () => {
 		const actions = mockActions();
-		localStorage.removeItem('gotv.gameSideWidth');
-		localStorage.removeItem('gotv.gameBoardWidth');
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(1900, 1100);
 		const props = { game: fixtureGame({ over: true, score: 'W+RESIGN' }) };
 		const view = await render(GameScreen, props);
@@ -333,13 +332,13 @@ describe('GameScreen', () => {
 		await view.unmount();
 		await render(GameScreen, props);
 		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
-		localStorage.removeItem('gotv.gameSideWidth');
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(414, 896);
 	});
 
 	it('grows the board with the window, as in CGoban', async () => {
 		mockActions();
-		localStorage.setItem('gotv.gameSideWidth', '380');
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(1200, 760);
 		await render(GameScreen, { game: fixtureGame({ over: true, score: 'W+RESIGN' }) });
 		const board = page.getByRole('img', { name: /Zug 2/ });
@@ -351,14 +350,20 @@ describe('GameScreen', () => {
 			.poll(() => board.element().getBoundingClientRect().width)
 			.toBeGreaterThan(small + 200);
 		expect(board.element().getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
-		localStorage.removeItem('gotv.gameSideWidth');
+		// A wide side column dragged in the big window, then half the screen:
+		// the board keeps its share instead of shrinking to a stamp.
+		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
+		(splitter.element() as HTMLElement).focus();
+		await userEvent.keyboard('{Home}'); // smallest board, widest side column
+		await page.viewport(960, 1040);
+		await expect.poll(() => board.element().getBoundingClientRect().width).toBeGreaterThan(300);
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(414, 896);
 	});
 
 	it('dragging the splitter onto the board places no stone', async () => {
 		const actions = mockActions();
-		localStorage.removeItem('gotv.gameSideWidth');
-		localStorage.removeItem('gotv.gameBoardWidth');
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(1180, 820);
 		await render(GameScreen, { game: fixtureGame(), playing: true });
 		const splitter = page.getByRole('slider', { name: 'Brett größer oder kleiner' });
@@ -367,14 +372,12 @@ describe('GameScreen', () => {
 		await userEvent.dragAndDrop(splitter, page.getByRole('img', { name: /Brett|board/i }).first());
 		expect(actions.onPlayMove).not.toHaveBeenCalled();
 		expect(Number(splitter.element().getAttribute('aria-valuenow'))).not.toBe(before);
-		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(414, 896);
 	});
 
 	it('keeps the whole board visible when it grows with the splitter', async () => {
 		const actions = mockActions();
-		localStorage.removeItem('gotv.gameSideWidth');
-		localStorage.removeItem('gotv.gameBoardWidth');
+		localStorage.removeItem('gotv.gameSideShare');
 		await page.viewport(1900, 1000);
 		await render(GameScreen, { game: fixtureGame() });
 		const board = page.getByRole('img', { name: /Zug 2/ });
@@ -395,7 +398,6 @@ describe('GameScreen', () => {
 		// No choice between fitting and scrolling any more.
 		await page.getByRole('button', { name: 'Mehr' }).click();
 		expect(page.getByText('Mit Scrollen vergrößern').elements()).toHaveLength(0);
-		localStorage.removeItem('gotv.gameBoardWidth');
 		await page.viewport(414, 896);
 	});
 

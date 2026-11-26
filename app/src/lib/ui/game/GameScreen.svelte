@@ -56,21 +56,25 @@
 	// Space the layout keeps below the page (padding of the app frame).
 	const BOTTOM_SPACE = 32;
 
-	// The splitter remembers the width of the side column, not of the board:
-	// the board takes the rest and grows with the window, as in CGoban (a
-	// fixed board width kept it small in a maximised window - user,
-	// 26.11.2026). An old `gotv.gameBoardWidth` is ignored.
-	const SIDE_WIDTH_KEY = 'gotv.gameSideWidth';
-	const SIDE_WIDTH_DEFAULT = 380;
+	// The splitter remembers the side column's SHARE of the width, not a board
+	// width in pixels: the board takes the rest and grows and shrinks with the
+	// window, as in CGoban (user, 26.11.2026 - a fixed board width stayed
+	// small in a maximised window, a fixed side width squeezed the board to a
+	// stamp in a half window). Older `gotv.gameBoardWidth`/`gotv.gameSideWidth`
+	// values are ignored.
+	const SIDE_SHARE_KEY = 'gotv.gameSideShare';
+	const SIDE_SHARE_DEFAULT = 0.3;
+	const SIDE_SHARE_MIN = 0.12;
+	const SIDE_SHARE_MAX = 0.55;
 	const SIDE_WIDTH_MIN = 280;
 	const BOARD_MIN_WIDTH = 320;
 	const BOARD_WIDTH_STEP = 20;
 	const SPLITTER_WIDTH = 24;
 
-	function loadWidth(key: string, minWidth: number): number | null {
+	function loadShare(): number | null {
 		try {
-			const value = Number(localStorage.getItem(key));
-			return Number.isFinite(value) && value >= minWidth ? value : null;
+			const value = Number(localStorage.getItem(SIDE_SHARE_KEY));
+			return value >= SIDE_SHARE_MIN && value <= SIDE_SHARE_MAX ? value : null;
 		} catch {
 			return null;
 		}
@@ -194,30 +198,29 @@
 	let mainEl: HTMLElement | undefined = $state();
 	let mainWidth = $state(0);
 	let boardAreaHeight = $state(0);
-	let preferredSideWidth = $state(loadWidth(SIDE_WIDTH_KEY, SIDE_WIDTH_MIN));
+	let sideShare = $state(loadShare());
+	let sideWidth = $derived(
+		Math.max(SIDE_WIDTH_MIN, Math.round(mainWidth * (sideShare ?? SIDE_SHARE_DEFAULT)))
+	);
 	let boardMaxWidth = $derived(Math.max(0, mainWidth - SPLITTER_WIDTH - SIDE_WIDTH_MIN));
 	let boardMinWidth = $derived(Math.min(BOARD_MIN_WIDTH, boardMaxWidth));
 	// The whole board always stays visible (no scrolling while playing): at
 	// most as wide as its column is high; more width goes to the side.
 	let fittedBoardWidth = $derived(Math.min(boardMaxWidth, boardAreaHeight));
 	let boardWidth = $derived(
-		Math.max(
-			boardMinWidth,
-			Math.min(
-				fittedBoardWidth,
-				mainWidth - SPLITTER_WIDTH - (preferredSideWidth ?? SIDE_WIDTH_DEFAULT)
-			)
-		)
+		Math.max(boardMinWidth, Math.min(fittedBoardWidth, mainWidth - SPLITTER_WIDTH - sideWidth))
 	);
 	// Once the board is large, reclaim vertical space above it. The threshold
 	// uses the column width, so compacting the header does not change it.
-	let compactHeader = $derived(preferredSideWidth !== null && boardWidth >= innerHeight * 0.75);
+	let compactHeader = $derived(sideShare !== null && boardWidth >= innerHeight * 0.75);
 
 	function setBoardWidth(value: number) {
+		if (mainWidth <= 0) return;
 		const board = Math.max(boardMinWidth, Math.min(boardMaxWidth, Math.round(value)));
-		preferredSideWidth = Math.max(SIDE_WIDTH_MIN, mainWidth - SPLITTER_WIDTH - board);
+		const side = mainWidth - SPLITTER_WIDTH - board;
+		sideShare = Math.min(SIDE_SHARE_MAX, Math.max(SIDE_SHARE_MIN, side / mainWidth));
 		try {
-			localStorage.setItem(SIDE_WIDTH_KEY, String(preferredSideWidth));
+			localStorage.setItem(SIDE_SHARE_KEY, sideShare.toFixed(3));
 		} catch {
 			// not remembered without storage
 		}

@@ -868,10 +868,12 @@ Steine und sind unverändert. README um die Funktionen vom 25./26.11. ergänzt.
   Modell: `model/community.ts`. Chat von Spielern auf der Ignorierliste blendet GoTV aus.
   Spielerprofil: Knöpfe Freund/Fan/Ignorieren, "Nachricht hinterlassen" bei Offline.
   Die Fanliste von KGS ist getrennt von GoTVs "Spielern folgen" (lokal).
-- Brettgröße wie CGoban (26.11.2026): die Trennkante merkt sich die Breite der SEITENSPALTE
-  (`gotv.gameSideWidth`), das Brett nimmt den Rest bis zur Fensterhöhe und wächst mit dem
-  Fenster (vorher feste Brettbreite `gotv.gameBoardWidth`, die im maximierten Fenster klein
-  blieb; der alte Wert wird ignoriert). Die vergrößerte Ansicht der Brettübersicht steht direkt
+- Brettgröße wie CGoban (26.11.2026): die Trennkante merkt sich den ANTEIL der Seitenspalte an
+  der Breite (`gotv.gameSideShare`, 0,12-0,55, Vorgabe 0,3, mindestens 280 px), das Brett nimmt
+  den Rest bis zur Fensterhöhe und wächst/schrumpft mit dem Fenster. Vorher feste Pixel: eine
+  feste Brettbreite blieb im maximierten Fenster klein, eine feste Spaltenbreite (im großen
+  Fenster gezogen) drückte das Brett im halben Fenster auf Briefmarkengröße. Alte Werte
+  `gotv.gameBoardWidth`/`gotv.gameSideWidth` werden ignoriert. Die vergrößerte Ansicht der Brettübersicht steht direkt
   unter `main` und ist `wideBoard`, damit sie wie ein Partiefenster das ganze Fenster füllt.
 - KGS-Brett immer "ans Fenster angepasst" (Nutzer, 25.11.2026): die Wahl "Mit Scrollen
   vergrößern" (Brett über die Fensterhöhe, seitlich scrollen) ist gestrichen - beim Spielen
