@@ -2,7 +2,9 @@
 	// Wraps every KGS page (Beobachten, Spielen, Chat, Suche, Konto): shows the
 	// page when logged in, the login form when not, and in the web version
 	// (GitHub Pages) a note - KGS only answers its own website, so KGS works
-	// in the desktop app only.
+	// in the desktop app only. A second GoTV tab or window, while another one
+	// holds the KGS connection (windowLink.ts), only says so - except a game
+	// window (`inWindow`), which shows the shared state.
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { Snippet } from 'svelte';
 	import { app } from '#lib/app.svelte.ts';
@@ -11,7 +13,7 @@
 	import Spinner from './Spinner.svelte';
 	import DesktopDownloads from './DesktopDownloads.svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { children, inWindow = false }: { children: Snippet; inWindow?: boolean } = $props();
 </script>
 
 {#if config.guestOnly}
@@ -23,6 +25,11 @@
 		<div class="downloads">
 			<DesktopDownloads />
 		</div>
+	</section>
+{:else if app.role === 'follower' && !inWindow}
+	<section class="note panel">
+		<h2 class="panel-title">{t('app.gate.otherWindowTitle')}</h2>
+		<p>{t('app.gate.otherWindowText')}</p>
 	</section>
 {:else if !app.started || !app.state.initialized}
 	<Spinner />

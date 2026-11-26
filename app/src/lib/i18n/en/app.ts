@@ -85,6 +85,9 @@ export const app: Translation<typeof de> = {
 	'app.login.loggingIn': 'Logging in …',
 	'app.login.register': 'Register at KGS',
 	'app.login.forgotPassword': 'Forgot password',
+	'app.gate.otherWindowTitle': 'KGS is running in another GoTV window',
+	'app.gate.otherWindowText':
+		'GoTV is already open in another window or tab, and only one of them can be connected to KGS – otherwise moves and messages end up in the wrong window. Carry on there or close it: this window then takes over by itself. Live, calendar, channels and replay work here as usual.',
 	'app.gate.title': 'KGS only in the desktop app',
 	'app.gate.text':
 		'KGS only answers requests from its own website, so watching, playing and chatting on KGS is available in the GoTV desktop app. Broadcasts, calendar, channels and replay work here without logging in.',

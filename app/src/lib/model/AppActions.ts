@@ -332,6 +332,14 @@ export class AppActions {
 			}
 		}
 	};
+	// A game in its own window (windowLink.ts): join it at KGS without
+	// switching this window to it. Nothing happens if it is joined already.
+	onJoinGameQuietly = (gameId: number) => {
+		const state = this._store.getState();
+		if (!state.gamesById[gameId] || state.channelMembership[gameId] || this._isOffline()) return;
+		this._store.dispatch({ type: 'GAME_JOIN', channelId: gameId });
+		this._client.sendMessage({ type: 'JOIN_REQUEST', channelId: gameId });
+	};
 	onLeaveGame = (game: GameChannel | number) => {
 		const gameId = typeof game === 'number' ? game : game.id;
 

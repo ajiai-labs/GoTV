@@ -10,6 +10,8 @@ export class AppStore {
 	_debug: boolean;
 	_recording: boolean;
 	_recordedMessages: Array<KgsMessage>;
+	// Every dispatched batch, e.g. for the other GoTV windows (windowLink.ts).
+	_onDispatch: ((msgs: Array<KgsMessage>) => void) | null = null;
 
 	constructor(handler: (appState: AppState, msg: KgsMessage) => any, initialState: AppState) {
 		this._handler = handler;
@@ -34,6 +36,8 @@ export class AppStore {
 			this._subscriber();
 		}
 
+		this._onDispatch?.(msgs);
+
 		if (this._recording) {
 			const clonedMsgs: Array<KgsMessage> = JSON.parse(JSON.stringify(msgs));
 
@@ -52,6 +56,14 @@ export class AppStore {
 	};
 	setState = (nextState: AppState) => {
 		this._state.appState = nextState;
+	};
+	// A whole new state (a follower window's snapshot), shown at once.
+	replaceState = (nextState: AppState) => {
+		this.setState(nextState);
+		this._subscriber?.();
+	};
+	setOnDispatch = (listener: ((msgs: Array<KgsMessage>) => void) | null) => {
+		this._onDispatch = listener;
 	};
 	getState = () => {
 		return this._state.appState;

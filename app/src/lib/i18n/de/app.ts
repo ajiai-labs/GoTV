@@ -88,6 +88,9 @@ export const app = {
 	'app.login.loggingIn': 'Anmeldung läuft …',
 	'app.login.register': 'Bei KGS registrieren',
 	'app.login.forgotPassword': 'Passwort vergessen',
+	'app.gate.otherWindowTitle': 'KGS läuft in einem anderen GoTV-Fenster',
+	'app.gate.otherWindowText':
+		'GoTV ist schon in einem anderen Fenster oder Tab geöffnet, und nur eines davon kann mit KGS verbunden sein – sonst landen Züge und Nachrichten im falschen Fenster. Mach dort weiter oder schließe es: Dann übernimmt dieses Fenster von selbst. Live, Kalender, Kanäle und Nachspielen gehen hier ganz normal.',
 	'app.gate.title': 'KGS nur in der Desktop-App',
 	'app.gate.text':
 		'KGS beantwortet Anfragen nur von seiner eigenen Webseite. Beobachten, Spielen und Chat auf KGS gibt es deshalb in der Desktop-App von GoTV. Übertragungen, Kalender, Kanäle und Nachspielen funktionieren hier ohne Anmeldung.',

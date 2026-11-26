@@ -16,6 +16,14 @@ import { KgsClient } from './model/KgsClient';
 import { getInitialState, handleMessage } from './model/index';
 import type { AppState, GameChannel, GameTree, KgsClientState, NavOption } from './model/types';
 import { getMainLine } from './model/ReplayVariation';
+import {
+	FORWARDED_ACTIONS,
+	FollowerFeed,
+	LINK_CHANNEL,
+	claimConnection,
+	waitForConnection
+} from './windowLink';
+import type { LinkMessage } from './windowLink';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
 // Nachspielen belong to it as well.
@@ -88,6 +96,10 @@ class GoTvApp {
 	client: KgsClient | null = null;
 	// Reactive, so pages waiting for the start (KgsGate) update once it ran.
 	_actions: AppActions | null = $state.raw(null);
+	// 'follower': another GoTV window holds the KGS connection; this one
+	// mirrors its state (windowLink.ts).
+	role: 'owner' | 'follower' | null = $state(null);
+	private starting = false;
 
 	get actions(): AppActions {
 		if (!this._actions) throw new Error('GoTV app not started');
@@ -102,11 +114,29 @@ class GoTvApp {
 		return !!this.state.currentUser;
 	}
 
-	// Called once from the layout, in the browser.
+	// Called once from the layout, in the browser. Tests start without the
+	// window link: every test page is its own owner.
 	start() {
-		if (this._actions) return;
-		const client = new KgsClient();
-		const store = new AppStore(handleMessage, getInitialState(client.state));
+		if (this._actions || this.starting) return;
+		this.starting = true;
+		if (import.meta.env.MODE === 'test') {
+			this.startOwner(null);
+			return;
+		}
+		claimConnection()
+			.then((role) => {
+				if (role === 'owner') this.startOwner(new BroadcastChannel(LINK_CHANNEL));
+				else this.startFollower();
+			})
+			.catch(() => this.startOwner(null));
+	}
+
+	// This window talks to KGS; other windows get every change. `mirrored`:
+	// the state of a follower taking over from a closed owner window - newer
+	// than the saved one, so it goes on from there.
+	private startOwner(link: BroadcastChannel | null, mirrored?: AppState) {
+		const client = new KgsClient(mirrored?.clientState);
+		const store = new AppStore(handleMessage, mirrored ?? getInitialState(client.state));
 		const actions = new AppActions(store, client, history);
 		this.client = client;
 		this.store = store;
@@ -118,12 +148,87 @@ class GoTvApp {
 		});
 		client.setOnChange((clientState) => actions.onClientStateChange(clientState));
 		client.setOnMessages(actions.onReceiveServerMessages);
-		actions.onRestoreAppState();
+		if (!mirrored) {
+			actions.onRestoreAppState();
+		} else if (mirrored.clientState.status === 'loggedIn') {
+			void client.poll(); // the same KGS session (shared cookie) goes on here
+		}
+		this.role = 'owner';
+		if (link) this.serveFollowers(link, store, actions);
 
 		const save = () => actions.onSaveAppState();
 		window.addEventListener('beforeunload', save);
 		document.addEventListener('visibilitychange', () => {
 			if (document.visibilityState === 'hidden') save();
+		});
+	}
+
+	private serveFollowers(link: BroadcastChannel, store: AppStore, actions: AppActions) {
+		let seq = 0;
+		const post = (message: LinkMessage) => {
+			try {
+				link.postMessage(message);
+			} catch (err) {
+				// Not cloneable: the followers fetch a snapshot instead.
+				console.warn('[GoTV] window link:', err);
+				seq++;
+			}
+		};
+		const snapshot = () => post({ t: 'snapshot', seq, state: store.getState() });
+		store.setOnDispatch((msgs) => post({ t: 'msgs', seq: ++seq, msgs }));
+		link.onmessage = (event: MessageEvent<LinkMessage>) => {
+			const message = event.data;
+			if (message.t === 'hello') {
+				snapshot();
+			} else if (message.t === 'call' && FORWARDED_ACTIONS.has(message.method)) {
+				const action = (actions as unknown as Record<string, unknown>)[message.method];
+				if (typeof action === 'function') {
+					(action as (...args: Array<unknown>) => unknown)(...message.args);
+				}
+			}
+		};
+		snapshot(); // followers waiting for a new owner
+	}
+
+	// Another window holds the connection: mirror its state, send our moves
+	// and chat to it, and take over once it closes.
+	private startFollower() {
+		const link = new BroadcastChannel(LINK_CHANNEL);
+		const store = new AppStore(handleMessage, getInitialState(LOGGED_OUT));
+		this.store = store;
+		this.client = null;
+		store.subscribe(() => {
+			this.state = store.getState();
+		});
+		const feed = new FollowerFeed(
+			(msgs) => store.dispatch(msgs),
+			(state) => store.replaceState(state),
+			() => link.postMessage({ t: 'hello' } satisfies LinkMessage)
+		);
+		link.onmessage = (event: MessageEvent<LinkMessage>) => feed.receive(event.data);
+		const forward = new Proxy(
+			{},
+			{
+				get: (_target, method) => {
+					if (typeof method !== 'string' || !FORWARDED_ACTIONS.has(method)) {
+						return () => {}; // not from a follower window
+					}
+					return (...args: Array<unknown>) =>
+						link.postMessage({ t: 'call', method, args } satisfies LinkMessage);
+				}
+			}
+		);
+		this.role = 'follower';
+		this._actions = forward as AppActions;
+		link.postMessage({ t: 'hello' } satisfies LinkMessage);
+		waitForConnection(() => {
+			link.close();
+			store.unsubscribe();
+			this._actions = null;
+			this.startOwner(
+				new BroadcastChannel(LINK_CHANNEL),
+				feed.ready ? store.getState() : undefined
+			);
 		});
 	}
 

@@ -24,4 +24,17 @@ describe('KgsGate', () => {
 
 		await expect.element(page.getByRole('button', { name: 'Anmelden' })).toBeVisible();
 	});
+
+	it('tells a second window where KGS runs, but a game window shows its page', async () => {
+		app._actions = { onLogin: () => {} } as unknown as AppActions;
+		app.state = { ...getInitialState(loggedOut), initialized: true };
+		app.role = 'follower';
+		const children = createRawSnippet(() => ({ render: () => '<p>KGS-Seite</p>' }));
+		const view = await render(KgsGate, { children });
+		await expect.element(page.getByText('KGS läuft in einem anderen GoTV-Fenster')).toBeVisible();
+		await view.unmount();
+		await render(KgsGate, { children, inWindow: true });
+		await expect.element(page.getByRole('button', { name: 'Anmelden' })).toBeVisible();
+		app.role = null;
+	});
 });
