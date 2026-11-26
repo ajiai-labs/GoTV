@@ -782,9 +782,11 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Mehr-Menü einer beobachteten Partie und im Spielerprofil (laufende Partie des Spielers,
   `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
   `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom
-  Brett. Nur Stellung, Spieler, Zug/Ergebnis - kein Chat, keine Kommentare, keine Analyse
-  (Absprachen während der Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen
-  das Fenster nie nach vorn. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
+  Brett. Die Bretter füllen das Fenster (1 allein, 2 nebeneinander bzw. im hohen Fenster
+  untereinander, ab 3 zwei mal zwei; quadratisch per `container-type: size`). Das vergrößerte
+  Brett hat den Partiechat daneben zum Mitlesen und Schreiben (`ui/game/BoardChat.svelte`,
+  Wunsch des Nutzers); die Übersicht zeigt nur Stellungen. Keine Analyse (Absprachen während der
+  Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen das Fenster nie nach vorn. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
   ("die Fenster holt man sich über Beobachten oder das Profil"). Für Turnierübertragungen
   (mehrere Bretter) später dieselbe Steuerung - noch nicht gebaut.
 - NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.

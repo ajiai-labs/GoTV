@@ -60,7 +60,7 @@ describe('Brettübersicht', () => {
 		await expect.element(page.getByText('Lukan [7d] – anna [5d]')).toBeVisible();
 		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(90);
 		expect(actions.onJoinGameQuietly).not.toHaveBeenCalledWith(91); // over
-		// No chat and nothing to type in: only positions.
+		// The overview: positions only, nothing to type in.
 		await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
 	});
 
@@ -69,6 +69,12 @@ describe('Brettübersicht', () => {
 		await page.getByRole('button', { name: /Lukan \[7d\] – anna/ }).click();
 		await expect.element(page.getByRole('button', { name: 'Alle Bretter' })).toBeVisible();
 		expect(localStorage.getItem('gotv.teamView')).toBe('1');
+		// The game's chat beside the big board, to write in.
+		actions.onSendGameChat = vi.fn();
+		await expect.element(page.getByRole('region', { name: 'Chat dieser Partie' })).toBeVisible();
+		await page.getByRole('textbox').fill('viel Glück');
+		await userEvent.keyboard('{Enter}');
+		expect(actions.onSendGameChat).toHaveBeenCalledWith('viel Glück', 90);
 		await userEvent.keyboard('{Escape}');
 		await expect
 			.element(page.getByRole('button', { name: 'Alle Bretter' }))

@@ -2,9 +2,10 @@
 	// Brettübersicht (model/team.ts): several KGS games in one calm window,
 	// apart from your own game - a team match or any games you follow, brought
 	// in from Beobachten or a player's profile. Fixed boards; a click shows one
-	// big, Esc or "Alle Bretter" goes back. Only the position: no chat, no
-	// comments, no analysis (team matches forbid outside help, DGoB Bundesliga
-	// rules § 3). New moves never bring this window to the front.
+	// big - with the game's chat beside it, to read and write - Esc or "Alle
+	// Bretter" goes back. The overview shows positions only; no analysis
+	// anywhere (team matches forbid outside help, DGoB Bundesliga rules § 3).
+	// New moves never bring this window to the front.
 	import { onMount } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
@@ -13,6 +14,7 @@
 	import type { TeamBoards } from '#lib/model/team.ts';
 	import type { BoardMarkup, BoardState, GameChannel } from '#lib/model/types.ts';
 	import Board from '#lib/ui/Board.svelte';
+	import BoardChat from '#lib/ui/game/BoardChat.svelte';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
 	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
 
@@ -58,6 +60,16 @@
 			}))
 			.filter((entry) => entry.id != null)
 	);
+	// The boards fill the window: 1 alone, 2 side by side (one above the
+	// other in a tall window), 3 and 4 two by two.
+	let innerWidth = $state(0);
+	let innerHeight = $state(0);
+	let grid = $derived.by(() => {
+		const n = shown.length;
+		if (n <= 1) return { cols: 1, rows: 1 };
+		if (n === 2) return innerHeight > innerWidth ? { cols: 1, rows: 2 } : { cols: 2, rows: 1 };
+		return { cols: 2, rows: 2 };
+	});
 	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
 
 	// The games on the boards are joined at KGS (nothing happens if joined).
@@ -116,6 +128,8 @@
 	}
 </script>
 
+<svelte:window bind:innerWidth bind:innerHeight />
+
 <svelte:head>
 	<title>{t('app.boards.title')} – GoTV</title>
 </svelte:head>
@@ -143,8 +157,13 @@
 					{#if game}· {gameLine(game)} · {stateLine(game)}{/if}
 				</p>
 				{#if game && pos}
-					<div class="big-board">
-						<Board board={pos.board} markup={pos.markup} label={gameLine(game)} />
+					<div class="big-main">
+						<div class="area">
+							<div class="fit">
+								<Board board={pos.board} markup={pos.markup} label={gameLine(game)} />
+							</div>
+						</div>
+						<BoardChat {game} />
 					</div>
 				{:else}
 					<p class="loading">{t('app.boards.loading')}</p>
@@ -161,7 +180,7 @@
 				</div>
 			</section>
 		{:else if shown.length}
-			<div class="grid">
+			<div class="grid" style:--cols={grid.cols} style:--rows={grid.rows}>
 				{#each shown as entry (entry.board)}
 					{@const game = entry.game}
 					{@const pos = game ? position(game) : null}
@@ -178,18 +197,20 @@
 								×
 							</button>
 						</header>
-						<button type="button" class="board-button" onclick={() => show(entry.board)}>
-							{#if game && pos}
-								<Board
-									board={pos.board}
-									markup={pos.markup}
-									coordinates={false}
-									label={`${gameLine(game)}, ${stateLine(game)}`}
-								/>
-							{:else}
-								<span class="loading">{t('app.boards.loading')}</span>
-							{/if}
-						</button>
+						<div class="area">
+							<button type="button" class="board-button fit" onclick={() => show(entry.board)}>
+								{#if game && pos}
+									<Board
+										board={pos.board}
+										markup={pos.markup}
+										coordinates={false}
+										label={`${gameLine(game)}, ${stateLine(game)}`}
+									/>
+								{:else}
+									<span class="loading">{t('app.boards.loading')}</span>
+								{/if}
+							</button>
+						</div>
 						{#if game}
 							<p class="players">{gameLine(game)}</p>
 							<p class="muted">{stateLine(game)}</p>
@@ -204,11 +225,18 @@
 </KgsGate>
 
 <style>
+	/* The whole window, whatever the layout around: the boards fill it. */
 	.boards {
-		padding: 12px 16px;
+		position: fixed;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		padding: 10px 14px 12px;
+		background: var(--bg);
 	}
 
 	.head {
+		flex: none;
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -222,14 +250,33 @@
 	}
 
 	.grid {
+		flex: 1;
+		min-height: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 14px;
+		grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+		grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+		gap: 12px;
+	}
+
+	/* A square board as large as its area allows (width or height). */
+	.area {
+		flex: 1;
+		min-height: 0;
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		container-type: size;
+	}
+
+	.fit {
+		width: min(100cqw, 100cqh);
 	}
 
 	.tile {
 		display: flex;
 		flex-direction: column;
+		min-height: 0;
 		gap: 6px;
 		padding: 10px;
 		border: 1px solid var(--panel-border);
@@ -278,14 +325,29 @@
 	}
 
 	.big {
+		flex: 1;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
 		align-items: center;
 	}
 
-	.big-board {
-		width: min(100%, calc(100vh - 170px));
+	/* Board and its chat side by side; in a narrow window one above the other. */
+	.big-main {
+		flex: 1;
+		min-height: 0;
+		align-self: stretch;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+		gap: 12px;
+	}
+
+	@media (max-width: 760px) {
+		.big-main {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: minmax(0, 2fr) minmax(0, 1fr);
+		}
 	}
 
 	.actions {
