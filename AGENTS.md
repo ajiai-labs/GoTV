@@ -838,7 +838,13 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Versuch, nicht als verlorene Sitzung (`KgsClient`, vorher Abmeldung).
 - Steinklick nur in der eigenen laufenden Partie - Brettübersicht und beobachtete Partien bleiben
   stumm (Nutzer: vier Bretter dürfen nicht durcheinander klacken).
-- NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.
+- README: Abschnitt "Brettübersicht (board overview)" mit Screenshot
+  `docs/screenshots/app/brettuebersicht.png` (erfundene Namen, Stellungen aus der mitgelieferten
+  EM-Finalpartie; aufgenommen per Vitest-Browser-Test mit `app.css`, 1280x800).
+- Prüfauftrag für einen zweiten Agenten: `docs/analyse-prompt-fenster.md`.
+- Vom Nutzer an der echten KGS-Sitzung ausprobiert (Videos 26.11.2026, 21:33-21:53):
+  Brettübersicht mit vier Brettern, Vergrößern, Einzelfenster, Fenstergröße. Mehrere Fenster
+  über längere Zeit und das Partiechat-Signal noch nicht.
 
 ## Steinoptik (26.11.2026)
 

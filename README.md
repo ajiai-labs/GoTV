@@ -76,11 +76,11 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   running game asks first: back to the game, resign or leave.
 - **Games in their own windows, as in CGoban:** a clicked game opens in a window of
   its own (an open one comes to the front); the main window keeps lists and chats.
-  All windows share one KGS connection - a second tab says where KGS runs.
-- **Brettübersicht (team matches):** up to four games in one calm window apart from
-  your own game - e.g. your team mates' games in the Go-Bundesliga. Bring games in from
-  Watch (tick "Partien in die Brettübersicht holen") or a player's profile; a click
-  shows one board big, Esc goes back. Positions only: no chat, no analysis.
+  Your own game opens in its own window too, also when it starts by itself
+  (automatch, accepted challenge). All windows share one KGS connection - a second
+  tab says where KGS runs. The board grows with the window, as in CGoban.
+- **Brettübersicht (board overview, team matches):** up to four games in one calm
+  window apart from your own game - see [below](#brettübersicht-board-overview).
 - **Stones like a real set:** white like clam shell (muted ivory with fine
   growth lines, every stone different), black like matte slate; white is
   drawn 2 % smaller, as in real Go sets, because light stones look bigger.
@@ -179,16 +179,47 @@ replay:
 
 <img src="./docs/screenshots/app/kanaele-classic.png" width="800" alt="Channels page with week plan in the Classic design">
 
+**Brettübersicht** - four games in one window, e.g. a Go-Bundesliga team match (names
+and positions made up for the picture):
+
+<img src="./docs/screenshots/app/brettuebersicht.png" width="800" alt="Board overview with four live KGS games in a two by two grid">
+
 **Einstellungen** - language, menu order, sounds while playing and three designs,
 switched at once:
 
 <img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings: language, menu order, sounds while playing, design choice">
+
+## Brettübersicht (board overview)
+
+For a team match (e.g. the Go-Bundesliga, four boards on KGS) or any games you want to
+follow side by side - in a window of its own, so your own game stays undisturbed.
+
+- **Bring games in:** in *Beobachten* tick **"Partien in die Brettübersicht holen"** -
+  while it is ticked, every game you click goes to the overview. Or use **"Zur
+  Brettübersicht"** in a watched game's *Mehr* menu, or in a player's profile when the
+  player is playing right now (e.g. a team mate).
+- **Fills the window:** one board alone, two side by side, three or four two by two; the
+  boards grow and shrink with the window. Each board shows the latest position, the
+  last move, both players and the move number - and the result once the game is over.
+- **One board big:** a click on a board shows it with the full game screen (players,
+  clocks, move navigation, chat, observers, more menu), **"‹ Alle Bretter"** or Esc goes
+  back. **"Eigenes Fenster"** moves it to a window of its own.
+- **Your own game** shows first, framed ("Deine Partie") - a click brings back your game
+  window, you play only there. Untick "Eigene Partie zeigen" if it distracts you.
+- **Calm:** new moves never bring the window to the front, and the boards make no stone
+  sounds. No analysis anywhere - outside help during a team match is not allowed.
+- **Remove:** × takes one board off, **"Alle entfernen"** all of them; closing the window
+  ends the overview - the next game you bring in starts an empty one. Logging out of KGS
+  closes it too.
+- Up to four boards; with all four taken, a clicked game opens in its own window and
+  *Beobachten* says why.
 
 ## KGS client
 
 Logged in to KGS, GoTV is a complete KGS client: game lists, watching games with
 chat, room chat, direct messages, user details, challenges (create, propose,
 negotiate, changed terms), automatic opponent selection, resuming unfinished games,
+games in their own windows and the board overview,
 playing, score estimate, local copies, copying a game into a room, friend/ignore/fan
 lists, messages and mailbox, declining private chats, creating rooms and server
 statistics. Not available: rengo/simul, recorded KGS lectures (the KGS interface
