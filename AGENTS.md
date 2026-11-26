@@ -396,7 +396,15 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   derselben zwei Spieler (Nachnamen, Akzente egal) als `ogs_game_ids` - Hand-Eintrag
   zuerst, dann speedgo, dann andere Importe - nur wenn er noch keine hat. Ergebnisse werden
   NICHT übernommen (Spoiler). Ein Hand-Eintrag derselben Paarung am selben Tag verhindert
-  den Import-Eintrag. Vergangene speedgo-Einträge bleiben 120 Tage. 0 gefundene
+  den Import-Eintrag. Vergangene speedgo-Einträge bleiben 120 Tage.
+  Kommende Begegnungen bekommen `ogs_players` (26.11.2026, Wunsch: Brett neben dem Stream
+  auch vor dem ersten Partielink): die Seite nennt nur Klarnamen, die OGS-Konten stehen in
+  `OGS_ACCOUNTS` (`tools/speedgo.py`, abgelesen aus den OGS-Partien der Bracket-Seiten 2025
+  und 2026) und werden täglich aus den Partien gespielter Begegnungen der laufenden Saison
+  ergänzt/überschrieben (`learn_ogs_accounts`, eine OGS-Anfrage pro Begegnung, 1 s Pause,
+  OGS antwortet Serien mit 429). Gelernt wird nur per Ausschluss (ein Konto der Begegnung
+  gehört einem bekannten Spieler), nie geraten; ein bekannter Spieler reicht der App
+  (`pickOgsGameId`). Spieler wechseln Konten zwischen Saisons (Jabarin, Kachanovskyi). 0 gefundene
   Begegnungen -> Abbruch ohne Schreiben. Läuft täglich im Workflow (letzter Import-Schritt,
   `continue-on-error`, Fehler melden sich über das Fehler-Issue) und in
   `refresh_tv_events.py` (letzte Quelle). Tests: `tools/test_speedgo.py` mit künstlicher

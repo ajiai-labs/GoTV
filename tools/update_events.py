@@ -802,13 +802,17 @@ except ImportError:  # pragma: no cover - script run from tools/
 SPEEDGO_SOURCE = speedgo.SPEEDGO_SOURCE
 
 
-def merge_speedgo_events(existing_events, matches, today_date):
+def merge_speedgo_events(existing_events, matches, today_date, accounts=None):
     """Speed Go bracket (--source speedgo, see tools/speedgo.py): dated
     matches as entries with the usual retention rule (a played match loses
     its date on the page, so a past entry missing from the fresh parse is
     normal), then the OGS games of played matches added to the entry of the
-    same pairing. Returns (merged, added, updated, removed)."""
-    fresh = speedgo.fresh_events(matches, existing_events)
+    same pairing, and the OGS accounts of upcoming matches as ogs_players
+    (accounts: see speedgo.learn_ogs_accounts). Returns (merged, added,
+    updated, removed)."""
+    if accounts is None:
+        accounts = speedgo.learn_ogs_accounts(matches, None)
+    fresh = speedgo.fresh_events(matches, existing_events, accounts)
     merged, added, updated, removed = _merge_with_retention(
         existing_events,
         fresh,
@@ -816,7 +820,9 @@ def merge_speedgo_events(existing_events, matches, today_date):
         speedgo.SPEEDGO_RETENTION_DAYS,
         today_date,
     )
-    merged, enriched = speedgo.enrich_with_games(merged, matches)
+    merged, with_games = speedgo.enrich_with_games(merged, matches)
+    merged, with_players = speedgo.enrich_with_players(merged, matches, accounts)
+    enriched = with_games + with_players
     added_ids = {e["id"] for e in added}
     updated_by_id = {e["id"]: e for e in updated}
     for event in enriched:
@@ -986,8 +992,13 @@ def main(argv=None):
                 file=sys.stderr,
             )
             return 1
+        # With a local page (tests, offline runs) no OGS requests.
+        accounts = speedgo.learn_ogs_accounts(
+            matches,
+            None if args.speedgo_html_file else speedgo.fetch_ogs_game_players,
+        )
         merged, added, updated, removed = merge_speedgo_events(
-            data.get("events", []), matches, datetime.date.today()
+            data.get("events", []), matches, datetime.date.today(), accounts
         )
     else:
         year = args.egf_year or datetime.date.today().year

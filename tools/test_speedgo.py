@@ -125,6 +125,65 @@ class EventsTest(unittest.TestCase):
         self.assertIn(played["id"], [e["id"] for e in merged])
 
 
+class OgsAccountsTest(unittest.TestCase):
+    def setUp(self):
+        self.matches = speedgo.parse_bracket_html(SAMPLE.read_text(encoding="utf-8"))
+        self.calls = []
+
+    def fetch(self, game_id):
+        self.calls.append(game_id)
+        return {1001: ["bruno-new", "anna-ogs"]}[game_id]
+
+    def test_a_played_match_teaches_the_other_players_account(self):
+        accounts = speedgo.learn_ogs_accounts(
+            self.matches, self.fetch, {"Anna Alpha": "anna-ogs", "Bruno Le Bêta": "bruno-old"}
+        )
+        self.assertEqual(self.calls, [1001])  # one request per played match
+        self.assertEqual(accounts["bruno le beta"], "bruno-new")
+        self.assertEqual(accounts["anna alpha"], "anna-ogs")
+
+    def test_no_account_is_guessed(self):
+        accounts = speedgo.learn_ogs_accounts(self.matches, self.fetch, {"Carla Gamma": "carla"})
+        self.assertNotIn("anna alpha", accounts)
+        self.assertNotIn("bruno le beta", accounts)
+        self.assertEqual(speedgo.learn_ogs_accounts(self.matches, None, {}), {})
+
+    def test_a_failing_request_only_skips_that_match(self):
+        def broken(_game_id):
+            raise OSError("429")
+
+        accounts = speedgo.learn_ogs_accounts(self.matches, broken, {"Anna Alpha": "anna-ogs"})
+        self.assertEqual(accounts, {"anna alpha": "anna-ogs"})
+
+    def test_upcoming_matches_get_the_known_accounts(self):
+        accounts = speedgo.learn_ogs_accounts(self.matches, None, {"Carla Gamma": "carla", "Dario Delta": "dario"})
+        fresh = speedgo.fresh_events(self.matches, [], accounts)
+        self.assertEqual(fresh[0]["ogs_players"], ["carla", "dario"])
+        self.assertNotIn("ogs_players", fresh[1])  # nobody known: stream only
+
+    def test_one_known_player_is_enough(self):
+        accounts = speedgo.learn_ogs_accounts(self.matches, None, {"Dario Delta": "dario"})
+        self.assertEqual(speedgo.fresh_events(self.matches, [], accounts)[0]["ogs_players"], ["dario"])
+
+    def test_existing_entries_get_players_but_keep_their_links(self):
+        accounts = speedgo.learn_ogs_accounts(self.matches, None, {"Carla Gamma": "carla"})
+        plain = entry("speedgo-2026-11-29-gamma-delta", "Speed Go Championship: Carla Gamma 7d – Dario Delta 6d", "2026-11-29", "speedgo")
+        linked = entry("hand", "Speed Go Championship: Emil Epsilon – Fiona Zeta", "2027-01-09", ogs_players=["emil"])
+        events, enriched = speedgo.enrich_with_players([plain, linked], self.matches, accounts)
+        self.assertEqual([e["id"] for e in enriched], [plain["id"]])
+        self.assertEqual(events[0]["ogs_players"], ["carla"])
+        self.assertNotIn("ogs_players", plain)  # copied, not changed in place
+        self.assertEqual(events[1]["ogs_players"], ["emil"])
+
+    def test_merge_reports_entries_that_got_players(self):
+        plain = entry("speedgo-2026-11-29-gamma-delta", "Speed Go Championship: Carla Gamma 7d – Dario Delta 6d", "2026-11-29", "speedgo")
+        accounts = speedgo.learn_ogs_accounts(self.matches, None, {"Carla Gamma": "carla"})
+        _merged, _added, updated, _removed = update_events.merge_speedgo_events(
+            [plain], self.matches, TODAY, accounts
+        )
+        self.assertEqual({e["id"]: e.get("ogs_players") for e in updated}[plain["id"]], ["carla"])
+
+
 class MainTest(unittest.TestCase):
     def run_main(self, html_path, events):
         with tempfile.TemporaryDirectory() as temp:

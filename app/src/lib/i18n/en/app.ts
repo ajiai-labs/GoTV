@@ -202,7 +202,7 @@ export const app: Translation<typeof de> = {
 	'app.calendarCard.ogsLinkedOnOpen': 'OGS board linked · loads when you open it',
 	'app.calendarCard.kgsLinked': 'KGS board linked',
 	'app.calendarCard.kgsLinkedNone': 'KGS board linked · no matching board online right now',
-	'app.calendarCard.streamOnly': 'Stream only · no KGS board linked',
+	'app.calendarCard.streamOnly': 'Stream only · no board linked',
 	'app.calendarCard.replaySgf': 'Replay SGF',
 	'app.update.about': 'About GoTV',
 	'app.update.version': 'GoTV Desktop, version {version}',

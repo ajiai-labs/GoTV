@@ -11,6 +11,13 @@ comments, no rules) and keeps the calendar in step with it:
   any more. Those game numbers go to the existing entry of the same two
   players - an imported one or one entered by hand - as ogs_game_ids, if it
   has none yet. Nothing else of a hand entry is touched.
+* An upcoming match gets the OGS accounts of its players as ogs_players, so
+  the app finds the board itself while the match is played. The page names
+  the players, not their OGS accounts: those come from OGS_ACCOUNTS (taken
+  from earlier games of the championship) and from the games of played
+  matches on the current page (one OGS request per match whose accounts are
+  not known yet). A player without a known account is left out, never
+  guessed; with no known player the entry stays stream only.
 
 Results ("3 : 0") are deliberately not imported: the calendar must not
 spoil games people still want to watch. Standard library only, like
@@ -18,7 +25,9 @@ update_events.py.
 """
 import datetime
 import html
+import json
 import re
+import time
 import unicodedata
 import urllib.request
 
@@ -30,6 +39,9 @@ SPEEDGO_USER_AGENT = (
 # Played matches leave the page's dates; their entries stay this long for
 # the replay lists (REPLAY_KEEP_DAYS in app/src/lib/model/tv.ts is 90).
 SPEEDGO_RETENTION_DAYS = 120
+OGS_GAME_API = "https://online-go.com/api/v1/games/%d"
+# Pause between OGS requests (OGS answers bursts with 429).
+OGS_REQUEST_PAUSE_SECONDS = 1.0
 STREAM_URL = "https://www.twitch.tv/europeangofederation"
 STREAM_CHANNEL = {"platform": "twitch", "id": "europeangofederation"}
 DURATION_MINUTES = 180
@@ -55,6 +67,26 @@ _WHEN_PARTS_RE = re.compile(
     re.I,
 )
 _TZ = {"CET": "+01:00", "CEST": "+02:00"}
+
+# OGS account of each player, read from the OGS games linked on the bracket
+# pages (speedgochampionship.com/bracket and /past/2025, checked 26.11.2026):
+# in every match the two accounts of its games, one of them already known
+# from another match. Players switch accounts between seasons (Jabarin:
+# AliJabarin -> Avtikh, Kachanovskyi: kachanovskyi.artem -> artem92), so a
+# game of the running season overrides this list (learn_ogs_accounts).
+OGS_ACCOUNTS = {
+    "Ali Jabarin": "Avtikh",
+    "Andrii Kravets": "AndriiKravets",
+    "Artem Kachanovskyi": "artem92",
+    "Benjamin Dréan-Guénaïzia": "ben0",
+    "Lukáš Podpěra": "Lukan",
+    "Mateusz Surma": "mateusz.surma1995",
+    "Rémi Campagnie": "RemiC",
+    "Stanisław Frejlak": "Siasio",
+    "Tanguy Le Calvé": "Welvang",
+    "Valerii Krushelnytskyi": "Valerii K",
+    "Vsevolod Ovsiienko": "OvsiienkoVsevolod",
+}
 
 
 def _season(html_text):
@@ -151,7 +183,54 @@ def _slug(text):
     return re.sub(r"[^a-z0-9]+", "-", _fold(text)).strip("-")
 
 
-def match_to_tv_event(match):
+def _account_key(name):
+    return " ".join(_fold(name).split())
+
+
+def learn_ogs_accounts(matches, fetch_game_players, known=None):
+    """OGS accounts by player (folded name -> username): `known` (default
+    OGS_ACCOUNTS) plus what the played matches of the current page show.
+    fetch_game_players(game_id) -> [black, white] usernames; called once per
+    played match that is not fully known yet. A match teaches an account
+    only when one of its two accounts belongs to a known player of it - the
+    other player then has the other one. None as fetcher: no requests."""
+    accounts = {
+        _account_key(name): user for name, user in (OGS_ACCOUNTS if known is None else known).items()
+    }
+    if fetch_game_players is None:
+        return accounts
+    learned = set()
+    for match in matches:
+        if not match["ogs_game_ids"]:
+            continue
+        keys = [_account_key(name) for name, _rank in match["players"]]
+        if all(key in learned for key in keys):
+            continue
+        try:
+            users = [u for u in fetch_game_players(match["ogs_game_ids"][0]) if u]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        if len(set(users)) != 2:
+            continue
+        a, b = keys
+        if accounts.get(a) in users:
+            first, second = a, b
+        elif accounts.get(b) in users:
+            first, second = b, a
+        else:
+            continue  # both players switched accounts: not decidable
+        accounts[second] = next(u for u in users if u != accounts[first])
+        learned.update((first, second))
+    return accounts
+
+
+def ogs_players_for(match, accounts):
+    """The known OGS accounts of a match's players, in page order."""
+    users = [accounts.get(_account_key(name)) for name, _rank in match["players"]]
+    return [user for user in users if user]
+
+
+def match_to_tv_event(match, accounts=None):
     """A dated match as a calendar entry (source "speedgo")."""
     (name_a, rank_a), (name_b, rank_b) = match["players"]
     date = match["start"][:10]
@@ -172,6 +251,9 @@ def match_to_tv_event(match):
     }
     if match["ogs_game_ids"]:
         tv_event["ogs_game_ids"] = list(match["ogs_game_ids"])
+    players = ogs_players_for(match, accounts or {})
+    if players:
+        tv_event["ogs_players"] = players
     return tv_event
 
 
@@ -192,6 +274,37 @@ def _source_rank(event):
     return 1 if event.get("source") == SPEEDGO_SOURCE else 2
 
 
+def _entry_for(events, match):
+    """Index of the entry that should carry a match's boards, or None."""
+    candidates = sorted(
+        (index for index, event in enumerate(events) if _is_same_pairing(event, match)),
+        key=lambda index: _source_rank(events[index]),
+    )
+    return candidates[0] if candidates else None
+
+
+def enrich_with_players(events, matches, accounts):
+    """Adds ogs_players to the entry of each upcoming (dated) match that has
+    no OGS link yet, so the app finds the board while the match is played.
+    Returns (events, enriched_entries); entries are copied."""
+    result = list(events)
+    enriched = []
+    for match in matches:
+        if not match["start"] or match["ogs_game_ids"]:
+            continue
+        players = ogs_players_for(match, accounts)
+        index = _entry_for(result, match)
+        if not players or index is None:
+            continue
+        event = result[index]
+        if event.get("ogs_players") or event.get("ogs_game_ids") or event.get("ogs_game_id"):
+            continue
+        updated = dict(event, ogs_players=players)
+        result[index] = updated
+        enriched.append(updated)
+    return result, enriched
+
+
 def enrich_with_games(events, matches):
     """Adds the OGS game numbers of played matches to the entry of the same
     pairing - a hand entry first, then a Speed Go import, then any other
@@ -202,17 +315,9 @@ def enrich_with_games(events, matches):
     for match in matches:
         if not match["ogs_game_ids"]:
             continue
-        candidates = sorted(
-            (
-                index
-                for index, event in enumerate(result)
-                if _is_same_pairing(event, match)
-            ),
-            key=lambda index: _source_rank(result[index]),
-        )
-        if not candidates:
+        index = _entry_for(result, match)
+        if index is None:
             continue
-        index = candidates[0]
         event = result[index]
         if event.get("ogs_game_ids") or event.get("ogs_game_id"):
             continue  # already linked (by hand or an earlier run)
@@ -222,7 +327,7 @@ def enrich_with_games(events, matches):
     return result, enriched
 
 
-def fresh_events(matches, existing_events):
+def fresh_events(matches, existing_events, accounts=None):
     """Calendar entries for dated matches, minus pairings someone already
     entered by hand on that day (the hand entry wins, as in
     dropImportedDuplicates). Other imports do not count: against the Twitch
@@ -232,7 +337,7 @@ def fresh_events(matches, existing_events):
     for match in matches:
         if not match["start"]:
             continue
-        tv_event = match_to_tv_event(match)
+        tv_event = match_to_tv_event(match, accounts)
         if any(
             e.get("date_start") == tv_event["date_start"] and _is_same_pairing(e, match)
             for e in hand
@@ -248,3 +353,16 @@ def fetch_bracket_html(timeout=20):
     )
     with urllib.request.urlopen(request, timeout=timeout) as res:
         return res.read().decode("utf-8")
+
+
+def fetch_ogs_game_players(game_id, timeout=20):
+    """[black, white] usernames of an OGS game (public REST API), with a
+    pause before each request."""
+    time.sleep(OGS_REQUEST_PAUSE_SECONDS)
+    request = urllib.request.Request(
+        OGS_GAME_API % game_id, headers={"User-Agent": SPEEDGO_USER_AGENT}
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as res:
+        game = json.loads(res.read().decode("utf-8"))
+    players = game.get("players") or {}
+    return [(players.get(color) or {}).get("username") for color in ("black", "white")]
