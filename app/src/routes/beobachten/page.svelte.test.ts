@@ -110,10 +110,23 @@ describe('Beobachten', () => {
 		expect(open).toHaveBeenCalledWith('', 'gotv-bretter', expect.any(String));
 		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/bretter$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
-		// All four boards taken: it says so instead.
+		// All four boards taken: the game opens in its own window all the same,
+		// and the page says why - a click never does nothing.
+		app.state = {
+			...app.state,
+			gamesById: {
+				...app.state.gamesById,
+				1: game(1, 'A'),
+				2: game(2, 'B'),
+				3: game(3, 'C'),
+				4: game(4, 'D')
+			}
+		};
 		localStorage.setItem('gotv.team', '[1,2,3,4]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
-		await expect.element(page.getByText(/Alle vier Bretter sind belegt/)).toBeVisible();
+		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).toBeVisible();
+		expect(open).toHaveBeenCalledWith('', 'gotv-partie-11', expect.any(String));
+		popup.closed = true; // the next test opens game 11 afresh
 		localStorage.removeItem('gotv.boardsMode');
 		localStorage.removeItem('gotv.team');
 		localStorage.removeItem('gotv.gameWindows');

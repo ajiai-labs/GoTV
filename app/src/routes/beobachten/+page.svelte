@@ -99,7 +99,7 @@
 				<p class="muted WatchScreen-note" role="status">{t('game.screen.ownWindowRefused')}</p>
 			{/if}
 			{#if boardsFull}
-				<p class="muted WatchScreen-note" role="status">{t('app.boards.full')}</p>
+				<p class="WatchScreen-warn" role="status">{t('app.boards.fullOpened')}</p>
 			{/if}
 			<GameListFilter
 				games={appState.activeGames}
@@ -152,6 +152,14 @@
 	.WatchScreen-mode .name {
 		display: block;
 		font-weight: 600;
+	}
+
+	.WatchScreen-warn {
+		margin: 0 16px 10px;
+		padding: 8px 12px;
+		border-radius: var(--radius-s);
+		background: var(--warn-bg);
+		color: var(--warn-ink);
 	}
 
 	.WatchScreen-note {

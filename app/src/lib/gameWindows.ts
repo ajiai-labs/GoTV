@@ -87,8 +87,11 @@ export function openBoardsWindow(): boolean {
 // "Zur Brettübersicht" (Beobachten, player profile): the game goes on the
 // next free board and the window opens or comes to the front. 'full' if all
 // boards are taken, 'refused' if the browser blocked the window.
-export function bringToBoards(gameId: number): 'shown' | 'full' | 'refused' {
-	const boards = addBoard(loadBoards(), gameId);
+export function bringToBoards(
+	gameId: number,
+	isKnown?: (id: number) => boolean
+): 'shown' | 'full' | 'refused' {
+	const boards = addBoard(loadBoards(), gameId, isKnown);
 	if (!boards) return 'full';
 	saveBoards(boards);
 	return openBoardsWindow() ? 'shown' : 'refused';

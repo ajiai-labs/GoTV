@@ -780,7 +780,10 @@ die schon offen sind, kommen nach vorn statt doppelt.
   ruhiges Fenster mit bis zu 4 festen Brettplätzen (`gotv.team`), getrennt vom eigenen
   Partiefenster (Nutzer: Teambretter neben dem eigenen Brett lenken ab - keine Leiste im
   Partiefenster). Partien kommen hinein über Beobachten (Haken "Partien in die Brettübersicht
-  holen", `gotv.boardsMode`: jeder Klick in der Liste landet dort), "Zur Brettübersicht" im
+  holen", `gotv.boardsMode`: jeder Klick in der Liste landet dort; ist die Übersicht voll,
+  öffnet die Partie trotzdem im eigenen Fenster mit deutlichem Hinweis - ein Klick darf nie
+  nichts tun, Befund des Nutzers 26.11.2026; Bretter mit Partien einer früheren KGS-Sitzung
+  gelten als frei und zeigen "nicht mehr da"), "Zur Brettübersicht" im
   Mehr-Menü einer beobachteten Partie und im Spielerprofil (laufende Partie des Spielers,
   `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
   `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom

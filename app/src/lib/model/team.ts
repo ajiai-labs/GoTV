@@ -41,10 +41,16 @@ export function saveBoards(boards: TeamBoards, storage: Storage = window.localSt
 }
 
 // A game on the first free board (unchanged if it is there already);
-// null if all boards are taken.
-export function addBoard(boards: TeamBoards, gameId: number): TeamBoards | null {
+// null if all boards are taken. `isKnown`: whether a game id still means a
+// game - ids of an earlier KGS session (before logging in again) do not,
+// so their boards count as free.
+export function addBoard(
+	boards: TeamBoards,
+	gameId: number,
+	isKnown: (id: number) => boolean = () => true
+): TeamBoards | null {
 	if (boards.includes(gameId)) return boards;
-	const free = boards.indexOf(null);
+	const free = boards.findIndex((id) => id == null || !isKnown(id));
 	if (free === -1) return null;
 	return boards.map((id, i) => (i === free ? gameId : id));
 }

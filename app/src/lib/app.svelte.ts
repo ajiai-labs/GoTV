@@ -240,19 +240,22 @@ class GoTvApp {
 	// A click on a KGS game (lists, followed players, room chat): in its own
 	// window when that is switched on and the browser allows it, otherwise
 	// here as before. `toBoards` (Beobachten with "Partien in die
-	// Brettübersicht holen" on): to the Brettübersicht; 'full' if all its
-	// boards are taken - then nothing else happens, the page says so.
+	// Brettübersicht holen" on): to the Brettübersicht. All its boards taken:
+	// the game opens as usual all the same, and 'full' tells the page to say
+	// why (a click must never do nothing).
 	watchGame(gameId: number | string, options: { toBoards?: boolean } = {}): 'full' | undefined {
+		let full = false;
 		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode()) {
-			const result = bringToBoards(gameId);
-			if (result === 'full') return 'full';
+			const result = bringToBoards(gameId, (id) => !!this.state.gamesById[id]);
 			if (result === 'shown') return;
+			full = result === 'full';
 		}
 		if (typeof gameId === 'number' && loadGameWindows()) {
 			this.actions.onJoinGameQuietly(gameId);
-			if (openGameWindow(gameId)) return;
+			if (openGameWindow(gameId)) return full ? 'full' : undefined;
 		}
 		this.actions.onJoinGame(gameId);
+		return full ? 'full' : undefined;
 	}
 
 	// An own game that starts here (found opponent, accepted challenge,

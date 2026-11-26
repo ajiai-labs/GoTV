@@ -100,9 +100,12 @@ export const app: Translation<typeof de> = {
 	'app.boards.playingNow': 'Playing now: {white} – {black} · move {move}',
 	'app.boards.watch': 'Watch',
 	'app.boards.full': 'All four boards are taken – remove one in the board overview first.',
+	'app.boards.fullOpened':
+		'The board overview is full (4 boards), so the game opened in a window of its own. Take a board off with × in the board overview or untick the box above.',
 	'app.boards.board': 'Board {board}',
 	'app.boards.move': 'Move {move}',
 	'app.boards.loading': 'Board loading …',
+	'app.boards.gone': 'This game is gone (an earlier KGS session). Take the board off with ×.',
 	'app.boards.all': 'All boards',
 	'app.boards.remove': 'Take off the board',
 	'app.boards.empty':

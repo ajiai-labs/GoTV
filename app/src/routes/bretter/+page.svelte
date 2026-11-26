@@ -210,7 +210,7 @@
 						<BoardChat {game} />
 					</div>
 				{:else}
-					<p class="loading">{t('app.boards.loading')}</p>
+					<p class="loading">{game ? t('app.boards.loading') : t('app.boards.gone')}</p>
 				{/if}
 				<div class="actions">
 					{#if game}
@@ -276,7 +276,9 @@
 										label={`${gameLine(game)}, ${stateLine(game)}`}
 									/>
 								{:else}
-									<span class="loading">{t('app.boards.loading')}</span>
+									<span class="loading">
+										{game ? t('app.boards.loading') : t('app.boards.gone')}
+									</span>
 								{/if}
 							</button>
 						</div>

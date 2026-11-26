@@ -103,9 +103,13 @@ export const app = {
 	'app.boards.playingNow': 'Spielt gerade: {white} – {black} · Zug {move}',
 	'app.boards.watch': 'Ansehen',
 	'app.boards.full': 'Alle vier Bretter sind belegt – entferne erst eines in der Brettübersicht.',
+	'app.boards.fullOpened':
+		'Die Brettübersicht ist voll (4 Bretter), deshalb ist die Partie in einem eigenen Fenster aufgegangen. Nimm in der Brettübersicht ein Brett mit × herunter oder entferne den Haken oben.',
 	'app.boards.board': 'Brett {board}',
 	'app.boards.move': 'Zug {move}',
 	'app.boards.loading': 'Brett lädt …',
+	'app.boards.gone':
+		'Diese Partie ist nicht mehr da (ältere KGS-Sitzung). Nimm das Brett mit × herunter.',
 	'app.boards.all': 'Alle Bretter',
 	'app.boards.remove': 'Vom Brett nehmen',
 	'app.boards.empty':

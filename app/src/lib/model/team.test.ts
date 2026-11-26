@@ -24,6 +24,8 @@ describe('Brettübersicht', () => {
 
 	it('says when all boards are taken', () => {
 		expect(addBoard([1, 2, 3, 4], 5)).toBeNull();
+		// Games of an earlier KGS session are gone: their boards count as free.
+		expect(addBoard([1, 2, 3, 4], 5, (id) => id !== 2)).toEqual([1, 5, 3, 4]);
 	});
 
 	it('remembers the boards and ignores broken entries', () => {
