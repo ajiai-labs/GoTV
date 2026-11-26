@@ -41,6 +41,20 @@ export function gameWindowUrl(gameId: number): string {
 // The windows this window opened, to bring one back instead of a second.
 const opened = new Map<number, Window>();
 
+// A window by name: one that is open already (also opened by another GoTV
+// window) comes back as it is - no reload; a new one opens empty and then
+// loads `url`.
+function openNamed(url: string, name: string): Window | null {
+	const win = window.open('', name, FEATURES);
+	if (!win) return null;
+	try {
+		if (win.location.href === 'about:blank') win.location.replace(url);
+	} catch {
+		// not readable: leave the window as it is
+	}
+	return win;
+}
+
 // Opens (or brings to the front) the window of a game. False if the browser
 // refused it - then the caller shows the game here.
 export function openGameWindow(gameId: number): boolean {
@@ -49,7 +63,7 @@ export function openGameWindow(gameId: number): boolean {
 		known.focus();
 		return true;
 	}
-	const win = window.open(gameWindowUrl(gameId), `gotv-partie-${gameId}`, FEATURES);
+	const win = openNamed(gameWindowUrl(gameId), `gotv-partie-${gameId}`);
 	if (!win) return false;
 	opened.set(gameId, win);
 	win.focus();
@@ -63,7 +77,7 @@ export function openBoardsWindow(): boolean {
 		boardsWindow.focus();
 		return true;
 	}
-	const win = window.open(resolve('/bretter'), 'gotv-bretter', FEATURES);
+	const win = openNamed(resolve('/bretter'), 'gotv-bretter');
 	if (!win) return false;
 	boardsWindow = win;
 	win.focus();

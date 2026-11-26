@@ -788,7 +788,13 @@ die schon offen sind, kommen nach vorn statt doppelt.
   untereinander, ab 3 zwei mal zwei; quadratisch per `container-type: size`). Das vergrößerte
   Brett hat den Partiechat daneben zum Mitlesen und Schreiben (`ui/game/BoardChat.svelte`,
   Wunsch des Nutzers); die Übersicht zeigt nur Stellungen. Keine Analyse (Absprachen während der
-  Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen das Fenster nie nach vorn. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
+  Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen das Fenster nie nach vorn.
+  Die eigene laufende Partie steht (abschaltbar: "Eigene Partie zeigen", `gotv.boardsOwnGame`)
+  als erstes Brett mit Rahmen in der Übersicht, nur als Vorschau: Klick holt das eigene
+  Partiefenster nach vorn, gespielt wird nur dort (Nutzer: das separate Fenster kann mehr).
+  Fenster werden per Name erst leer geöffnet und dann geladen (`openNamed`), damit ein schon
+  offenes Fenster - auch aus einem anderen GoTV-Fenster geöffnet - ohne Neuladen nach vorn kommt;
+  Tauri lässt dafür `about:blank` als lokales Fenster zu. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
   ("die Fenster holt man sich über Beobachten oder das Profil"). Für Turnierübertragungen
   (mehrere Bretter) später dieselbe Steuerung - noch nicht gebaut.
 - NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.

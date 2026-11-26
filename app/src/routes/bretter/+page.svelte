@@ -5,11 +5,14 @@
 	// big - with the game's chat beside it, to read and write - Esc or "Alle
 	// Bretter" goes back. The overview shows positions only; no analysis
 	// anywhere (team matches forbid outside help, DGoB Bundesliga rules § 3).
-	// New moves never bring this window to the front.
+	// New moves never bring this window to the front. Your own running game
+	// can show as a framed preview first; a click on it brings back its own
+	// window - you play only there.
 	import { onMount } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { openGameWindow } from '#lib/gameWindows.ts';
+	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
 	import type { TeamBoards } from '#lib/model/team.ts';
 	import type { BoardMarkup, BoardState, GameChannel } from '#lib/model/types.ts';
@@ -19,6 +22,38 @@
 	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
 
 	const VIEW_KEY = 'gotv.teamView';
+	const OWN_KEY = 'gotv.boardsOwnGame';
+
+	let showOwn = $state(loadShowOwn());
+	function loadShowOwn(): boolean {
+		try {
+			return localStorage.getItem(OWN_KEY) !== 'off';
+		} catch {
+			return true;
+		}
+	}
+	function setShowOwn(on: boolean) {
+		showOwn = on;
+		try {
+			localStorage.setItem(OWN_KEY, on ? 'on' : 'off');
+		} catch {
+			// not remembered without storage
+		}
+	}
+
+	// Your own running game (joined at KGS), shown as a framed preview.
+	let ownGame = $derived.by(() => {
+		const me = app.state.currentUser?.name;
+		if (!me || !showOwn) return null;
+		return (
+			Object.values(app.state.gamesById).find(
+				(game) =>
+					!!app.state.channelMembership[game.id] &&
+					isGamePlayer(me, game.players) &&
+					isGamePlaying(game)
+			) ?? null
+		);
+	});
 
 	let boards: TeamBoards = $state(loadBoards());
 	let big: number | null = $state(loadView());
@@ -65,10 +100,11 @@
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 	let grid = $derived.by(() => {
-		const n = shown.length;
+		const n = shown.length + (ownGame ? 1 : 0);
 		if (n <= 1) return { cols: 1, rows: 1 };
 		if (n === 2) return innerHeight > innerWidth ? { cols: 1, rows: 2 } : { cols: 2, rows: 1 };
-		return { cols: 2, rows: 2 };
+		if (n <= 4) return { cols: 2, rows: 2 };
+		return innerHeight > innerWidth ? { cols: 2, rows: 3 } : { cols: 3, rows: 2 };
 	});
 	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
 
@@ -138,6 +174,14 @@
 	<div class="boards">
 		<header class="head">
 			<h1>{t('app.boards.title')}</h1>
+			<label class="own-switch">
+				<input
+					type="checkbox"
+					checked={showOwn}
+					onchange={(event) => setShowOwn(event.currentTarget.checked)}
+				/>
+				{t('app.boards.showOwn')}
+			</label>
 			{#if bigEntry}
 				<button type="button" class="button" onclick={() => show(null)}>
 					{t('app.boards.all')}
@@ -179,8 +223,33 @@
 					</button>
 				</div>
 			</section>
-		{:else if shown.length}
+		{:else if shown.length || ownGame}
 			<div class="grid" style:--cols={grid.cols} style:--rows={grid.rows}>
+				{#if ownGame}
+					{@const pos = position(ownGame)}
+					<section class="tile own" aria-label={t('app.boards.own')}>
+						<header><strong>{t('app.boards.own')}</strong></header>
+						<div class="area">
+							<button
+								type="button"
+								class="board-button own-button fit"
+								title={t('app.boards.ownHint')}
+								onclick={() => (refused = !openGameWindow(ownGame.id))}
+							>
+								{#if pos}
+									<Board
+										board={pos.board}
+										markup={pos.markup}
+										coordinates={false}
+										label={`${t('app.boards.own')}: ${gameLine(ownGame)}, ${t('app.boards.ownHint')}`}
+									/>
+								{/if}
+							</button>
+						</div>
+						<p class="players">{gameLine(ownGame)}</p>
+						<p class="muted">{stateLine(ownGame)}</p>
+					</section>
+				{/if}
 				{#each shown as entry (entry.board)}
 					{@const game = entry.game}
 					{@const pos = game ? position(game) : null}
@@ -289,6 +358,23 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+	}
+
+	/* Your own game: framed, a click goes to its window. */
+	.tile.own {
+		border: 3px solid var(--accent);
+	}
+
+	.own-button {
+		cursor: pointer;
+	}
+
+	.own-switch {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.9rem;
+		color: var(--ink-soft);
 	}
 
 	.remove {

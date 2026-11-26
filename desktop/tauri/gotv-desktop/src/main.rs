@@ -3,7 +3,8 @@
 //! The page talks to KGS through the server's /json/access proxy - the same
 //! setup as the Linux desktop app with desktop/goTV_local.py.
 //!
-//! Game windows (window.open of /partie, app/src/lib/gameWindows.ts) open as
+//! Game windows (window.open of /partie or /bretter, opened empty by name
+//! and then loaded - app/src/lib/gameWindows.ts) open as
 //! further app windows on the same server; they share the KGS connection of
 //! the first window in the page (windowLink.ts). Links that a page opens in
 //! a new window to anywhere else (e.g. from a stream player) go to the
@@ -54,7 +55,10 @@ fn main() {
 /// windows share storage); anything else opens in the system browser.
 fn new_window_handler<R: Runtime>(app: AppHandle<R>, server: Url) -> NewWindowHandler<R> {
     Box::new(move |url, features| {
-        if url.origin() != server.origin() {
+        // GoTV opens its windows empty by name first (gameWindows.ts) and
+        // then loads the page itself; that is "about:blank".
+        let local = url.origin() == server.origin() || url.as_str() == "about:blank";
+        if !local {
             if matches!(url.scheme(), "http" | "https") {
                 if let Err(err) = gotv_server::open_in_browser(url.as_str()) {
                     eprintln!("GoTV: could not open {url}: {err}");

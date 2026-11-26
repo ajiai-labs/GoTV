@@ -40,6 +40,11 @@ function setState(extra: Record<string, unknown> = {}) {
 	};
 }
 
+// A window as window.open returns it: new and still empty.
+function newPopup() {
+	return { closed: false, focus: vi.fn(), location: { href: 'about:blank', replace: vi.fn() } };
+}
+
 describe('Beobachten', () => {
 	let actions: Record<string, ReturnType<typeof vi.fn>>;
 
@@ -72,18 +77,17 @@ describe('Beobachten', () => {
 
 	it('opens a clicked game in its own window when that is switched on', async () => {
 		localStorage.setItem('gotv.gameWindows', 'on');
-		const open = vi.fn(() => ({ closed: false, focus: vi.fn() }));
+		const popup = newPopup();
+		const open = vi.fn(() => popup);
 		vi.stubGlobal('open', open);
 		actions.onJoinGameQuietly = vi.fn();
 		setState();
 		await render(Page);
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
 		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(12);
-		expect(open).toHaveBeenCalledWith(
-			expect.stringMatching(/\/partie\?id=12$/),
-			'gotv-partie-12',
-			expect.any(String)
-		);
+		// Opened empty by name (an open one would come back as it is), then loaded.
+		expect(open).toHaveBeenCalledWith('', 'gotv-partie-12', expect.any(String));
+		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/partie\?id=12$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
 		// Clicked again: the open window comes to the front, no second one.
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
@@ -94,7 +98,8 @@ describe('Beobachten', () => {
 	it('brings clicked games to the board overview while that is ticked', async () => {
 		localStorage.setItem('gotv.gameWindows', 'on');
 		localStorage.removeItem('gotv.team');
-		const open = vi.fn(() => ({ closed: false, focus: vi.fn() }));
+		const popup = newPopup();
+		const open = vi.fn(() => popup);
 		vi.stubGlobal('open', open);
 		actions.onJoinGameQuietly = vi.fn();
 		setState();
@@ -102,11 +107,8 @@ describe('Beobachten', () => {
 		await page.getByRole('checkbox', { name: /Partien in die Brettübersicht holen/ }).click();
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
 		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([12, null, null, null]);
-		expect(open).toHaveBeenCalledWith(
-			expect.stringMatching(/\/bretter$/),
-			'gotv-bretter',
-			expect.any(String)
-		);
+		expect(open).toHaveBeenCalledWith('', 'gotv-bretter', expect.any(String));
+		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/bretter$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
 		// All four boards taken: it says so instead.
 		localStorage.setItem('gotv.team', '[1,2,3,4]');
