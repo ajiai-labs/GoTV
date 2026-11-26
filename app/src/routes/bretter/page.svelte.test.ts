@@ -31,7 +31,7 @@ describe('Brettübersicht', () => {
 	let actions: Record<string, ReturnType<typeof vi.fn>>;
 
 	beforeEach(() => {
-		actions = { onJoinGameQuietly: vi.fn() };
+		actions = { onViewGame: vi.fn(), onUnviewGame: vi.fn() };
 		app._actions = actions as unknown as AppActions;
 		app.state = {
 			...getInitialState({ status: 'loggedIn', network: 'online', retryTimes: 0 }),
@@ -58,8 +58,9 @@ describe('Brettübersicht', () => {
 		await expect.element(page.getByRole('region', { name: 'Brett 3' })).toBeVisible();
 		await expect.element(page.getByRole('region', { name: 'Brett 2' })).not.toBeInTheDocument();
 		await expect.element(page.getByText('Lukan [7d] – anna [5d]')).toBeVisible();
-		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(90);
-		expect(actions.onJoinGameQuietly).not.toHaveBeenCalledWith(91); // over
+		// Both boards are registered as shown here with the KGS connection.
+		expect(actions.onViewGame).toHaveBeenCalledWith(90, expect.any(String));
+		expect(actions.onViewGame).toHaveBeenCalledWith(91, expect.any(String));
 		// The overview: positions only, nothing to type in.
 		await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
 	});
@@ -126,5 +127,8 @@ describe('Brettübersicht', () => {
 			.click();
 		await expect.element(page.getByRole('region', { name: 'Brett 3' })).not.toBeInTheDocument();
 		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([90, null, null, null]);
+		// Taken off: no longer shown here, the KGS connection may let it go.
+		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
+		expect(actions.onUnviewGame).not.toHaveBeenCalledWith(90, expect.any(String));
 	});
 });

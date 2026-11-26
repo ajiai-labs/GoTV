@@ -94,6 +94,8 @@ export const app = {
 	'app.boards.openHint':
 		'Mehrere Partien in einem eigenen Fenster – für den Mannschaftskampf oder Partien, die du verfolgen willst',
 	'app.boards.add': 'Zur Brettübersicht',
+	'app.boards.added':
+		'Die Partie liegt jetzt in der Brettübersicht. Das Fenster ist schon offen – „Brettübersicht“ holt es nach vorn.',
 	'app.boards.own': 'Deine Partie',
 	'app.boards.ownHint': 'Klick: zurück in dein Partiefenster',
 	'app.boards.showOwn': 'Eigene Partie zeigen',

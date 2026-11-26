@@ -91,6 +91,8 @@ export const app: Translation<typeof de> = {
 	'app.boards.openHint':
 		'Several games in a window of their own – for a team match or games you want to follow',
 	'app.boards.add': 'To the board overview',
+	'app.boards.added':
+		'The game is in the board overview now. Its window is open already – "Board overview" brings it to the front.',
 	'app.boards.own': 'Your game',
 	'app.boards.ownHint': 'Click: back to your game window',
 	'app.boards.showOwn': 'Show own game',

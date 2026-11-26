@@ -33,6 +33,9 @@ describe('channels closed by KGS', () => {
 
 	it('still leaves an open game, and a game joined again after closing', () => {
 		const { sendMessage, actions } = setup();
+		actions.onReceiveServerMessages([
+			{ type: 'GAME_JOIN', channelId: 42, gameType: 'free', players: {}, sgfEvents: [], users: [] }
+		]);
 		actions.onLeaveGame(42);
 		expect(unjoins(sendMessage)).toHaveLength(1);
 

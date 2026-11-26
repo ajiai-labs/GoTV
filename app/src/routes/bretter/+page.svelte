@@ -12,6 +12,7 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { openGameWindow } from '#lib/gameWindows.ts';
+	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
 	import type { TeamBoards } from '#lib/model/team.ts';
@@ -108,14 +109,22 @@
 	});
 	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
 
-	// The games on the boards are joined at KGS (nothing happens if joined).
+	// The games on the boards are registered as shown here with the window
+	// that holds the KGS connection: it joins each once and lets go when no
+	// window shows it any more - also when a board is taken off (×).
+	let viewed: Array<number> = []; // not reactive: only bookkeeping
+	function syncViews(ids: Array<number>) {
+		for (const id of ids) {
+			if (!viewed.includes(id)) app.actions.onViewGame(id, VIEW_ID);
+		}
+		for (const id of viewed) {
+			if (!ids.includes(id)) app.actions.onUnviewGame(id, VIEW_ID);
+		}
+		viewed = [...ids];
+	}
 	$effect(() => {
 		if (!app.started || !app.loggedIn) return;
-		for (const { game } of shown) {
-			// Again when KGS ends a membership (a window of that game closed).
-			const joined = !!app.state.channelMembership[game?.id ?? -1];
-			if (game && !game.over && !joined) app.actions.onJoinGameQuietly(game.id);
-		}
+		syncViews(shown.flatMap(({ game }) => (game ? [game.id] : [])));
 	});
 
 	onMount(() => {
@@ -129,11 +138,17 @@
 			const typing = !!target?.closest('input, textarea, [role="dialog"]');
 			if (event.key === 'Escape' && big && !typing) show(null);
 		};
+		const leave = () => {
+			if (app.started) syncViews([]);
+		};
 		window.addEventListener('storage', onStorage);
 		window.addEventListener('keydown', onKey);
+		window.addEventListener('pagehide', leave);
 		return () => {
 			window.removeEventListener('storage', onStorage);
 			window.removeEventListener('keydown', onKey);
+			window.removeEventListener('pagehide', leave);
+			leave();
 		};
 	});
 

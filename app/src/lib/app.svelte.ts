@@ -100,6 +100,11 @@ class GoTvApp {
 	// 'follower': another GoTV window holds the KGS connection; this one
 	// mirrors its state (windowLink.ts).
 	role: 'owner' | 'follower' | null = $state(null);
+	// A player's profile opens in the window where the name was clicked:
+	// `detailsHere` - asked for in this (follower) window; `detailsElsewhere` -
+	// asked for by a follower, so this (owner) window does not show it.
+	detailsHere: string | null = $state(null);
+	detailsElsewhere: string | null = $state(null);
 	private starting = false;
 
 	get actions(): AppActions {
@@ -149,6 +154,7 @@ class GoTvApp {
 			const ready = this.state.initialized;
 			const before = this.state.playGameId ?? null;
 			this.state = store.getState();
+			if (!this.state.userDetailsRequest) this.detailsElsewhere = null;
 			if (ready) this.moveNewOwnGameOut(before, this.state.playGameId);
 		});
 		client.setOnChange((clientState) => actions.onClientStateChange(clientState));
@@ -186,6 +192,7 @@ class GoTvApp {
 			if (message.t === 'hello') {
 				snapshot();
 			} else if (message.t === 'call' && FORWARDED_ACTIONS.has(message.method)) {
+				if (message.method === 'onUserDetail') this.detailsElsewhere = String(message.args[0]);
 				const action = (actions as unknown as Record<string, unknown>)[message.method];
 				if (typeof action === 'function') {
 					(action as (...args: Array<unknown>) => unknown)(...message.args);
@@ -204,6 +211,7 @@ class GoTvApp {
 		this.client = null;
 		store.subscribe(() => {
 			this.state = store.getState();
+			if (!this.state.userDetailsRequest) this.detailsHere = null;
 		});
 		const feed = new FollowerFeed(
 			(msgs) => store.dispatch(msgs),
@@ -218,8 +226,10 @@ class GoTvApp {
 					if (typeof method !== 'string' || !FORWARDED_ACTIONS.has(method)) {
 						return () => {}; // not from a follower window
 					}
-					return (...args: Array<unknown>) =>
+					return (...args: Array<unknown>) => {
+						if (method === 'onUserDetail') this.detailsHere = String(args[0]);
 						link.postMessage({ t: 'call', method, args } satisfies LinkMessage);
+					};
 				}
 			}
 		);
@@ -243,15 +253,18 @@ class GoTvApp {
 	// Brettübersicht holen" on): to the Brettübersicht. All its boards taken:
 	// the game opens as usual all the same, and 'full' tells the page to say
 	// why (a click must never do nothing).
-	watchGame(gameId: number | string, options: { toBoards?: boolean } = {}): 'full' | undefined {
+	watchGame(
+		gameId: number | string,
+		options: { toBoards?: boolean } = {}
+	): 'full' | 'added' | undefined {
 		let full = false;
 		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode()) {
 			const result = bringToBoards(gameId, (id) => !!this.state.gamesById[id]);
 			if (result === 'shown') return;
+			if (result === 'added') return 'added';
 			full = result === 'full';
 		}
 		if (typeof gameId === 'number' && loadGameWindows()) {
-			this.actions.onJoinGameQuietly(gameId);
 			if (openGameWindow(gameId)) return full ? 'full' : undefined;
 		}
 		this.actions.onJoinGame(gameId);

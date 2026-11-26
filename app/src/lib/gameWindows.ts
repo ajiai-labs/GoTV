@@ -76,14 +76,26 @@ export function openBoardsWindow(): boolean {
 // "Zur Brettübersicht" (Beobachten, player profile): the game goes on the
 // next free board and the window opens or comes to the front. 'full' if all
 // boards are taken, 'refused' if the browser blocked the window.
+// If the overview is open already it takes the new board by itself (storage
+// event) and is left as it is - position, enlarged board - 'added'; the
+// "Brettübersicht" button brings it to the front.
 export function bringToBoards(
 	gameId: number,
 	isKnown?: (id: number) => boolean
-): 'shown' | 'full' | 'refused' {
+): 'shown' | 'added' | 'full' | 'refused' {
 	const boards = addBoard(loadBoards(), gameId, isKnown);
 	if (!boards) return 'full';
 	saveBoards(boards);
-	return openBoardsWindow() ? 'shown' : 'refused';
+	const win = window.open('', 'gotv-bretter', FEATURES);
+	if (!win) return 'refused';
+	try {
+		if (win.location.href !== 'about:blank') return 'added';
+	} catch {
+		return 'added';
+	}
+	win.location.replace(resolve('/bretter'));
+	win.focus();
+	return 'shown';
 }
 
 // "Partien in die Brettübersicht holen" (switch on Beobachten): while it is

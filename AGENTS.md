@@ -808,6 +808,26 @@ die schon offen sind, kommen nach vorn statt doppelt.
   (das ersetzte Fenster verlässt beobachtete Partien beim Schließen). Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
   ("die Fenster holt man sich über Beobachten oder das Profil"). Für Turnierübertragungen
   (mehrere Bretter) später dieselbe Steuerung - noch nicht gebaut.
+- Ein KGS-Abo pro Partie für alle Ansichten (26.11.2026, nach "Unknown channel"-Abmeldung durch
+  KGS im Test des Nutzers): Partiefenster und Brettübersicht melden sich beim Besitzer-Fenster mit
+  `onViewGame(gameId, VIEW_ID)` an und mit `onUnviewGame` ab (pagehide, ×). `AppActions` tritt
+  einmal bei (`_joinForViews`: nur Partien, die KGS noch in `activeGames` führt, nie mit
+  `deletedTime`, nie doppelt) und verlässt erst 3 s nach der letzten Ansicht (ein frisch geöffnetes
+  Fenster meldet sich vorher wieder an) - nicht die im Hauptfenster gezeigte, nicht die eigene
+  laufende Partie, nur bei Mitgliedschaft. `onLeaveGame` verlässt nicht, solange eine Ansicht die
+  Partie zeigt. KGS meldet die GANZE Verbindung ab ("Internal error … Unknown channel"), wenn es
+  eine Anfrage für einen Kanal bekommt, den es nicht kennt. Tests: `model/gameViews.test.ts`.
+- "Zur Brettübersicht" lässt eine schon offene Übersicht stehen (sie liest die neuen Bretter per
+  storage-Event, Position und vergrößertes Brett bleiben) und sagt das; nur der Knopf
+  "Brettübersicht" holt sie (geschlossen + neu geöffnet) nach vorn.
+- Profile öffnen sich im Fenster, in dem der Name geklickt wurde (`onUserDetail`/
+  `onCloseUserDetail` weitergeleitet, `app.detailsHere`/`detailsElsewhere`).
+- Partiechat-Ton: KGS schickt den Chat einer Partie als COMMENT-Props in `GAME_UPDATE`
+  (`commentAuthor` in `model/chatSound.ts`, Autor der letzten Zeile ≠ ich → Ton).
+- KGS-Client: HTTP 5xx (z. B. 502 des lokalen Proxys nach Timeout) gilt als Netzfehler mit neuem
+  Versuch, nicht als verlorene Sitzung (`KgsClient`, vorher Abmeldung).
+- Steinklick nur in der eigenen laufenden Partie - Brettübersicht und beobachtete Partien bleiben
+  stumm (Nutzer: vier Bretter dürfen nicht durcheinander klacken).
 - NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.
 
 ## Steinoptik (26.11.2026)

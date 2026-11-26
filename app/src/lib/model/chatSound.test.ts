@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isChatForMe } from './chatSound';
+import { commentAuthor, isChatForMe } from './chatSound';
 import type { AppState } from './types';
 
 function state(extra: Partial<AppState> = {}) {
@@ -52,5 +52,32 @@ describe('chat sound', () => {
 
 	it('stays quiet while logged out', () => {
 		expect(isChatForMe(state({ currentUser: null }), 7, 'ziming9')).toBe(false);
+	});
+
+	it('reads who wrote the newest line of a game chat (comments of moves)', () => {
+		const update = (text: string, type = 'PROP_ADDED') => ({
+			type: 'GAME_UPDATE',
+			channelId: 20,
+			sgfEvents: [{ type, nodeId: 5, prop: { name: 'COMMENT', text } }]
+		});
+		expect(commentAuthor(update('andy1975 [1d]: hallo\nziming9 [4d]: bist du da?\n'))).toBe(
+			'ziming9'
+		);
+		expect(commentAuthor(update('ziming9 [4d]: hallo\nandy1975 [1d]: ja\n', 'PROP_CHANGED'))).toBe(
+			'andy1975'
+		);
+		expect(
+			commentAuthor({
+				type: 'GAME_UPDATE',
+				sgfEvents: [{ type: 'PROP_GROUP_ADDED', props: [{ name: 'COMMENT', text: 'gast: hi' }] }]
+			})
+		).toBe('gast');
+		// A move without chat: nothing.
+		expect(
+			commentAuthor({
+				type: 'GAME_UPDATE',
+				sgfEvents: [{ type: 'PROP_GROUP_ADDED', props: [{ name: 'MOVE', color: 'black' }] }]
+			})
+		).toBeNull();
 	});
 });

@@ -26,8 +26,11 @@
 	let boardsMode = $state(loadBoardsMode());
 	let boardsFull = $state(false);
 
+	let boardsAdded = $state(false);
 	function select(id: number) {
-		boardsFull = app.watchGame(id, { toBoards: true }) === 'full';
+		const result = app.watchGame(id, { toBoards: true });
+		boardsFull = result === 'full';
+		boardsAdded = result === 'added';
 	}
 
 	let appState = $derived(app.state);
@@ -97,6 +100,9 @@
 			{/if}
 			{#if boardsRefused}
 				<p class="muted WatchScreen-note" role="status">{t('game.screen.ownWindowRefused')}</p>
+			{/if}
+			{#if boardsAdded}
+				<p class="WatchScreen-note" role="status">{t('app.boards.added')}</p>
 			{/if}
 			{#if boardsFull}
 				<p class="WatchScreen-warn" role="status">{t('app.boards.fullOpened')}</p>

@@ -37,9 +37,16 @@ export const FORWARDED_ACTIONS = new Set([
 	'onAddGameTime',
 	'onSendGameChat',
 	'onChangeCurrentNode',
-	'onJoinGameQuietly',
-	'onLeaveGame'
+	'onViewGame',
+	'onUnviewGame',
+	'onLeaveGame',
+	// A profile opens in the window where the name was clicked (app.svelte.ts).
+	'onUserDetail',
+	'onCloseUserDetail'
 ]);
+
+// This window, for the views registered with the owner (onViewGame).
+export const VIEW_ID = `view-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function canLinkWindows(): boolean {
 	return (

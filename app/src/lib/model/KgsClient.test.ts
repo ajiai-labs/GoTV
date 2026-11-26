@@ -34,4 +34,39 @@ describe('KgsClient.poll', () => {
 		expect(onMessages).toHaveBeenCalledWith([{ type: 'LOGOUT' }, { type: 'SESSION_EXPIRED' }]);
 		expect(client.state.status).toBe('loggedOut');
 	});
+
+	it('takes a 502 (proxy timeout) as a broken connection to retry, not a lost session', async () => {
+		class FakeXhr {
+			status = 0;
+			readyState = 0;
+			responseText = '';
+			onreadystatechange: (() => void) | null = null;
+			constructor(private readonly answer: number) {}
+			addEventListener() {}
+			open() {}
+			setRequestHeader() {}
+			send() {
+				this.status = this.answer;
+				this.readyState = 4;
+				this.onreadystatechange?.();
+			}
+		}
+		let answer = 502;
+		vi.stubGlobal(
+			'XMLHttpRequest',
+			class extends FakeXhr {
+				constructor() {
+					super(answer);
+				}
+			}
+		);
+		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		await expect(client._receiveMessages()).rejects.toMatchObject({ type: 'networkError' });
+		await client.poll();
+		expect(client.state).toMatchObject({ status: 'loggedIn', network: 'error', retryTimes: 1 });
+		// A 4xx still means KGS no longer knows this client.
+		answer = 403;
+		await expect(client._receiveMessages()).rejects.toMatchObject({ type: 'noClient' });
+		vi.unstubAllGlobals();
+	});
 });

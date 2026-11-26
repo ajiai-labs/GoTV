@@ -118,6 +118,14 @@
 	// Windows that only mirror the KGS connection of another one: no second
 	// notification, reminder or profile dialog from them.
 	let mirror = $derived(app.role === 'follower' || gameWindow);
+	// A profile shows in the window where its name was clicked.
+	let showDetails = $derived.by(() => {
+		const request = appState.userDetailsRequest;
+		if (!request) return false;
+		return app.role === 'follower'
+			? request.name === app.detailsHere
+			: request.name !== app.detailsElsewhere;
+	});
 	let boardOpen = $derived(
 		gameWindow ||
 			(page.route.id === '/nachspielen' &&
@@ -284,7 +292,7 @@
 		</footer>
 	{/if}
 
-	{#if appState.userDetailsRequest && !mirror}
+	{#if showDetails}
 		<UserDetailsModal />
 	{/if}
 	<!-- "Mein GoTV": notifications 10 min before a starred event, app-wide -->

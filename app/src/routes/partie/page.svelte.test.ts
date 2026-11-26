@@ -45,7 +45,8 @@ describe('Partie im eigenen Fenster', () => {
 			vi.fn(() => Promise.reject(new Error('offline')))
 		);
 		actions = {
-			onJoinGameQuietly: vi.fn(),
+			onViewGame: vi.fn(),
+			onUnviewGame: vi.fn(),
 			onLeaveGame: vi.fn(),
 			onChangeCurrentNode: vi.fn()
 		};
@@ -70,7 +71,7 @@ describe('Partie im eigenen Fenster', () => {
 		vi.stubGlobal('close', close);
 		await render(Page);
 		await expect.element(page.getByRole('heading', { name: 'Bundesliga Brett 2' })).toBeVisible();
-		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(31);
+		expect(actions.onViewGame).toHaveBeenCalledWith(31, expect.any(String));
 		// No way back to the main window's pages in here, and no second window.
 		await expect
 			.element(page.getByRole('button', { name: 'Eigenes Fenster' }))

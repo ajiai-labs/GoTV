@@ -247,7 +247,9 @@ export class KgsClient {
 			const xhr = new XMLHttpRequest();
 
 			const onError = () => {
-				const errorType = xhr.status ? 'noClient' : 'networkError';
+				// A 5xx (e.g. 502 from the local proxy after a timeout) is a broken
+				// connection to retry, not a lost session.
+				const errorType = xhr.status && xhr.status < 500 ? 'noClient' : 'networkError';
 				const err = new ApiError('Receive failed', errorType, xhr);
 				reject(err);
 			};
@@ -277,7 +279,9 @@ export class KgsClient {
 			const xhr = new XMLHttpRequest();
 
 			const onError = () => {
-				const errorType = xhr.status ? 'noClient' : 'networkError';
+				// A 5xx (e.g. 502 from the local proxy after a timeout) is a broken
+				// connection to retry, not a lost session.
+				const errorType = xhr.status && xhr.status < 500 ? 'noClient' : 'networkError';
 				const err = new ApiError('Send failed', errorType, xhr);
 				reject(err);
 			};

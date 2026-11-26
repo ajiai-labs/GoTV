@@ -2,9 +2,9 @@ import { AppStore } from './AppStore';
 import { KgsClient } from './KgsClient';
 import { tempId, isTempId } from './tempId';
 import { prepareSavedAppState } from './appState';
-import { isGamePlayer, isGameProposalPlayer, proposalsEqual } from './game';
+import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } from './game';
 import { playGameStart, playMessage } from '../sound/gameSounds';
-import { isChatForMe } from './chatSound';
+import { commentAuthor, isChatForMe } from './chatSound';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -32,6 +32,8 @@ import type {
 	PlayerColor
 } from './types';
 import { distinct } from '../util/collection';
+// How long a game nobody shows stays joined (a window opened afresh).
+const GAME_RELEASE_DELAY_MS = 3000;
 const APP_STATE_SAVE_KEY = 'savedAppState';
 export class AppActions {
 	_store: AppStore;
@@ -139,6 +141,10 @@ export class AppActions {
 				this.onReceiveChallengeSubmit(msg.channelId);
 			} else if (msg.type === 'CHAT' && msg.channelId && msg.user) {
 				this.onReceiveChat(msg.channelId, msg.user.name);
+			} else if (msg.type === 'GAME_UPDATE' && msg.channelId) {
+				// The chat of a game comes as comments of its moves.
+				const from = commentAuthor(msg);
+				if (from) this.onReceiveChat(msg.channelId, from);
 			} else if (msg.type === 'ARCHIVE_JOIN' && msg.channelId) {
 				this.onArchiveJoinSuccess(msg.channelId, msg.user);
 			} else if (msg.type === 'GLOBAL_GAMES_JOIN' || msg.type === 'GAME_LIST') {
@@ -341,13 +347,65 @@ export class AppActions {
 		if (state.watchGameId === gameId) msgs.push({ type: 'WATCH_GAME', gameId: null });
 		if (msgs.length) this._store.dispatch(msgs);
 	};
-	// A game in its own window (windowLink.ts): join it at KGS without
-	// switching this window to it. Nothing happens if it is joined already.
-	onJoinGameQuietly = (gameId: number) => {
+	// Games shown in other windows (a game window, the Brettübersicht -
+	// windowLink.ts): each view registers here. KGS gets a join only once and
+	// an unjoin only when no view needs the game any more - KGS ends the whole
+	// connection ("Unknown channel") on a request for a channel it does not
+	// know, so nothing is sent for a removed game or a channel we are not in.
+	_gameViews = new Map<number, Set<string>>();
+	_releaseTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+	onViewGame = (gameId: number, viewId: string) => {
+		const views = this._gameViews.get(gameId) ?? new Set<string>();
+		views.add(viewId);
+		this._gameViews.set(gameId, views);
+		clearTimeout(this._releaseTimers.get(gameId));
+		this._releaseTimers.delete(gameId);
+		this._joinForViews(gameId);
+	};
+
+	onUnviewGame = (gameId: number, viewId: string) => {
+		const views = this._gameViews.get(gameId);
+		if (!views) return;
+		views.delete(viewId);
+		if (views.size) return;
+		this._gameViews.delete(gameId);
+		// A window that is replaced (closed and opened afresh) registers again
+		// a moment later; only then let go.
+		clearTimeout(this._releaseTimers.get(gameId));
+		this._releaseTimers.set(
+			gameId,
+			setTimeout(() => {
+				this._releaseTimers.delete(gameId);
+				if (!this._gameViews.has(gameId)) this._releaseGame(gameId);
+			}, GAME_RELEASE_DELAY_MS)
+		);
+	};
+
+	_isGameViewed = (gameId: number): boolean =>
+		this._gameViews.has(gameId) || this._releaseTimers.has(gameId);
+
+	_joinForViews = (gameId: number) => {
 		const state = this._store.getState();
-		if (!state.gamesById[gameId] || state.channelMembership[gameId] || this._isOffline()) return;
+		const game = state.gamesById[gameId];
+		if (!game || game.deletedTime || state.channelMembership[gameId] || this._isOffline()) return;
+		// Only a game KGS still lists: a finished game whose channel is gone
+		// would make KGS log us out. Its last position stays on the board.
+		if (!state.activeGames.some((listed) => listed.id === gameId)) return;
 		this._store.dispatch({ type: 'GAME_JOIN', channelId: gameId });
 		this._client.sendMessage({ type: 'JOIN_REQUEST', channelId: gameId });
+	};
+
+	// Unjoin a game nobody shows any more: not the game this window shows,
+	// not an own running game, and only a channel we are in.
+	_releaseGame = (gameId: number) => {
+		const state = this._store.getState();
+		if (state.watchGameId === gameId || state.playGameId === gameId) return;
+		if (!state.channelMembership[gameId]) return;
+		const me = state.currentUser?.name;
+		const game = state.gamesById[gameId];
+		if (game && me && isGamePlayer(me, game.players) && isGamePlaying(game)) return;
+		this.onUnjoin(gameId);
 	};
 	onLeaveGame = (game: GameChannel | number) => {
 		const gameId = typeof game === 'number' ? game : game.id;
@@ -374,6 +432,11 @@ export class AppActions {
 			this._store.dispatch(msgs);
 		}
 
+		// Still shown in another window: stay joined there. Not joined at all
+		// (neither a member nor shown here): nothing to leave.
+		if (this._isGameViewed(gameId)) return;
+		const shownHere = state.watchGameId === gameId || state.playGameId === gameId;
+		if (!state.channelMembership[gameId] && !shownHere) return;
 		this.onUnjoin(gameId);
 	};
 	onSelectChallenge = (challengeId: number) => {

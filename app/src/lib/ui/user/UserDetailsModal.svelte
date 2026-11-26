@@ -134,9 +134,11 @@
 		boardsNote =
 			result === 'full'
 				? t('app.boards.full')
-				: result === 'refused'
-					? t('game.screen.ownWindowRefused')
-					: null;
+				: result === 'added'
+					? t('app.boards.added')
+					: result === 'refused'
+						? t('game.screen.ownWindowRefused')
+						: null;
 	}
 
 	let statusText = $derived.by(() => {

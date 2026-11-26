@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
+	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
 	import Spinner from '#lib/ui/Spinner.svelte';
@@ -23,20 +24,26 @@
 		return names.length ? names.join(' – ') : t('app.gameWindow.title');
 	});
 
-	// Join once the shared state is there (nothing happens if joined) - and
-	// again if KGS ends the membership, e.g. when this window replaced an
-	// older one of the same game that left it on closing.
+	// This window shows the game: registered with the window that holds the
+	// KGS connection, which joins it once and lets go when no window shows it
+	// any more (AppActions.onViewGame).
+	let viewing = false;
 	$effect(() => {
-		const joined = !!app.state.channelMembership[gameId];
-		if (!joined && game && app.loggedIn && app.started) app.actions.onJoinGameQuietly(gameId);
+		if (viewing || !game || !app.loggedIn || !app.started) return;
+		viewing = true;
+		app.actions.onViewGame(gameId, VIEW_ID);
 	});
 
 	onMount(() => {
 		const leave = () => {
-			if (game && !mine && app.started) app.actions.onLeaveGame(gameId);
+			if (viewing && app.started) app.actions.onUnviewGame(gameId, VIEW_ID);
+			viewing = false;
 		};
 		window.addEventListener('pagehide', leave);
-		return () => window.removeEventListener('pagehide', leave);
+		return () => {
+			window.removeEventListener('pagehide', leave);
+			leave();
+		};
 	});
 </script>
 

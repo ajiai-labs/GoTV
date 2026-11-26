@@ -85,11 +85,9 @@ describe('Beobachten', () => {
 		const popup = newPopup();
 		const open = vi.fn(() => popup);
 		vi.stubGlobal('open', open);
-		actions.onJoinGameQuietly = vi.fn();
 		setState();
 		await render(Page);
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
-		expect(actions.onJoinGameQuietly).toHaveBeenCalledWith(12);
 		// Opened empty by name (an open one would come back as it is), then loaded.
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-12', expect.any(String));
 		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/partie\?id=12$/));
@@ -113,7 +111,6 @@ describe('Beobachten', () => {
 		const popup = newPopup();
 		const open = vi.fn(() => popup);
 		vi.stubGlobal('open', open);
-		actions.onJoinGameQuietly = vi.fn();
 		setState();
 		await render(Page);
 		await page.getByRole('checkbox', { name: /Partien in die Brettübersicht holen/ }).click();
@@ -150,7 +147,6 @@ describe('Beobachten', () => {
 			'open',
 			vi.fn(() => null)
 		);
-		actions.onJoinGameQuietly = vi.fn();
 		setState();
 		await render(Page);
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
