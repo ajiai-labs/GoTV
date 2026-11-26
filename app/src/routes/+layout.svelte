@@ -101,6 +101,7 @@
 	let wideBoard = $derived(
 		page.route.id === '/nachspielen' ||
 			page.route.id === '/partie' ||
+			page.route.id === '/bretter' ||
 			(!config.guestOnly &&
 				!!appState.currentUser &&
 				((page.route.id === '/beobachten' &&

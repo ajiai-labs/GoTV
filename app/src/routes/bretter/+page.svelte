@@ -209,15 +209,14 @@
 <KgsGate inWindow>
 	{#if bigEntry?.game}
 		{@const game = bigEntry.game}
-		<!-- The same game screen as a game window, with all it can do. -->
-		<div class="single">
-			<GameScreen
-				{game}
-				playing={isMine(game) && isGamePlaying(game)}
-				inWindow
-				onBack={() => show(null)}
-			/>
-		</div>
+		<!-- The same game screen as a game window, with all it can do - right
+		     under main, so it fills the window like a game window. -->
+		<GameScreen
+			{game}
+			playing={isMine(game) && isGamePlaying(game)}
+			inWindow
+			onBack={() => show(null)}
+		/>
 	{:else}
 		<div class="boards">
 			<header class="head">
@@ -458,11 +457,6 @@
 		flex-direction: column;
 		gap: 10px;
 		align-items: center;
-	}
-
-	/* One board enlarged: the game screen fills the window. */
-	.single {
-		padding: 8px 12px 0;
 	}
 
 	.actions {

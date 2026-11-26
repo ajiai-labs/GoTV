@@ -333,7 +333,25 @@ describe('GameScreen', () => {
 		await view.unmount();
 		await render(GameScreen, props);
 		await expect.poll(boardWidth).toBeCloseTo(adjustedWidth);
-		localStorage.removeItem('gotv.gameBoardWidth');
+		localStorage.removeItem('gotv.gameSideWidth');
+		await page.viewport(414, 896);
+	});
+
+	it('grows the board with the window, as in CGoban', async () => {
+		mockActions();
+		localStorage.setItem('gotv.gameSideWidth', '380');
+		await page.viewport(1200, 760);
+		await render(GameScreen, { game: fixtureGame({ over: true, score: 'W+RESIGN' }) });
+		const board = page.getByRole('img', { name: /Zug 2/ });
+		await expect.element(board).toBeVisible();
+		const small = board.element().getBoundingClientRect().width;
+		// Maximised: the side column keeps its width, the board takes the rest.
+		await page.viewport(1900, 1100);
+		await expect
+			.poll(() => board.element().getBoundingClientRect().width)
+			.toBeGreaterThan(small + 200);
+		expect(board.element().getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
+		localStorage.removeItem('gotv.gameSideWidth');
 		await page.viewport(414, 896);
 	});
 
