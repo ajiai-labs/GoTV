@@ -123,7 +123,14 @@ describe('Brettübersicht', () => {
 		await render(Page);
 		await page.getByRole('button', { name: 'Alle entfernen' }).click();
 		await expect.element(page.getByRole('region', { name: 'Brett 1' })).not.toBeInTheDocument();
-		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([null, null, null, null]);
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
+			null,
+			null,
+			null,
+			null,
+			null,
+			null
+		]);
 		expect(actions.onUnviewGame).toHaveBeenCalledWith(90, expect.any(String));
 		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
 	});
@@ -135,7 +142,14 @@ describe('Brettübersicht', () => {
 			.getByRole('button', { name: 'Vom Brett nehmen' })
 			.click();
 		await expect.element(page.getByRole('region', { name: 'Brett 3' })).not.toBeInTheDocument();
-		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([90, null, null, null]);
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
+			90,
+			null,
+			null,
+			null,
+			null,
+			null
+		]);
 		// Taken off: no longer shown here, the KGS connection may let it go.
 		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
 		expect(actions.onUnviewGame).not.toHaveBeenCalledWith(90, expect.any(String));

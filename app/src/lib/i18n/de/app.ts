@@ -101,12 +101,12 @@ export const app = {
 	'app.boards.showOwn': 'Eigene Partie zeigen',
 	'app.boards.mode': 'Partien in die Brettübersicht holen',
 	'app.boards.modeHint':
-		'Solange der Haken gesetzt ist, kommt jede Partie, die du hier anklickst, in die Brettübersicht – ein Fenster mit bis zu vier Brettern, z. B. für den Mannschaftskampf.',
+		'Solange der Haken gesetzt ist, kommt jede Partie, die du hier anklickst, in die Brettübersicht – ein Fenster mit bis zu sechs Brettern, z. B. für den Mannschaftskampf.',
 	'app.boards.playingNow': 'Spielt gerade: {white} – {black} · Zug {move}',
 	'app.boards.watch': 'Ansehen',
-	'app.boards.full': 'Alle vier Bretter sind belegt – entferne erst eines in der Brettübersicht.',
+	'app.boards.full': 'Alle sechs Bretter sind belegt – entferne erst eines in der Brettübersicht.',
 	'app.boards.fullOpened':
-		'Die Brettübersicht ist voll (4 Bretter), deshalb ist die Partie in einem eigenen Fenster aufgegangen. Nimm in der Brettübersicht ein Brett mit × herunter oder entferne den Haken oben.',
+		'Die Brettübersicht ist voll (6 Bretter), deshalb ist die Partie in einem eigenen Fenster aufgegangen. Nimm in der Brettübersicht ein Brett mit × herunter oder entferne den Haken oben.',
 	'app.boards.board': 'Brett {board}',
 	'app.boards.move': 'Zug {move}',
 	'app.boards.loading': 'Brett lädt …',

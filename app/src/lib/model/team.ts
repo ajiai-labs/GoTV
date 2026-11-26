@@ -8,7 +8,7 @@ import { isGamePlaying } from './game';
 import type { GameChannel } from './types';
 
 export const TEAM_KEY = 'gotv.team';
-export const TEAM_BOARDS = 4;
+export const TEAM_BOARDS = 6;
 
 // Board N (1..TEAM_BOARDS) shows boards[N - 1]: a KGS game id or null.
 export type TeamBoards = Array<number | null>;

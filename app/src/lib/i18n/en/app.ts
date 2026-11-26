@@ -98,12 +98,12 @@ export const app: Translation<typeof de> = {
 	'app.boards.showOwn': 'Show own game',
 	'app.boards.mode': 'Bring games to the board overview',
 	'app.boards.modeHint':
-		'While this is ticked, every game you click here goes to the board overview – one window with up to four boards, e.g. for a team match.',
+		'While this is ticked, every game you click here goes to the board overview – one window with up to six boards, e.g. for a team match.',
 	'app.boards.playingNow': 'Playing now: {white} – {black} · move {move}',
 	'app.boards.watch': 'Watch',
-	'app.boards.full': 'All four boards are taken – remove one in the board overview first.',
+	'app.boards.full': 'All six boards are taken – remove one in the board overview first.',
 	'app.boards.fullOpened':
-		'The board overview is full (4 boards), so the game opened in a window of its own. Take a board off with × in the board overview or untick the box above.',
+		'The board overview is full (6 boards), so the game opened in a window of its own. Take a board off with × in the board overview or untick the box above.',
 	'app.boards.board': 'Board {board}',
 	'app.boards.move': 'Move {move}',
 	'app.boards.loading': 'Board loading …',

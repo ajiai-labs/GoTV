@@ -79,7 +79,7 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   Your own game opens in its own window too, also when it starts by itself
   (automatch, accepted challenge). All windows share one KGS connection - a second
   tab says where KGS runs. The board grows with the window, as in CGoban.
-- **Brettübersicht (board overview, team matches):** up to four games in one calm
+- **Brettübersicht (board overview, team matches):** up to six games in one calm
   window apart from your own game - see [below](#brettübersicht-board-overview).
 - **Stones like a real set:** white like clam shell (muted ivory with fine
   growth lines, every stone different), black like matte slate; white is
@@ -198,7 +198,8 @@ follow side by side - in a window of its own, so your own game stays undisturbed
   while it is ticked, every game you click goes to the overview. Or use **"Zur
   Brettübersicht"** in a watched game's *Mehr* menu, or in a player's profile when the
   player is playing right now (e.g. a team mate).
-- **Fills the window:** one board alone, two side by side, three or four two by two; the
+- **Fills the window:** one board alone, two side by side, three or four two by two,
+  five or six three by two; the
   boards grow and shrink with the window. Each board shows the latest position, the
   last move, both players and the move number - and the result once the game is over.
 - **One board big:** a click on a board shows it with the full game screen (players,
@@ -211,7 +212,8 @@ follow side by side - in a window of its own, so your own game stays undisturbed
 - **Remove:** × takes one board off, **"Alle entfernen"** all of them; closing the window
   ends the overview - the next game you bring in starts an empty one. Logging out of KGS
   closes it too.
-- Up to four boards; with all four taken, a clicked game opens in its own window and
+- Up to six boards (a team of four in the Go-Bundesliga, a tournament broadcast with
+  several boards); with all six taken, a clicked game opens in its own window and
   *Beobachten* says why.
 
 ## KGS client

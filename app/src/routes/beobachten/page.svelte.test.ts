@@ -115,7 +115,14 @@ describe('Beobachten', () => {
 		await render(Page);
 		await page.getByRole('checkbox', { name: /Partien in die Brettübersicht holen/ }).click();
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
-		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([12, null, null, null]);
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
+			12,
+			null,
+			null,
+			null,
+			null,
+			null
+		]);
 		expect(open).toHaveBeenCalledWith('', 'gotv-bretter', expect.any(String));
 		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/bretter$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
@@ -128,27 +135,39 @@ describe('Beobachten', () => {
 				1: game(1, 'A'),
 				2: game(2, 'B'),
 				3: game(3, 'C'),
-				4: game(4, 'D')
+				4: game(4, 'D'),
+				5: game(5, 'E'),
+				6: game(6, 'F')
 			}
 		};
 		// The overview closed (the browser has no window of that name): its
 		// old boards are gone, a new one starts.
-		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		localStorage.setItem('gotv.team', '[1,2,3,4,5,6]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
-		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, null, null, null]);
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
+			11,
+			null,
+			null,
+			null,
+			null,
+			null
+		]);
 		// The overview open: games of an earlier session (restored with the
 		// saved state, not listed by KGS any more) do not hold their boards.
 		popup.location.href = 'http://localhost/bretter'; // the overview is open
-		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		localStorage.setItem('gotv.team', '[1,2,3,4,5,6]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
-		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, 2, 3, 4]);
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, 2, 3, 4, 5, 6]);
 		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).not.toBeInTheDocument();
 		// Listed games do: then the overview is full.
 		app.state = {
 			...app.state,
-			activeGames: [...app.state.activeGames, ...[1, 2, 3, 4].map((id) => app.state.gamesById[id])]
+			activeGames: [
+				...app.state.activeGames,
+				...[1, 2, 3, 4, 5, 6].map((id) => app.state.gamesById[id])
+			]
 		};
-		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		localStorage.setItem('gotv.team', '[1,2,3,4,5,6]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
 		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).toBeVisible();
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-11', expect.any(String));

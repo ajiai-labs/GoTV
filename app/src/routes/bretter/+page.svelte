@@ -104,15 +104,18 @@
 			.filter((entry) => entry.id != null)
 	);
 	// The boards fill the window: 1 alone, 2 side by side (one above the
-	// other in a tall window), 3 and 4 two by two.
+	// other in a tall window), 3 and 4 two by two, 5 and 6 three by two, 7
+	// (six boards and your own game) four by two.
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 	let grid = $derived.by(() => {
 		const n = shown.length + (ownGame ? 1 : 0);
 		if (n <= 1) return { cols: 1, rows: 1 };
 		if (n === 2) return innerHeight > innerWidth ? { cols: 1, rows: 2 } : { cols: 2, rows: 1 };
+		const tall = innerHeight > innerWidth;
 		if (n <= 4) return { cols: 2, rows: 2 };
-		return innerHeight > innerWidth ? { cols: 2, rows: 3 } : { cols: 3, rows: 2 };
+		if (n <= 6) return tall ? { cols: 2, rows: 3 } : { cols: 3, rows: 2 };
+		return tall ? { cols: 2, rows: 4 } : { cols: 4, rows: 2 };
 	});
 	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
 

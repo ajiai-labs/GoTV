@@ -777,7 +777,8 @@ die schon offen sind, kommen nach vorn statt doppelt.
   andere Adressen (Links aus Stream-Playern) gehen in den System-Browser. Wirkt erst ab dem
   nächsten Desktop-Release. Die Skript-Installation (Chromium `--app`) öffnet Pop-ups selbst.
 - Brettübersicht `/bretter` (`model/team.ts`, Wunsch 26.11.2026, Go-Bundesliga): ein eigenes,
-  ruhiges Fenster mit bis zu 4 festen Brettplätzen (`gotv.team`), getrennt vom eigenen
+  ruhiges Fenster mit bis zu 6 festen Brettplätzen (`gotv.team`, `TEAM_BOARDS`; bis 26.11.2026
+  abends 4 - Nutzer: "maximal bis sechs", mehr wird auf Full HD zu klein), getrennt vom eigenen
   Partiefenster (Nutzer: Teambretter neben dem eigenen Brett lenken ab - keine Leiste im
   Partiefenster). Partien kommen hinein über Beobachten (Haken "Partien in die Brettübersicht
   holen", `gotv.boardsMode`: jeder Klick in der Liste landet dort; ist die Übersicht voll,
@@ -790,7 +791,7 @@ die schon offen sind, kommen nach vorn statt doppelt.
   `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
   `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom
   Brett. Die Bretter füllen das Fenster (1 allein, 2 nebeneinander bzw. im hohen Fenster
-  untereinander, ab 3 zwei mal zwei; quadratisch per `container-type: size`). Ein angeklicktes
+  untereinander, 3-4 zwei mal zwei, 5-6 drei mal zwei, mit eigener Partie 7 vier mal zwei; quadratisch per `container-type: size`). Ein angeklicktes
   Brett zeigt dieselbe `GameScreen` wie ein Partiefenster (Spieler, Uhren, Navigation, Chat,
   Zuschauer, Mehr-Menü; Wunsch des Nutzers: "die GUI wiederverwenden mit der ganzen
   Funktionsvielfalt"), "‹ Alle Bretter" (`GameScreen onBack`) bzw. Esc außerhalb von
