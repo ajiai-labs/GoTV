@@ -36,5 +36,8 @@ export const settings = {
 	'settings.sounds.countdown.name': 'Zeit läuft ab',
 	'settings.sounds.countdown.description':
 		'Ein Piepton für jede der letzten 10 Sekunden auf deiner Uhr, die letzten 3 höher.',
+	'settings.sounds.messages.name': 'Chatnachricht',
+	'settings.sounds.messages.description':
+		'Wenn dir jemand schreibt: private Nachricht oder Chat in deiner laufenden Partie.',
 	'settings.sounds.sample': 'Anhören'
 } satisfies Record<string, Message>;

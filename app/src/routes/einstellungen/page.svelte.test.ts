@@ -63,7 +63,8 @@ describe('Einstellungen', () => {
 		expect(JSON.parse(localStorage.getItem('gotv.sounds') ?? '{}')).toEqual({
 			stones: false,
 			gameStart: true,
-			countdown: true
+			countdown: true,
+			messages: true
 		});
 		await view.unmount();
 		await render(Page);
@@ -74,10 +75,10 @@ describe('Einstellungen', () => {
 		await page.viewport(560, 800);
 		await render(Page);
 		const widths = page
-			.getByRole('checkbox', { name: /Steinklick|Partiebeginn|Zeit läuft ab/ })
+			.getByRole('checkbox', { name: /Steinklick|Partiebeginn|Zeit läuft ab|Chatnachricht/ })
 			.elements()
 			.map((box) => box.getBoundingClientRect().width);
-		expect(widths).toHaveLength(3);
+		expect(widths).toHaveLength(4);
 		expect(new Set(widths).size).toBe(1);
 		await page.viewport(414, 896);
 	});

@@ -37,5 +37,8 @@ export const settings: Translation<typeof de> = {
 	'settings.sounds.countdown.name': 'Time running out',
 	'settings.sounds.countdown.description':
 		'A beep for each of the last 10 seconds on your clock, the last 3 higher.',
+	'settings.sounds.messages.name': 'Chat message',
+	'settings.sounds.messages.description':
+		'When someone writes to you: a private message or the chat of your running game.',
 	'settings.sounds.sample': 'Listen'
 };

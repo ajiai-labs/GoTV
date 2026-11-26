@@ -705,7 +705,10 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   Einstellungen „Töne beim Spielen“, `gotv.sounds`, alles an): Steinklick bei jedem Zug der
   eigenen Partie (`GameScreen`), Klang bei Partiebeginn (`playGameStart` in AppActions bei
   `CHALLENGE_FINAL` als Spieler, Automatch, fortgesetzter Partie), Piepton für jede der letzten
-  10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher). Wunsch:
+  10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher), Ding-Dong bei
+  einer Chatnachricht an mich (26.11.2026, `model/chatSound.ts`: private Nachricht oder Chat in
+  der eigenen laufenden Partie, nie eigene Nachrichten, Räume oder beobachtete Partien; Schalter
+  „Chatnachricht“; ersetzt das alte `two_tone_03b.mp3`, die Datei liegt ungenutzt). Wunsch:
   hören, dass es weitergeht, auch beim Kochen. Nicht in der Web-Version (kein KGS).
 - **Nicht beendete Partien fortsetzen** (Spielen): statt „Noch nicht verfügbar“ lädt ein
   Dialog die Partie per `ROOM_LOAD_GAME` (nicht privat) in einen Raum;

@@ -1,31 +1,36 @@
 // Sounds of an own KGS game, made with the Web Audio API (no sound files):
 // a stone click for every move, a chime when the game starts, and a beep for
 // each of the last ten seconds on our clock (higher for the last three) -
-// so you hear it from the kitchen. Each one can be switched off in
+// so you hear it from the kitchen. Plus a ding-dong when someone writes to
+// you (chatSound.ts decides when). Each one can be switched off in
 // Einstellungen (gotv.sounds); the switches are read at every sound.
 
-export type GameSoundKind = 'stones' | 'gameStart' | 'countdown';
+export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
 export type GameSoundPrefs = Record<GameSoundKind, boolean>;
 
 export const SOUND_PREFS_KEY = 'gotv.sounds';
 export const COUNTDOWN_SECONDS = 10;
 const URGENT_SECONDS = 3;
 
-const DEFAULT_PREFS: GameSoundPrefs = { stones: true, gameStart: true, countdown: true };
-
+export const DEFAULT_SOUND_PREFS: GameSoundPrefs = {
+	stones: true,
+	gameStart: true,
+	countdown: true,
+	messages: true
+};
 export function loadSoundPrefs(): GameSoundPrefs {
 	try {
 		const stored = JSON.parse(localStorage.getItem(SOUND_PREFS_KEY) ?? '{}') as unknown;
-		const prefs = { ...DEFAULT_PREFS };
+		const prefs = { ...DEFAULT_SOUND_PREFS };
 		if (stored && typeof stored === 'object') {
-			for (const kind of Object.keys(DEFAULT_PREFS) as Array<GameSoundKind>) {
+			for (const kind of Object.keys(DEFAULT_SOUND_PREFS) as Array<GameSoundKind>) {
 				const value = (stored as Record<string, unknown>)[kind];
 				if (typeof value === 'boolean') prefs[kind] = value;
 			}
 		}
 		return prefs;
 	} catch {
-		return { ...DEFAULT_PREFS }; // storage disabled or broken entry
+		return { ...DEFAULT_SOUND_PREFS }; // storage disabled or broken entry
 	}
 }
 
@@ -104,6 +109,17 @@ export function playGameStart() {
 			tone(ctx, 660, t + offset, 0.35, 0.4);
 			tone(ctx, 880, t + offset + 0.15, 0.35, 0.4);
 			tone(ctx, 1320, t + offset + 0.3, 0.5, 0.4);
+		}
+	});
+}
+
+// A chat message for me: ding-dong, twice, clearly audible.
+export function playMessage() {
+	play('messages', (ctx) => {
+		const t = ctx.currentTime;
+		for (const offset of [0, 0.6]) {
+			tone(ctx, 988, t + offset, 0.3, 0.4);
+			tone(ctx, 740, t + offset + 0.22, 0.4, 0.4);
 		}
 	});
 }

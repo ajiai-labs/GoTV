@@ -3,7 +3,8 @@ import { KgsClient } from './KgsClient';
 import { tempId, isTempId } from './tempId';
 import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGameProposalPlayer, proposalsEqual } from './game';
-import { playGameStart } from '../sound/gameSounds';
+import { playGameStart, playMessage } from '../sound/gameSounds';
+import { isChatForMe } from './chatSound';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -137,7 +138,7 @@ export class AppActions {
 			} else if (msg.type === 'CHALLENGE_SUBMIT' && msg.channelId) {
 				this.onReceiveChallengeSubmit(msg.channelId);
 			} else if (msg.type === 'CHAT' && msg.channelId && msg.user) {
-				this.onReceiveDirectMessage(msg.channelId);
+				this.onReceiveChat(msg.channelId, msg.user.name);
 			} else if (msg.type === 'ARCHIVE_JOIN' && msg.channelId) {
 				this.onArchiveJoinSuccess(msg.channelId, msg.user);
 			} else if (msg.type === 'GLOBAL_GAMES_JOIN' || msg.type === 'GAME_LIST') {
@@ -542,12 +543,10 @@ export class AppActions {
 			SOUNDS.CHALLENGE_PROPOSAL_RECEIVED.play();
 		}
 	};
-	onReceiveDirectMessage = (channelId: number) => {
-		const { conversationsById } = this._store.getState();
-		const convo = conversationsById[channelId];
-
-		if (convo && convo.user && convo.status !== 'closed') {
-			SOUNDS.DIRECT_MESSAGE_RECEIVED.play();
+	// A private message or the opponent's chat in my running game.
+	onReceiveChat = (channelId: number, from: string) => {
+		if (isChatForMe(this._store.getState(), channelId, from)) {
+			playMessage();
 		}
 	};
 	onShowGames = (filter: GameFilter) => {

@@ -2,10 +2,12 @@
 	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
 	import {
+		DEFAULT_SOUND_PREFS,
 		loadSoundPrefs,
 		saveSoundPrefs,
 		playCountdown,
 		playGameStart,
+		playMessage,
 		playStoneClick
 	} from '#lib/sound/gameSounds.ts';
 	import type { GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
@@ -43,11 +45,9 @@
 	];
 
 	// Sounds of an own game (gameSounds.ts), each with a short sample.
-	const SOUND_KINDS: Array<GameSoundKind> = ['stones', 'gameStart', 'countdown'];
+	const SOUND_KINDS: Array<GameSoundKind> = ['stones', 'gameStart', 'countdown', 'messages'];
 	let soundPrefs: GameSoundPrefs = $state(
-		typeof localStorage === 'undefined'
-			? { stones: true, gameStart: true, countdown: true }
-			: loadSoundPrefs()
+		typeof localStorage === 'undefined' ? { ...DEFAULT_SOUND_PREFS } : loadSoundPrefs()
 	);
 	function setSound(kind: GameSoundKind, on: boolean) {
 		soundPrefs = { ...soundPrefs, [kind]: on };
@@ -56,6 +56,7 @@
 	function sample(kind: GameSoundKind) {
 		if (kind === 'stones') playStoneClick();
 		else if (kind === 'gameStart') playGameStart();
+		else if (kind === 'messages') playMessage();
 		else [3, 2, 1].forEach((n, i) => setTimeout(() => playCountdown(n), i * 1000));
 	}
 </script>
