@@ -131,8 +131,13 @@ describe('Beobachten', () => {
 				4: game(4, 'D')
 			}
 		};
-		// Games of an earlier session (restored with the saved state, not listed
-		// by KGS any more) do not hold their boards.
+		// The overview closed: its old boards are gone, a new one starts.
+		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		await page.getByRole('button', { name: /Erste Partie/ }).click();
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, null, null, null]);
+		// The overview open: games of an earlier session (restored with the
+		// saved state, not listed by KGS any more) do not hold their boards.
+		localStorage.setItem('gotv.boardsOpenAt', String(Date.now()));
 		localStorage.setItem('gotv.team', '[1,2,3,4]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
 		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, 2, 3, 4]);
@@ -147,6 +152,7 @@ describe('Beobachten', () => {
 		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).toBeVisible();
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-11', expect.any(String));
 		popup.closed = true; // the next test opens game 11 afresh
+		localStorage.removeItem('gotv.boardsOpenAt');
 		localStorage.removeItem('gotv.boardsMode');
 		localStorage.removeItem('gotv.team');
 		localStorage.removeItem('gotv.gameWindows');

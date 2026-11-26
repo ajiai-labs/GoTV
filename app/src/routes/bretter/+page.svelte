@@ -11,7 +11,7 @@
 	import { onMount } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
-	import { openGameWindow } from '#lib/gameWindows.ts';
+	import { BOARDS_HEARTBEAT_MS, markBoardsWindowOpen, openGameWindow } from '#lib/gameWindows.ts';
 	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
@@ -109,6 +109,14 @@
 	});
 	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
 
+	// Logged out at KGS (in any window): this window has nothing to show any
+	// more and closes, instead of offering a login of its own.
+	let wasLoggedIn = false;
+	$effect(() => {
+		if (app.loggedIn) wasLoggedIn = true;
+		else if (wasLoggedIn && app.state.initialized) window.close();
+	});
+
 	// The games on the boards are registered as shown here with the window
 	// that holds the KGS connection: it joins each once and lets go when no
 	// window shows it any more - also when a board is taken off (×).
@@ -138,7 +146,12 @@
 			const typing = !!target?.closest('input, textarea, [role="dialog"]');
 			if (event.key === 'Escape' && big && !typing) show(null);
 		};
+		// While open, this window says so (the next game is added here).
+		markBoardsWindowOpen(true);
+		const heartbeat = setInterval(() => markBoardsWindowOpen(true), BOARDS_HEARTBEAT_MS);
 		const leave = () => {
+			clearInterval(heartbeat);
+			markBoardsWindowOpen(false);
 			if (app.started) syncViews([]);
 		};
 		window.addEventListener('storage', onStorage);

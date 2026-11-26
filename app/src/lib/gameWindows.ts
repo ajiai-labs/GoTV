@@ -9,7 +9,7 @@
 // in the main window, where "Eigenes Fenster" moves it out.
 import { resolve } from '$app/paths';
 import { config } from './config';
-import { addBoard, loadBoards, saveBoards } from './model/team';
+import { addBoard, emptyBoards, loadBoards, saveBoards } from './model/team';
 
 export const GAME_WINDOWS_KEY = 'gotv.gameWindows';
 const FEATURES = 'popup,width=1180,height=820';
@@ -79,11 +79,15 @@ export function openBoardsWindow(): boolean {
 // If the overview is open already it takes the new board by itself (storage
 // event) and is left as it is - position, enlarged board - 'added'; the
 // "Brettübersicht" button brings it to the front.
+// The boards belong to the open overview: with the window closed, the next
+// game starts an empty one (user, 26.11.2026: closed boards kept the
+// overview "full", and every click opened a single window instead).
 export function bringToBoards(
 	gameId: number,
 	isKnown?: (id: number) => boolean
 ): 'shown' | 'added' | 'full' | 'refused' {
-	const boards = addBoard(loadBoards(), gameId, isKnown);
+	const start = isBoardsWindowOpen() ? loadBoards() : emptyBoards();
+	const boards = addBoard(start, gameId, isKnown);
 	if (!boards) return 'full';
 	saveBoards(boards);
 	const win = window.open('', 'gotv-bretter', FEATURES);
@@ -115,5 +119,28 @@ export function saveBoardsMode(on: boolean) {
 		localStorage.setItem(BOARDS_MODE_KEY, on ? 'on' : 'off');
 	} catch {
 		// not remembered without storage
+	}
+}
+
+// The open Brettübersicht says so every few seconds (routes/bretter); a
+// closed one stops, so its boards no longer count.
+export const BOARDS_OPEN_KEY = 'gotv.boardsOpenAt';
+export const BOARDS_HEARTBEAT_MS = 2000;
+
+export function isBoardsWindowOpen(now: number = Date.now()): boolean {
+	try {
+		const at = Number(localStorage.getItem(BOARDS_OPEN_KEY));
+		return at > 0 && now - at < BOARDS_HEARTBEAT_MS * 3;
+	} catch {
+		return false;
+	}
+}
+
+export function markBoardsWindowOpen(open: boolean) {
+	try {
+		if (open) localStorage.setItem(BOARDS_OPEN_KEY, String(Date.now()));
+		else localStorage.removeItem(BOARDS_OPEN_KEY);
+	} catch {
+		// without storage every click starts a new overview
 	}
 }

@@ -24,6 +24,14 @@
 		return names.length ? names.join(' – ') : t('app.gameWindow.title');
 	});
 
+	// Logged out at KGS (in any window): this window has nothing to show any
+	// more and closes, instead of offering a login of its own.
+	let wasLoggedIn = false;
+	$effect(() => {
+		if (app.loggedIn) wasLoggedIn = true;
+		else if (wasLoggedIn && app.state.initialized) window.close();
+	});
+
 	// This window shows the game: registered with the window that holds the
 	// KGS connection, which joins it once and lets go when no window shows it
 	// any more (AppActions.onViewGame).
