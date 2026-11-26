@@ -259,7 +259,7 @@ class GoTvApp {
 	): 'full' | 'added' | undefined {
 		let full = false;
 		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode()) {
-			const result = bringToBoards(gameId, (id) => !!this.state.gamesById[id]);
+			const result = bringToBoards(gameId, this.isLiveGame);
 			if (result === 'shown') return;
 			if (result === 'added') return 'added';
 			full = result === 'full';
@@ -282,6 +282,13 @@ class GoTvApp {
 			if (this.state.playGameId === now) this.moveGameToWindow(now);
 		});
 	}
+
+	// Whether a game id means a game of this KGS session: listed by KGS or
+	// joined. Games from the saved state of an earlier session (restored on
+	// start) do not count - their boards in the Brettübersicht are free.
+	isLiveGame = (gameId: number): boolean =>
+		!!this.state.channelMembership[gameId] ||
+		this.state.activeGames.some((game) => game.id === gameId);
 
 	// "Eigenes Fenster" on a game shown here: the game moves to its window,
 	// this window goes back to its list. False if the browser refused.

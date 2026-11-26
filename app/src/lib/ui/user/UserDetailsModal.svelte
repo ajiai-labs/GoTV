@@ -130,7 +130,7 @@
 	let runningGames = $derived(user ? findRunningGames(appState.activeGames, user.name) : []);
 	let boardsNote: string | null = $state(null);
 	function toBoards(gameId: number) {
-		const result = bringToBoards(gameId, (id) => !!app.state.gamesById[id]);
+		const result = bringToBoards(gameId, app.isLiveGame);
 		boardsNote =
 			result === 'full'
 				? t('app.boards.full')

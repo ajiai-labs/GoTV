@@ -53,7 +53,7 @@
 	let boardsNote: string | null = $state(null);
 	function toBoards() {
 		moreShowing = false;
-		const result = bringToBoards(game.id, (id) => !!app.state.gamesById[id]);
+		const result = bringToBoards(game.id, app.isLiveGame);
 		boardsNote =
 			result === 'full'
 				? t('app.boards.full')

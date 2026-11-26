@@ -131,6 +131,17 @@ describe('Beobachten', () => {
 				4: game(4, 'D')
 			}
 		};
+		// Games of an earlier session (restored with the saved state, not listed
+		// by KGS any more) do not hold their boards.
+		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		await page.getByRole('button', { name: /Erste Partie/ }).click();
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, 2, 3, 4]);
+		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).not.toBeInTheDocument();
+		// Listed games do: then the overview is full.
+		app.state = {
+			...app.state,
+			activeGames: [...app.state.activeGames, ...[1, 2, 3, 4].map((id) => app.state.gamesById[id])]
+		};
 		localStorage.setItem('gotv.team', '[1,2,3,4]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
 		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).toBeVisible();

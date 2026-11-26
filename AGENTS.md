@@ -783,7 +783,9 @@ die schon offen sind, kommen nach vorn statt doppelt.
   holen", `gotv.boardsMode`: jeder Klick in der Liste landet dort; ist die Übersicht voll,
   öffnet die Partie trotzdem im eigenen Fenster mit deutlichem Hinweis - ein Klick darf nie
   nichts tun, Befund des Nutzers 26.11.2026; Bretter mit Partien einer früheren KGS-Sitzung
-  gelten als frei und zeigen "nicht mehr da"), "Zur Brettübersicht" im
+  gelten als frei und zeigen "nicht mehr da" - "frei" heißt: weder von KGS gelistet noch
+  beigetreten, `app.isLiveGame`; der beim Start wiederhergestellte Zustand enthält alte Partien
+  in `gamesById`, die zählen nicht), "Zur Brettübersicht" im
   Mehr-Menü einer beobachteten Partie und im Spielerprofil (laufende Partie des Spielers,
   `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
   `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom
