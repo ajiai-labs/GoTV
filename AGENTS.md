@@ -819,9 +819,11 @@ die schon offen sind, kommen nach vorn statt doppelt.
   laufende Partie, nur bei Mitgliedschaft. `onLeaveGame` verlässt nicht, solange eine Ansicht die
   Partie zeigt. KGS meldet die GANZE Verbindung ab ("Internal error … Unknown channel"), wenn es
   eine Anfrage für einen Kanal bekommt, den es nicht kennt. Tests: `model/gameViews.test.ts`.
-- Die Bretter gehören zur offenen Übersicht: sie meldet sich alle 2 s in `gotv.boardsOpenAt`
-  (`markBoardsWindowOpen`); ist sie geschlossen, beginnt die nächste hineingeholte Partie eine
-  leere Übersicht (`isBoardsWindowOpen` in `bringToBoards`). Vorher blieben geschlossene Bretter
+- Die Bretter gehören zur offenen Übersicht: ob sie offen ist, fragt `bringToBoards`/
+  `openBoardsWindow` den Browser selbst (`window.open('', 'gotv-bretter')` liefert das offene
+  Fenster oder ein leeres neues - in Chromium geprüft); ist sie zu, beginnt sie leer (auch über
+  den Knopf). Ein Lebenszeichen per localStorage (2 s) war unzuverlässig: kurz nach dem Schließen
+  galt sie noch als offen und voll. Vorher blieben geschlossene Bretter
   gespeichert, die Übersicht galt als voll und jeder Klick öffnete ein Einzelfenster bzw. alle
   alten Bretter kamen nach dem Neuanmelden wieder. Partiefenster und Brettübersicht schließen
   sich beim Abmelden von KGS selbst (statt je ein Anmeldeformular zu zeigen).

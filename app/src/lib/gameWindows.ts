@@ -68,35 +68,51 @@ export function openGameWindow(gameId: number): boolean {
 	return !!openNamed(gameWindowUrl(gameId), `gotv-partie-${gameId}`);
 }
 
-// The Brettübersicht (routes/bretter): one window for several games.
+// The Brettübersicht (routes/bretter): one window for several games. Its
+// boards belong to the open window: whether it is open is asked of the
+// browser itself (a window by that name), and a closed one starts empty.
+// (User, 26.11.2026: closed boards came back, filled the overview and made
+// every click open a single window.)
+const BOARDS_NAME = 'gotv-bretter';
+
+function isBlank(win: Window): boolean {
+	try {
+		return win.location.href === 'about:blank';
+	} catch {
+		return false;
+	}
+}
+
+// "Brettübersicht" button: open, or bring to the front (closed and opened
+// afresh, see openNamed - its boards stay).
 export function openBoardsWindow(): boolean {
-	return !!openNamed(resolve('/bretter'), 'gotv-bretter');
+	const win = window.open('', BOARDS_NAME, FEATURES);
+	if (!win) return false;
+	if (isBlank(win)) {
+		saveBoards(emptyBoards());
+		win.location.replace(resolve('/bretter'));
+		win.focus();
+		return true;
+	}
+	return !!openNamed(resolve('/bretter'), BOARDS_NAME);
 }
 
 // "Zur Brettübersicht" (Beobachten, player profile): the game goes on the
-// next free board and the window opens or comes to the front. 'full' if all
-// boards are taken, 'refused' if the browser blocked the window.
-// If the overview is open already it takes the new board by itself (storage
-// event) and is left as it is - position, enlarged board - 'added'; the
-// "Brettübersicht" button brings it to the front.
-// The boards belong to the open overview: with the window closed, the next
-// game starts an empty one (user, 26.11.2026: closed boards kept the
-// overview "full", and every click opened a single window instead).
+// next free board. 'shown' - the overview opened with it; 'added' - the
+// overview is open already and takes it by itself (storage event), left as
+// it is (position, enlarged board); 'full' - all boards taken; 'refused' -
+// the browser blocked the window.
 export function bringToBoards(
 	gameId: number,
 	isKnown?: (id: number) => boolean
 ): 'shown' | 'added' | 'full' | 'refused' {
-	const start = isBoardsWindowOpen() ? loadBoards() : emptyBoards();
-	const boards = addBoard(start, gameId, isKnown);
-	if (!boards) return 'full';
-	saveBoards(boards);
-	const win = window.open('', 'gotv-bretter', FEATURES);
+	const win = window.open('', BOARDS_NAME, FEATURES);
 	if (!win) return 'refused';
-	try {
-		if (win.location.href !== 'about:blank') return 'added';
-	} catch {
-		return 'added';
-	}
+	const fresh = isBlank(win);
+	const boards = addBoard(fresh ? emptyBoards() : loadBoards(), gameId, isKnown);
+	if (!boards) return 'full'; // only an open overview can be full
+	saveBoards(boards);
+	if (!fresh) return 'added';
 	win.location.replace(resolve('/bretter'));
 	win.focus();
 	return 'shown';
@@ -119,28 +135,5 @@ export function saveBoardsMode(on: boolean) {
 		localStorage.setItem(BOARDS_MODE_KEY, on ? 'on' : 'off');
 	} catch {
 		// not remembered without storage
-	}
-}
-
-// The open Brettübersicht says so every few seconds (routes/bretter); a
-// closed one stops, so its boards no longer count.
-export const BOARDS_OPEN_KEY = 'gotv.boardsOpenAt';
-export const BOARDS_HEARTBEAT_MS = 2000;
-
-export function isBoardsWindowOpen(now: number = Date.now()): boolean {
-	try {
-		const at = Number(localStorage.getItem(BOARDS_OPEN_KEY));
-		return at > 0 && now - at < BOARDS_HEARTBEAT_MS * 3;
-	} catch {
-		return false;
-	}
-}
-
-export function markBoardsWindowOpen(open: boolean) {
-	try {
-		if (open) localStorage.setItem(BOARDS_OPEN_KEY, String(Date.now()));
-		else localStorage.removeItem(BOARDS_OPEN_KEY);
-	} catch {
-		// without storage every click starts a new overview
 	}
 }

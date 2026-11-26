@@ -11,7 +11,7 @@
 	import { onMount } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
-	import { BOARDS_HEARTBEAT_MS, markBoardsWindowOpen, openGameWindow } from '#lib/gameWindows.ts';
+	import { openGameWindow } from '#lib/gameWindows.ts';
 	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, emptyBoards, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
@@ -153,12 +153,7 @@
 			const typing = !!target?.closest('input, textarea, [role="dialog"]');
 			if (event.key === 'Escape' && big && !typing) show(null);
 		};
-		// While open, this window says so (the next game is added here).
-		markBoardsWindowOpen(true);
-		const heartbeat = setInterval(() => markBoardsWindowOpen(true), BOARDS_HEARTBEAT_MS);
 		const leave = () => {
-			clearInterval(heartbeat);
-			markBoardsWindowOpen(false);
 			if (app.started) syncViews([]);
 		};
 		window.addEventListener('storage', onStorage);
