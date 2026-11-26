@@ -9,6 +9,7 @@
 // window, where "Eigenes Fenster" moves it out.
 import { resolve } from '$app/paths';
 import { config } from './config';
+import { addBoard, loadBoards, saveBoards } from './model/team';
 
 export const GAME_WINDOWS_KEY = 'gotv.gameWindows';
 const FEATURES = 'popup,width=1180,height=820';
@@ -53,4 +54,48 @@ export function openGameWindow(gameId: number): boolean {
 	opened.set(gameId, win);
 	win.focus();
 	return true;
+}
+
+// The Brettübersicht (routes/bretter): one window for several games.
+let boardsWindow: Window | null = null;
+export function openBoardsWindow(): boolean {
+	if (boardsWindow && !boardsWindow.closed) {
+		boardsWindow.focus();
+		return true;
+	}
+	const win = window.open(resolve('/bretter'), 'gotv-bretter', FEATURES);
+	if (!win) return false;
+	boardsWindow = win;
+	win.focus();
+	return true;
+}
+
+// "Zur Brettübersicht" (Beobachten, player profile): the game goes on the
+// next free board and the window opens or comes to the front. 'full' if all
+// boards are taken, 'refused' if the browser blocked the window.
+export function bringToBoards(gameId: number): 'shown' | 'full' | 'refused' {
+	const boards = addBoard(loadBoards(), gameId);
+	if (!boards) return 'full';
+	saveBoards(boards);
+	return openBoardsWindow() ? 'shown' : 'refused';
+}
+
+// "Partien in die Brettübersicht holen" (switch on Beobachten): while it is
+// on, every game clicked in the list goes to the Brettübersicht.
+export const BOARDS_MODE_KEY = 'gotv.boardsMode';
+
+export function loadBoardsMode(): boolean {
+	try {
+		return localStorage.getItem(BOARDS_MODE_KEY) === 'on';
+	} catch {
+		return false;
+	}
+}
+
+export function saveBoardsMode(on: boolean) {
+	try {
+		localStorage.setItem(BOARDS_MODE_KEY, on ? 'on' : 'off');
+	} catch {
+		// not remembered without storage
+	}
 }

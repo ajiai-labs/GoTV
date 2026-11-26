@@ -89,6 +89,24 @@ export const app = {
 	'app.login.register': 'Bei KGS registrieren',
 	'app.login.forgotPassword': 'Passwort vergessen',
 	'app.gameWindow.title': 'Partie',
+	'app.boards.title': 'Brettübersicht',
+	'app.boards.open': 'Brettübersicht',
+	'app.boards.openHint':
+		'Mehrere Partien in einem eigenen Fenster – für den Mannschaftskampf oder Partien, die du verfolgen willst',
+	'app.boards.add': 'Zur Brettübersicht',
+	'app.boards.mode': 'Partien in die Brettübersicht holen',
+	'app.boards.modeHint':
+		'Solange der Haken gesetzt ist, kommt jede Partie, die du hier anklickst, in die Brettübersicht – ein Fenster mit bis zu vier Brettern, z. B. für den Mannschaftskampf.',
+	'app.boards.playingNow': 'Spielt gerade: {white} – {black} · Zug {move}',
+	'app.boards.watch': 'Ansehen',
+	'app.boards.full': 'Alle vier Bretter sind belegt – entferne erst eines in der Brettübersicht.',
+	'app.boards.board': 'Brett {board}',
+	'app.boards.move': 'Zug {move}',
+	'app.boards.loading': 'Brett lädt …',
+	'app.boards.all': 'Alle Bretter',
+	'app.boards.remove': 'Vom Brett nehmen',
+	'app.boards.empty':
+		'Noch keine Bretter. Hol dir Partien über „Beobachten“ oder das Spielerprofil mit „Zur Brettübersicht“ hierher – zum Beispiel die Partien deiner Mannschaft.',
 	'app.gameWindow.missing': 'Diese Partie gibt es nicht (mehr).',
 	'app.gate.otherWindowTitle': 'KGS läuft in einem anderen GoTV-Fenster',
 	'app.gate.otherWindowText':

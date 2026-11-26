@@ -11,6 +11,7 @@
 	import Modal from '#lib/ui/Modal.svelte';
 	import GameInfo from './GameInfo.svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { bringToBoards } from '#lib/gameWindows.ts';
 	import ScoreEstimateDialog from './ScoreEstimateDialog.svelte';
 
 	const MORE_INFO_PROPS: Record<string, MessageKey> = {
@@ -47,6 +48,19 @@
 			.map((id) => (roomsById ?? app.state.roomsById)[id])
 			.filter((room): room is Room => !!room)
 	);
+
+	// "Zur Brettübersicht": the game joins the other boards in their window.
+	let boardsNote: string | null = $state(null);
+	function toBoards() {
+		moreShowing = false;
+		const result = bringToBoards(game.id);
+		boardsNote =
+			result === 'full'
+				? t('app.boards.full')
+				: result === 'refused'
+					? t('game.screen.ownWindowRefused')
+					: null;
+	}
 
 	function openLocalCopy() {
 		moreShowing = false;
@@ -171,11 +185,19 @@
 				<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
 					{t('game.moreMenu.localCopy')}
 				</button>
+				<button type="button" class="GameMoreMenu-dropdown-item" onclick={toBoards}>
+					{t('app.boards.add')}
+				</button>
 				<button type="button" class="GameMoreMenu-dropdown-item" onclick={showCopy}>
 					{t('game.moreMenu.copyToRoom')}
 				</button>
 			{/if}
 		</div>
+	{/if}
+	{#if boardsNote}
+		<Modal title={t('app.boards.title')} onclose={() => (boardsNote = null)}>
+			<p>{boardsNote}</p>
+		</Modal>
 	{/if}
 	{#if estimateShowing}
 		<ScoreEstimateDialog {game} onclose={() => (estimateShowing = false)} />

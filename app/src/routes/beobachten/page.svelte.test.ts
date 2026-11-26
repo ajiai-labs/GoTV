@@ -91,6 +91,32 @@ describe('Beobachten', () => {
 		localStorage.removeItem('gotv.gameWindows');
 	});
 
+	it('brings clicked games to the board overview while that is ticked', async () => {
+		localStorage.setItem('gotv.gameWindows', 'on');
+		localStorage.removeItem('gotv.team');
+		const open = vi.fn(() => ({ closed: false, focus: vi.fn() }));
+		vi.stubGlobal('open', open);
+		actions.onJoinGameQuietly = vi.fn();
+		setState();
+		await render(Page);
+		await page.getByRole('checkbox', { name: /Partien in die Brettübersicht holen/ }).click();
+		await page.getByRole('button', { name: /Zweite Partie/ }).click();
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([12, null, null, null]);
+		expect(open).toHaveBeenCalledWith(
+			expect.stringMatching(/\/bretter$/),
+			'gotv-bretter',
+			expect.any(String)
+		);
+		expect(actions.onJoinGame).not.toHaveBeenCalled();
+		// All four boards taken: it says so instead.
+		localStorage.setItem('gotv.team', '[1,2,3,4]');
+		await page.getByRole('button', { name: /Erste Partie/ }).click();
+		await expect.element(page.getByText(/Alle vier Bretter sind belegt/)).toBeVisible();
+		localStorage.removeItem('gotv.boardsMode');
+		localStorage.removeItem('gotv.team');
+		localStorage.removeItem('gotv.gameWindows');
+	});
+
 	it('shows the game here when the browser blocks the window', async () => {
 		localStorage.setItem('gotv.gameWindows', 'on');
 		vi.stubGlobal(

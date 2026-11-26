@@ -774,6 +774,19 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Server ein weiteres App-Fenster (`window_features` = verwandte Webview, gemeinsamer Speicher);
   andere Adressen (Links aus Stream-Playern) gehen in den System-Browser. Wirkt erst ab dem
   nächsten Desktop-Release. Die Skript-Installation (Chromium `--app`) öffnet Pop-ups selbst.
+- Brettübersicht `/bretter` (`model/team.ts`, Wunsch 26.11.2026, Go-Bundesliga): ein eigenes,
+  ruhiges Fenster mit bis zu 4 festen Brettplätzen (`gotv.team`), getrennt vom eigenen
+  Partiefenster (Nutzer: Teambretter neben dem eigenen Brett lenken ab - keine Leiste im
+  Partiefenster). Partien kommen hinein über Beobachten (Haken "Partien in die Brettübersicht
+  holen", `gotv.boardsMode`: jeder Klick in der Liste landet dort), "Zur Brettübersicht" im
+  Mehr-Menü einer beobachteten Partie und im Spielerprofil (laufende Partie des Spielers,
+  `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
+  `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom
+  Brett. Nur Stellung, Spieler, Zug/Ergebnis - kein Chat, keine Kommentare, keine Analyse
+  (Absprachen während der Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen
+  das Fenster nie nach vorn. Eine Aufstellung per Namenseingabe hat der Nutzer abgelehnt
+  ("die Fenster holt man sich über Beobachten oder das Profil"). Für Turnierübertragungen
+  (mehrere Bretter) später dieselbe Steuerung - noch nicht gebaut.
 - NOCH NICHT an einer echten KGS-Sitzung mit mehreren Fenstern geprüft.
 
 ## Steinoptik (26.11.2026)

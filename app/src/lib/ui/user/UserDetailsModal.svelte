@@ -75,6 +75,8 @@
 	// loaded into a room. Others get "Nachricht senden", you get "Profil
 	// bearbeiten".
 	import { app } from '#lib/app.svelte.ts';
+	import { bringToBoards } from '#lib/gameWindows.ts';
+	import { findRunningGames } from '#lib/model/team.ts';
 	import type { GameSummary, Room, UserDetails } from '#lib/model/types.ts';
 	import { getUserStatusText } from '#lib/model/user.ts';
 	import { formatLocaleDate } from '#lib/util/date.ts';
@@ -122,6 +124,20 @@
 	let realName = $derived(
 		details?.personalName && details.personalName !== user?.name ? details.personalName : null
 	);
+
+	// A game the player is playing right now: watch it, or bring it to the
+	// Brettübersicht (e.g. a team mate's game in a team match).
+	let runningGames = $derived(user ? findRunningGames(appState.activeGames, user.name) : []);
+	let boardsNote: string | null = $state(null);
+	function toBoards(gameId: number) {
+		const result = bringToBoards(gameId);
+		boardsNote =
+			result === 'full'
+				? t('app.boards.full')
+				: result === 'refused'
+					? t('game.screen.ownWindowRefused')
+					: null;
+	}
 
 	let statusText = $derived.by(() => {
 		if (!user) return null;
@@ -250,6 +266,29 @@
 						</div>
 					{/if}
 				</div>
+
+				{#if runningGames.length && !isMe}
+					<div class="running">
+						{#each runningGames as game (game.id)}
+							<p>
+								{t('app.boards.playingNow', {
+									white: game.players?.white?.name ?? '?',
+									black: game.players?.black?.name ?? '?',
+									move: String(game.moveNum ?? 0)
+								})}
+							</p>
+							<div class="running-actions">
+								<button type="button" class="button" onclick={() => app.watchGame(game.id)}>
+									{t('app.boards.watch')}
+								</button>
+								<button type="button" class="button" onclick={() => toBoards(game.id)}>
+									{t('app.boards.add')}
+								</button>
+							</div>
+						{/each}
+						{#if boardsNote}<p class="muted" role="status">{boardsNote}</p>{/if}
+					</div>
+				{/if}
 
 				{#if user && !isMe}
 					{@const name = user.name}
@@ -396,6 +435,23 @@
 	.authname {
 		color: var(--accent);
 		font-size: 0.9em;
+	}
+
+	.running {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin: 10px 0 4px;
+	}
+
+	.running p {
+		margin: 0;
+	}
+
+	.running-actions {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
 	}
 
 	.status {

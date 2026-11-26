@@ -24,7 +24,7 @@ import {
 	waitForConnection
 } from './windowLink';
 import type { LinkMessage } from './windowLink';
-import { loadGameWindows, openGameWindow } from './gameWindows';
+import { bringToBoards, loadBoardsMode, loadGameWindows, openGameWindow } from './gameWindows';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
 // Nachspielen belong to it as well.
@@ -235,8 +235,15 @@ class GoTvApp {
 
 	// A click on a KGS game (lists, followed players, room chat): in its own
 	// window when that is switched on and the browser allows it, otherwise
-	// here as before.
-	watchGame(gameId: number | string) {
+	// here as before. `toBoards` (Beobachten with "Partien in die
+	// Brettübersicht holen" on): to the Brettübersicht; 'full' if all its
+	// boards are taken - then nothing else happens, the page says so.
+	watchGame(gameId: number | string, options: { toBoards?: boolean } = {}): 'full' | undefined {
+		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode()) {
+			const result = bringToBoards(gameId);
+			if (result === 'full') return 'full';
+			if (result === 'shown') return;
+		}
 		if (typeof gameId === 'number' && loadGameWindows()) {
 			this.actions.onJoinGameQuietly(gameId);
 			if (openGameWindow(gameId)) return;

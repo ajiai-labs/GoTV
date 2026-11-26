@@ -86,6 +86,24 @@ export const app: Translation<typeof de> = {
 	'app.login.register': 'Register at KGS',
 	'app.login.forgotPassword': 'Forgot password',
 	'app.gameWindow.title': 'Game',
+	'app.boards.title': 'Board overview',
+	'app.boards.open': 'Board overview',
+	'app.boards.openHint':
+		'Several games in a window of their own – for a team match or games you want to follow',
+	'app.boards.add': 'To the board overview',
+	'app.boards.mode': 'Bring games to the board overview',
+	'app.boards.modeHint':
+		'While this is ticked, every game you click here goes to the board overview – one window with up to four boards, e.g. for a team match.',
+	'app.boards.playingNow': 'Playing now: {white} – {black} · move {move}',
+	'app.boards.watch': 'Watch',
+	'app.boards.full': 'All four boards are taken – remove one in the board overview first.',
+	'app.boards.board': 'Board {board}',
+	'app.boards.move': 'Move {move}',
+	'app.boards.loading': 'Board loading …',
+	'app.boards.all': 'All boards',
+	'app.boards.remove': 'Take off the board',
+	'app.boards.empty':
+		'No boards yet. Bring games here from Watch or a player’s profile with "To the board overview" – for example your team’s games.',
 	'app.gameWindow.missing': 'This game does not exist (any more).',
 	'app.gate.otherWindowTitle': 'KGS is running in another GoTV window',
 	'app.gate.otherWindowText':

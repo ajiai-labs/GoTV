@@ -14,8 +14,21 @@
 	import GameList from '#lib/ui/game/GameList.svelte';
 	import GameListFilter from '#lib/ui/game/GameListFilter.svelte';
 	import GameScreen from '#lib/ui/game/GameScreen.svelte';
+	import {
+		loadBoardsMode,
+		loadGameWindows,
+		openBoardsWindow,
+		saveBoardsMode
+	} from '#lib/gameWindows.ts';
 
 	let tvEvents: Array<TvEvent> = $state([]);
+	let boardsRefused = $state(false);
+	let boardsMode = $state(loadBoardsMode());
+	let boardsFull = $state(false);
+
+	function select(id: number) {
+		boardsFull = app.watchGame(id, { toBoards: true }) === 'full';
+	}
 
 	let appState = $derived(app.state);
 	let activeGame = $derived(
@@ -52,7 +65,42 @@
 			</div>
 		{/if}
 		<section class="WatchScreen-list panel" aria-labelledby="watch-title">
-			<h1 id="watch-title" class="panel-title">{t('app.watch.title')}</h1>
+			<div class="WatchScreen-head">
+				<h1 id="watch-title" class="panel-title">{t('app.watch.title')}</h1>
+				{#if loadGameWindows()}
+					<button
+						type="button"
+						class="button"
+						title={t('app.boards.openHint')}
+						onclick={() => (boardsRefused = !openBoardsWindow())}
+					>
+						{t('app.boards.open')}
+					</button>
+				{/if}
+			</div>
+			{#if loadGameWindows()}
+				<label class="WatchScreen-mode">
+					<input
+						type="checkbox"
+						checked={boardsMode}
+						onchange={(event) => {
+							boardsMode = event.currentTarget.checked;
+							boardsFull = false;
+							saveBoardsMode(boardsMode);
+						}}
+					/>
+					<span>
+						<span class="name">{t('app.boards.mode')}</span>
+						<span class="muted">{t('app.boards.modeHint')}</span>
+					</span>
+				</label>
+			{/if}
+			{#if boardsRefused}
+				<p class="muted WatchScreen-note" role="status">{t('game.screen.ownWindowRefused')}</p>
+			{/if}
+			{#if boardsFull}
+				<p class="muted WatchScreen-note" role="status">{t('app.boards.full')}</p>
+			{/if}
 			<GameListFilter
 				games={appState.activeGames}
 				roomsById={appState.roomsById}
@@ -63,7 +111,7 @@
 				games={appState.activeGames}
 				filter={appState.watchFilter}
 				roomsById={appState.roomsById}
-				onSelect={(id: number) => app.watchGame(id)}
+				onSelect={select}
 			/>
 		</section>
 	{/if}
@@ -77,6 +125,37 @@
 	.WatchScreen-list {
 		max-width: 960px;
 		margin: 0 auto;
+	}
+
+	.WatchScreen-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding-right: 12px;
+	}
+
+	.WatchScreen-mode {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		margin: 0 16px 10px;
+	}
+
+	.WatchScreen-mode input {
+		flex: none;
+		width: 18px;
+		height: 18px;
+		margin-top: 2px;
+	}
+
+	.WatchScreen-mode .name {
+		display: block;
+		font-weight: 600;
+	}
+
+	.WatchScreen-note {
+		margin: 0 16px 8px;
 	}
 
 	.WatchScreen-list .panel-title {

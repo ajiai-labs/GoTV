@@ -112,8 +112,9 @@
 	);
 	// A board is open (own game, watching, a loaded replay): no top bar, like a
 	// separate game window. The board pages show a small logo instead (HomeLink).
-	// A game in its own window (/partie): only the game.
-	let gameWindow = $derived(page.route.id === '/partie');
+	// A game in its own window (/partie) or the Brettübersicht (/bretter):
+	// only that, no top bar.
+	let gameWindow = $derived(page.route.id === '/partie' || page.route.id === '/bretter');
 	// Windows that only mirror the KGS connection of another one: no second
 	// notification, reminder or profile dialog from them.
 	let mirror = $derived(app.role === 'follower' || gameWindow);
@@ -154,7 +155,7 @@
 
 	// Chat, Beobachten and Spielen fill the window height (iPad, no scrolling):
 	// no footer there.
-	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen', '/partie'];
+	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen', '/partie', '/bretter'];
 	let showFooter = $derived.by(() => {
 		void page.url.pathname;
 		return !FULL_HEIGHT_PAGES.some((path) => isCurrent(path));

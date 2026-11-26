@@ -77,6 +77,10 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
 - **Games in their own windows, as in CGoban:** a clicked game opens in a window of
   its own (an open one comes to the front); the main window keeps lists and chats.
   All windows share one KGS connection - a second tab says where KGS runs.
+- **Brettübersicht (team matches):** up to four games in one calm window apart from
+  your own game - e.g. your team mates' games in the Go-Bundesliga. Bring games in from
+  Watch (tick "Partien in die Brettübersicht holen") or a player's profile; a click
+  shows one board big, Esc goes back. Positions only: no chat, no analysis.
 - **Stones like a real set:** white like clam shell (muted ivory with fine
   growth lines, every stone different), black like matte slate; white is
   drawn 2 % smaller, as in real Go sets, because light stones look bigger.
