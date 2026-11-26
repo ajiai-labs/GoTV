@@ -145,7 +145,11 @@ class GoTvApp {
 		this.state = store.getState();
 
 		store.subscribe(() => {
+			// Restoring the saved state (a reload) is no new game.
+			const ready = this.state.initialized;
+			const before = this.state.playGameId ?? null;
 			this.state = store.getState();
+			if (ready) this.moveNewOwnGameOut(before, this.state.playGameId);
 		});
 		client.setOnChange((clientState) => actions.onClientStateChange(clientState));
 		client.setOnMessages(actions.onReceiveServerMessages);
@@ -249,6 +253,18 @@ class GoTvApp {
 			if (openGameWindow(gameId)) return;
 		}
 		this.actions.onJoinGame(gameId);
+	}
+
+	// An own game that starts here (found opponent, accepted challenge,
+	// resumed game) moves to its own window, like a clicked one. Browsers may
+	// refuse a window that opens without a click - then it stays here, with
+	// "Eigenes Fenster" in its header. Not from a game window itself.
+	private moveNewOwnGameOut(before: number | null, now: number | null | undefined) {
+		if (now == null || now === before || !loadGameWindows()) return;
+		if (['/partie', '/bretter'].includes(currentPath())) return;
+		queueMicrotask(() => {
+			if (this.state.playGameId === now) this.moveGameToWindow(now);
+		});
 	}
 
 	// "Eigenes Fenster" on a game shown here: the game moves to its window,

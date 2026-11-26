@@ -4,9 +4,9 @@
 // window to the front instead of opening a second one. All windows share
 // one KGS connection (windowLink.ts).
 //
-// Opening needs a click: browsers block windows that open by themselves, so
-// a game that starts without one (a found opponent) shows up in the main
-// window, where "Eigenes Fenster" moves it out.
+// An own game that starts without a click (a found opponent) is tried as
+// well; browsers may block a window that opens by itself - then it shows up
+// in the main window, where "Eigenes Fenster" moves it out.
 import { resolve } from '$app/paths';
 import { config } from './config';
 import { addBoard, loadBoards, saveBoards } from './model/team';

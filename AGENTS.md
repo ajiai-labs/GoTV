@@ -766,8 +766,10 @@ die schon offen sind, kommen nach vorn statt doppelt.
   `window.open(url, 'gotv-partie-N')`; ein schon offenes Fenster kommt nach vorn
   (`app.watchGame`). Blockiert der Browser, zeigt das Hauptfenster die Partie wie bisher.
   "Eigenes Fenster" im Partiekopf verschiebt eine angezeigte Partie (`app.moveGameToWindow`,
-  `onShowGameElsewhere`). Partien, die ohne Klick beginnen (Automatch, angenommene
-  Herausforderung), öffnen im Hauptfenster - Browser blockieren Fenster ohne Klick. Schließen
+  `onShowGameElsewhere`). Eine eigene Partie, die ohne Klick beginnt (Automatch,
+  angenommene Herausforderung, fortgesetzte Partie: `playGameId` wechselt), versucht GoTV
+  ebenfalls ins eigene Fenster zu schieben (`app.moveNewOwnGameOut`, nicht beim Wiederherstellen
+  nach Neuladen); blockiert der Browser das Fenster ohne Klick, bleibt sie im Hauptfenster. Schließen
   eines Fensters verlässt eine beobachtete Partie bei KGS, die eigene läuft weiter.
   Einstellung "Partien in eigenem Fenster öffnen" (`gotv.gameWindows`, Vorgabe an).
 - Tauri (`gotv-desktop/src/main.rs`): `on_new_window` macht aus window.open auf den lokalen
