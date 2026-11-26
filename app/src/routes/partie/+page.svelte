@@ -33,6 +33,18 @@
 		else if (wasLoggedIn && app.state.initialized) window.close();
 	});
 
+	// A game id KGS does not (or no longer) know: once the shared state is
+	// there and a few seconds passed, say so instead of loading forever.
+	let gone = $state(false);
+	$effect(() => {
+		if (game || !app.loggedIn || !app.state.initialized) {
+			gone = false;
+			return;
+		}
+		const timer = setTimeout(() => (gone = true), 5000);
+		return () => clearTimeout(timer);
+	});
+
 	// This window shows the game: registered with the window that holds the
 	// KGS connection, which joins it once and lets go when no window shows it
 	// any more (AppActions.onViewGame).
@@ -63,7 +75,7 @@
 <KgsGate inWindow>
 	{#if game}
 		<GameScreen {game} {playing} inWindow />
-	{:else if !Number.isFinite(gameId) || gameId <= 0}
+	{:else if !Number.isFinite(gameId) || gameId <= 0 || gone}
 		<p class="missing">{t('app.gameWindow.missing')}</p>
 	{:else}
 		<Spinner />

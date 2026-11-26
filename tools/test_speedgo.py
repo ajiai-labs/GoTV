@@ -184,6 +184,29 @@ class OgsAccountsTest(unittest.TestCase):
         self.assertEqual({e["id"]: e.get("ogs_players") for e in updated}[plain["id"]], ["carla"])
 
 
+class ReviewFindingsTest(unittest.TestCase):
+    """Review 26.11.2026: learning must not depend on the page order, and an
+    upcoming match must not give its accounts to an older entry."""
+
+    def test_learning_does_not_depend_on_the_order_of_matches(self):
+        def match(a, b, game):
+            return {"round": "", "players": [(a, ""), (b, "")], "start": None, "ogs_game_ids": [game]}
+
+        games = {1: ["x-ogs", "y-ogs"], 2: ["y-ogs", "z-ogs"]}
+        matches = [match("Xa X", "Ya Y", 1), match("Ya Y", "Za Z", 2)]
+        accounts = speedgo.learn_ogs_accounts(matches, games.__getitem__, {"Za Z": "z-ogs"})
+        self.assertEqual(accounts["ya y"], "y-ogs")
+        self.assertEqual(accounts["xa x"], "x-ogs")
+
+    def test_an_older_entry_of_the_pairing_gets_no_accounts(self):
+        matches = speedgo.parse_bracket_html(SAMPLE.read_text(encoding="utf-8"))
+        accounts = speedgo.learn_ogs_accounts(matches, None, {"Carla Gamma": "carla"})
+        old = entry("old", "Speed Go Championship: Carla Gamma – Dario Delta", "2025-11-30")
+        events, enriched = speedgo.enrich_with_players([old], matches, accounts)
+        self.assertEqual(enriched, [])
+        self.assertNotIn("ogs_players", events[0])
+
+
 class MainTest(unittest.TestCase):
     def run_main(self, html_path, events):
         with tempfile.TemporaryDirectory() as temp:

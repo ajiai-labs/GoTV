@@ -801,7 +801,8 @@
 			flex: none;
 			aspect-ratio: 1;
 			width: 100%;
-			max-width: 820px;
+			/* The whole board in view also in a short window (header above it). */
+			max-width: min(820px, calc(100dvh - 72px));
 			align-self: center;
 		}
 

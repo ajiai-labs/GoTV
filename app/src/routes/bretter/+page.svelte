@@ -159,7 +159,9 @@
 		const onKey = (event: KeyboardEvent) => {
 			// Esc in a text field or a dialog stays there.
 			const target = event.target as HTMLElement | null;
-			const typing = !!target?.closest('input, textarea, [role="dialog"]');
+			const typing =
+				!!target?.closest('input, textarea, dialog, [role="dialog"]') ||
+				!!document.querySelector('dialog[open]');
 			if (event.key === 'Escape' && big && !typing) show(null);
 		};
 		const leave = () => {

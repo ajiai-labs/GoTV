@@ -86,6 +86,29 @@ function click(ctx: AudioContext) {
 	tone(ctx, 180, ctx.currentTime, 0.05, 0.35);
 }
 
+// A window opened by GoTV itself (a game window) may not play sound before
+// someone clicks in it (browser rule): such a window hands its sounds to the
+// main window, which may (windowLink.ts). The relay returns true if it took
+// the sound.
+export type SoundName = 'stone' | 'gameStart' | 'message' | 'countdown';
+let relay: ((name: SoundName, arg?: number) => boolean) | null = null;
+
+export function setSoundRelay(next: typeof relay) {
+	relay = next;
+}
+
+function relayed(name: SoundName, arg?: number): boolean {
+	return !!relay && relay(name, arg);
+}
+
+// Plays a sound by name - for sounds handed over by another window.
+export function playByName(name: SoundName, arg?: number) {
+	if (name === 'stone') playStoneClick();
+	else if (name === 'gameStart') playGameStart();
+	else if (name === 'message') playMessage();
+	else if (name === 'countdown' && typeof arg === 'number') playCountdown(arg);
+}
+
 function play(kind: GameSoundKind, sound: (ctx: AudioContext) => void) {
 	if (!loadSoundPrefs()[kind]) return;
 	const ctx = audio();
@@ -98,10 +121,12 @@ function play(kind: GameSoundKind, sound: (ctx: AudioContext) => void) {
 }
 
 export function playStoneClick() {
+	if (relayed('stone')) return;
 	play('stones', click);
 }
 
 export function playGameStart() {
+	if (relayed('gameStart')) return;
 	play('gameStart', (ctx) => {
 		const t = ctx.currentTime;
 		// Rising three-note chime, played twice - meant to be heard.
@@ -115,6 +140,7 @@ export function playGameStart() {
 
 // A chat message for me: ding-dong, twice, clearly audible.
 export function playMessage() {
+	if (relayed('message')) return;
 	play('messages', (ctx) => {
 		const t = ctx.currentTime;
 		for (const offset of [0, 0.6]) {
@@ -127,6 +153,7 @@ export function playMessage() {
 // One beep for `seconds` left (1 to COUNTDOWN_SECONDS).
 export function playCountdown(seconds: number) {
 	if (seconds < 1 || seconds > COUNTDOWN_SECONDS) return;
+	if (relayed('countdown', seconds)) return;
 	play('countdown', (ctx) => {
 		const urgent = seconds <= URGENT_SECONDS;
 		tone(ctx, urgent ? 1200 : 800, ctx.currentTime, urgent ? 0.18 : 0.1, 0.45);

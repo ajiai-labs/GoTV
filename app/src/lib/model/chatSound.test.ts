@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { commentAuthor, isChatForMe } from './chatSound';
+import { isChatForMe, newChatAuthors } from './chatSound';
 import type { AppState } from './types';
 
 function state(extra: Partial<AppState> = {}) {
@@ -54,30 +54,33 @@ describe('chat sound', () => {
 		expect(isChatForMe(state({ currentUser: null }), 7, 'ziming9')).toBe(false);
 	});
 
-	it('reads who wrote the newest line of a game chat (comments of moves)', () => {
+	it('reads who wrote the new lines of a game chat (comments of moves)', () => {
 		const update = (text: string, type = 'PROP_ADDED') => ({
 			type: 'GAME_UPDATE',
 			channelId: 20,
 			sgfEvents: [{ type, nodeId: 5, prop: { name: 'COMMENT', text } }]
 		});
-		expect(commentAuthor(update('andy1975 [1d]: hallo\nziming9 [4d]: bist du da?\n'))).toBe(
-			'ziming9'
-		);
-		expect(commentAuthor(update('ziming9 [4d]: hallo\nandy1975 [1d]: ja\n', 'PROP_CHANGED'))).toBe(
-			'andy1975'
-		);
+		const withComment = (text: string) =>
+			({ tree: { nodes: { 5: { props: [{ name: 'COMMENT', text }] } } } }) as never;
+		// The opponent's line, then mine in the same answer: the opponent counts.
 		expect(
-			commentAuthor({
-				type: 'GAME_UPDATE',
-				sgfEvents: [{ type: 'PROP_GROUP_ADDED', props: [{ name: 'COMMENT', text: 'gast: hi' }] }]
-			})
-		).toBe('gast');
+			newChatAuthors(undefined, update('ziming9 [4d]: bist du da?\nandy1975 [1d]: ja\n'))
+		).toEqual(['ziming9', 'andy1975']);
+		// Only what was added to the comment the move already had.
+		const had = withComment('ziming9 [4d]: hallo\n');
+		expect(
+			newChatAuthors(had, update('ziming9 [4d]: hallo\nandy1975 [1d]: hi\n', 'PROP_CHANGED'))
+		).toEqual(['andy1975']);
+		// The same comment again: nothing new.
+		expect(newChatAuthors(had, update('ziming9 [4d]: hallo\n', 'PROP_CHANGED'))).toEqual([]);
 		// A move without chat: nothing.
 		expect(
-			commentAuthor({
+			newChatAuthors(undefined, {
 				type: 'GAME_UPDATE',
-				sgfEvents: [{ type: 'PROP_GROUP_ADDED', props: [{ name: 'MOVE', color: 'black' }] }]
+				sgfEvents: [
+					{ type: 'PROP_GROUP_ADDED', nodeId: 6, props: [{ name: 'MOVE', color: 'black' }] }
+				]
 			})
-		).toBeNull();
+		).toEqual([]);
 	});
 });

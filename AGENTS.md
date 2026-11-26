@@ -853,6 +853,21 @@ die schon offen sind, kommen nach vorn statt doppelt.
   laufende Partie ist dort nie ein Brett (auch nicht über "Zur Brettübersicht" im Gegnerprofil),
   nur die umrahmte Vorschau. "Verlassen" nach Rückfrage verlässt die eigene Partie bei KGS auch,
   wenn ein anderes Fenster sie zeigt (`onLeaveGame(game, { explicit: true })`).
+- Fenster und Töne nach dem Prüfbericht 26.11.2026: `openNamed` lädt ein Fenster, das dieses
+  Fenster gerade erst geöffnet hat (noch about:blank), nicht ein zweites Mal (schnelle
+  Doppelklicks), und schließt ein offenes Fenster erst, wenn das neue da ist (`'_blank'`, dann
+  `name` übernehmen). In den Tauri-Apps (`DESKTOP_VERSION`) wird kein Fenster ersetzt (nur
+  focus) - Schließen aus der Seite kann dort ein leeres natives Fenster hinterlassen. Eine neue
+  Brettübersicht beginnt ohne vergrößertes Brett. Follower dürfen auch die Profil- und
+  Mehr-Menü-Aktionen (`FORWARDED_ACTIONS`: Chat starten, Rangverlauf, Freunde, Nachricht,
+  Spiel kopieren, Laden …). Töne eines Follower-Fensters spielt das Hauptfenster
+  (`setSoundRelay`/`playByName`; ein frisch geöffnetes Fenster darf vor einem Klick keinen Ton
+  spielen). Partiechat-Ton nur für wirklich neue Zeilen (`newChatAuthors`, Vergleich mit dem
+  Kommentar davor, bewertet auf dem Stand VOR der Antwort). Haken "Partien in die
+  Brettübersicht holen" wirkt nur mit Partiefenstern; eine unbekannte Partie-ID zeigt nach 5 s
+  "gibt es nicht (mehr)"; im einspaltigen Layout (≤ 900 px) passt das Brett in die Höhe.
+  Speed-Go-Importer: Konten werden in mehreren Durchgängen gelernt (Reihenfolge egal),
+  `ogs_players` nur für einen Eintrag am selben Tag.
 - "Zur Brettübersicht" lässt eine schon offene Übersicht stehen (sie liest die neuen Bretter per
   storage-Event, Position und vergrößertes Brett bleiben) und sagt das; nur der Knopf
   "Brettübersicht" holt sie (geschlossen + neu geöffnet) nach vorn.

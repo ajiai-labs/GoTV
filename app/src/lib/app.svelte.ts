@@ -25,6 +25,7 @@ import {
 	waitForConnection
 } from './windowLink';
 import type { LinkMessage } from './windowLink';
+import { playByName, setSoundRelay } from './sound/gameSounds';
 import { bringToBoards, loadBoardsMode, loadGameWindows, openGameWindow } from './gameWindows';
 
 // The page of each nav. "tv" is GoTV itself (Live); Kalender, Kanäle and
@@ -195,6 +196,8 @@ class GoTvApp {
 			const message = event.data;
 			if (message.t === 'hello') {
 				snapshot();
+			} else if (message.t === 'sound') {
+				playByName(message.name, message.arg);
 			} else if (message.t === 'call' && FORWARDED_ACTIONS.has(message.method)) {
 				if (message.method === 'onUserDetail') this.detailsElsewhere = String(message.args[0]);
 				const action = (actions as unknown as Record<string, unknown>)[message.method];
@@ -241,8 +244,14 @@ class GoTvApp {
 		);
 		this.role = 'follower';
 		this._actions = forward as AppActions;
+		// Sounds of this window play in the main window (allowed to play).
+		setSoundRelay((name, arg) => {
+			link.postMessage({ t: 'sound', name, arg } satisfies LinkMessage);
+			return true;
+		});
 		link.postMessage({ t: 'hello' } satisfies LinkMessage);
 		waitForConnection(() => {
+			setSoundRelay(null); // this window holds the connection now
 			link.close();
 			store.unsubscribe();
 			this._actions = null;
@@ -284,7 +293,9 @@ class GoTvApp {
 		options: { toBoards?: boolean } = {}
 	): 'full' | 'added' | undefined {
 		let full = false;
-		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode()) {
+		// The overview needs game windows: with them switched off in the
+		// settings (the tick is hidden then) a click shows the game here.
+		if (typeof gameId === 'number' && options.toBoards && loadBoardsMode() && loadGameWindows()) {
 			const result = bringToBoards(gameId, this.isLiveGame);
 			if (result === 'shown') return;
 			if (result === 'added') return 'added';

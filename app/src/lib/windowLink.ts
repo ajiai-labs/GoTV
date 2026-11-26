@@ -13,6 +13,7 @@
 // Without Web Locks or BroadcastChannel (very old engines) every window is
 // its own owner, as before.
 import type { AppState, KgsMessage } from './model/types';
+import type { SoundName } from './sound/gameSounds';
 
 export const LINK_CHANNEL = 'gotv-kgs-link';
 const LOCK_NAME = 'gotv-kgs-connection';
@@ -21,10 +22,11 @@ export type LinkMessage =
 	| { t: 'hello' }
 	| { t: 'snapshot'; owner: string; seq: number; state: AppState }
 	| { t: 'msgs'; owner: string; seq: number; msgs: Array<KgsMessage> }
-	| { t: 'call'; method: string; args: Array<unknown> };
+	| { t: 'call'; method: string; args: Array<unknown> }
+	| { t: 'sound'; name: SoundName; arg?: number };
 
 // What a follower window may ask the owner to do: the actions of a game
-// window. Nothing here navigates the owner's window.
+// window and of a profile opened there.
 export const FORWARDED_ACTIONS = new Set([
 	'onPlayMove',
 	'onPass',
@@ -44,7 +46,22 @@ export const FORWARDED_ACTIONS = new Set([
 	'onUserDetail',
 	'onCloseUserDetail',
 	// The "Abmelden" button of the offline notice, in any window.
-	'onLogout'
+	'onLogout',
+	// What a profile or the more menu of a game window offers (review
+	// 26.11.2026: these buttons did nothing in a follower). Whatever opens a
+	// page (a chat, a watched game) opens in the main window.
+	'onStartChat',
+	'onRequestRankGraph',
+	'onAddFriend',
+	'onRemoveFriend',
+	'onLeaveMessage',
+	'onClearCommunityResult',
+	'onUpdateProfileDetails',
+	'onUpdatePassword',
+	'onLoadGame',
+	'onCloneGame',
+	'onJoinGame',
+	'onOpenTvStream'
 ]);
 
 // This window, for the views registered with the owner (onViewGame).

@@ -83,7 +83,7 @@ describe('Beobachten', () => {
 	it('opens a clicked game in its own window when that is switched on', async () => {
 		localStorage.setItem('gotv.gameWindows', 'on');
 		const popup = newPopup();
-		const open = vi.fn(() => popup);
+		const open = vi.fn<(url: string, name: string) => ReturnType<typeof newPopup>>(() => popup);
 		vi.stubGlobal('open', open);
 		setState();
 		await render(Page);
@@ -92,16 +92,20 @@ describe('Beobachten', () => {
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-12', expect.any(String));
 		expect(popup.location.replace).toHaveBeenCalledWith(expect.stringMatching(/\/partie\?id=12$/));
 		expect(actions.onJoinGame).not.toHaveBeenCalled();
-		// Clicked again while it is open: closed and opened afresh, so it shows
-		// in front (Wayland lets no page bring another window forward).
+		// Clicked again while it is open: opened afresh, so it shows in front
+		// (Wayland lets no page bring another window forward); the old one is
+		// closed only once the new one is there, which takes over the name.
 		popup.location.href = 'http://localhost/partie?id=12';
+		const fresh = newPopup() as ReturnType<typeof newPopup> & { name?: string };
+		open.mockImplementation((_url: string, name: string) => (name === '_blank' ? fresh : popup));
 		await page.getByRole('button', { name: /Zweite Partie/ }).click();
-		expect(popup.close).toHaveBeenCalled();
 		expect(open).toHaveBeenLastCalledWith(
 			expect.stringMatching(/\/partie\?id=12$/),
-			'gotv-partie-12',
+			'_blank',
 			expect.any(String)
 		);
+		expect(popup.close).toHaveBeenCalled();
+		expect(fresh.name).toBe('gotv-partie-12');
 		localStorage.removeItem('gotv.gameWindows');
 	});
 
@@ -140,8 +144,10 @@ describe('Beobachten', () => {
 				6: game(6, 'F')
 			}
 		};
-		// The overview closed (the browser has no window of that name): its
-		// old boards are gone, a new one starts.
+		// The overview closed (the browser has no window of that name, so the
+		// next one is a new, empty window): its old boards are gone.
+		const reopened = newPopup();
+		open.mockReturnValue(reopened);
 		localStorage.setItem('gotv.team', '[1,2,3,4,5,6]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
 		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
@@ -154,7 +160,7 @@ describe('Beobachten', () => {
 		]);
 		// The overview open: games of an earlier session (restored with the
 		// saved state, not listed by KGS any more) do not hold their boards.
-		popup.location.href = 'http://localhost/bretter'; // the overview is open
+		reopened.location.href = 'http://localhost/bretter'; // the overview is open
 		localStorage.setItem('gotv.team', '[1,2,3,4,5,6]');
 		await page.getByRole('button', { name: /Erste Partie/ }).click();
 		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([11, 2, 3, 4, 5, 6]);
@@ -172,6 +178,35 @@ describe('Beobachten', () => {
 		await expect.element(page.getByText(/Die Brettübersicht ist voll/)).toBeVisible();
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-11', expect.any(String));
 		popup.closed = true; // the next test opens game 11 afresh
+		reopened.closed = true;
+		localStorage.removeItem('gotv.boardsMode');
+		localStorage.removeItem('gotv.team');
+		localStorage.removeItem('gotv.gameWindows');
+	});
+
+	it('keeps both games on two fast clicks while the overview is still loading', async () => {
+		localStorage.setItem('gotv.gameWindows', 'on');
+		localStorage.setItem('gotv.boardsMode', 'on');
+		localStorage.removeItem('gotv.team');
+		const popup = newPopup(); // stays about:blank: the overview is still loading
+		vi.stubGlobal(
+			'open',
+			vi.fn(() => popup)
+		);
+		setState();
+		await render(Page);
+		await page.getByRole('button', { name: /Zweite Partie/ }).click();
+		await page.getByRole('button', { name: /Erste Partie/ }).click();
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([
+			12,
+			11,
+			null,
+			null,
+			null,
+			null
+		]);
+		expect(popup.location.replace).toHaveBeenCalledTimes(1);
+		popup.closed = true;
 		localStorage.removeItem('gotv.boardsMode');
 		localStorage.removeItem('gotv.team');
 		localStorage.removeItem('gotv.gameWindows');

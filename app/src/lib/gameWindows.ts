@@ -10,6 +10,7 @@
 import { resolve } from '$app/paths';
 import { config } from './config';
 import { addBoard, emptyBoards, loadBoards, saveBoards } from './model/team';
+import { DESKTOP_VERSION } from './desktopUpdate';
 
 export const GAME_WINDOWS_KEY = 'gotv.gameWindows';
 const FEATURES = 'popup,width=1180,height=820';
@@ -44,21 +45,42 @@ export function gameWindowUrl(gameId: number): string {
 // the front - window.focus() silently does nothing there, so the click would
 // seem to do nothing (found by the user, 26.11.2026). A new window always
 // appears in front; what it shows lives at KGS and in the browser storage.
+//
+// - A window this one started loading a moment ago still reads about:blank:
+//   it is not loaded a second time (fast double clicks).
+// - The old window is closed only once the new one is there (a blocked
+//   pop-up must not cost the open window).
+// - The downloadable desktop apps (Tauri) do not replace windows: closing
+//   from the page can leave an empty native window behind there (review
+//   26.11.2026); a window that does not come forward is the smaller harm.
+const loading = new Set<Window>();
+
+function startLoading(win: Window, url: string) {
+	loading.add(win);
+	win.location.replace(url);
+	win.focus();
+	setTimeout(() => loading.delete(win), 5000);
+}
+
 function openNamed(url: string, name: string): Window | null {
 	const win = window.open('', name, FEATURES);
 	if (!win) return null;
-	try {
-		if (win.location.href === 'about:blank') {
-			win.location.replace(url);
-			win.focus();
-			return win;
-		}
-	} catch {
-		// not readable: open it afresh below
+	if (isBlank(win)) {
+		if (!loading.has(win)) startLoading(win, url);
+		return win;
+	}
+	if (DESKTOP_VERSION) {
+		win.focus();
+		return win;
+	}
+	const fresh = window.open(url, '_blank', FEATURES);
+	if (!fresh) {
+		win.focus();
+		return win;
 	}
 	win.close();
-	const fresh = window.open(url, name, FEATURES);
-	fresh?.focus();
+	fresh.name = name;
+	fresh.focus();
 	return fresh;
 }
 
@@ -88,10 +110,10 @@ function isBlank(win: Window): boolean {
 export function openBoardsWindow(): boolean {
 	const win = window.open('', BOARDS_NAME, FEATURES);
 	if (!win) return false;
-	if (isBlank(win)) {
+	if (isBlank(win) && !loading.has(win)) {
 		saveBoards(emptyBoards());
-		win.location.replace(resolve('/bretter'));
-		win.focus();
+		clearBoardsZoom();
+		startLoading(win, resolve('/bretter'));
 		return true;
 	}
 	return !!openNamed(resolve('/bretter'), BOARDS_NAME);
@@ -108,13 +130,14 @@ export function bringToBoards(
 ): 'shown' | 'added' | 'full' | 'refused' {
 	const win = window.open('', BOARDS_NAME, FEATURES);
 	if (!win) return 'refused';
-	const fresh = isBlank(win);
+	// Still loading from a click a moment ago counts as open (its boards).
+	const fresh = isBlank(win) && !loading.has(win);
 	const boards = addBoard(fresh ? emptyBoards() : loadBoards(), gameId, isKnown);
 	if (!boards) return 'full'; // only an open overview can be full
 	saveBoards(boards);
 	if (!fresh) return 'added';
-	win.location.replace(resolve('/bretter'));
-	win.focus();
+	clearBoardsZoom(); // a new overview starts with all boards, none enlarged
+	startLoading(win, resolve('/bretter'));
 	return 'shown';
 }
 
@@ -135,5 +158,17 @@ export function saveBoardsMode(on: boolean) {
 		localStorage.setItem(BOARDS_MODE_KEY, on ? 'on' : 'off');
 	} catch {
 		// not remembered without storage
+	}
+}
+
+// The enlarged board of the Brettübersicht (routes/bretter) belongs to one
+// overview; a new one starts with all boards.
+export const BOARDS_ZOOM_KEY = 'gotv.teamView';
+
+function clearBoardsZoom() {
+	try {
+		localStorage.removeItem(BOARDS_ZOOM_KEY);
+	} catch {
+		// nothing remembered without storage
 	}
 }

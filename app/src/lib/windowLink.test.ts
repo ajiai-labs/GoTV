@@ -50,9 +50,12 @@ describe('window link', () => {
 		expect(apply).toHaveBeenLastCalledWith([{ type: 'NEXT' }]);
 	});
 
-	it('lets a follower window only play and chat in its game', () => {
+	it('lets a follower window play, chat and use a profile - not log in or navigate', () => {
 		expect(FORWARDED_ACTIONS.has('onPlayMove')).toBe(true);
 		expect(FORWARDED_ACTIONS.has('onSendGameChat')).toBe(true);
+		expect(FORWARDED_ACTIONS.has('onStartChat')).toBe(true);
+		expect(FORWARDED_ACTIONS.has('onCloneGame')).toBe(true);
+		expect(FORWARDED_ACTIONS.has('onAddFriend')).toBe(true);
 		expect(FORWARDED_ACTIONS.has('onLogin')).toBe(false);
 		expect(FORWARDED_ACTIONS.has('onChangeNav')).toBe(false);
 	});

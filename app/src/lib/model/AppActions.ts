@@ -4,7 +4,7 @@ import { tempId, isTempId } from './tempId';
 import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } from './game';
 import { playGameStart, playMessage } from '../sound/gameSounds';
-import { commentAuthor, isChatForMe } from './chatSound';
+import { isChatForMe, newChatAuthors } from './chatSound';
 import { ChannelGuard } from './channelGuard';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
@@ -130,7 +130,19 @@ export class AppActions {
 				this._closedChannels.delete(msg.channelId);
 			}
 		}
+		// The chat of my running game comes as comments of its moves: judged on
+		// the state before the update (the game may end in the same answer).
+		const before = this._store.getState();
+		const chatForMe = (Array.isArray(msgs) ? msgs : [msgs]).some(
+			(msg) =>
+				msg.type === 'GAME_UPDATE' &&
+				typeof msg.channelId === 'number' &&
+				newChatAuthors(before.gamesById[msg.channelId], msg).some((from) =>
+					isChatForMe(before, msg.channelId as number, from)
+				)
+		);
 		this._store.dispatch(msgs);
+		if (chatForMe) playMessage();
 		if (this._store.getState().automatchEnabled) {
 			this._automatchEndedAt = 0;
 		} else if (wasAutomatching && !this._automatchEndedAt) {
@@ -168,10 +180,6 @@ export class AppActions {
 				this.onReceiveChallengeSubmit(msg.channelId);
 			} else if (msg.type === 'CHAT' && msg.channelId && msg.user) {
 				this.onReceiveChat(msg.channelId, msg.user.name);
-			} else if (msg.type === 'GAME_UPDATE' && msg.channelId) {
-				// The chat of a game comes as comments of its moves.
-				const from = commentAuthor(msg);
-				if (from) this.onReceiveChat(msg.channelId, from);
 			} else if (msg.type === 'ARCHIVE_JOIN' && msg.channelId) {
 				this.onArchiveJoinSuccess(msg.channelId, msg.user);
 			} else if (msg.type === 'GLOBAL_GAMES_JOIN' || msg.type === 'GAME_LIST') {

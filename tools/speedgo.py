@@ -199,28 +199,36 @@ def learn_ogs_accounts(matches, fetch_game_players, known=None):
     }
     if fetch_game_players is None:
         return accounts
-    learned = set()
+    # One request per played match, then resolve until nothing new is learned:
+    # the order of the matches on the page must not decide what is learned.
+    pairs = []
     for match in matches:
         if not match["ogs_game_ids"]:
             continue
         keys = [_account_key(name) for name, _rank in match["players"]]
-        if all(key in learned for key in keys):
-            continue
         try:
             users = [u for u in fetch_game_players(match["ogs_game_ids"][0]) if u]
         except (OSError, ValueError, KeyError, TypeError):
             continue
-        if len(set(users)) != 2:
-            continue
-        a, b = keys
-        if accounts.get(a) in users:
-            first, second = a, b
-        elif accounts.get(b) in users:
-            first, second = b, a
-        else:
-            continue  # both players switched accounts: not decidable
-        accounts[second] = next(u for u in users if u != accounts[first])
-        learned.update((first, second))
+        if len(set(users)) == 2:
+            pairs.append((keys, users))
+    learned = set()
+    changed = True
+    while changed:
+        changed = False
+        for keys, users in pairs:
+            if all(key in learned for key in keys):
+                continue
+            a, b = keys
+            if accounts.get(a) in users:
+                first, second = a, b
+            elif accounts.get(b) in users:
+                first, second = b, a
+            else:
+                continue  # neither account known (yet): maybe after another pass
+            accounts[second] = next(u for u in users if u != accounts[first])
+            learned.update((first, second))
+            changed = True
     return accounts
 
 
@@ -274,10 +282,18 @@ def _source_rank(event):
     return 1 if event.get("source") == SPEEDGO_SOURCE else 2
 
 
-def _entry_for(events, match):
-    """Index of the entry that should carry a match's boards, or None."""
+def _entry_for(events, match, same_day=False):
+    """Index of the entry that should carry a match's boards, or None.
+    same_day: only an entry on the match's date (an upcoming match must not
+    give its accounts to an older entry of the same pairing)."""
+    day = (match.get("start") or "")[:10]
     candidates = sorted(
-        (index for index, event in enumerate(events) if _is_same_pairing(event, match)),
+        (
+            index
+            for index, event in enumerate(events)
+            if _is_same_pairing(event, match)
+            and (not same_day or event.get("date_start") == day)
+        ),
         key=lambda index: _source_rank(events[index]),
     )
     return candidates[0] if candidates else None
@@ -293,7 +309,7 @@ def enrich_with_players(events, matches, accounts):
         if not match["start"] or match["ogs_game_ids"]:
             continue
         players = ogs_players_for(match, accounts)
-        index = _entry_for(result, match)
+        index = _entry_for(result, match, same_day=True)
         if not players or index is None:
             continue
         event = result[index]

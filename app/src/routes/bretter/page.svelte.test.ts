@@ -106,12 +106,12 @@ describe('Brettübersicht', () => {
 		await own.getByRole('button').click();
 		// The open game window is opened afresh, so it shows in front.
 		expect(open).toHaveBeenCalledWith('', 'gotv-partie-95', expect.any(String));
-		expect(popup.close).toHaveBeenCalled();
 		expect(open).toHaveBeenLastCalledWith(
 			expect.stringMatching(/\/partie\?id=95$/),
-			'gotv-partie-95',
+			'_blank',
 			expect.any(String)
 		);
+		expect(popup.close).toHaveBeenCalled();
 		// Switched off: no own game here.
 		await page.getByRole('checkbox', { name: 'Eigene Partie zeigen' }).click();
 		await expect.element(own).not.toBeInTheDocument();
