@@ -12,7 +12,6 @@ export const game: Translation<typeof de> = {
 	'game.screen.over': 'Game over',
 	'game.screen.overWithScore': 'Game over: {score}',
 	'game.screen.closeWindow': 'Close window',
-	'game.boardChat': 'Chat of this game',
 	'game.screen.ownWindow': 'Own window',
 	'game.screen.ownWindowHint': 'Show the game in a window of its own, as in CGoban',
 	'game.screen.ownWindowRefused':

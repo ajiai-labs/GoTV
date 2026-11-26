@@ -13,7 +13,6 @@ export const game = {
 	'game.screen.over': 'Partie beendet',
 	'game.screen.overWithScore': 'Partie beendet: {score}',
 	'game.screen.closeWindow': 'Fenster schließen',
-	'game.boardChat': 'Chat dieser Partie',
 	'game.screen.ownWindow': 'Eigenes Fenster',
 	'game.screen.ownWindowHint': 'Die Partie in einem eigenen Fenster zeigen, wie in CGoban',
 	'game.screen.ownWindowRefused':

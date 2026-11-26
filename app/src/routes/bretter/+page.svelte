@@ -17,7 +17,7 @@
 	import type { TeamBoards } from '#lib/model/team.ts';
 	import type { BoardMarkup, BoardState, GameChannel } from '#lib/model/types.ts';
 	import Board from '#lib/ui/Board.svelte';
-	import BoardChat from '#lib/ui/game/BoardChat.svelte';
+	import GameScreen from '#lib/ui/game/GameScreen.svelte';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
 	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
 
@@ -124,7 +124,10 @@
 			if (event.key === TEAM_KEY) boards = loadBoards();
 		};
 		const onKey = (event: KeyboardEvent) => {
-			if (event.key === 'Escape' && big) show(null);
+			// Esc in a text field or a dialog stays there.
+			const target = event.target as HTMLElement | null;
+			const typing = !!target?.closest('input, textarea, [role="dialog"]');
+			if (event.key === 'Escape' && big && !typing) show(null);
 		};
 		window.addEventListener('storage', onStorage);
 		window.addEventListener('keydown', onKey);
@@ -134,8 +137,9 @@
 		};
 	});
 
-	function detach(gameId: number) {
-		refused = !openGameWindow(gameId);
+	function isMine(game: GameChannel): boolean {
+		const me = app.state.currentUser?.name;
+		return !!me && isGamePlayer(me, game.players);
 	}
 
 	// The latest position of a game (live), with its last-move mark.
@@ -173,128 +177,128 @@
 </svelte:head>
 
 <KgsGate inWindow>
-	<div class="boards">
-		<header class="head">
-			<h1>{t('app.boards.title')}</h1>
-			<label class="own-switch">
-				<input
-					type="checkbox"
-					checked={showOwn}
-					onchange={(event) => setShowOwn(event.currentTarget.checked)}
-				/>
-				{t('app.boards.showOwn')}
-			</label>
-			{#if bigEntry}
-				<button type="button" class="button" onclick={() => show(null)}>
-					{t('app.boards.all')}
-				</button>
-			{/if}
-		</header>
-		{#if refused}
-			<p class="muted" role="status">{t('game.screen.ownWindowRefused')}</p>
-		{/if}
-
-		{#if bigEntry}
-			{@const game = bigEntry.game}
-			{@const pos = game ? position(game) : null}
-			<section class="big">
-				<p class="players">
-					{t('app.boards.board', { board: String(bigEntry.board) })}
-					{#if game}· {gameLine(game)} · {stateLine(game)}{/if}
-				</p>
-				{#if game && pos}
-					<div class="big-main">
-						<div class="area">
-							<div class="fit">
-								<Board board={pos.board} markup={pos.markup} label={gameLine(game)} />
-							</div>
-						</div>
-						<BoardChat {game} />
-					</div>
-				{:else}
-					<p class="loading">{game ? t('app.boards.loading') : t('app.boards.gone')}</p>
-				{/if}
-				<div class="actions">
-					{#if game}
-						<button type="button" class="button" onclick={() => detach(game.id)}>
-							⧉ {t('game.screen.ownWindow')}
-						</button>
-					{/if}
-					<button type="button" class="button" onclick={() => bigEntry && takeOff(bigEntry.board)}>
-						{t('app.boards.remove')}
+	{#if bigEntry?.game}
+		{@const game = bigEntry.game}
+		<!-- The same game screen as a game window, with all it can do. -->
+		<div class="single">
+			<GameScreen
+				{game}
+				playing={isMine(game) && isGamePlaying(game)}
+				inWindow
+				onBack={() => show(null)}
+			/>
+		</div>
+	{:else}
+		<div class="boards">
+			<header class="head">
+				<h1>{t('app.boards.title')}</h1>
+				<label class="own-switch">
+					<input
+						type="checkbox"
+						checked={showOwn}
+						onchange={(event) => setShowOwn(event.currentTarget.checked)}
+					/>
+					{t('app.boards.showOwn')}
+				</label>
+				{#if bigEntry}
+					<button type="button" class="button" onclick={() => show(null)}>
+						{t('app.boards.all')}
 					</button>
-				</div>
-			</section>
-		{:else if shown.length || ownGame}
-			<div class="grid" style:--cols={grid.cols} style:--rows={grid.rows}>
-				{#if ownGame}
-					{@const pos = position(ownGame)}
-					<section class="tile own" aria-label={t('app.boards.own')}>
-						<header><strong>{t('app.boards.own')}</strong></header>
-						<div class="area">
-							<button
-								type="button"
-								class="board-button own-button fit"
-								title={t('app.boards.ownHint')}
-								onclick={() => (refused = !openGameWindow(ownGame.id))}
-							>
-								{#if pos}
-									<Board
-										board={pos.board}
-										markup={pos.markup}
-										coordinates={false}
-										label={`${t('app.boards.own')}: ${gameLine(ownGame)}, ${t('app.boards.ownHint')}`}
-									/>
-								{/if}
-							</button>
-						</div>
-						<p class="players">{gameLine(ownGame)}</p>
-						<p class="muted">{stateLine(ownGame)}</p>
-					</section>
 				{/if}
-				{#each shown as entry (entry.board)}
-					{@const game = entry.game}
-					{@const pos = game ? position(game) : null}
-					<section class="tile" aria-label={t('app.boards.board', { board: String(entry.board) })}>
-						<header>
-							<strong>{t('app.boards.board', { board: String(entry.board) })}</strong>
-							<button
-								type="button"
-								class="remove"
-								aria-label={t('app.boards.remove')}
-								title={t('app.boards.remove')}
-								onclick={() => takeOff(entry.board)}
-							>
-								×
-							</button>
-						</header>
-						<div class="area">
-							<button type="button" class="board-button fit" onclick={() => show(entry.board)}>
-								{#if game && pos}
-									<Board
-										board={pos.board}
-										markup={pos.markup}
-										coordinates={false}
-										label={`${gameLine(game)}, ${stateLine(game)}`}
-									/>
-								{:else}
-									<span class="loading">
-										{game ? t('app.boards.loading') : t('app.boards.gone')}
-									</span>
-								{/if}
-							</button>
-						</div>
-						{#if game}
-							<p class="players">{gameLine(game)}</p>
-							<p class="muted">{stateLine(game)}</p>
-						{/if}
-					</section>
-				{/each}
-			</div>
-		{:else}
-			<p class="empty">{t('app.boards.empty')}</p>
-		{/if}
-	</div>
+			</header>
+			{#if refused}
+				<p class="muted" role="status">{t('game.screen.ownWindowRefused')}</p>
+			{/if}
+
+			{#if bigEntry}
+				<!-- A board whose game is gone (an earlier KGS session). -->
+				<section class="big">
+					<p class="players">{t('app.boards.board', { board: String(bigEntry.board) })}</p>
+					<p class="loading">{t('app.boards.gone')}</p>
+					<div class="actions">
+						<button
+							type="button"
+							class="button"
+							onclick={() => bigEntry && takeOff(bigEntry.board)}
+						>
+							{t('app.boards.remove')}
+						</button>
+					</div>
+				</section>
+			{:else if shown.length || ownGame}
+				<div class="grid" style:--cols={grid.cols} style:--rows={grid.rows}>
+					{#if ownGame}
+						{@const pos = position(ownGame)}
+						<section class="tile own" aria-label={t('app.boards.own')}>
+							<header><strong>{t('app.boards.own')}</strong></header>
+							<div class="area">
+								<button
+									type="button"
+									class="board-button own-button fit"
+									title={t('app.boards.ownHint')}
+									onclick={() => (refused = !openGameWindow(ownGame.id))}
+								>
+									{#if pos}
+										<Board
+											board={pos.board}
+											markup={pos.markup}
+											coordinates={false}
+											label={`${t('app.boards.own')}: ${gameLine(ownGame)}, ${t('app.boards.ownHint')}`}
+										/>
+									{/if}
+								</button>
+							</div>
+							<p class="players">{gameLine(ownGame)}</p>
+							<p class="muted">{stateLine(ownGame)}</p>
+						</section>
+					{/if}
+					{#each shown as entry (entry.board)}
+						{@const game = entry.game}
+						{@const pos = game ? position(game) : null}
+						<section
+							class="tile"
+							aria-label={t('app.boards.board', { board: String(entry.board) })}
+						>
+							<header>
+								<strong>{t('app.boards.board', { board: String(entry.board) })}</strong>
+								<button
+									type="button"
+									class="remove"
+									aria-label={t('app.boards.remove')}
+									title={t('app.boards.remove')}
+									onclick={() => takeOff(entry.board)}
+								>
+									×
+								</button>
+							</header>
+							<div class="area">
+								<button type="button" class="board-button fit" onclick={() => show(entry.board)}>
+									{#if game && pos}
+										<Board
+											board={pos.board}
+											markup={pos.markup}
+											coordinates={false}
+											label={`${gameLine(game)}, ${stateLine(game)}`}
+										/>
+									{:else}
+										<span class="loading">
+											{game ? t('app.boards.loading') : t('app.boards.gone')}
+										</span>
+									{/if}
+								</button>
+							</div>
+							{#if game}
+								<p class="players">{gameLine(game)}</p>
+								<p class="muted">{stateLine(game)}</p>
+							{/if}
+						</section>
+					{/each}
+				</div>
+			{:else}
+				<p class="empty">{t('app.boards.empty')}</p>
+			{/if}
+		</div>
+	{/if}
 </KgsGate>
 
 <style>
@@ -423,21 +427,9 @@
 		align-items: center;
 	}
 
-	/* Board and its chat side by side; in a narrow window one above the other. */
-	.big-main {
-		flex: 1;
-		min-height: 0;
-		align-self: stretch;
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-		gap: 12px;
-	}
-
-	@media (max-width: 760px) {
-		.big-main {
-			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: minmax(0, 2fr) minmax(0, 1fr);
-		}
+	/* One board enlarged: the game screen fills the window. */
+	.single {
+		padding: 8px 12px 0;
 	}
 
 	.actions {

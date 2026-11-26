@@ -64,21 +64,24 @@ describe('Brettübersicht', () => {
 		await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
 	});
 
-	it('shows one board big, remembers it, and goes back with Esc', async () => {
+	it('shows one board with the full game screen and goes back to all boards', async () => {
+		actions.onSendGameChat = vi.fn();
 		await render(Page);
 		await page.getByRole('button', { name: /Lukan \[7d\] – anna/ }).click();
-		await expect.element(page.getByRole('button', { name: 'Alle Bretter' })).toBeVisible();
 		expect(localStorage.getItem('gotv.teamView')).toBe('1');
-		// The game's chat beside the big board, to write in.
-		actions.onSendGameChat = vi.fn();
-		await expect.element(page.getByRole('region', { name: 'Chat dieser Partie' })).toBeVisible();
+		// The same game screen as a game window: players, chat to write in.
+		await expect.element(page.getByRole('button', { name: /Alle Bretter/ })).toBeVisible();
 		await page.getByRole('textbox').fill('viel Glück');
 		await userEvent.keyboard('{Enter}');
 		expect(actions.onSendGameChat).toHaveBeenCalledWith('viel Glück', 90);
+		// Esc in the chat field stays there; Esc elsewhere goes back.
 		await userEvent.keyboard('{Escape}');
-		await expect
-			.element(page.getByRole('button', { name: 'Alle Bretter' }))
-			.not.toBeInTheDocument();
+		await expect.element(page.getByRole('button', { name: /Alle Bretter/ })).toBeVisible();
+		(document.activeElement as HTMLElement | null)?.blur();
+		await userEvent.keyboard('{Escape}');
+		await expect.element(page.getByRole('region', { name: 'Brett 3' })).toBeVisible();
+		await page.getByRole('button', { name: /Lukan \[7d\] – anna/ }).click();
+		await page.getByRole('button', { name: /Alle Bretter/ }).click();
 		await expect.element(page.getByRole('region', { name: 'Brett 3' })).toBeVisible();
 	});
 

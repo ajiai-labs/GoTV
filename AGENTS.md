@@ -788,9 +788,13 @@ die schon offen sind, kommen nach vorn statt doppelt.
   `findRunningGames`). Klick auf ein Brett vergrößert es im selben Fenster (gemerkt in
   `gotv.teamView`), Esc/"Alle Bretter" zurück, "Eigenes Fenster" trennt es ab, "×" nimmt es vom
   Brett. Die Bretter füllen das Fenster (1 allein, 2 nebeneinander bzw. im hohen Fenster
-  untereinander, ab 3 zwei mal zwei; quadratisch per `container-type: size`). Das vergrößerte
-  Brett hat den Partiechat daneben zum Mitlesen und Schreiben (`ui/game/BoardChat.svelte`,
-  Wunsch des Nutzers); die Übersicht zeigt nur Stellungen. Keine Analyse (Absprachen während der
+  untereinander, ab 3 zwei mal zwei; quadratisch per `container-type: size`). Ein angeklicktes
+  Brett zeigt dieselbe `GameScreen` wie ein Partiefenster (Spieler, Uhren, Navigation, Chat,
+  Zuschauer, Mehr-Menü; Wunsch des Nutzers: "die GUI wiederverwenden mit der ganzen
+  Funktionsvielfalt"), "‹ Alle Bretter" (`GameScreen onBack`) bzw. Esc außerhalb von
+  Eingabefeldern führt zur Übersicht zurück, die Partie bleibt dabei beigetreten. Eine eigene
+  Großansicht mit Extra-Chat (`BoardChat`) gab es kurz, sie ist wieder entfernt. Die Übersicht
+  zeigt nur Stellungen. Keine Analyse (Absprachen während der
   Partie verboten, DGoB-Bundesliga-Turnierordnung § 3). Neue Züge holen das Fenster nie nach vorn.
   Die eigene laufende Partie steht (abschaltbar: "Eigene Partie zeigen", `gotv.boardsOwnGame`)
   als erstes Brett mit Rahmen in der Übersicht, nur als Vorschau: Klick holt das eigene

@@ -77,6 +77,7 @@
 		game,
 		playing = false,
 		inWindow = false,
+		onBack,
 		tvEvents = [],
 		currentUser: currentUserProp,
 		usersByName: usersByNameProp,
@@ -86,6 +87,9 @@
 		playing?: boolean;
 		// In its own window (/partie): "Zurück" closes the window.
 		inWindow?: boolean;
+		// Shown enlarged in the Brettübersicht: "Alle Bretter" goes back to
+		// the overview, the game stays joined.
+		onBack?: () => void;
 		// Calendar events: a watched game of a live broadcast shows its stream.
 		tvEvents?: Array<TvEvent>;
 		// Defaults: from the app state.
@@ -231,7 +235,7 @@
 	}
 
 	// "Eigenes Fenster": the game moves out of the main window.
-	let canMoveOut = $derived(!inWindow && loadGameWindows());
+	let canMoveOut = $derived((!inWindow || !!onBack) && loadGameWindows());
 	let windowRefused = $state(false);
 	function onMoveToWindow() {
 		windowRefused = !app.moveGameToWindow(game.id);
@@ -331,7 +335,12 @@
 >
 	<header class="GameScreen-header">
 		{#if !inWindow}<HomeLink />{/if}
-		{#if !playing}
+		{#if onBack}
+			<button type="button" class="GameScreen-back button" onclick={onBack}>
+				<span aria-hidden="true">‹</span>
+				{t('app.boards.all')}
+			</button>
+		{:else if !playing}
 			<button type="button" class="GameScreen-back button" onclick={onLeave}>
 				<span aria-hidden="true">{inWindow ? '×' : '‹'}</span>
 				{inWindow ? t('game.screen.closeWindow') : t('game.screen.back')}
