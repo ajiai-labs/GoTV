@@ -28,7 +28,8 @@
 	let {
 		game,
 		roomsById,
-		kgsTools = false
+		kgsTools = false,
+		overview = false
 	}: {
 		game: GameChannel;
 		// Default: the rooms the app knows.
@@ -36,6 +37,9 @@
 		// A KGS game watched on Beobachten: "Lokal betrachten" and "Spiel
 		// kopieren in …" (as CGoban's Optionen menu).
 		kgsTools?: boolean;
+		// In the Brettübersicht (team matches): no score estimate or local copy
+		// of a running game - no outside help during the game (DGoB § 3).
+		overview?: boolean;
 	} = $props();
 
 	let estimateShowing = $state(false);
@@ -174,22 +178,26 @@
 				{t('game.moreMenu.gameInfo')}
 			</button>
 			{#if kgsTools && game.tree}
-				<button
-					type="button"
-					class="GameMoreMenu-dropdown-item"
-					onclick={() => {
-						moreShowing = false;
-						estimateShowing = true;
-					}}
-				>
-					{t('game.estimate.title')}
-				</button>
-				<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
-					{t('game.moreMenu.localCopy')}
-				</button>
-				<button type="button" class="GameMoreMenu-dropdown-item" onclick={toBoards}>
-					{t('app.boards.add')}
-				</button>
+				{#if !overview || game.over}
+					<button
+						type="button"
+						class="GameMoreMenu-dropdown-item"
+						onclick={() => {
+							moreShowing = false;
+							estimateShowing = true;
+						}}
+					>
+						{t('game.estimate.title')}
+					</button>
+					<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
+						{t('game.moreMenu.localCopy')}
+					</button>
+				{/if}
+				{#if !overview}
+					<button type="button" class="GameMoreMenu-dropdown-item" onclick={toBoards}>
+						{t('app.boards.add')}
+					</button>
+				{/if}
 				<button type="button" class="GameMoreMenu-dropdown-item" onclick={showCopy}>
 					{t('game.moreMenu.copyToRoom')}
 				</button>

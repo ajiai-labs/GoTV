@@ -171,4 +171,23 @@ describe('game views', () => {
 		actions.onReceiveServerMessages([{ type: 'UNJOIN', channelId: 42 }]);
 		expect(sent('JOIN_REQUEST')).toEqual([42, 42]);
 	});
+
+	it('leaves a game when the user confirmed it, even while another window shows it', () => {
+		const { actions, sent } = setup();
+		actions.onViewGame(42, 'partie');
+		actions.onReceiveServerMessages([
+			{
+				type: 'GAME_JOIN',
+				channelId: 42,
+				gameType: 'ranked',
+				players: {},
+				sgfEvents: [],
+				users: []
+			}
+		]);
+		actions.onLeaveGame(42); // just closing: stays joined for the view
+		expect(sent('UNJOIN_REQUEST')).toEqual([]);
+		actions.onLeaveGame(42, { explicit: true }); // "Verlassen" confirmed
+		expect(sent('UNJOIN_REQUEST')).toEqual([42]);
+	});
 });

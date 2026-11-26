@@ -676,13 +676,22 @@
 			</ul>
 		{/if}
 		<div class="progress-actions">
-			<button type="button" class="small-button" onclick={onExportSgf}>
+			<!-- A copy of a game still running on KGS: no file or link that could
+			     be opened elsewhere with KataGo (no help during a game). -->
+			<button
+				type="button"
+				class="small-button"
+				disabled={kataGoBlocked}
+				title={kataGoBlocked ? t('replay.view.exportBlocked') : undefined}
+				onclick={onExportSgf}
+			>
 				{t('replay.view.exportSgf')}
 			</button>
 			<button
 				type="button"
 				class="small-button"
-				disabled={!shareLink}
+				disabled={!shareLink || kataGoBlocked}
+				title={kataGoBlocked ? t('replay.view.exportBlocked') : undefined}
 				aria-describedby={shareReason ? `${uid}-share-reason` : undefined}
 				onclick={onCopyLink}
 			>

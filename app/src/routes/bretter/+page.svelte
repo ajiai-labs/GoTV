@@ -44,7 +44,7 @@
 	// Your own running game (joined at KGS), shown as a framed preview.
 	let ownGame = $derived.by(() => {
 		const me = app.state.currentUser?.name;
-		if (!me || !showOwn) return null;
+		if (!me || (!showOwn && !ownOnBoard)) return null;
 		return (
 			Object.values(app.state.gamesById).find(
 				(game) =>
@@ -93,7 +93,10 @@
 	}
 
 	// Boards with their game (a list entry before joining has no moves yet).
-	let shown = $derived(
+	// Your own running game is never a board here (it would be playable): it
+	// only shows as the framed preview, also when it was brought in by hand.
+	let ownRunning = (game: GameChannel | undefined) => !!game && isMine(game) && isGamePlaying(game);
+	let allBoards = $derived(
 		boards
 			.map((id, i) => ({
 				board: i + 1,
@@ -102,6 +105,8 @@
 			}))
 			.filter((entry) => entry.id != null)
 	);
+	let shown = $derived(allBoards.filter((entry) => !ownRunning(entry.game)));
+	let ownOnBoard = $derived(allBoards.some((entry) => ownRunning(entry.game)));
 	// The boards fill the window: 1 alone, 2 side by side (one above the
 	// other in a tall window), 3 and 4 two by two, 5 and 6 three by two, 7
 	// (six boards and your own game) four by two.
@@ -219,6 +224,7 @@
 			{game}
 			playing={isMine(game) && isGamePlaying(game)}
 			inWindow
+			overview
 			onBack={() => show(null)}
 		/>
 	{:else}

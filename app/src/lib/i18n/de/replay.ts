@@ -36,6 +36,8 @@ export const replay = {
 	'replay.view.bookmarks': 'Lesezeichen',
 	'replay.view.bookmarkNote': 'Zug {move}: {note}',
 	'replay.view.removeBookmark': 'Lesezeichen bei Zug {move} löschen',
+	'replay.view.exportBlocked':
+		'Erst wenn die Partie auf KGS beendet ist – keine Hilfe während einer laufenden Partie.',
 	'replay.view.exportSgf': 'Als SGF speichern',
 	'replay.view.copyLink': 'Link kopieren',
 	'replay.view.linkCopied': 'Link kopiert',

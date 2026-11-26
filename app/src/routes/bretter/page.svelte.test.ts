@@ -135,6 +135,24 @@ describe('Brettübersicht', () => {
 		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
 	});
 
+	it('offers no analysis of a running game and never makes my own game a board', async () => {
+		app.state = {
+			...app.state,
+			gamesById: { ...app.state.gamesById, 95: game(95, me, anna) },
+			channelMembership: { 95: { type: 'game', complete: true, stale: false } }
+		};
+		localStorage.setItem('gotv.team', JSON.stringify([90, 95, null, null, null, null]));
+		await render(Page);
+		// My own running game, brought in by hand: only the framed preview.
+		await expect.element(page.getByRole('region', { name: 'Deine Partie' })).toBeVisible();
+		await expect.element(page.getByRole('region', { name: 'Brett 2' })).not.toBeInTheDocument();
+		// A team mate's running game, enlarged: no score estimate, no local copy.
+		await page.getByRole('button', { name: /Lukan \[7d\] – anna/ }).click();
+		await page.getByRole('button', { name: /Mehr/ }).click();
+		await expect.element(page.getByText('Ergebnis schätzen')).not.toBeInTheDocument();
+		await expect.element(page.getByText('Lokal betrachten')).not.toBeInTheDocument();
+	});
+
 	it('takes a board off', async () => {
 		await render(Page);
 		await page

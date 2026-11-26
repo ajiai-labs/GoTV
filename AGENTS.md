@@ -846,6 +846,13 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Partiefenster schließen sich auch, wenn KGS die Sitzung beendet; "Abmelden" geht aus jedem
   Fenster. Tests: `channelGuard.test.ts`, `gameViews.test.ts`, `KgsClient.test.ts`,
   `windowLink.test.ts`.
+- Keine Hilfe im Mannschaftskampf (Prüfbericht 26.11.2026): in der Brettübersicht für laufende
+  Partien kein "Ergebnis schätzen" und kein "Lokal betrachten" (`GameScreen overview` →
+  `GameMoreMenu overview`); eine lokale Kopie einer laufenden Partie lässt sich nicht als SGF
+  speichern oder verlinken (`SgfReplayView`, sonst KataGo über den Umweg Datei). Die eigene
+  laufende Partie ist dort nie ein Brett (auch nicht über "Zur Brettübersicht" im Gegnerprofil),
+  nur die umrahmte Vorschau. "Verlassen" nach Rückfrage verlässt die eigene Partie bei KGS auch,
+  wenn ein anderes Fenster sie zeigt (`onLeaveGame(game, { explicit: true })`).
 - "Zur Brettübersicht" lässt eine schon offene Übersicht stehen (sie liest die neuen Bretter per
   storage-Event, Position und vergrößertes Brett bleiben) und sagt das; nur der Knopf
   "Brettübersicht" holt sie (geschlossen + neu geöffnet) nach vorn.

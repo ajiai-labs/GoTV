@@ -35,6 +35,7 @@ export const replay: Translation<typeof de> = {
 	'replay.view.bookmarks': 'Bookmarks',
 	'replay.view.bookmarkNote': 'Move {move}: {note}',
 	'replay.view.removeBookmark': 'Delete bookmark at move {move}',
+	'replay.view.exportBlocked': 'Only once the game on KGS is over – no help during a running game.',
 	'replay.view.exportSgf': 'Save as SGF',
 	'replay.view.copyLink': 'Copy link',
 	'replay.view.linkCopied': 'Link copied',

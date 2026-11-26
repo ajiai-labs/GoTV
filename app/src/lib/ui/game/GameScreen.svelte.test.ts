@@ -164,7 +164,7 @@ describe('GameScreen', () => {
 		await page.getByRole('button', { name: /Mehr/ }).click();
 		await page.getByRole('button', { name: 'Partie verlassen' }).click();
 		await dialog.getByRole('button', { name: 'Verlassen' }).click();
-		expect(actions.onLeaveGame).toHaveBeenCalledWith(game);
+		expect(actions.onLeaveGame).toHaveBeenCalledWith(game, { explicit: true });
 	});
 
 	it('resigns from the leave warning', async () => {

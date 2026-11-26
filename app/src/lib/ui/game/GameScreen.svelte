@@ -85,6 +85,7 @@
 		playing = false,
 		inWindow = false,
 		onBack,
+		overview = false,
 		tvEvents = [],
 		currentUser: currentUserProp,
 		usersByName: usersByNameProp,
@@ -97,6 +98,8 @@
 		// Shown enlarged in the Brettübersicht: "Alle Bretter" goes back to
 		// the overview, the game stays joined.
 		onBack?: () => void;
+		// Shown in the Brettübersicht: no analysis of a running game there.
+		overview?: boolean;
 		// Calendar events: a watched game of a live broadcast shows its stream.
 		tvEvents?: Array<TvEvent>;
 		// Defaults: from the app state.
@@ -322,7 +325,10 @@
 				class="button"
 				onclick={() => {
 					confirmingLeave = false;
-					onLeave();
+					// Confirmed: leave the own game at KGS, even while another
+					// window shows it.
+					app.actions.onLeaveGame(game, { explicit: true });
+					if (inWindow) window.close();
 				}}
 			>
 				{t('game.play.leaveYes')}
@@ -367,7 +373,7 @@
 			</button>
 		{/if}
 		{#if !playing}
-			<GameMoreMenu {game} {roomsById} kgsTools />
+			<GameMoreMenu {game} {roomsById} kgsTools {overview} />
 		{/if}
 	</header>
 	{#if windowRefused}

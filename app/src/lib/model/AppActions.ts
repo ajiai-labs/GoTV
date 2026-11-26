@@ -442,7 +442,9 @@ export class AppActions {
 		if (game && me && isGamePlayer(me, game.players) && isGamePlaying(game)) return;
 		this.onUnjoin(gameId);
 	};
-	onLeaveGame = (game: GameChannel | number) => {
+	// `explicit`: the user confirmed leaving (own game) - not held back by
+	// other windows that show the game.
+	onLeaveGame = (game: GameChannel | number, options: { explicit?: boolean } = {}) => {
 		const gameId = typeof game === 'number' ? game : game.id;
 
 		const state = this._store.getState();
@@ -469,7 +471,7 @@ export class AppActions {
 
 		// Still shown in another window: stay joined there. Not joined at all
 		// (neither a member nor shown here): nothing to leave.
-		if (this._isGameViewed(gameId)) return;
+		if (this._isGameViewed(gameId) && !options.explicit) return;
 		const shownHere = state.watchGameId === gameId || state.playGameId === gameId;
 		if (!state.channelMembership[gameId] && !shownHere) return;
 		this.onUnjoin(gameId);
