@@ -828,6 +828,24 @@ die schon offen sind, kommen nach vorn statt doppelt.
   gespeichert, die Übersicht galt als voll und jeder Klick öffnete ein Einzelfenster bzw. alle
   alten Bretter kamen nach dem Neuanmelden wieder. Partiefenster und Brettübersicht schließen
   sich beim Abmelden von KGS selbst (statt je ein Anmeldeformular zu zeigen).
+- Verbindungsstabilität nach dem Prüfbericht vom 26.11.2026 (oberste Priorität des Nutzers):
+  `model/channelGuard.ts` ist das EINE Tor für JOIN_REQUEST/UNJOIN_REQUEST - es sitzt auf
+  `client.sendMessage` (in `AppActions`), also auch für TV-Bretter, Räume, Profile, Nachspielen.
+  Nie Anfragen für geschlossene Kanäle (CLOSE), keine Anmeldung für Partien, die KGS aus allen
+  Listen genommen hat (`GAME_CONTAINER_REMOVE_GAME` je Liste), Anmeldung/Abmeldung je einmal bis
+  zur Antwort (20 s), Abmeldung nur für beigetretene Kanäle, neue Sitzung (LOGIN_SUCCESS/LOGOUT)
+  beginnt leer; Freigabe-Timer enden mit der Sitzung. `CHALLENGE_FINAL` für fremde Paarungen
+  verlässt nur die Herausforderung (vorher ALLE Partiekanäle, auch die eigene laufende Partie).
+  `KgsClient`: eine Abrufschleife pro Sitzung (`_session`, Login bricht den alten GET ab, alte
+  Antworten werden verworfen), angemeldet unbegrenzt neue Versuche (3 s bis 30 s), nur ein
+  erfolgreicher Poll setzt "online", GET-Frist 120 s, Nicht-JSON = Netzfehler, ein Fehler beim
+  Verarbeiten einer Antwort beendet die Schleife nicht mehr. Fenster-Link: Nachrichten tragen
+  die Besitzerkennung (`owner`), nach einem Besitzerwechsel (F5) übernehmen Folgefenster den
+  neuen Snapshot und melden ihre Ansichten neu an (`app.viewGame`/`registerViews`). Bestätigt KGS
+  eine Abmeldung, während ein Fenster die Partie noch zeigt, wird sie neu angemeldet.
+  Partiefenster schließen sich auch, wenn KGS die Sitzung beendet; "Abmelden" geht aus jedem
+  Fenster. Tests: `channelGuard.test.ts`, `gameViews.test.ts`, `KgsClient.test.ts`,
+  `windowLink.test.ts`.
 - "Zur Brettübersicht" lässt eine schon offene Übersicht stehen (sie liest die neuen Bretter per
   storage-Event, Position und vergrößertes Brett bleiben) und sagt das; nur der Knopf
   "Brettübersicht" holt sie (geschlossen + neu geöffnet) nach vorn.

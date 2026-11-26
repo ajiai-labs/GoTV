@@ -19,8 +19,8 @@ const LOCK_NAME = 'gotv-kgs-connection';
 
 export type LinkMessage =
 	| { t: 'hello' }
-	| { t: 'snapshot'; seq: number; state: AppState }
-	| { t: 'msgs'; seq: number; msgs: Array<KgsMessage> }
+	| { t: 'snapshot'; owner: string; seq: number; state: AppState }
+	| { t: 'msgs'; owner: string; seq: number; msgs: Array<KgsMessage> }
 	| { t: 'call'; method: string; args: Array<unknown> };
 
 // What a follower window may ask the owner to do: the actions of a game
@@ -42,7 +42,9 @@ export const FORWARDED_ACTIONS = new Set([
 	'onLeaveGame',
 	// A profile opens in the window where the name was clicked (app.svelte.ts).
 	'onUserDetail',
-	'onCloseUserDetail'
+	'onCloseUserDetail',
+	// The "Abmelden" button of the offline notice, in any window.
+	'onLogout'
 ]);
 
 // This window, for the views registered with the owner (onViewGame).
@@ -88,11 +90,15 @@ export function waitForConnection(onFree: () => void) {
 // asks for a fresh snapshot when one is missing.
 export class FollowerFeed {
 	private seq = -1;
+	// The window holding the connection: numbers count per owner, so a new
+	// owner (F5, the old one closed) starts afresh from its snapshot.
+	private owner: string | null = null;
 
 	constructor(
 		private readonly apply: (msgs: Array<KgsMessage>) => void,
 		private readonly replace: (state: AppState) => void,
-		private readonly resync: () => void
+		private readonly resync: () => void,
+		private readonly ownerChanged: () => void = () => {}
 	) {}
 
 	get ready(): boolean {
@@ -101,11 +107,22 @@ export class FollowerFeed {
 
 	receive(message: LinkMessage) {
 		if (message.t === 'snapshot') {
-			if (message.seq >= this.seq) {
+			const newOwner = message.owner !== this.owner;
+			if (newOwner || message.seq >= this.seq) {
+				const hadOwner = this.owner !== null;
+				this.owner = message.owner;
 				this.seq = message.seq;
 				this.replace(message.state);
+				if (newOwner && hadOwner) this.ownerChanged();
 			}
 		} else if (message.t === 'msgs') {
+			if (this.owner === null) return; // waiting for the first snapshot
+			if (message.owner !== this.owner) {
+				// Another window took over and we missed its snapshot.
+				this.seq = -1;
+				this.resync();
+				return;
+			}
 			if (!this.ready || message.seq <= this.seq) return; // in the snapshot already
 			if (message.seq !== this.seq + 1) {
 				this.seq = -1; // a gap: start again from a snapshot

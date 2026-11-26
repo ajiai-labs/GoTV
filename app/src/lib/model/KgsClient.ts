@@ -17,6 +17,12 @@ const initialClientState: KgsClientState = {
 	network: 'online',
 	retryTimes: 0
 };
+// Retries of a failed poll: 3 s, doubling up to 30 s.
+const RETRY_MS = 3000;
+const RETRY_MAX_MS = 30_000;
+// KGS answers a long poll well within this; longer means the line is dead.
+const POLL_TIMEOUT_MS = 120_000;
+
 type SendMessageOptions = {
 	sync?: boolean;
 };
@@ -27,6 +33,12 @@ export class KgsClient {
 	_onMessages: ((messages: Array<KgsMessage>) => any) | null | undefined;
 	_debug: boolean = config.dev;
 	_apiUrl: string;
+	// One receive loop per KGS session (review 26.11.2026): a login starts a
+	// new session; answers and retries of the old one are dropped, so a late
+	// LOGOUT of the old poll cannot log the new session out.
+	_session = 0;
+	_pollActive = false;
+	_pollXhr: XMLHttpRequest | null = null;
 
 	constructor(state: KgsClientState = initialClientState) {
 		this.state = state;
@@ -81,6 +93,10 @@ export class KgsClient {
 		this._onMessages = listener;
 	};
 	login = async (username: string, password: string, locale: string = 'en_US') => {
+		this._session++;
+		this._pollActive = false;
+		this._pollXhr?.abort();
+		this._pollXhr = null;
 		this.setState({ ...this.state, status: 'loggingIn' });
 
 		try {
@@ -125,7 +141,11 @@ export class KgsClient {
 
 		try {
 			await this._sendMessage(msg, opts);
-			this.setState({ ...this.state, network: 'online', retryTimes: 0 });
+			// Logged in, only a successful poll says the connection is live
+			// again - a POST that gets through does not bring moves.
+			if (this.state.status !== 'loggedIn') {
+				this.setState({ ...this.state, network: 'online', retryTimes: 0 });
+			}
 		} catch (err) {
 			if (isJsError(err) || (err instanceof Error && err.name === 'InvariantError')) {
 				// Likely an error in the app, not with network or client
@@ -156,10 +176,15 @@ export class KgsClient {
 		}
 	};
 	poll = async () => {
+		const session = this._session;
+		if (this._pollActive) return; // this session's loop runs already
+		this._pollActive = true;
 		let messages;
 
 		try {
 			messages = await this._receiveMessages();
+			this._pollActive = false;
+			if (session !== this._session) return; // an answer of the old session
 
 			if (this.state.retryTimes) {
 				// Reconnected. KGS may answer with no messages at all (e.g. after a
@@ -189,7 +214,12 @@ export class KgsClient {
 			}
 
 			if (this._onMessages) {
-				this._onMessages(messages);
+				try {
+					this._onMessages(messages);
+				} catch (handlerError) {
+					// A bug while handling one answer must not end the connection.
+					console.error('[KGS Client] Handling messages failed', handlerError);
+				}
 			}
 
 			if (nextState.status !== 'loggedOut') {
@@ -200,6 +230,8 @@ export class KgsClient {
 				console.log('[KGS Client] Stopped polling');
 			}
 		} catch (err) {
+			this._pollActive = false;
+			if (session !== this._session) return; // the old session's poll (aborted)
 			if (isJsError(err) || (err instanceof Error && err.name === 'InvariantError')) {
 				// Likely an error in the app, not with network or client
 				throw err;
@@ -213,8 +245,13 @@ export class KgsClient {
 				nextState.retryTimes = 0;
 			} else {
 				const { retryTimes } = this.state;
+				// Logged in: keep trying, ever more slowly (3 s up to 30 s), so the
+				// boards come back after a long outage; a login attempt gives up.
+				const keepTrying =
+					this.state.status === 'loggedIn' ||
+					(retryTimes < 10 && this.state.status !== 'loggedOut');
 
-				if (retryTimes < 10 && this.state.status !== 'loggedOut') {
+				if (keepTrying) {
 					nextState.retryTimes = retryTimes + 1;
 					nextState.network = 'error';
 
@@ -222,9 +259,10 @@ export class KgsClient {
 						console.log('[KGS Client] Poll failed - retry', nextState.retryTimes);
 					}
 
+					const delay = Math.min(RETRY_MAX_MS, RETRY_MS * 2 ** Math.min(retryTimes, 4));
 					setTimeout(() => {
-						this.poll();
-					}, 3000);
+						if (session === this._session) this.poll();
+					}, delay);
 				} else {
 					nextState.network = 'error';
 					nextState.retryTimes = 0;
@@ -245,6 +283,7 @@ export class KgsClient {
 	_receiveMessages = (): Promise<Array<KgsMessage>> => {
 		return new Promise((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
+			this._pollXhr = xhr;
 
 			const onError = () => {
 				// A 5xx (e.g. 502 from the local proxy after a timeout) is a broken
@@ -257,8 +296,13 @@ export class KgsClient {
 			xhr.onreadystatechange = function () {
 				if (xhr.readyState === 4) {
 					if (xhr.status === 200) {
-						const resp = JSON.parse(xhr.responseText);
-						resolve(resp.messages || []);
+						// Not JSON (e.g. an HTML page from a proxy): a broken connection.
+						try {
+							const resp = JSON.parse(xhr.responseText) as { messages?: Array<KgsMessage> };
+							resolve(Array.isArray(resp?.messages) ? resp.messages : []);
+						} catch {
+							reject(new ApiError('Receive failed: no JSON', 'networkError', xhr));
+						}
 					} else {
 						onError();
 					}
@@ -269,6 +313,8 @@ export class KgsClient {
 			xhr.addEventListener('abort', onError);
 			xhr.addEventListener('timeout', onError);
 			xhr.open('GET', this._apiUrl, true);
+			// A long poll that never answers counts as broken and is retried.
+			xhr.timeout = POLL_TIMEOUT_MS;
 			xhr.setRequestHeader('Accept', 'application/json;charset=UTF-8');
 			xhr.withCredentials = true;
 			xhr.send();

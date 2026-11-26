@@ -5,6 +5,7 @@ import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } from './game';
 import { playGameStart, playMessage } from '../sound/gameSounds';
 import { commentAuthor, isChatForMe } from './chatSound';
+import { ChannelGuard } from './channelGuard';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -54,10 +55,19 @@ export class AppActions {
 	// When we last asked KGS to copy a game into a room (onCloneGame).
 	_cloneRequestedAt = 0;
 
+	// Every JOIN_REQUEST/UNJOIN_REQUEST passes this gate (channelGuard.ts).
+	_channels = new ChannelGuard();
+
 	constructor(store: AppStore, client: KgsClient, history: Record<string, any>) {
 		this._store = store;
 		this._client = client;
 		this._history = history;
+		// The gate sits on the client itself, so no part of GoTV goes around it.
+		const send = client.sendMessage;
+		client.sendMessage = (...args: Parameters<KgsClient['sendMessage']>) =>
+			this._channels.allow(args[0]) ? send(...args) : Promise.resolve();
+		// A state taken over from another window: the channels it is in.
+		this._channels.reset(this._joinedChannels());
 		this._tvGameSubscriptions = new TvGameSubscriptions(
 			() => this._store.getState(),
 			(message) => {
@@ -68,6 +78,11 @@ export class AppActions {
 			}
 		);
 	}
+
+	_joinedChannels = (): Array<number> =>
+		Object.keys(this._store.getState().channelMembership)
+			.map(Number)
+			.filter((id) => Number.isFinite(id));
 
 	_isOffline = () => {
 		const { status, network } = this._store.getState().clientState;
@@ -80,6 +95,8 @@ export class AppActions {
 	onRestoreAppState = () => {
 		this._store.restoreSavedState(APP_STATE_SAVE_KEY, (appState) => {
 			this._client.setState(appState.clientState);
+			// The same KGS session goes on: the channels it is in.
+			this._channels.reset(this._joinedChannels());
 
 			this._store.dispatch({
 				type: 'APP_STATE_INITIALIZED'
@@ -104,6 +121,8 @@ export class AppActions {
 			this._store.getState().automatchEnabled ||
 			Date.now() - this._automatchEndedAt < AUTOMATCH_JOIN_GRACE_MS;
 		for (const msg of Array.isArray(msgs) ? msgs : [msgs]) {
+			this._channels.observe(msg);
+			if (msg.type === 'LOGIN_SUCCESS' || msg.type === 'LOGOUT') this._endViewTimers();
 			if (typeof msg.channelId !== 'number') continue;
 			if (msg.type === 'UNJOIN' || msg.type === 'CLOSE') {
 				this._closedChannels.add(msg.channelId);
@@ -120,6 +139,14 @@ export class AppActions {
 
 		// Follow-up actions we know we need to take, even without user interaction
 		msgs = Array.isArray(msgs) ? msgs : [msgs];
+
+		// KGS confirmed an unjoin (e.g. of a window that was replaced) while a
+		// window still shows the game: join it again for that window.
+		for (const msg of msgs) {
+			if (msg.type === 'UNJOIN' && typeof msg.channelId === 'number') {
+				if (this._gameViews.has(msg.channelId)) this._joinForViews(msg.channelId);
+			}
+		}
 
 		for (const msg of msgs) {
 			if (msg.type === 'LOGIN_SUCCESS') {
@@ -382,6 +409,13 @@ export class AppActions {
 		);
 	};
 
+	// A new session (login, logout): no timer of the old one may unjoin a
+	// channel id of the new one.
+	_endViewTimers = () => {
+		for (const timer of this._releaseTimers.values()) clearTimeout(timer);
+		this._releaseTimers.clear();
+	};
+
 	_isGameViewed = (gameId: number): boolean =>
 		this._gameViews.has(gameId) || this._releaseTimers.has(gameId);
 
@@ -392,6 +426,7 @@ export class AppActions {
 		// Only a game KGS still lists: a finished game whose channel is gone
 		// would make KGS log us out. Its last position stays on the board.
 		if (!state.activeGames.some((listed) => listed.id === gameId)) return;
+		if (!this._channels.canJoin(gameId)) return;
 		this._store.dispatch({ type: 'GAME_JOIN', channelId: gameId });
 		this._client.sendMessage({ type: 'JOIN_REQUEST', channelId: gameId });
 	};
@@ -570,17 +605,11 @@ export class AppActions {
 		if (isPlayer) {
 			playGameStart();
 		} else {
-			// Challenge accepted by someone else
+			// Challenge accepted by someone else: leave only that challenge -
+			// never other games (an own running game in its window, watched ones).
 			this.onChangeNav('watch');
-			const { channelMembership } = state;
-
-			for (const chanIdStr of Object.keys(channelMembership)) {
-				const chan = channelMembership[chanIdStr];
-				const chanId = parseInt(chanIdStr, 10);
-
-				if (chan && chan.type === 'game' && chanId !== gameId) {
-					this.onUnjoin(chanId);
-				}
+			if (challengeId !== gameId && state.channelMembership[challengeId]) {
+				this.onUnjoin(challengeId);
 			}
 		}
 	};

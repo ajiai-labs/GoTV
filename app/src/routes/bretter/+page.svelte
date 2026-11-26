@@ -12,7 +12,6 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { openGameWindow } from '#lib/gameWindows.ts';
-	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, emptyBoards, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
 	import type { TeamBoards } from '#lib/model/team.ts';
@@ -121,9 +120,11 @@
 
 	// Logged out at KGS (in any window): this window has nothing to show any
 	// more and closes, instead of offering a login of its own.
+	// Also when KGS ended the session (LOGOUT keeps the user for the notice).
 	let wasLoggedIn = false;
 	$effect(() => {
-		if (app.loggedIn) wasLoggedIn = true;
+		const inSession = app.loggedIn && app.state.clientState.status !== 'loggedOut';
+		if (inSession) wasLoggedIn = true;
 		else if (wasLoggedIn && app.state.initialized) window.close();
 	});
 
@@ -133,10 +134,10 @@
 	let viewed: Array<number> = []; // not reactive: only bookkeeping
 	function syncViews(ids: Array<number>) {
 		for (const id of ids) {
-			if (!viewed.includes(id)) app.actions.onViewGame(id, VIEW_ID);
+			if (!viewed.includes(id)) app.viewGame(id);
 		}
 		for (const id of viewed) {
-			if (!ids.includes(id)) app.actions.onUnviewGame(id, VIEW_ID);
+			if (!ids.includes(id)) app.unviewGame(id);
 		}
 		viewed = [...ids];
 	}

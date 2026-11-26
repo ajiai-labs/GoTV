@@ -28,7 +28,9 @@ describe('window link with a real game', () => {
 		} as AppState);
 		const sent: Array<LinkMessage> = [];
 		let seq = 0;
-		owner.setOnDispatch((msgs) => sent.push(structuredClone({ t: 'msgs', seq: ++seq, msgs })));
+		owner.setOnDispatch((msgs) =>
+			sent.push(structuredClone({ t: 'msgs', owner: 'a', seq: ++seq, msgs }))
+		);
 
 		owner.dispatch({
 			type: 'GAME_JOIN',
@@ -56,7 +58,7 @@ describe('window link with a real game', () => {
 			(state) => follower.replaceState(state),
 			() => {}
 		);
-		feed.receive(structuredClone({ t: 'snapshot', seq, state: owner.getState() }));
+		feed.receive(structuredClone({ t: 'snapshot', owner: 'a', seq, state: owner.getState() }));
 		owner.dispatch({ type: 'GAME_UPDATE', channelId: 42, sgfEvents: move(2, 6, 2, 'white') });
 		owner.dispatch({ type: 'CHAT', channelId: 42, user: ANNA, text: 'viel Glück' });
 		for (const message of sent.slice(1)) feed.receive(message);

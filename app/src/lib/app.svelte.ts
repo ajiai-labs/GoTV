@@ -21,6 +21,7 @@ import {
 	FollowerFeed,
 	LINK_CHANNEL,
 	claimConnection,
+	VIEW_ID,
 	waitForConnection
 } from './windowLink';
 import type { LinkMessage } from './windowLink';
@@ -165,6 +166,9 @@ class GoTvApp {
 			void client.poll(); // the same KGS session (shared cookie) goes on here
 		}
 		this.role = 'owner';
+		// Taken over from a closed owner: what this window shows (the other
+		// windows tell theirs when they see the new owner's snapshot).
+		this.registerViews();
 		if (link) this.serveFollowers(link, store, actions);
 
 		const save = () => actions.onSaveAppState();
@@ -185,8 +189,8 @@ class GoTvApp {
 				seq++;
 			}
 		};
-		const snapshot = () => post({ t: 'snapshot', seq, state: store.getState() });
-		store.setOnDispatch((msgs) => post({ t: 'msgs', seq: ++seq, msgs }));
+		const snapshot = () => post({ t: 'snapshot', owner: VIEW_ID, seq, state: store.getState() });
+		store.setOnDispatch((msgs) => post({ t: 'msgs', owner: VIEW_ID, seq: ++seq, msgs }));
 		link.onmessage = (event: MessageEvent<LinkMessage>) => {
 			const message = event.data;
 			if (message.t === 'hello') {
@@ -216,7 +220,9 @@ class GoTvApp {
 		const feed = new FollowerFeed(
 			(msgs) => store.dispatch(msgs),
 			(state) => store.replaceState(state),
-			() => link.postMessage({ t: 'hello' } satisfies LinkMessage)
+			() => link.postMessage({ t: 'hello' } satisfies LinkMessage),
+			// A new window holds the connection: tell it what this one shows.
+			() => this.registerViews()
 		);
 		link.onmessage = (event: MessageEvent<LinkMessage>) => feed.receive(event.data);
 		const forward = new Proxy(
@@ -245,6 +251,26 @@ class GoTvApp {
 				feed.ready ? store.getState() : undefined
 			);
 		});
+	}
+
+	// The games this window shows (a game window, the Brettübersicht),
+	// registered with the window holding the KGS connection
+	// (AppActions.onViewGame) - again after that window changed.
+	private views = new Set<number>();
+
+	viewGame(gameId: number) {
+		this.views.add(gameId);
+		this.actions.onViewGame(gameId, VIEW_ID);
+	}
+
+	unviewGame(gameId: number) {
+		if (!this.views.delete(gameId)) return;
+		this.actions.onUnviewGame(gameId, VIEW_ID);
+	}
+
+	private registerViews() {
+		if (!this._actions) return;
+		for (const gameId of this.views) this._actions.onViewGame(gameId, VIEW_ID);
 	}
 
 	// A click on a KGS game (lists, followed players, room chat): in its own
