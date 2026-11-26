@@ -740,6 +740,14 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   Iframes, also YouTube/Twitch). Kein Tauri-Updater-Plugin (bräuchte Signaturschlüssel).
   Wirkt erst ab dem nächsten Release (0.2.0 hat den Hinweis noch nicht).
 
+## Steinoptik (26.11.2026)
+
+Weiß wie Muschelsteine (gedämpftes Elfenbein statt Reinweiß, feine Wachstumslinien, 8 Varianten,
+Nachbarn nie gleich), Schwarz wie matter Schiefer; Weiß 2 % kleiner wie bei echten Go-Sets (helle
+Steine wirken größer). Vom Nutzer aus drei Entwürfen gewählt, gilt für beide Designs.
+`app/src/lib/ui/board/stoneLook.ts`, gezeichnet in `Board.svelte` (Linien einmal in `<defs>`,
+pro Stein ein `<use>`; Schiefer-Korn als Muster-Kachel, nicht als Filter pro Stein).
+
 ## CGoban-Funktionen aus den Videos des Nutzers (25.11.2026, abends)
 
 - Beobachten, "Mehr": "Ergebnis schätzen" (`model/scoreEstimate.ts`: Zufallspartien mit

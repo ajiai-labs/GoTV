@@ -3,6 +3,8 @@
 	// iPad, desktop). Its look follows the chosen design: flat and calm in
 	// "modern", wood grain and shaded stones in "oldschool".
 	//
+	// Stones: white like clam shell, black like slate (board/stoneLook.ts).
+	//
 	// Everything the old board showed is here: the last move ("active"), a
 	// move waiting for the server (pendingBlack/White), territory, dead
 	// stones, triangle/square/circle/cross, letters. With `ghost` set, a
@@ -10,6 +12,13 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { BoardMarkup, BoardPointMark, BoardState, Point } from '#lib/model/types.ts';
 	import { design } from './design.svelte.ts';
+	import {
+		SHELL_VARIANTS,
+		STONE_RADIUS,
+		WHITE_RADIUS,
+		shellLines,
+		shellVariant
+	} from './board/stoneLook.ts';
 
 	type Label = { x: number; y: number; text: string };
 
@@ -40,6 +49,8 @@
 		13: [3, 6, 9],
 		9: [2, 4, 6]
 	};
+	const SHELLS = Array.from({ length: SHELL_VARIANTS }, (_, v) => shellLines(v));
+	const radius = (color: 'black' | 'white') => (color === 'white' ? WHITE_RADIUS : STONE_RADIUS);
 	const SHAPES = new Set<BoardPointMark>(['triangle', 'square', 'circle', 'cross']);
 
 	type Mark = { x: number; y: number; mark: BoardPointMark };
@@ -116,16 +127,48 @@
 	onpointerleave={ghost ? () => (hover = null) : undefined}
 >
 	<defs>
-		<radialGradient id="{uid}-black" cx="0.36" cy="0.32" r="0.75">
-			<stop offset="0" stop-color={oldschool ? '#6e6e6e' : '#3d4642'} />
-			<stop offset="0.45" stop-color={oldschool ? '#1a1a1a' : '#1f2523'} />
-			<stop offset="1" stop-color="#0a0c0b" />
+		<!-- Black: matte slate with a soft sheen. -->
+		<radialGradient id="{uid}-black" cx="0.38" cy="0.34" r="0.78">
+			<stop offset="0" stop-color="#4a4d4b" />
+			<stop offset="0.35" stop-color="#262827" />
+			<stop offset="1" stop-color="#101111" />
 		</radialGradient>
-		<radialGradient id="{uid}-white" cx="0.36" cy="0.32" r="0.8">
-			<stop offset="0" stop-color="#ffffff" />
-			<stop offset="0.7" stop-color={oldschool ? '#ece7da' : '#f1f3ef'} />
-			<stop offset="1" stop-color={oldschool ? '#bdb6a3' : '#d7ddd6'} />
+		<!-- White: muted ivory instead of glaring white. -->
+		<radialGradient id="{uid}-white" cx="0.38" cy="0.34" r="0.82">
+			<stop offset="0" stop-color="#fbf9f3" />
+			<stop offset="0.6" stop-color="#efeadf" />
+			<stop offset="1" stop-color="#cdc5b4" />
 		</radialGradient>
+		<radialGradient id="{uid}-sheen" cx="0.36" cy="0.3" r="0.35">
+			<stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
+			<stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+		</radialGradient>
+		<!-- The fine grain of slate, as a tile drawn once. -->
+		<filter id="{uid}-grain" x="0" y="0" width="100%" height="100%">
+			<feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="2" seed="3" />
+			<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.07 0" />
+		</filter>
+		<pattern id="{uid}-slate" patternUnits="userSpaceOnUse" width="4" height="4">
+			<rect width="4" height="4" filter="url(#{uid}-grain)" />
+		</pattern>
+		<clipPath id="{uid}-shell-clip">
+			<circle r={WHITE_RADIUS} />
+		</clipPath>
+		<!-- Growth lines of clam shell stones, a few variants around (0, 0). -->
+		{#each SHELLS as lines, v (v)}
+			<g id="{uid}-shell-{v}" clip-path="url(#{uid}-shell-clip)">
+				{#each lines as line, i (i)}
+					<path
+						d={line.d}
+						fill="none"
+						stroke="#9c8f74"
+						stroke-opacity={line.opacity}
+						stroke-width={line.width}
+					/>
+				{/each}
+				<circle r={WHITE_RADIUS} fill="url(#{uid}-sheen)" />
+			</g>
+		{/each}
 		<filter id="{uid}-shadow" x="-30%" y="-30%" width="160%" height="160%">
 			<feDropShadow
 				dx={oldschool ? 0.07 : 0.03}
@@ -187,14 +230,31 @@
 
 	<g filter="url(#{uid}-shadow)">
 		{#each stones as stone (stone.x + '-' + stone.y)}
-			<circle
-				class="stone {stone.color}"
-				class:dead={stone.dead}
-				cx={stone.x}
-				cy={stone.y}
-				r="0.475"
-				fill="url(#{uid}-{stone.color})"
-			/>
+			<g class:dead={stone.dead}>
+				<circle
+					class="stone {stone.color}"
+					cx={stone.x}
+					cy={stone.y}
+					r={radius(stone.color)}
+					fill="url(#{uid}-{stone.color})"
+				/>
+				{#if stone.color === 'white'}
+					<use
+						class="grain"
+						href="#{uid}-shell-{shellVariant(stone.x, stone.y)}"
+						x={stone.x}
+						y={stone.y}
+					/>
+				{:else}
+					<circle
+						class="grain"
+						cx={stone.x}
+						cy={stone.y}
+						r={STONE_RADIUS}
+						fill="url(#{uid}-slate)"
+					/>
+				{/if}
+			</g>
 		{/each}
 	</g>
 
@@ -204,7 +264,7 @@
 				class="pending"
 				cx={m.x}
 				cy={m.y}
-				r="0.475"
+				r={radius(m.mark === 'pendingBlack' ? 'black' : 'white')}
 				fill="url(#{uid}-{m.mark === 'pendingBlack' ? 'black' : 'white'})"
 			/>
 		{:else if m.mark === 'blackTerritory' || m.mark === 'whiteTerritory'}
@@ -264,7 +324,7 @@
 	{/each}
 
 	{#if showGhost && hover && ghost}
-		<circle class="ghost" cx={hover.x} cy={hover.y} r="0.475" fill="url(#{uid}-{ghost})" />
+		<circle class="ghost" cx={hover.x} cy={hover.y} r={radius(ghost)} fill="url(#{uid}-{ghost})" />
 	{/if}
 
 	{#if onpoint}
@@ -334,12 +394,16 @@
 	}
 
 	.stone.white {
-		stroke: rgba(0, 0, 0, 0.18);
+		stroke: rgba(80, 60, 30, 0.22);
 		stroke-width: 0.02;
 	}
 
-	.stone.dead {
+	.dead {
 		opacity: 0.45;
+	}
+
+	.grain {
+		pointer-events: none;
 	}
 
 	.pending,
