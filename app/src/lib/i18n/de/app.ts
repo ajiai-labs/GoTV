@@ -114,6 +114,7 @@ export const app = {
 		'Diese Partie ist nicht mehr da (ältere KGS-Sitzung). Nimm das Brett mit × herunter.',
 	'app.boards.all': 'Alle Bretter',
 	'app.boards.remove': 'Vom Brett nehmen',
+	'app.boards.clear': 'Alle entfernen',
 	'app.boards.empty':
 		'Noch keine Bretter. Hol dir Partien über „Beobachten“ oder das Spielerprofil mit „Zur Brettübersicht“ hierher – zum Beispiel die Partien deiner Mannschaft.',
 	'app.gameWindow.missing': 'Diese Partie gibt es nicht (mehr).',

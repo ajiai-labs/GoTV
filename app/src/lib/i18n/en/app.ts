@@ -110,6 +110,7 @@ export const app: Translation<typeof de> = {
 	'app.boards.gone': 'This game is gone (an earlier KGS session). Take the board off with ×.',
 	'app.boards.all': 'All boards',
 	'app.boards.remove': 'Take off the board',
+	'app.boards.clear': 'Remove all',
 	'app.boards.empty':
 		'No boards yet. Bring games here from Watch or a player’s profile with "To the board overview" – for example your team’s games.',
 	'app.gameWindow.missing': 'This game does not exist (any more).',

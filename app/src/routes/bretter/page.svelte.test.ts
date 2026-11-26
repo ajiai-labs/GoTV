@@ -119,6 +119,15 @@ describe('Brettübersicht', () => {
 		vi.unstubAllGlobals();
 	});
 
+	it('removes all boards with one click and lets KGS go of their games', async () => {
+		await render(Page);
+		await page.getByRole('button', { name: 'Alle entfernen' }).click();
+		await expect.element(page.getByRole('region', { name: 'Brett 1' })).not.toBeInTheDocument();
+		expect(JSON.parse(localStorage.getItem('gotv.team') ?? '[]')).toEqual([null, null, null, null]);
+		expect(actions.onUnviewGame).toHaveBeenCalledWith(90, expect.any(String));
+		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
+	});
+
 	it('takes a board off', async () => {
 		await render(Page);
 		await page

@@ -14,7 +14,7 @@
 	import { BOARDS_HEARTBEAT_MS, markBoardsWindowOpen, openGameWindow } from '#lib/gameWindows.ts';
 	import { VIEW_ID } from '#lib/windowLink.ts';
 	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
-	import { TEAM_KEY, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
+	import { TEAM_KEY, emptyBoards, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
 	import type { TeamBoards } from '#lib/model/team.ts';
 	import type { BoardMarkup, BoardState, GameChannel } from '#lib/model/types.ts';
 	import Board from '#lib/ui/Board.svelte';
@@ -78,6 +78,13 @@
 		} catch {
 			// not remembered without storage
 		}
+	}
+
+	// All boards at once: off the overview, and KGS may let the games go.
+	function clearAll() {
+		boards = emptyBoards();
+		saveBoards(boards);
+		show(null);
 	}
 
 	function takeOff(board: number) {
@@ -232,6 +239,9 @@
 					<button type="button" class="button" onclick={() => show(null)}>
 						{t('app.boards.all')}
 					</button>
+				{/if}
+				{#if shown.length}
+					<button type="button" class="button" onclick={clearAll}>{t('app.boards.clear')}</button>
 				{/if}
 			</header>
 			{#if refused}
