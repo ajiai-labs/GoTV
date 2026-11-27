@@ -24,6 +24,8 @@
 		isGameScoring,
 		isPlayerMove
 	} from '#lib/model/game/tree.ts';
+	import { canEditReview, getReviewEditor, reviewMoveMessage } from '#lib/model/game/review.ts';
+	import { getColorToPlay } from '#lib/model/ReplayVariation.ts';
 	import { kgsTvSource } from '#lib/model/TvSource.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import { sortUsers } from '#lib/model/user.ts';
@@ -134,6 +136,12 @@
 	);
 	let isOurMove = $derived(playing && !!tree && isPlayerMove(game, currentUser.name));
 	let scoring = $derived(isGameScoring(game));
+	// A KGS review: who holds the control, and whether that is us (then the
+	// board takes clicks and moving through it moves everyone's board).
+	let reviewEditor = $derived(getReviewEditor(game));
+	let editing = $derived(!playing && canEditReview(game, currentUser.name));
+	let editColor = $derived(editing && tree ? getColorToPlay(tree, tree.currentNode) : null);
+	let reviewNotice: 'ko' | 'suicide' | null = $state(null);
 	// Own game: a stone click for every new move (not when it opens).
 	let heardMoveNum: number | undefined;
 	let heardGameId: number | undefined;
@@ -276,7 +284,17 @@
 	}
 
 	function onChangeCurrentNode(nodeId: number) {
-		app.actions.onChangeCurrentNode(game, nodeId);
+		reviewNotice = null;
+		if (editing) app.actions.onReviewGoTo(game, nodeId);
+		else app.actions.onChangeCurrentNode(game, nodeId);
+	}
+
+	function onClickReviewPoint(clicked: GameChannel, loc: Point) {
+		const current = clicked.tree;
+		if (!current) return;
+		const result = reviewMoveMessage(clicked, current, current.currentNode, loc);
+		reviewNotice = result.ok || result.error === 'occupied' ? null : result.error;
+		if (result.ok) app.actions.onReviewMove(clicked, loc);
 	}
 
 	function onClickPoint(
@@ -407,12 +425,21 @@
 					<BoardContainer
 						{game}
 						{playing}
-						ghost={isOurMove && !scoring ? playerColor : null}
-						onClickPoint={isOurMove || scoring ? onClickPoint : undefined}
+						ghost={editing ? editColor : isOurMove && !scoring ? playerColor : null}
+						onClickPoint={editing
+							? onClickReviewPoint
+							: isOurMove || scoring
+								? onClickPoint
+								: undefined}
 					/>
 				</div>
 				{#if game.accessDenied}
 					<p class="GameScreen-access-denied" role="alert">{game.accessDenied}</p>
+				{/if}
+				{#if reviewNotice}
+					<p class="GameScreen-move-failed" role="alert">
+						{t(reviewNotice === 'ko' ? 'replay.view.koNotice' : 'replay.view.suicideNotice')}
+					</p>
 				{/if}
 				{#if game.moveFailed && playing}
 					<p class="GameScreen-move-failed" role="alert">{t('game.screen.moveFailed')}</p>
@@ -468,6 +495,13 @@
 						onDoneScoring={app.actions.onDoneScoring}
 					/>
 				{:else if tree}
+					{#if reviewEditor}
+						<p class="GameScreen-review-control">
+							{editing
+								? t('game.review.youControl')
+								: t('game.review.control', { name: reviewEditor })}
+						</p>
+					{/if}
 					<GameBoardNav
 						nodeId={tree.currentNode}
 						currentLine={tree.currentLine}
@@ -635,6 +669,12 @@
 		background: var(--warn-bg, #fff3cd);
 		color: var(--warn-ink, #5c4400);
 		text-align: center;
+	}
+
+	.GameScreen-review-control {
+		margin: 0 0 6px;
+		font-size: 0.9rem;
+		color: var(--muted, #555);
 	}
 
 	.GameScreen-move-failed {

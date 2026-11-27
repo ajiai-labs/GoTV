@@ -64,6 +64,22 @@ describe('loading a game from the archive', () => {
 		expect(store.getState().reviewGameId).toBe(911);
 	});
 
+	it('shows the review of an own game, not Spielen (we are white in it)', () => {
+		const { store, history, actions } = setup();
+		actions.onLoadGame('2026-11-20T18:00:00.000Z', 5, true);
+		const players = { owner: ME, white: ME, black: ANNA };
+		actions.onReceiveServerMessages([
+			{
+				...gameJoin(912, 'review', players),
+				gameSummary: { gameType: 'review', timestamp: '2026-11-25T08:00:00.000Z', players }
+			}
+		]);
+		actions.onJoinGame(912); // what UserGameSummary does with reviewGameId
+		expect(store.getState().playGameId).toBeNull();
+		expect(store.getState().watchGameId).toBe(912);
+		expect(history.push).not.toHaveBeenCalledWith('/play');
+	});
+
 	it('does not take over games joined without a load request', () => {
 		const { store, actions } = setup();
 		actions.onReceiveServerMessages([gameJoin(912, 'ranked', { white: ME, black: ANNA })]);

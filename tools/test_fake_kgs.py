@@ -32,7 +32,7 @@ class ServerTest(unittest.TestCase):
         return messages
 
     def test_login_lists_three_watched_games_and_the_own_game(self):
-        self.assertEqual([m["type"] for m in self.drain()], ["HELLO", "LOGIN_SUCCESS"])
+        self.assertEqual([m["type"] for m in self.drain()], ["HELLO", "LOGIN_SUCCESS", "ROOM_JOIN"])
         self.fake.handle("s1", {"type": "GLOBAL_LIST_JOIN_REQUEST", "list": "ACTIVES"})
         games = self.drain()[0]["games"]
         self.assertEqual(len(games), 4)
@@ -48,6 +48,29 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(self.fake.own.moves, [("black", 3, 3)])
         self.fake._opponent_moves()
         self.assertEqual(len(self.fake.own.moves), 2)
+
+    def test_loads_an_own_game_as_review_and_echoes_changes(self):
+        self.drain()
+        self.fake.handle("s1", {"type": "JOIN_ARCHIVE_REQUEST", "name": "andreas"})
+        games = self.drain()[0]["games"]
+        self.assertEqual(len(games), 2)
+        self.fake.handle("s1", {"type": "ROOM_LOAD_GAME", "channelId": fake_kgs.ROOM_ID,
+                                "timestamp": games[0]["timestamp"], "private": True})
+        join, state = self.drain()
+        self.assertEqual(join["gameType"], "review")
+        self.assertEqual(state["actions"], [{"action": "EDIT", "user": {"name": "andreas"}}])
+        review = self.fake.reviews[join["channelId"]]
+        last = review.active
+        change = [{"type": "CHILD_ADDED", "nodeId": last, "childNodeId": last + 1},
+                  {"type": "ACTIVATED", "nodeId": last + 1, "prevNodeId": last},
+                  {"type": "PROP_ADDED", "nodeId": last + 1,
+                   "prop": {"name": "MOVE", "color": "white", "loc": {"x": 0, "y": 0}}}]
+        self.fake.handle("s1", {"type": "KGS_SGF_CHANGE", "channelId": review.id, "sgfEvents": change})
+        self.assertEqual(self.drain(), [{"type": "GAME_UPDATE", "channelId": review.id, "sgfEvents": change}])
+        # The same node id again: the real KGS would refuse it.
+        self.fake.strict = True
+        self.fake.handle("s1", {"type": "KGS_SGF_CHANGE", "channelId": review.id, "sgfEvents": change})
+        self.assertEqual([m["type"] for m in self.drain()], ["LOGOUT"])
 
     def test_warns_where_the_real_kgs_would_log_out(self):
         self.fake.strict = True

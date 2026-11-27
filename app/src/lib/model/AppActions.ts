@@ -6,6 +6,7 @@ import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } fro
 import { playGameStart, playMessage } from '../sound/gameSounds';
 import { isChatForMe, newChatAuthors } from './chatSound';
 import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './channelGuard';
+import { activateMessage, canEditReview, reviewMoveMessage } from './game/review';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -14,6 +15,8 @@ import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
 const AUTOMATCH_JOIN_GRACE_MS = 60000;
 // After ROOM_LOAD_GAME: how long a GAME_JOIN counts as the loaded game.
 const LOAD_JOIN_GRACE_MS = 30000;
+// A review change KGS has not sent back after this long no longer blocks the next.
+const REVIEW_PENDING_MS = 3000;
 import type { FriendType } from './community';
 import { loadNoChats } from './noChats';
 import type {
@@ -143,6 +146,9 @@ export class AppActions {
 			Date.now() - this._automatchEndedAt < AUTOMATCH_JOIN_GRACE_MS;
 		for (const msg of Array.isArray(msgs) ? msgs : [msgs]) {
 			this._channels.observe(msg);
+			if (msg.type === 'GAME_UPDATE' && typeof msg.channelId === 'number') {
+				this._reviewPending.delete(msg.channelId);
+			}
 			if (msg.type === 'LOGIN_SUCCESS' || msg.type === 'LOGOUT') this._endViewTimers();
 			if (typeof msg.channelId !== 'number') continue;
 			if (msg.type === 'UNJOIN' || msg.type === 'CLOSE') {
@@ -334,22 +340,28 @@ export class AppActions {
 		}
 
 		let players;
+		// Only a game that is played is "ours" to play on Spielen; a review of
+		// an own game (loaded from the archive) is shown like any other
+		// (27.11.2026: it opened Spielen instead of the review).
+		let played = false;
 
 		if (typeof gameId === 'number') {
 			const game = state.gamesById[gameId];
 			players = game.players;
+			played = isGamePlaying(game);
 		} else {
 			const gameSummaries = state.gameSummariesByUser[currentUser.name];
 			const gameSummary = gameSummaries ? gameSummaries.find((g) => g.timestamp === gameId) : null;
 
 			if (gameSummary) {
 				players = gameSummary.players;
+				played = !gameSummary.score && !String(gameSummary.type).includes('review');
 			}
 		}
 
 		let joinType;
 
-		if (players && isGamePlayer(currentUser.name, players)) {
+		if (players && played && isGamePlayer(currentUser.name, players)) {
 			// Left game; rejoin
 			joinType = 'PLAY_GAME';
 			this.onChangeNav('play');
@@ -1019,6 +1031,41 @@ export class AppActions {
 			currentNode: nodeId,
 			channelId: game.id
 		});
+	};
+	// Editing a KGS review we hold the control of (model/game/review.ts).
+	// One change at a time: the next only after KGS sent the last one back
+	// (GAME_UPDATE), or after REVIEW_PENDING_MS without an answer.
+	_reviewPending = new Map<number, number>();
+
+	_sendReviewChange = (game: GameChannel, message: KgsMessage): boolean => {
+		const since = this._reviewPending.get(game.id);
+		if (since !== undefined && Date.now() - since < REVIEW_PENDING_MS) return false;
+		if (this._isOffline() || !this._store.getState().channelMembership[game.id]) return false;
+		this._reviewPending.set(game.id, Date.now());
+		this._client.sendMessage(message).catch(() => this._reviewPending.delete(game.id));
+		return true;
+	};
+	// A click on the board of a review: the move for everyone, or a hint why
+	// not (taken point, suicide, ko - as on Nachspielen).
+	onReviewMove = (game: GameChannel, loc: Point): 'occupied' | 'suicide' | 'ko' | null => {
+		const tree = game.tree;
+		const me = this._store.getState().currentUser?.name ?? '';
+		if (!tree || !canEditReview(game, me)) return null;
+		const result = reviewMoveMessage(game, tree, tree.currentNode, loc);
+		if (!result.ok) return result.error;
+		this._sendReviewChange(game, result.message);
+		return null;
+	};
+	// Moving through a review we control moves everyone's board.
+	onReviewGoTo = (game: GameChannel, nodeId: number) => {
+		const tree = game.tree;
+		const me = this._store.getState().currentUser?.name ?? '';
+		if (!tree || !canEditReview(game, me) || nodeId === tree.activeNode) {
+			this.onChangeCurrentNode(game, nodeId);
+			return;
+		}
+		this.onChangeCurrentNode(game, nodeId);
+		this._sendReviewChange(game, activateMessage(game, tree, nodeId));
 	};
 	onPlayMove = (game: GameChannel, loc: Point, color: PlayerColor | null | undefined) => {
 		if (color) {

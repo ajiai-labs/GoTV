@@ -230,6 +230,66 @@ class Game:
         return events
 
 
+class Review:
+    """A game loaded from the archive as a KGS review (ROOM_LOAD_GAME). The
+    user who loaded it holds the control (action EDIT); KGS_SGF_CHANGE from
+    them is checked and sent back to everybody in the channel."""
+
+    def __init__(self, channel_id, owner, summary, moves):
+        self.id = channel_id
+        self.owner = owner
+        self.summary = summary
+        self.events = [{
+            "type": "PROP_GROUP_ADDED", "nodeId": 0,
+            "props": [{"name": "RULES", "size": SIZE, "komi": 6.5, "rules": "japanese"}],
+        }]
+        for node, (color, x, y) in enumerate(moves, start=1):
+            self.events += [
+                {"type": "CHILD_ADDED", "nodeId": node - 1, "childNodeId": node},
+                {"type": "PROP_GROUP_ADDED", "nodeId": node,
+                 "props": [{"name": "MOVE", "color": color, "loc": {"x": x, "y": y}}]},
+            ]
+        self.nodes = set(range(len(moves) + 1))
+        self.active = len(moves)
+        self.events.append({"type": "ACTIVATED", "nodeId": self.active, "prevNodeId": 0})
+
+    def change(self, events):
+        """The events of a KGS_SGF_CHANGE, or an error text when the real
+        KGS would refuse them (unknown node, a node id given twice)."""
+        nodes = set(self.nodes)
+        for event in events:
+            kind, node = event.get("type"), event.get("nodeId")
+            if node not in nodes:
+                return "Ereignis %s für unbekannten Knoten %s" % (kind, node)
+            if kind == "CHILD_ADDED":
+                child = event.get("childNodeId")
+                if not isinstance(child, int) or child in nodes:
+                    return "CHILD_ADDED mit belegter Knotennummer %s" % child
+                nodes.add(child)
+            elif kind not in ("ACTIVATED", "PROP_ADDED", "PROP_REMOVED", "PROP_CHANGED"):
+                return "Ereignis %s wird nicht unterstützt" % kind
+        self.nodes = nodes
+        for event in events:
+            if event["type"] == "ACTIVATED":
+                self.active = event["nodeId"]
+        self.events += events
+        return None
+
+    def join(self, users):
+        players = {"owner": self.owner, "white": self.summary["players"]["white"],
+                   "black": self.summary["players"]["black"]}
+        return [
+            {"type": "GAME_JOIN", "channelId": self.id, "gameType": "review", "roomId": ROOM_ID,
+             "players": players, "users": users, "sgfEvents": list(self.events),
+             "gameSummary": dict(self.summary, gameType="review", players=players)},
+            self.state(),
+        ]
+
+    def state(self):
+        return {"type": "GAME_STATE", "channelId": self.id,
+                "actions": [{"action": "EDIT", "user": {"name": self.owner["name"]}}]}
+
+
 class FakeKgs:
     """One practice server: games, sessions and the long-poll queues."""
 
@@ -242,6 +302,7 @@ class FakeKgs:
         self.me = None
         self.own = None
         self.watched = []
+        self.reviews = {}  # channel id -> Review
         self._load_scripts()
 
     def _load_scripts(self):
@@ -254,6 +315,7 @@ class FakeKgs:
             except OSError:
                 texts.append([])
         main = texts[0] or []
+        self.archive_moves = main[:80]
         for index, (white, black) in enumerate(WATCHED_PLAYERS):
             game = Game(WATCH_GAME_IDS[index], white, black, script=list(main))
             # Start the three games at different points of the game.
@@ -265,7 +327,8 @@ class FakeKgs:
         return [game for game in [self.own, *self.watched] if game]
 
     def game(self, channel_id):
-        return next((game for game in self.games() if game.id == channel_id), None)
+        return next((game for game in self.games() if game.id == channel_id), None) \
+            or self.reviews.get(channel_id)
 
     # -- sending ------------------------------------------------------------
 
@@ -342,7 +405,10 @@ class FakeKgs:
                 self.warn(session, "JOIN_REQUEST für einen schon beigetretenen Kanal", channel_id)
             else:
                 session["joined"].add(channel_id)
-                self.push(session, *self.game_join(game))
+                if isinstance(game, Review):
+                    self.push(session, *game.join([self.me]))
+                else:
+                    self.push(session, *self.game_join(game))
         elif kind == "UNJOIN_REQUEST":
             if channel_id not in session["joined"]:
                 self.warn(session, "UNJOIN_REQUEST für einen Kanal, in dem GoTV nicht ist", channel_id)
@@ -357,7 +423,7 @@ class FakeKgs:
                     self.broadcast_game(self.own, [{"type": "GAME_UPDATE", "channelId": self.own.id,
                                                     "sgfEvents": events}, self.game_state(self.own)])
                     threading.Timer(self.rng.uniform(1.5, 4.0), self.opponent_moves).start()
-        elif kind == "CHAT" and self.game(channel_id):
+        elif kind == "CHAT" and isinstance(self.game(channel_id), Game):
             game = self.game(channel_id)
             self.broadcast_game(game, [{"type": "GAME_UPDATE", "channelId": game.id,
                                         "sgfEvents": game.add_chat(self.me, message.get("text", ""))}])
@@ -375,10 +441,53 @@ class FakeKgs:
         elif kind == "JOIN_ARCHIVE_REQUEST":
             archive_id = next(self.channel_ids)
             session["joined"].add(archive_id)
+            name = message.get("name", "")
             self.push(session, {"type": "ARCHIVE_JOIN", "channelId": archive_id,
-                                "user": {"name": message.get("name", ""), "rank": "?", "flags": {}},
-                                "games": []})
+                                "user": {"name": name, "rank": "?", "flags": {}},
+                                "games": self.archive(name)})
+        elif kind == "ROOM_LOAD_GAME":
+            self.load_review(session, message)
+        elif kind == "KGS_SGF_CHANGE":
+            review = self.reviews.get(channel_id)
+            if review is None or channel_id not in session["joined"]:
+                self.warn(session, "KGS_SGF_CHANGE für einen Kanal ohne Besprechung", channel_id)
+            elif review.owner["name"] != session["name"]:
+                print("WARNUNG: KGS_SGF_CHANGE ohne Kontrolle (%s)" % session["name"], flush=True)
+            else:
+                error = review.change(message.get("sgfEvents") or [])
+                if error:
+                    self.warn(session, error, channel_id)
+                else:
+                    self.broadcast_game(review, [{"type": "GAME_UPDATE", "channelId": review.id,
+                                                  "sgfEvents": message["sgfEvents"]}])
         return True
+
+    # -- archive and reviews ----------------------------------------------------
+
+    def archive(self, name):
+        """Two finished games of the user (practice archive)."""
+        if not self.me or name.lower() != self.me["name"].lower():
+            return []
+        me = {"name": self.me["name"], "rank": self.me["rank"]}
+        return [
+            {"timestamp": "2026-11-25T19:25:00.000Z", "gameType": "ranked", "size": SIZE, "komi": 6.5,
+             "players": {"white": dict(OPPONENT), "black": me}, "score": "B+RESIGN", "inPlay": True},
+            {"timestamp": "2026-11-22T12:16:00.000Z", "gameType": "free", "size": SIZE, "komi": 0.5,
+             "players": {"white": me, "black": {"name": "Kranich", "rank": "5d"}}, "score": 17.5},
+        ]
+
+    def load_review(self, session, message):
+        summary = next((game for game in self.archive(session["name"])
+                        if game["timestamp"] == message.get("timestamp")), None)
+        if summary is None or message.get("channelId") != ROOM_ID:
+            self.push(session, {"type": "LOAD_FAILED", "channelId": message.get("channelId")})
+            return
+        review = Review(next(self.channel_ids), {"name": self.me["name"], "rank": self.me["rank"]},
+                        dict(summary, timestamp=time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())),
+                        self.archive_moves)
+        self.reviews[review.id] = review
+        session["joined"].add(review.id)
+        self.push(session, *review.join([self.me]))
 
     def login(self, session_id, message):
         name = (message.get("name") or "gast").strip()[:10] or "gast"
@@ -393,6 +502,10 @@ class FakeKgs:
             "rooms": [{"channelId": ROOM_ID, "name": "Übungsraum", "category": "MAIN"}],
             "friends": [],
         })
+        # Like KGS, which puts you back into your rooms after logging in.
+        session["joined"].add(ROOM_ID)
+        self.push(session, {"type": "ROOM_JOIN", "channelId": ROOM_ID, "users": [self.me],
+                            "games": [game.list_entry() for game in self.games()]})
         print("Angemeldet: %s" % name, flush=True)
         return True
 
