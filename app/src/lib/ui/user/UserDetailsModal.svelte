@@ -168,8 +168,17 @@
 		tab = 'rankGraph';
 	}
 
+	// A finished game is loaded from the archive (review in KGS or GoTV's
+	// Nachspielen with KataGo), also while KGS still has it open ("inPlay",
+	// e.g. a game that ended a moment ago). Joined directly: a game going on
+	// and an open review (user, 27.11.2026: an old game could not be loaded
+	// for analysis - the click joined it by its time stamp instead).
+	function isFinished(game: GameSummary): boolean {
+		return game.score != null && game.score !== 'UNFINISHED';
+	}
+
 	function selectGame(game: GameSummary) {
-		if (game.inPlay) {
+		if (game.inPlay && (game.type === 'review' || !isFinished(game))) {
 			app.actions.onCloseUserDetail();
 			if (game.type === 'review' && appState.reviewGameId) {
 				app.actions.onJoinGame(appState.reviewGameId);

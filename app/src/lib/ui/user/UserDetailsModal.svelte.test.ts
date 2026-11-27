@@ -193,6 +193,38 @@ describe('UserDetailsModal', () => {
 		expect(fake.onCloseUserDetail).toHaveBeenCalled();
 	});
 
+	it('loads a finished game also while KGS still has it open', async () => {
+		const finishedOpen: GameSummary = {
+			timestamp: '2026-11-25T19:25:00.000Z',
+			type: 'ranked',
+			rules,
+			players: { white: anna, black: me },
+			score: 'B+RESIGN',
+			inPlay: true
+		};
+		const fake = setup({
+			userDetailsRequest: { name: 'anna', status: 'received' },
+			gameSummariesByUser: { anna: [finishedOpen] },
+			conversationsById: { 5: { id: 5, messages: [], status: 'created' } },
+			roomsById: {
+				5: {
+					id: 5,
+					name: 'Deutscher Raum',
+					description: null,
+					owners: null,
+					users: null,
+					category: 'NATIONAL'
+				}
+			}
+		});
+		await render(UserDetailsModal);
+		await page.getByRole('tab', { name: '1 Partie' }).click();
+		await page.getByRole('button', { name: /Aufgabe/ }).click();
+		const summary = page.getByRole('dialog', { name: 'Partie aus dem Archiv' });
+		await expect.element(summary.getByRole('button', { name: 'Partie laden' })).toBeVisible();
+		expect(fake.onJoinGame).not.toHaveBeenCalled();
+	});
+
 	it('edits the own profile and sends the changes', async () => {
 		const fake = setup({ userDetailsRequest: { name: 'gotvfan', status: 'received' } });
 		await render(UserDetailsModal);

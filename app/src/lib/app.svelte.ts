@@ -313,7 +313,9 @@ class GoTvApp {
 	// refuse a window that opens without a click - then it stays here, with
 	// "Eigenes Fenster" in its header. Not from a game window itself.
 	private moveNewOwnGameOut(before: number | null, now: number | null | undefined) {
-		if (now == null || now === before || !loadGameWindows()) return;
+		// A game joined by its time stamp (archive) gets its channel id with
+		// KGS's answer; only that opens a window (/partie?id= needs a number).
+		if (typeof now !== 'number' || now === before || !loadGameWindows()) return;
 		if (['/partie', '/bretter'].includes(currentPath())) return;
 		queueMicrotask(() => {
 			if (this.state.playGameId === now) this.moveGameToWindow(now);
