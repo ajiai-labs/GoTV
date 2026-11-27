@@ -142,6 +142,15 @@ export class ChannelGuard {
 			this.leaving.delete(id);
 			this.closed.add(id);
 		}
+		if (msg.type === 'GAME_REVIEW' && typeof msg.originalId === 'number') {
+			// The game went into a review channel; KGS closes the old one.
+			const to = (msg.review as { channelId?: unknown } | undefined)?.channelId;
+			this.joined.delete(msg.originalId);
+			this.joining.delete(msg.originalId);
+			this.leaving.delete(msg.originalId);
+			this.closed.add(msg.originalId);
+			if (typeof to === 'number') this.joined.add(to);
+		}
 		if (msg.type === 'GAME_CONTAINER_REMOVE_GAME' && typeof msg.gameId === 'number') {
 			this.listedIn.get(msg.gameId)?.delete(id ?? -1);
 		}

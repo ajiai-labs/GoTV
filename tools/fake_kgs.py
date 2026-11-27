@@ -423,6 +423,12 @@ class FakeKgs:
                     self.broadcast_game(self.own, [{"type": "GAME_UPDATE", "channelId": self.own.id,
                                                     "sgfEvents": events}, self.game_state(self.own)])
                     threading.Timer(self.rng.uniform(1.5, 4.0), self.opponent_moves).start()
+        elif kind == "GAME_RESIGN" and self.own and channel_id == self.own.id and not self.own.over:
+            self.own.over = True
+            self.own.score = "W+RESIGN" if self.own.black["name"] == session["name"] else "B+RESIGN"
+            self.broadcast_game(self.own, [self.game_state(self.own)])
+        elif kind == "GAME_START_REVIEW":
+            self.start_review(session, channel_id)
         elif kind == "CHAT" and isinstance(self.game(channel_id), Game):
             game = self.game(channel_id)
             self.broadcast_game(game, [{"type": "GAME_UPDATE", "channelId": game.id,
@@ -475,6 +481,32 @@ class FakeKgs:
             {"timestamp": "2026-11-22T12:16:00.000Z", "gameType": "free", "size": SIZE, "komi": 0.5,
              "players": {"white": me, "black": {"name": "Kranich", "rank": "5d"}}, "score": 17.5},
         ]
+
+    def start_review(self, session, channel_id):
+        """The finished own game becomes a review in a new channel, as KGS
+        does: GAME_REVIEW to everybody in the game, then CLOSE of the game. A
+        new own game starts for further practice."""
+        game = self.own
+        if game is None or channel_id != game.id or not game.over:
+            self.warn(session, "GAME_START_REVIEW für eine Partie, die nicht beendet ist", channel_id)
+            return
+        summary = {"timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
+                   "players": {"white": dict(game.white), "black": dict(game.black)}}
+        review = Review(next(self.channel_ids), {"name": session["name"], "rank": self.me["rank"]},
+                        summary, game.moves)
+        self.reviews[review.id] = review
+        entry = {"channelId": review.id, "gameType": "review", "roomId": ROOM_ID,
+                 "players": {"owner": review.owner, **summary["players"]}}
+        with self.lock:
+            for other in self.sessions.values():
+                if game.id in other["joined"]:
+                    other["joined"].discard(game.id)
+                    other["joined"].add(review.id)
+                    other["queue"].extend([{"type": "GAME_REVIEW", "originalId": game.id, "review": entry},
+                                           review.state(), {"type": "CLOSE", "channelId": game.id}])
+            self.lock.notify_all()
+        self.own = Game(next(self.channel_ids), OPPONENT, {"name": session["name"], "rank": self.me["rank"]})
+        self.own.white = dict(OPPONENT)
 
     def load_review(self, session, message):
         summary = next((game for game in self.archive(session["name"])

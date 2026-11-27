@@ -23,6 +23,7 @@ export const game = {
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Brett größer oder kleiner',
 	'game.screen.splitterValue': 'Brettbreite {width} Pixel',
+	'game.replay.discuss': 'Mit Gegner besprechen',
 	'game.review.youControl': 'Du hast die Kontrolle: Züge und Blättern sehen alle im Raum.',
 	'game.review.control': 'Kontrolle: {name}',
 	'game.screen.moveFailed':

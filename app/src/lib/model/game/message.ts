@@ -44,6 +44,31 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 		}
 
 		return nextState;
+	} else if (msg.type === 'GAME_REVIEW' && typeof msg.originalId === 'number' && msg.review) {
+		// A finished game became a review (GAME_START_REVIEW, sent by a player):
+		// KGS moved everybody into a new channel and closes the old one. The
+		// review starts with the game's tree; a GAME_JOIN for it, if KGS sends
+		// one, rebuilds it as usual.
+		const from: number = msg.originalId;
+		const to = (msg.review as { channelId?: unknown }).channelId;
+		if (typeof to !== 'number') return prevState;
+		const old = prevState.gamesById[from];
+		const gamesById: Index<GameChannel> = { ...prevState.gamesById };
+		const review = parseGameChannel(old ? { ...old, id: to } : null, msg.review);
+		gamesById[to] = { ...review, id: to, type: 'review' };
+		const channelMembership: ChannelMembership = { ...prevState.channelMembership };
+		delete channelMembership[from];
+		channelMembership[to] = { type: 'game', complete: true, stale: false };
+		const follow = (id: number | null | undefined) => (id === from ? null : id);
+		const watching = prevState.watchGameId === from || prevState.playGameId === from;
+		return {
+			...prevState,
+			gamesById,
+			channelMembership,
+			playGameId: follow(prevState.playGameId),
+			watchGameId: watching ? to : prevState.watchGameId,
+			movedGames: { ...prevState.movedGames, [from]: to }
+		};
 	} else if (msg.type === 'GAME_CONTAINER_REMOVE_GAME' && chanId) {
 		// Note - we don't actually track game/channel associations other than roomId,
 		// which is attached to the game channel record itself. We only remove games

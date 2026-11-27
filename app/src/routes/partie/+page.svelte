@@ -33,6 +33,17 @@
 		else if (wasLoggedIn && app.state.initialized) window.close();
 	});
 
+	// The game became a KGS review in a new channel (GAME_REVIEW): this
+	// window goes on with the review.
+	$effect(() => {
+		const to = app.state.movedGames?.[gameId];
+		if (to && to !== gameId) {
+			const target = new URL(window.location.href);
+			target.searchParams.set('id', String(to));
+			window.location.replace(target.toString());
+		}
+	});
+
 	// A game id KGS does not (or no longer) know: once the shared state is
 	// there and a few seconds passed, say so instead of loading forever.
 	let gone = $state(false);

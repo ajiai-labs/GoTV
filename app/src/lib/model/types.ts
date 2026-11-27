@@ -477,6 +477,9 @@ export type AppState = {
 	readonly showUnderConstruction: boolean;
 	readonly showFeedbackModal: boolean;
 	readonly reviewGameId: number | null | undefined;
+	// Games KGS turned into a review in a new channel (GAME_REVIEW): old
+	// channel id -> review channel id, so windows showing the game follow.
+	readonly movedGames?: Readonly<Record<number, number>>;
 	readonly tvStreamUrl: string | null | undefined;
 	readonly tvReplayGameId: number | null | undefined;
 	// KGS could not load a game from the archive (LOAD_FAILED): the game's

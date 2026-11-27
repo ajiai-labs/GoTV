@@ -168,8 +168,16 @@ export class AppActions {
 					isChatForMe(before, msg.channelId as number, from)
 				)
 		);
+		// The game shown here became a review (GAME_REVIEW): it goes on on
+		// Beobachten, like any review.
+		const reviewed = (Array.isArray(msgs) ? msgs : [msgs]).some(
+			(msg) =>
+				msg.type === 'GAME_REVIEW' &&
+				(before.playGameId === msg.originalId || before.watchGameId === msg.originalId)
+		);
 		this._store.dispatch(msgs);
 		if (chatForMe) playMessage();
+		if (reviewed) this.onChangeNav('watch');
 		if (this._store.getState().automatchEnabled) {
 			this._automatchEndedAt = 0;
 		} else if (wasAutomatching && !this._automatchEndedAt) {
@@ -1055,6 +1063,16 @@ export class AppActions {
 		if (!result.ok) return result.error;
 		this._sendReviewChange(game, result.message);
 		return null;
+	};
+	// "Mit Gegner besprechen" after an own game (CGoban): KGS turns the game
+	// into a review in a new channel and moves both players there
+	// (GAME_REVIEW, handled in the reducer).
+	onStartReview = (game: GameChannel) => {
+		const state = this._store.getState();
+		const me = state.currentUser?.name;
+		if (!me || !game.over || !isGamePlayer(me, game.players)) return;
+		if (this._isOffline() || !state.channelMembership[game.id]) return;
+		this._client.sendMessage({ type: 'GAME_START_REVIEW', channelId: game.id });
 	};
 	// Moving through a review we control moves everyone's board.
 	onReviewGoTo = (game: GameChannel, nodeId: number) => {

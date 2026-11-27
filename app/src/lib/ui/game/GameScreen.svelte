@@ -457,6 +457,9 @@
 						<GameReplaySuggestion
 							onReplay={() => app.suggestGameReplay(game)}
 							onReview={canReview ? () => app.suggestGameReplay(game, { kataGo: true }) : undefined}
+							onDiscuss={canReview && game.type !== 'review'
+								? () => app.actions.onStartReview(game)
+								: undefined}
 							onDismiss={() => (dismissedReplayForGameId = game.id)}
 						/>
 					</div>

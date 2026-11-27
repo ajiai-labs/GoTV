@@ -72,6 +72,20 @@ class ServerTest(unittest.TestCase):
         self.fake.handle("s1", {"type": "KGS_SGF_CHANGE", "channelId": review.id, "sgfEvents": change})
         self.assertEqual([m["type"] for m in self.drain()], ["LOGOUT"])
 
+    def test_review_with_the_opponent_after_the_game(self):
+        self.drain()
+        own = self.fake.own
+        self.fake.handle("s1", {"type": "JOIN_REQUEST", "channelId": own.id})
+        self.fake.handle("s1", {"type": "GAME_MOVE", "channelId": own.id, "loc": {"x": 3, "y": 3}})
+        self.fake.handle("s1", {"type": "GAME_RESIGN", "channelId": own.id})
+        self.drain()
+        self.fake.handle("s1", {"type": "GAME_START_REVIEW", "channelId": own.id})
+        review, state, close = self.drain()
+        self.assertEqual((review["type"], review["originalId"]), ("GAME_REVIEW", own.id))
+        self.assertEqual(state["actions"][0]["action"], "EDIT")
+        self.assertEqual(close, {"type": "CLOSE", "channelId": own.id})
+        self.assertNotEqual(self.fake.own.id, own.id)  # a new game to practise on
+
     def test_warns_where_the_real_kgs_would_log_out(self):
         self.fake.strict = True
         self.drain()

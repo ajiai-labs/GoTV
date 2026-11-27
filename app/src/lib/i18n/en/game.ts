@@ -22,6 +22,7 @@ export const game: Translation<typeof de> = {
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Make the board bigger or smaller',
 	'game.screen.splitterValue': 'Board width {width} pixels',
+	'game.replay.discuss': 'Discuss with opponent',
 	'game.review.youControl': 'You have control: everyone here sees your moves and navigation.',
 	'game.review.control': 'Control: {name}',
 	'game.screen.moveFailed':
