@@ -103,7 +103,7 @@
 
 	const MAX_GAME_SUMMARIES = 500;
 
-	type Tab = 'bio' | 'games' | 'rankGraph';
+	type Tab = 'bio' | 'games' | 'tagged' | 'rankGraph';
 
 	let tab = $state<Tab>('bio');
 	let editing = $state(false);
@@ -116,6 +116,9 @@
 	let user = $derived(request ? appState.usersByName[request.name] : undefined);
 	let details = $derived(user?.details);
 	let gameSummaries = $derived(request ? appState.gameSummariesByUser[request.name] : undefined);
+	let taggedGames = $derived(request ? appState.taggedGamesByUser?.[request.name] : undefined);
+	// The comment we gave a game ourselves (for the archive dialog).
+	let myTags = $derived(currentUser ? (appState.taggedGamesByUser?.[currentUser.name] ?? []) : []);
 	let channelId = $derived(details?.channelId);
 	let offline = $derived(!!user && !user.flags?.connected);
 	let isMe = $derived(!!user && !!currentUser && user.name === currentUser.name);
@@ -161,6 +164,15 @@
 
 	function close() {
 		app.actions.onCloseUserDetail();
+	}
+
+	function showTagged() {
+		if (request) app.actions.onRequestTagArchive(request.name);
+		// Our own tags too, for the comment field in the archive dialog.
+		if (currentUser && request && currentUser.name !== request.name) {
+			app.actions.onRequestTagArchive(currentUser.name);
+		}
+		tab = 'tagged';
 	}
 
 	function showRankGraph() {
@@ -220,6 +232,8 @@
 				{rooms}
 				loadFailed={appState.loadFailed != null}
 				onOpenReplay={(gameId: number) => app.openArchiveReplay(gameId)}
+				tag={myTags.find((game) => game.timestamp === gameToLoad?.timestamp)?.tag ?? ''}
+				onTag={currentUser ? app.actions.onTagGame : undefined}
 			/>
 		</Modal>
 	{:else}
@@ -360,6 +374,14 @@
 							<button
 								type="button"
 								role="tab"
+								aria-selected={shownTab === 'tagged'}
+								onclick={showTagged}
+							>
+								{t('chat.profile.tagged')}
+							</button>
+							<button
+								type="button"
+								role="tab"
 								aria-selected={shownTab === 'rankGraph'}
 								onclick={showRankGraph}
 							>
@@ -380,6 +402,16 @@
 									</div>
 								{:else}
 									<p class="muted">{t('chat.profile.noGames')}</p>
+								{/if}
+							{:else if shownTab === 'tagged'}
+								{#if !taggedGames}
+									<Spinner label={t('chat.profile.loading')} />
+								{:else if taggedGames.length}
+									<div class="games">
+										<GameSummaryList games={taggedGames} player={user.name} onSelect={selectGame} />
+									</div>
+								{:else}
+									<p class="muted">{t('chat.profile.noTagged')}</p>
 								{/if}
 							{:else if shownTab === 'rankGraph'}
 								<UserRankGraph

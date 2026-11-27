@@ -63,6 +63,7 @@
 			</span>
 			<span class="GameSummaryList-item-players">
 				<GamePlayersList players={game.players} winner={winningColor} />
+				{#if game.tag}<span class="GameSummaryList-item-tag">„{game.tag}“</span>{/if}
 			</span>
 			<span class="GameSummaryList-item-info">
 				{#if playingNow}
@@ -92,6 +93,12 @@
 </div>
 
 <style>
+	.GameSummaryList-item-tag {
+		display: block;
+		font-style: italic;
+		color: var(--ink-soft);
+	}
+
 	.GameSummaryList {
 		display: flex;
 		flex-direction: column;

@@ -86,6 +86,15 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(close, {"type": "CLOSE", "channelId": own.id})
         self.assertNotEqual(self.fake.own.id, own.id)  # a new game to practise on
 
+    def test_tags_a_game_and_lists_it_in_the_tag_archive(self):
+        self.drain()
+        stamp = self.fake.archive("andreas")[1]["timestamp"]
+        self.fake.handle("s1", {"type": "TAG_GAME", "gameTimestamp": stamp, "text": "Yose üben"})
+        self.fake.handle("s1", {"type": "JOIN_TAG_ARCHIVE_REQUEST", "name": "andreas"})
+        archive = self.drain()[0]
+        self.assertEqual(archive["type"], "TAG_ARCHIVE_JOIN")
+        self.assertEqual([(g["timestamp"], g["tag"]) for g in archive["games"]], [(stamp, "Yose üben")])
+
     def test_warns_where_the_real_kgs_would_log_out(self):
         self.fake.strict = True
         self.drain()

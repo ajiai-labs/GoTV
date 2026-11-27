@@ -19,9 +19,11 @@ const LOAD_JOIN_GRACE_MS = 30000;
 const REVIEW_PENDING_MS = 3000;
 import type { FriendType } from './community';
 import { loadNoChats } from './noChats';
+import { TAG_MAX_LENGTH } from './tags';
 import type {
 	AutomatchPrefs,
 	GameChannel,
+	GameSummary,
 	KgsClientState,
 	GameFilter,
 	GameProposal,
@@ -215,6 +217,9 @@ export class AppActions {
 				this.onReceiveChallengeSubmit(msg.channelId);
 			} else if (msg.type === 'CHAT' && msg.channelId && msg.user) {
 				this.onReceiveChat(msg.channelId, msg.user.name);
+			} else if (msg.type === 'TAG_ARCHIVE_JOIN' && msg.channelId) {
+				// Read once; no live updates needed.
+				this.onUnjoin(msg.channelId);
 			} else if (msg.type === 'ARCHIVE_JOIN' && msg.channelId) {
 				this.onArchiveJoinSuccess(msg.channelId, msg.user);
 			} else if (msg.type === 'GLOBAL_GAMES_JOIN' || msg.type === 'GAME_LIST') {
@@ -793,6 +798,23 @@ export class AppActions {
 			type: 'JOIN_ARCHIVE_REQUEST',
 			name
 		});
+	};
+	// "Kommentierte Spiele" of a player (KGS tag archive), on opening the tab.
+	onRequestTagArchive = (name: string) => {
+		if (this._isOffline() || !name) return;
+		this._client.sendMessage({ type: 'JOIN_TAG_ARCHIVE_REQUEST', name });
+	};
+	// "Spiel kommentieren" (CGoban): a short comment of ours on a game, max.
+	// 50 characters (KGS limit); an empty text takes it away.
+	onTagGame = (game: GameSummary, text: string) => {
+		const me = this._store.getState().currentUser?.name;
+		if (this._isOffline() || !me) return;
+		const tag = text.trim().slice(0, TAG_MAX_LENGTH);
+		this._client.sendMessage({ type: 'TAG_GAME', gameTimestamp: game.timestamp, text: tag });
+		const tagged: GameSummary = { ...game };
+		if (tag) tagged.tag = tag;
+		else delete tagged.tag;
+		this._store.dispatch({ type: 'GAME_TAGGED', name: me, game: tagged });
 	};
 	onCloseUserDetail = () => {
 		const { userDetailsRequest, usersByName } = this._store.getState();

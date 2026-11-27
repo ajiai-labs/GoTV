@@ -180,6 +180,37 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 		};
 		nextState.channelMembership = chanMem;
 		return nextState;
+	} else if (msg.type === 'TAG_ARCHIVE_JOIN' && msg.user) {
+		const summaries: Array<GameSummary> = (msg.games ?? []).map((g: any) => parseGameSummary(g));
+		summaries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+		const nextState = {
+			...prevState,
+			taggedGamesByUser: { ...prevState.taggedGamesByUser, [msg.user.name]: summaries }
+		};
+		if (chanId) {
+			nextState.channelMembership = {
+				...prevState.channelMembership,
+				[chanId]: { type: 'archive', complete: false, stale: false }
+			};
+		}
+		return nextState;
+	} else if (msg.type === 'TAG_ARCHIVE_NONEXISTANT' && msg.name) {
+		return {
+			...prevState,
+			taggedGamesByUser: { ...prevState.taggedGamesByUser, [msg.name]: [] }
+		};
+	} else if (msg.type === 'GAME_TAGGED' && msg.name && msg.game) {
+		// Our own tag, kept here at once (KGS does not send it back).
+		const summary: GameSummary = msg.game;
+		const own = (prevState.taggedGamesByUser?.[msg.name] ?? []).filter(
+			(game) => game.timestamp !== summary.timestamp
+		);
+		const tagged = summary.tag ? [summary, ...own] : own;
+		tagged.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+		return {
+			...prevState,
+			taggedGamesByUser: { ...prevState.taggedGamesByUser, [msg.name]: tagged }
+		};
 	} else if (msg.type === 'ARCHIVE_GAMES_CHANGED') {
 		// FIXME: hack - hardcoded to currentUser since the message doens't include
 		// the user, and we only stay subscribed to archive for currentUser

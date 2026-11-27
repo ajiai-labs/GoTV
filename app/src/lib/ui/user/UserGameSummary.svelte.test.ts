@@ -40,4 +40,40 @@ describe('UserGameSummary', () => {
 		await vi.waitFor(() => expect(p.onJoinGame).toHaveBeenCalledWith(921));
 		expect(p.onOpenReplay).not.toHaveBeenCalled();
 	});
+
+	it('offers the SGF from the KGS archive, also without a room', async () => {
+		const p = props();
+		const game = {
+			...summaries[0],
+			timestamp: '2026-11-25T19:25:00.000Z',
+			score: 24.5,
+			private: false
+		};
+		await render(UserGameSummary, { ...p, game, rooms: [] });
+		const link = page.getByRole('link', { name: 'SGF herunterladen' });
+		await expect.element(link).toBeVisible();
+		expect(link.element().getAttribute('href')).toMatch(
+			/^https:\/\/files\.gokgs\.com\/games\/2026\/11\/25\/.+\.sgf$/
+		);
+	});
+
+	it('has no SGF link for a private game', async () => {
+		const p = props();
+		await render(UserGameSummary, { ...p, game: { ...summaries[0], score: 24.5, private: true } });
+		await expect
+			.element(page.getByRole('link', { name: 'SGF herunterladen' }))
+			.not.toBeInTheDocument();
+	});
+
+	it('saves our comment on the game', async () => {
+		const p = props();
+		const onTag = vi.fn();
+		await render(UserGameSummary, { ...p, tag: 'alt', onTag });
+		const field = page.getByLabelText(/Dein Kommentar/);
+		await expect.element(field).toHaveValue('alt');
+		await field.fill('Fehler im Yose');
+		await page.getByRole('button', { name: 'Speichern' }).click();
+		expect(onTag).toHaveBeenCalledWith(summaries[0], 'Fehler im Yose');
+		await expect.element(page.getByText('Kommentar gespeichert.')).toBeVisible();
+	});
 });

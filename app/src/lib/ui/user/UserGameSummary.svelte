@@ -9,6 +9,8 @@
 	import type { GameChannel, GameSummary, Room } from '#lib/model/types.ts';
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import { formatGameTypeDe, formatScoreDe } from '#lib/ui/game/gameText.ts';
+	import { getKgsSgfUrl } from '#lib/model/game/tree.ts';
+	import { TAG_MAX_LENGTH } from '#lib/model/tags.ts';
 	import Spinner from '#lib/ui/Spinner.svelte';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
@@ -23,7 +25,9 @@
 		rooms = [],
 		resume = false,
 		loadFailed = false,
-		onOpenReplay
+		onOpenReplay,
+		tag = '',
+		onTag
 	}: {
 		activeConversationId: number | null | undefined;
 		game: GameSummary;
@@ -36,7 +40,16 @@
 		resume?: boolean;
 		loadFailed?: boolean;
 		onOpenReplay?: (gameId: number) => void;
+		// "Spiel kommentieren": our comment on this game (KGS tag).
+		tag?: string;
+		onTag?: (game: GameSummary, text: string) => void;
 	} = $props();
+
+	let tagText = $state(untrack(() => tag));
+	let tagSaved = $state(false);
+	$effect(() => {
+		tagText = tag;
+	});
 
 	const formId = $props.id();
 
@@ -75,6 +88,17 @@
 		}
 	});
 
+	// "Spiel auf Festplatte kopieren" (CGoban): the SGF from KGS's public
+	// archive - only finished games that are not private are there.
+	let sgfUrl = $derived.by(() => {
+		if (!game.score || game.score === 'UNFINISHED' || game.private) return null;
+		try {
+			return getKgsSgfUrl(game);
+		} catch {
+			return null;
+		}
+	});
+
 	// "Die Partie wird in {room} geladen.": the room name in bold.
 	let loadsIn = $derived(t('chat.summary.loadsIn').split('{room}'));
 
@@ -103,6 +127,38 @@
 		<dd>{formatGameTypeDe(game.type)}</dd>
 	</dl>
 
+	{#if sgfUrl}
+		<p class="download">
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- a file in KGS's archive, outside GoTV -->
+			<a class="button" href={sgfUrl} target="_blank" rel="noopener noreferrer">
+				{t('chat.summary.downloadSgf')}
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		</p>
+	{/if}
+	{#if onTag}
+		<form
+			class="tag"
+			onsubmit={(event) => {
+				event.preventDefault();
+				onTag(game, tagText);
+				tagSaved = true;
+			}}
+		>
+			<label for="{formId}-tag">{t('chat.summary.tag')}</label>
+			<div class="tag-row">
+				<input
+					id="{formId}-tag"
+					type="text"
+					maxlength={TAG_MAX_LENGTH}
+					bind:value={tagText}
+					oninput={() => (tagSaved = false)}
+				/>
+				<button class="button" type="submit">{t('chat.summary.tagSave')}</button>
+			</div>
+			{#if tagSaved}<p class="muted" role="status">{t('chat.summary.tagSaved')}</p>{/if}
+		</form>
+	{/if}
 	{#if !targetRoom}
 		<p class="note"><strong>{t('chat.summary.joinRoomFirst')}</strong></p>
 	{:else if showSpinner && loadFailed}
@@ -158,6 +214,35 @@
 </div>
 
 <style>
+	.download {
+		margin: 0 0 12px;
+	}
+
+	.tag {
+		margin: 0 0 16px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.tag label {
+		display: block;
+		margin-bottom: 6px;
+	}
+
+	.tag-row {
+		display: flex;
+		gap: 8px;
+	}
+
+	.tag-row input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tag .muted {
+		margin: 6px 0 0;
+	}
+
 	dl {
 		display: grid;
 		grid-template-columns: max-content 1fr;

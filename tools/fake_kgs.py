@@ -303,6 +303,7 @@ class FakeKgs:
         self.own = None
         self.watched = []
         self.reviews = {}  # channel id -> Review
+        self.tags = {}  # user name -> {game time stamp: tag}
         self._load_scripts()
 
     def _load_scripts(self):
@@ -451,6 +452,22 @@ class FakeKgs:
             self.push(session, {"type": "ARCHIVE_JOIN", "channelId": archive_id,
                                 "user": {"name": name, "rank": "?", "flags": {}},
                                 "games": self.archive(name)})
+        elif kind == "TAG_GAME":
+            tags = self.tags.setdefault(session["name"], {})
+            text = (message.get("text") or "")[:50]
+            if text:
+                tags[message.get("gameTimestamp")] = text
+            else:
+                tags.pop(message.get("gameTimestamp"), None)
+        elif kind == "JOIN_TAG_ARCHIVE_REQUEST":
+            name = message.get("name", "")
+            tags = self.tags.get(name, {})
+            games = [dict(game, tag=tags[game["timestamp"]]) for game in self.archive(name)
+                     if game["timestamp"] in tags]
+            archive_id = next(self.channel_ids)
+            session["joined"].add(archive_id)
+            self.push(session, {"type": "TAG_ARCHIVE_JOIN", "channelId": archive_id,
+                                "user": {"name": name, "rank": "?", "flags": {}}, "games": games})
         elif kind == "ROOM_LOAD_GAME":
             self.load_review(session, message)
         elif kind == "KGS_SGF_CHANGE":

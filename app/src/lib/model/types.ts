@@ -480,6 +480,9 @@ export type AppState = {
 	// Games KGS turned into a review in a new channel (GAME_REVIEW): old
 	// channel id -> review channel id, so windows showing the game follow.
 	readonly movedGames?: Readonly<Record<number, number>>;
+	// "Kommentierte Spiele" (KGS tag archive) of a user: their games with
+	// the short comment ("tag") they gave them (TAG_ARCHIVE_JOIN).
+	readonly taggedGamesByUser?: Readonly<Record<string, Array<GameSummary>>>;
 	readonly tvStreamUrl: string | null | undefined;
 	readonly tvReplayGameId: number | null | undefined;
 	// KGS could not load a game from the archive (LOAD_FAILED): the game's

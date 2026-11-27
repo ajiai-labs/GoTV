@@ -42,6 +42,8 @@ export const FORWARDED_ACTIONS = new Set([
 	'onReviewMove',
 	'onReviewGoTo',
 	'onStartReview',
+	'onRequestTagArchive',
+	'onTagGame',
 	'onViewGame',
 	'onUnviewGame',
 	'onLeaveGame',
