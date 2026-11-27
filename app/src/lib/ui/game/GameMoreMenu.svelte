@@ -5,7 +5,7 @@
 	// the menu.
 	import { formatScoreDe } from './gameText.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
-	import { getKgsSgfUrl } from '#lib/model/game/tree.ts';
+	import { getKgsSgfUrl, isGamePlayer, isGamePlaying } from '#lib/model/game/tree.ts';
 	import type { GameChannel, GameNode, Index, Room, SgfProp } from '#lib/model/types.ts';
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import Modal from '#lib/ui/Modal.svelte';
@@ -37,10 +37,18 @@
 		// A KGS game watched on Beobachten: "Lokal betrachten" and "Spiel
 		// kopieren in …" (as CGoban's Optionen menu).
 		kgsTools?: boolean;
-		// In the Brettübersicht (team matches): no score estimate or local copy
-		// of a running game - no outside help during the game (DGoB § 3).
+		// In the Brettübersicht (team matches): no local copy of a running
+		// game - no outside help during the game (DGoB § 3).
 		overview?: boolean;
 	} = $props();
+
+	// "Ergebnis schätzen" for every game shown (watched, broadcast, review,
+	// team board) - not for the own running game (user, 27.11.2026).
+	let ownRunning = $derived.by(() => {
+		const me = app.state.currentUser?.name;
+		return !!me && !!game.players && isGamePlaying(game) && isGamePlayer(me, game.players);
+	});
+	let canEstimate = $derived(!!game.tree && !ownRunning);
 
 	let estimateShowing = $state(false);
 	let copyShowing = $state(false);
@@ -177,18 +185,20 @@
 			<button type="button" class="GameMoreMenu-dropdown-item" onclick={showGameInfo}>
 				{t('game.moreMenu.gameInfo')}
 			</button>
+			{#if canEstimate}
+				<button
+					type="button"
+					class="GameMoreMenu-dropdown-item"
+					onclick={() => {
+						moreShowing = false;
+						estimateShowing = true;
+					}}
+				>
+					{t('game.estimate.title')}
+				</button>
+			{/if}
 			{#if kgsTools && game.tree}
 				{#if !overview || game.over}
-					<button
-						type="button"
-						class="GameMoreMenu-dropdown-item"
-						onclick={() => {
-							moreShowing = false;
-							estimateShowing = true;
-						}}
-					>
-						{t('game.estimate.title')}
-					</button>
 					<button type="button" class="GameMoreMenu-dropdown-item" onclick={openLocalCopy}>
 						{t('game.moreMenu.localCopy')}
 					</button>

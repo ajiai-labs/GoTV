@@ -57,6 +57,7 @@
 	import type { GameTree, PlayerColor, Point, SgfProp } from '#lib/model/types.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import KataGoPanel from './KataGoPanel.svelte';
+	import ScoreEstimateDialog from '#lib/ui/game/ScoreEstimateDialog.svelte';
 
 	let {
 		initialUrl = null,
@@ -153,6 +154,8 @@
 	let bookmarkDraft = $state<string | null>(null);
 	// KataGo's top moves for the shown position, as board labels 1-5.
 	let kataGoMoves = $state.raw<{ nodeId: number; moves: Array<KataGoMove> } | null>(null);
+	// "Ergebnis schätzen" (as CGoban) for the position shown.
+	let estimateShowing = $state(false);
 	// Why the last click on the board was not played (ko, suicide).
 	let moveNotice = $state<MessageKey | null>(null);
 	// Where the shown game came from: only games from an address can be shared.
@@ -676,6 +679,9 @@
 			</ul>
 		{/if}
 		<div class="progress-actions">
+			<button type="button" class="small-button" onclick={() => (estimateShowing = true)}>
+				{t('game.estimate.title')}
+			</button>
 			<!-- A copy of a game still running on KGS: no file or link that could
 			     be opened elsewhere with KataGo (no help during a game). -->
 			<button
@@ -871,6 +877,12 @@
 		{/if}
 	{:else if !compact}
 		{@render sources()}
+	{/if}
+	{#if estimateShowing && tree}
+		<ScoreEstimateDialog
+			game={{ tree: { ...tree, currentNode } }}
+			onclose={() => (estimateShowing = false)}
+		/>
 	{/if}
 </div>
 

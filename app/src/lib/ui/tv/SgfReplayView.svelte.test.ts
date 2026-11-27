@@ -51,6 +51,17 @@ describe('SgfReplayView', () => {
 		await expect.element(page.getByText(/· B\+R/)).toBeVisible();
 	});
 
+	it('estimates the score of the position shown, with the komi of the SGF', async () => {
+		await render(SgfReplayView, {});
+		await page.getByLabelText('SGF einfügen:').fill('(;SZ[9]KM[7.5];B[cc];W[gg])');
+		await page.getByRole('button', { name: 'Laden', exact: true }).click();
+		await page.getByRole('button', { name: 'Ergebnis schätzen' }).click();
+		const dialog = page.getByRole('dialog', { name: 'Ergebnis schätzen' });
+		await expect.element(dialog.getByText(/mit 7,5 Komi/)).toBeVisible();
+		await dialog.getByRole('button', { name: /Schließen/ }).click();
+		await expect.element(dialog).not.toBeInTheDocument();
+	});
+
 	it('speaks English, also for an error already shown', async () => {
 		await render(SgfReplayView, {});
 		await page.getByLabelText('SGF einfügen:').fill('kein sgf');

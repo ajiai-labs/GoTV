@@ -41,4 +41,21 @@ describe('TvGamePanel', () => {
 		await page.getByRole('button', { name: /anna/ }).first().click();
 		expect(actions.onUserDetail).not.toHaveBeenCalled();
 	});
+
+	it('estimates the score of a broadcast game (as CGoban, no AI)', async () => {
+		await render(TvGamePanel, { game: game('ogs') });
+		await page.getByRole('button', { name: /Mehr/ }).click();
+		await page.getByRole('button', { name: 'Ergebnis schätzen' }).click();
+		await expect
+			.element(page.getByRole('dialog', { name: 'Ergebnis schätzen' }).getByText(/ohne KI/))
+			.toBeVisible();
+	});
+
+	it('offers no estimate for my own running game', async () => {
+		app.state = { ...app.state, currentUser: { name: 'anna', rank: '2d' } };
+		await render(TvGamePanel, { game: game('kgs') });
+		await page.getByRole('button', { name: /Mehr/ }).click();
+		await expect.element(page.getByText('Partieinfo')).toBeVisible();
+		await expect.element(page.getByText('Ergebnis schätzen')).not.toBeInTheDocument();
+	});
 });

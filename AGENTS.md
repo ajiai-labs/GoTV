@@ -856,8 +856,9 @@ die schon offen sind, kommen nach vorn statt doppelt.
   und das Partiefenster zeigt "Zug nicht bei KGS angekommen" (`game.moveFailed`, endet mit dem
   nächsten Brettstand von KGS).
 - Keine Hilfe im Mannschaftskampf (Prüfbericht 26.11.2026): in der Brettübersicht für laufende
-  Partien kein "Ergebnis schätzen" und kein "Lokal betrachten" (`GameScreen overview` →
-  `GameMoreMenu overview`); eine lokale Kopie einer laufenden Partie lässt sich nicht als SGF
+  Partien kein "Lokal betrachten" (`GameScreen overview` → `GameMoreMenu overview`); "Ergebnis
+  schätzen" ist dort seit 27.11.2026 wieder da (Nutzer: überall außer in der eigenen laufenden
+  Partie, wie CGoban); eine lokale Kopie einer laufenden Partie lässt sich nicht als SGF
   speichern oder verlinken (`SgfReplayView`, sonst KataGo über den Umweg Datei). Die eigene
   laufende Partie ist dort nie ein Brett (auch nicht über "Zur Brettübersicht" im Gegnerprofil),
   nur die umrahmte Vorschau. "Verlassen" nach Rückfrage verlässt die eigene Partie bei KGS auch,
@@ -974,8 +975,12 @@ Steine und sind unverändert. README um die Funktionen vom 25./26.11. ergänzt.
 ## CGoban-Funktionen aus den Videos des Nutzers (25.11.2026, abends)
 
 - Beobachten, "Mehr": "Ergebnis schätzen" (`model/scoreEstimate.ts`: Zufallspartien mit
-  Atari-Regel, tote Gruppen nach mittlerem Besitz, geschlossene Gebiete exakt - KEINE KI;
-  nur beim Beobachten, nicht in der eigenen laufenden Partie), "Lokal betrachten"
+  Atari-Regel, tote Gruppen nach mittlerem Besitz, geschlossene Gebiete exakt - KEINE KI).
+  Seit 27.11.2026 überall, wo eine Partie offen ist (Nutzer: "alles Partienanalysen"):
+  Partiefenster, Brettübersicht, TV-Bretter (KGS und OGS), Besprechungen und Nachspielen (Knopf
+  bei "Als SGF speichern"; Komi aus dem SGF). Nie in der eigenen laufenden Partie
+  (`GameMoreMenu`: `isGamePlaying` und ich bin Spieler; das Spielen-Menü hat es ohnehin nicht).
+  Weiter: "Lokal betrachten"
   (`app.openLocalCopy`: Kopie auf Nachspielen ab dem aktuellen Zug; KataGo gesperrt,
   solange die Partie auf KGS läuft - `KataGoPanel blocked`), "Spiel kopieren in …"
   (`ROOM_CLONE_GAME`, die Kopie öffnet sich unter Beobachten).

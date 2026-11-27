@@ -135,7 +135,7 @@ describe('Brettübersicht', () => {
 		expect(actions.onUnviewGame).toHaveBeenCalledWith(91, expect.any(String));
 	});
 
-	it('offers no analysis of a running game and never makes my own game a board', async () => {
+	it('offers no local copy of a running game and never makes my own game a board', async () => {
 		app.state = {
 			...app.state,
 			gamesById: { ...app.state.gamesById, 95: game(95, me, anna) },
@@ -146,10 +146,11 @@ describe('Brettübersicht', () => {
 		// My own running game, brought in by hand: only the framed preview.
 		await expect.element(page.getByRole('region', { name: 'Deine Partie' })).toBeVisible();
 		await expect.element(page.getByRole('region', { name: 'Brett 2' })).not.toBeInTheDocument();
-		// A team mate's running game, enlarged: no score estimate, no local copy.
+		// A team mate's running game, enlarged: the score estimate as in CGoban
+		// (user, 27.11.2026), but no local copy.
 		await page.getByRole('button', { name: /Lukan \[7d\] – anna/ }).click();
 		await page.getByRole('button', { name: /Mehr/ }).click();
-		await expect.element(page.getByText('Ergebnis schätzen')).not.toBeInTheDocument();
+		await expect.element(page.getByText('Ergebnis schätzen')).toBeVisible();
 		await expect.element(page.getByText('Lokal betrachten')).not.toBeInTheDocument();
 	});
 

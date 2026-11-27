@@ -1,16 +1,34 @@
 <script lang="ts">
-	// "Ergebnis schätzen" (CGoban) for a watched game: the position shown,
-	// with each side's area and the stones that look dead, and the result if
-	// the game ended like this. Rough: random playouts, no AI (scoreEstimate).
+	// "Ergebnis schätzen" (CGoban) for any game shown but the own running one
+	// (watched, broadcast, review, replay): the position shown, with each
+	// side's area and the stones that look dead, and the result if the game
+	// ended like this. Rough: random playouts, no AI (scoreEstimate).
 	import { onMount, untrack } from 'svelte';
 	import { locale, t } from '#lib/i18n/index.svelte.ts';
 	import { estimateScore } from '#lib/model/scoreEstimate.ts';
 	import type { ScoreEstimate } from '#lib/model/scoreEstimate.ts';
-	import type { GameChannel } from '#lib/model/types.ts';
+	import type { GameChannel, GameRules } from '#lib/model/types.ts';
 	import Modal from '#lib/ui/Modal.svelte';
 	import Board from '#lib/ui/Board.svelte';
 
-	let { game, onclose }: { game: GameChannel; onclose: () => void } = $props();
+	let {
+		game,
+		onclose
+	}: {
+		// A KGS game carries its rules; a replayed SGF has them in the root
+		// node's RULES prop.
+		game: Pick<GameChannel, 'tree' | 'rules'>;
+		onclose: () => void;
+	} = $props();
+
+	type EstimateRules = Pick<GameRules, 'komi' | 'rules'>;
+	const rules: EstimateRules = untrack(() => {
+		if (game.rules) return game.rules;
+		const tree = game.tree;
+		const prop = tree?.nodes[tree.rootNode]?.props.find((item) => item.name === 'RULES') as
+			Partial<EstimateRules> | undefined;
+		return { komi: typeof prop?.komi === 'number' ? prop.komi : 0, rules: prop?.rules };
+	});
 
 	let estimate = $state.raw<ScoreEstimate | null>(null);
 	// The position at the moment the dialog opened - later moves do not
@@ -25,8 +43,8 @@
 		// Let the dialog paint first; the estimate takes a moment on 19x19.
 		const timer = setTimeout(() => {
 			estimate = estimateScore(state.board, {
-				komi: game.rules?.komi ?? 0,
-				rules: game.rules?.rules,
+				komi: rules.komi,
+				rules: rules.rules,
 				blackCaptures: state.blackCaptures,
 				whiteCaptures: state.whiteCaptures
 			});
@@ -71,7 +89,7 @@
 						<dd>
 							{t('game.estimate.pointsKomi', {
 								points: points(estimate.whiteScore),
-								komi: points(game.rules?.komi ?? 0)
+								komi: points(rules.komi)
 							})}
 						</dd>
 					</dl>
