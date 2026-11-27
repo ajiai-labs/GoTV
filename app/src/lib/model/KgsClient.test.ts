@@ -88,6 +88,23 @@ describe('KgsClient.poll', () => {
 		expect(onMessages).not.toHaveBeenCalledWith([{ type: 'LOGOUT' }]);
 	});
 
+	it('lets a late error of the old logout leave the new session alone', async () => {
+		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		let failLogout: (err: unknown) => void = () => {};
+		const send = vi
+			.spyOn(client, '_sendMessage')
+			.mockImplementationOnce(() => new Promise((_, reject) => (failLogout = reject)))
+			.mockResolvedValue(undefined);
+		vi.spyOn(client, 'poll').mockResolvedValue(undefined);
+		const logout = client.logout().catch(() => {});
+		await client.login('andy1975', 'secret');
+		client.setState({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		failLogout({ type: 'noClient' }); // the 403 to the logout, after the new login
+		await logout;
+		expect(send).toHaveBeenCalledTimes(2);
+		expect(client.state.status).toBe('loggedIn');
+	});
+
 	it('keeps trying while logged in, also after many failures', async () => {
 		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
 		const receive = vi

@@ -22,6 +22,8 @@ export const game: Translation<typeof de> = {
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Make the board bigger or smaller',
 	'game.screen.splitterValue': 'Board width {width} pixels',
+	'game.screen.moveFailed':
+		'Move did not reach KGS – please play it again once the connection is back.',
 	'game.screen.splitterFitValue': 'Board width {width} pixels, sidebar {side} pixels',
 	'game.screen.tabs': 'View',
 	'game.screen.tabChat': 'Chat',

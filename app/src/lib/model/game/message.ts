@@ -320,6 +320,18 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 			gamesById[chanId].tree = tree;
 			return { ...prevState, gamesById };
 		}
+	} else if (msg.type === 'GAME_MOVE_FAILED' && chanId && prevState.gamesById[chanId]) {
+		// The move did not reach KGS: off the board again, with a notice.
+		const gamesById: Index<GameChannel> = { ...prevState.gamesById };
+		const game = { ...gamesById[chanId], moveFailed: true };
+		if (game.tree?.pendingMove) {
+			const tree = { ...game.tree };
+			delete tree.pendingMove;
+			tree.computedState = computeGameNodeStates(tree, tree.activeNode);
+			game.tree = tree;
+		}
+		gamesById[chanId] = game;
+		return { ...prevState, gamesById };
 	} else if (msg.type === 'USER_REMOVED' && chanId && prevState.gamesById[chanId]) {
 		const gamesById: Index<GameChannel> = { ...prevState.gamesById };
 		const users = gamesById[chanId].users;

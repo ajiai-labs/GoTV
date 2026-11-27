@@ -846,6 +846,15 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Partiefenster schließen sich auch, wenn KGS die Sitzung beendet; "Abmelden" geht aus jedem
   Fenster. Tests: `channelGuard.test.ts`, `gameViews.test.ts`, `KgsClient.test.ts`,
   `windowLink.test.ts`.
+- Prüfbericht 27.11.2026 (drei Befunde, behoben): (1) Der Stand der Kanal-Schranke (geschlossene
+  Kanäle, offene Anmeldungen/Abmeldungen, Listen) steht in `gotv.kgsChannels` (localStorage, nicht
+  in "Meine Daten") und gilt nach F5 und bei der Übernahme durch ein anderes Fenster weiter
+  (`ChannelGuard.restore`/`toJSON`, `AppActions._restoreChannels`; nur bei angemeldeter Sitzung,
+  LOGIN_SUCCESS/LOGOUT leeren ihn). (2) `KgsClient.sendMessage` prüft wie der Abruf die Sitzung:
+  eine späte Fehlerantwort (z. B. 403 auf das alte LOGOUT) ändert eine neue Anmeldung nicht.
+  (3) Scheitert das Senden eines Zuges, nimmt `GAME_MOVE_FAILED` den vorläufigen Stein vom Brett
+  und das Partiefenster zeigt "Zug nicht bei KGS angekommen" (`game.moveFailed`, endet mit dem
+  nächsten Brettstand von KGS).
 - Keine Hilfe im Mannschaftskampf (Prüfbericht 26.11.2026): in der Brettübersicht für laufende
   Partien kein "Ergebnis schätzen" und kein "Lokal betrachten" (`GameScreen overview` →
   `GameMoreMenu overview`); eine lokale Kopie einer laufenden Partie lässt sich nicht als SGF

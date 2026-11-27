@@ -127,6 +127,12 @@ describe('GameScreen', () => {
 		expect(actions.onPlayMove).toHaveBeenCalledTimes(1);
 	});
 
+	it('says when our last move did not reach KGS', async () => {
+		mockActions();
+		await render(GameScreen, { game: fixtureGame({ moveFailed: true }), playing: true });
+		await expect.element(page.getByText(/Zug nicht bei KGS angekommen/)).toBeVisible();
+	});
+
 	it('does not take clicks when it is not our move', async () => {
 		mockActions();
 		await render(GameScreen, {

@@ -414,6 +414,9 @@
 				{#if game.accessDenied}
 					<p class="GameScreen-access-denied" role="alert">{game.accessDenied}</p>
 				{/if}
+				{#if game.moveFailed && playing}
+					<p class="GameScreen-move-failed" role="alert">{t('game.screen.moveFailed')}</p>
+				{/if}
 				{#if game.undoRequest}
 					<div class="GameScreen-overlay">
 						<GameUndoPrompt
@@ -631,6 +634,20 @@
 		padding: 10px 16px;
 		background: var(--warn-bg, #fff3cd);
 		color: var(--warn-ink, #5c4400);
+		text-align: center;
+	}
+
+	.GameScreen-move-failed {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		z-index: 4;
+		margin: 0;
+		padding: 10px 16px;
+		background: var(--warn-bg, #fff3cd);
+		color: var(--warn-ink, #5c4400);
+		font-weight: 600;
 		text-align: center;
 	}
 

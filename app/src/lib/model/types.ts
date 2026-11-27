@@ -345,6 +345,8 @@ export type GameChannel = {
 		user: UnparsedUser;
 	}>;
 	clocks?: Partial<Record<GameRole, ClockState>>;
+	// The last own move did not reach KGS (GAME_MOVE_FAILED).
+	moveFailed?: boolean;
 	whiteDoneSent?: boolean;
 	blackDoneSent?: boolean;
 	whiteScore?: boolean;

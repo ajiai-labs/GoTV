@@ -23,6 +23,8 @@ export const game = {
 	'game.screen.live': 'Live: {name}',
 	'game.screen.splitter': 'Brett größer oder kleiner',
 	'game.screen.splitterValue': 'Brettbreite {width} Pixel',
+	'game.screen.moveFailed':
+		'Zug nicht bei KGS angekommen – bitte noch einmal setzen, sobald die Verbindung steht.',
 	'game.screen.splitterFitValue': 'Brettbreite {width} Pixel, Seitenleiste {side} Pixel',
 	'game.screen.tabs': 'Ansicht',
 	'game.screen.tabChat': 'Chat',

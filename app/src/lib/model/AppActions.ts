@@ -5,7 +5,7 @@ import { prepareSavedAppState } from './appState';
 import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } from './game';
 import { playGameStart, playMessage } from '../sound/gameSounds';
 import { isChatForMe, newChatAuthors } from './chatSound';
-import { ChannelGuard } from './channelGuard';
+import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './channelGuard';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -66,8 +66,19 @@ export class AppActions {
 		const send = client.sendMessage;
 		client.sendMessage = (...args: Parameters<KgsClient['sendMessage']>) =>
 			this._channels.allow(args[0]) ? send(...args) : Promise.resolve();
-		// A state taken over from another window: the channels it is in.
-		this._channels.reset(this._joinedChannels());
+		// A state taken over from another window: the same KGS session goes on,
+		// with what the gate knew there (closed channels, open requests).
+		this._restoreChannels();
+		// Stored after every change, once per turn of the event loop.
+		let saving = false;
+		this._channels.onChange = () => {
+			if (saving) return;
+			saving = true;
+			queueMicrotask(() => {
+				saving = false;
+				saveChannelGuardState(this._channels.toJSON());
+			});
+		};
 		this._tvGameSubscriptions = new TvGameSubscriptions(
 			() => this._store.getState(),
 			(message) => {
@@ -78,6 +89,15 @@ export class AppActions {
 			}
 		);
 	}
+
+	_restoreChannels = () => {
+		const joined = this._joinedChannels();
+		if (this._store.getState().clientState.status === 'loggedIn') {
+			this._channels.restore(loadChannelGuardState(), joined);
+		} else {
+			this._channels.reset(joined);
+		}
+	};
 
 	_joinedChannels = (): Array<number> =>
 		Object.keys(this._store.getState().channelMembership)
@@ -95,8 +115,9 @@ export class AppActions {
 	onRestoreAppState = () => {
 		this._store.restoreSavedState(APP_STATE_SAVE_KEY, (appState) => {
 			this._client.setState(appState.clientState);
-			// The same KGS session goes on: the channels it is in.
-			this._channels.reset(this._joinedChannels());
+			// The same KGS session goes on (F5): the channels it is in and what
+			// the gate knew before the reload.
+			this._restoreChannels();
 
 			this._store.dispatch({
 				type: 'APP_STATE_INITIALIZED'
@@ -1009,11 +1030,17 @@ export class AppActions {
 			});
 		}
 
-		this._client.sendMessage({
-			type: 'GAME_MOVE',
-			channelId: game.id,
-			loc
-		});
+		// A move that did not reach KGS must not stay on the board as if it
+		// had: the stone goes, and the game screen says so (review 27.11.2026).
+		this._client
+			.sendMessage({
+				type: 'GAME_MOVE',
+				channelId: game.id,
+				loc
+			})
+			.catch(() => {
+				this._store.dispatch({ type: 'GAME_MOVE_FAILED', channelId: game.id });
+			});
 	};
 	onMarkLife = (game: GameChannel, loc: Point, alive: boolean) => {
 		this._client.sendMessage({

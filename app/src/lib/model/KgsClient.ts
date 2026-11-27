@@ -132,6 +132,7 @@ export class KgsClient {
 		);
 	};
 	sendMessage = async (msg: KgsMessage, opts: SendMessageOptions = {}) => {
+		const session = this._session;
 		if (this._debug) {
 			console.log(
 				'[KGS Client] >> ' + msg.type,
@@ -151,6 +152,9 @@ export class KgsClient {
 				// Likely an error in the app, not with network or client
 				throw err;
 			}
+			// An answer to a request of the old session (e.g. a 403 to the
+			// logout, arriving after logging in again) says nothing about this one.
+			if (session !== this._session) throw err;
 
 			const nextState: KgsClientState = { ...this.state };
 

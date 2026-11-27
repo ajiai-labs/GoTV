@@ -15,7 +15,7 @@ const KEY_RE = /^gotv\.[A-Za-z]+$/;
 // Reminders already shown here: carrying them over would silence the
 // other device's own reminders. The closed "Zum Home-Bildschirm" hint
 // belongs to this device too (the tablet should still show it).
-const LOCAL_ONLY_KEYS = ['gotv.notified', 'gotv.homeHintDismissed'];
+const LOCAL_ONLY_KEYS = ['gotv.notified', 'gotv.homeHintDismissed', 'gotv.kgsChannels'];
 const MAX_VALUE_LENGTH = 1024 * 1024;
 const MAX_KEYS = 100;
 export type BackupData = Record<string, string>;

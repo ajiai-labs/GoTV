@@ -37,7 +37,12 @@ function setup(listed: Array<number> = [42]) {
 }
 
 describe('game views', () => {
-	beforeEach(() => vi.useFakeTimers());
+	beforeEach(() => {
+		vi.useFakeTimers();
+		// What the channel gate stored for the window before (a reload) does
+		// not belong to these made-up sessions.
+		localStorage.clear();
+	});
 	afterEach(() => vi.useRealTimers());
 
 	it('keeps the overview live when a game window of the same game closes', () => {

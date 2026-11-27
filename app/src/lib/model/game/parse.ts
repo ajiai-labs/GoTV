@@ -372,6 +372,8 @@ export function parseGameChannel(
 		if (newChan.tree) {
 			delete newChan.tree.pendingMove;
 		}
+		// The board moved on: an earlier failed move is past.
+		delete newChan.moveFailed;
 
 		delete newChan.undoRequest;
 
