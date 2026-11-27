@@ -911,6 +911,43 @@ Tests: `tools/test_fake_kgs.py`. Gefunden damit: eine doppelte Nutzerliste (Spie
 Beobachter) ließ das Partiefenster abstürzen (`each_key_duplicate`) - Namen werden jetzt beim
 Einlesen und in `GameScreen` je einmal geführt.
 
+## KGS-Besprechungen und Archiv wie in CGoban (27.11.2026)
+
+Anlass: Video des Nutzers - eine alte Partie ließ sich nicht laden und analysieren; Wunsch: alles
+aus der kostenlosen KGS-Version nachbauen (KGS Plus nicht). Grundlage: die offizielle
+JSON-Doku (gokgs.com/json, upstream/downstream/dataTypes) Nachricht für Nachricht gegen den Code
+abgeglichen; offen gelassen: Admin/Moderation, Registrierung, Avatar-Upload, Vorlesungen.
+Wie Bearbeiten im Protokoll aussieht (Knotennummern), steht nicht in der Doku: abgelesen am
+offenen Client GoUniverse (LGPL, nur das Protokoll übernommen, kein Code; den dekompilierten
+CGoban-Code in "kgs-mod" bewusst nicht angesehen).
+
+- Archivpartie, die KGS noch als `inPlay` führt (gerade beendet): öffnete per Zeitstempel ein
+  Partiefenster ins Leere. Beendete Partien öffnen jetzt immer den Ladedialog
+  (`UserDetailsModal.selectGame`); `moveNewOwnGameOut` öffnet Fenster nur für Kanalnummern.
+- Besprechung einer EIGENEN Partie (Partie laden) öffnete "Spielen" (wir sind white/black darin):
+  `onJoinGame` behandelt nur laufende Partien (`isGamePlaying`) als eigene.
+- Bearbeiten (`model/game/review.ts`, `ReviewTools.svelte`): Kontrolle = Aktion `EDIT` im
+  GAME_STATE. Zug = `KGS_SGF_CHANGE` [CHILD_ADDED (kleinste freie Knotennummer, `position` =
+  Anzahl Kinder, also Variante hinten an), ACTIVATED, PROP_ADDED MOVE]; vorhandene Fortsetzung
+  = nur ACTIVATED; Ko/Selbstmord wie Nachspielen (`getMoveError`). Blättern = ACTIVATED für alle.
+  Das Brett ändert sich erst mit der Antwort (GAME_UPDATE), eine Änderung zur Zeit (3 s Frist).
+  Markierungen TRIANGLE/SQUARE/CIRCLE/CROSS/LABEL (A, B, C … je Knoten), zweiter Klick nimmt sie
+  weg (PROP_REMOVED). Besitzer (`players.owner`): Kontrolle geben/zurücknehmen
+  (`GAME_SET_ROLES {owner: name}`), "Im KGS-Archiv speichern" (`GAME_LIST_ENTRY_SET_FLAGS
+  {saved: true}`).
+- "Mit Gegner besprechen" nach eigener Partie: `GAME_START_REVIEW`; KGS antwortet `GAME_REVIEW
+  {originalId, review}`: Reducer übernimmt den Baum in den neuen Kanal, `movedGames[alt] = neu`
+  (Partiefenster lädt sich mit neuer id), Kanal-Schranke zählt den alten Kanal als geschlossen.
+- "Spiel kommentieren" (`TAG_GAME`, max. 50 Zeichen, `model/tags.ts`), Reiter "Kommentierte
+  Spiele" (`JOIN_TAG_ARCHIVE_REQUEST` → `TAG_ARCHIVE_JOIN`, einmal gelesen und verlassen).
+  "SGF herunterladen" (files.gokgs.com, öffentlich, ohne CORS - daher nur als Link; nicht für
+  private Partien; geht auch ohne Raum).
+- Übungs-KGS kann all das (Archiv, Laden als Besprechung, Bearbeiten mit Prüfung der
+  Knotennummern, Kontrolle, Speichern, Besprechung nach Aufgeben, Tags) und betritt nach der
+  Anmeldung den Übungsraum wie KGS. Im Browser durchgespielt (Playwright gegen das Übungs-KGS,
+  keine Warnung). An einer echten KGS-Sitzung NOCH NICHT geprüft.
+- Offen: Rengo-/Simul-Herausforderungen (weiter "Noch nicht verfügbar").
+
 ## Steinoptik (26.11.2026)
 
 Weiß wie Muschelsteine (gedämpftes Elfenbein statt Reinweiß, feine Wachstumslinien, 8 Varianten,

@@ -96,7 +96,16 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
 - **Unfinished and archived games:** all unfinished games of yours are listed
   as in CGoban, games whose opponent is waiting first and in bold; "Partie
   fortsetzen" loads one into a room. A finished game from a player's archive
-  opens in Nachspielen ("In GoTV nachspielen") with KataGo.
+  opens in Nachspielen ("In GoTV nachspielen") with KataGo, or as a KGS review
+  ("Partie laden"); "SGF herunterladen" saves the file from the KGS archive,
+  and "Spiel kommentieren" gives it a short comment, listed under
+  "Kommentierte Spiele" in the profile.
+- **KGS reviews as in CGoban:** whoever has the control places stones,
+  variations and marks (triangle, square, circle, cross, letters) and moves
+  through the game for everyone in the review; the owner gives the control to
+  someone else, takes it back and saves the review in the KGS archive. After
+  your own game, "Mit Gegner besprechen" turns it into a review with your
+  opponent.
 - **KGS community:** friends, ignore and fan lists, messages for offline
   players and your mailbox, "Keine Unterhaltungen" (decline private chats),
   creating a room and the KGS server statistics.
