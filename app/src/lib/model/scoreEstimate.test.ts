@@ -69,6 +69,48 @@ describe('score estimate', () => {
 		expect(estimate.whiteScore).toBe(13 + 1);
 	});
 
+	it('marks a framework still open for its side, but counts it only in part', () => {
+		// Black's wall on the third line from the left, white's on the right,
+		// the middle open: the points near each wall lean to its side.
+		const rows = Array.from({ length: 19 }, () => Array<string>(19).fill('.'));
+		for (let y = 2; y < 17; y += 2) {
+			rows[y][2] = 'X';
+			rows[y][16] = 'O';
+		}
+		const estimate = estimateScore(board(rows.map((row) => row.join(''))), {
+			komi: 0,
+			blackCaptures: 0,
+			whiteCaptures: 0
+		});
+		const marks = estimate.markup.marks;
+		expect(marks[9]?.[4]).toBe('blackTerritory');
+		expect(marks[9]?.[14]).toBe('whiteTerritory');
+		const markedBlack = Object.values(marks)
+			.flatMap((row) => Object.values(row))
+			.filter((mark) => mark === 'blackTerritory').length;
+		expect(estimate.blackTerritory).toBeGreaterThan(0);
+		expect(estimate.blackTerritory).toBeLessThan(markedBlack);
+	});
+
+	it('finds a two-stone group without eyes inside the other side dead', () => {
+		const estimate = estimateScore(
+			board([
+				'.X.X.X...',
+				'XXXXXXXXX',
+				'.........',
+				'.........',
+				'...OO....',
+				'.........',
+				'.........',
+				'XXXXXXXXX',
+				'.X.X.X...'
+			]),
+			{ komi: 0, blackCaptures: 0, whiteCaptures: 0 }
+		);
+		expect(estimate.deadWhite).toBe(2);
+		expect(estimate.markup.marks[4]?.[3]).toBe('dead');
+	});
+
 	it('gives the same answer for the same position', () => {
 		const a = estimateScore(SPLIT, { komi: 6.5, blackCaptures: 0, whiteCaptures: 0, playouts: 50 });
 		const b = estimateScore(SPLIT, { komi: 6.5, blackCaptures: 0, whiteCaptures: 0, playouts: 50 });

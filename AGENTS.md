@@ -980,6 +980,15 @@ Steine und sind unverändert. README um die Funktionen vom 25./26.11. ergänzt.
   Partiefenster, Brettübersicht, TV-Bretter (KGS und OGS), Besprechungen und Nachspielen (Knopf
   bei "Als SGF speichern"; Komi aus dem SGF). Nie in der eigenen laufenden Partie
   (`GameMoreMenu`: `isGamePlaying` und ich bin Spieler; das Spielen-Menü hat es ohnehin nicht).
+  Verbessert 27.11.2026 (Nutzer: "Was ist mit den anderen Gebieten? … optisch nicht so gut"):
+  offene Punkte nach Zufallspartien UND Einfluss der lebenden Steine (1, 1/2, 1/4, 1/8 nach
+  Abstand), offene Flächen zählen nur anteilig, keine Selbst-Atari-Züge von Gruppen in den
+  Zufallspartien; Anzeige wie CGoban mit kleinen Steinen (`Board territoryStones`), tote Steine
+  blass mit kleinem Stein des Besitzers. Gemessen gegen KataGo b18 (lokal, nur als Messlatte,
+  42 Stellungen aus EM-Finale, AlphaGo-Lee 1, Takao-So 13x13, Yasuda-Ito): sichere Punkte
+  72 → 97,5 % richtig, markierte offene Punkte 14 → 81 %, Führender 28 → 33 von 42, mittlerer
+  Fehler 17,7 → 13,9 Punkte. Schwach bleibt Leben und Tod großer Gruppen (EM-Finale ab Zug 120:
+  ein toter weißer Drache gilt als lebendig) - das kann ohne KI kaum besser werden.
   Weiter: "Lokal betrachten"
   (`app.openLocalCopy`: Kopie auf Nachspielen ab dem aktuellen Zug; KataGo gesperrt,
   solange die Partie auf KGS läuft - `KataGoPanel blocked`), "Spiel kopieren in …"

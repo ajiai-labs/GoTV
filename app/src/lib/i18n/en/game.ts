@@ -62,7 +62,7 @@ export const game: Translation<typeof de> = {
 	'game.estimate.pointsKomi': '{points} points (with {komi} komi)',
 	'game.estimate.noBoard': 'This game has no board yet.',
 	'game.estimate.note':
-		'Rough estimate from many random games, no AI. Inaccurate in open fights. Crosses: stones that look dead.',
+		'Rough estimate from many random games, no AI. Small stones: who the point probably belongs to; faded stones look dead. Open areas count only in part. Often off in big life-and-death fights.',
 	'game.moreMenu.localCopy': 'View locally',
 	'game.moreMenu.copyToRoom': 'Copy game to …',
 	'game.moreMenu.copyText':

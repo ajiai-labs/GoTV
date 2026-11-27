@@ -30,6 +30,7 @@
 		coordinates = true,
 		label,
 		ghost = null,
+		territoryStones = false,
 		onpoint
 	}: {
 		board: BoardState;
@@ -39,6 +40,9 @@
 		coordinates?: boolean;
 		label?: string;
 		ghost?: 'black' | 'white' | null;
+		// Territory as small stones, dead stones with the owner's small stone
+		// on them (as CGoban's "Geschätztes Ergebnis").
+		territoryStones?: boolean;
 		onpoint?: (point: Point, color: 'black' | 'white' | null, mark: BoardPointMark | null) => void;
 	} = $props();
 
@@ -51,6 +55,7 @@
 	};
 	const SHELLS = Array.from({ length: SHELL_VARIANTS }, (_, v) => shellLines(v));
 	const radius = (color: 'black' | 'white') => (color === 'white' ? WHITE_RADIUS : STONE_RADIUS);
+	const TERRITORY_STONE_RADIUS = 0.24;
 	const SHAPES = new Set<BoardPointMark>(['triangle', 'square', 'circle', 'cross']);
 
 	type Mark = { x: number; y: number; mark: BoardPointMark };
@@ -267,6 +272,22 @@
 				r={radius(m.mark === 'pendingBlack' ? 'black' : 'white')}
 				fill="url(#{uid}-{m.mark === 'pendingBlack' ? 'black' : 'white'})"
 			/>
+		{:else if territoryStones && (m.mark === 'blackTerritory' || m.mark === 'whiteTerritory')}
+			<circle
+				class="territory-stone"
+				cx={m.x}
+				cy={m.y}
+				r={TERRITORY_STONE_RADIUS}
+				fill="url(#{uid}-{m.mark === 'blackTerritory' ? 'black' : 'white'})"
+			/>
+		{:else if territoryStones && m.mark === 'dead' && board[m.y]?.[m.x]}
+			<circle
+				class="territory-stone"
+				cx={m.x}
+				cy={m.y}
+				r={TERRITORY_STONE_RADIUS}
+				fill="url(#{uid}-{board[m.y]?.[m.x] === 'black' ? 'white' : 'black'})"
+			/>
 		{:else if m.mark === 'blackTerritory' || m.mark === 'whiteTerritory'}
 			<rect
 				class="territory {m.mark === 'blackTerritory' ? 'black' : 'white'}"
@@ -409,6 +430,12 @@
 	.pending,
 	.ghost {
 		opacity: 0.55;
+		pointer-events: none;
+	}
+
+	.territory-stone {
+		stroke: rgba(40, 30, 15, 0.35);
+		stroke-width: 0.02;
 		pointer-events: none;
 	}
 

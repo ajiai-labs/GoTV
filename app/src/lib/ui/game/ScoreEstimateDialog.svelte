@@ -76,6 +76,7 @@
 				<Board
 					board={shown.board}
 					markup={estimate?.markup ?? null}
+					territoryStones
 					label={t('game.estimate.boardLabel')}
 				/>
 			</div>
@@ -111,11 +112,12 @@
 	}
 
 	.ScoreEstimate-board {
-		width: min(480px, 80vw);
+		width: min(540px, 86vw, 66vh);
 		aspect-ratio: 1;
 	}
 
 	.ScoreEstimate-text {
+		flex: 1 1 13rem;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;

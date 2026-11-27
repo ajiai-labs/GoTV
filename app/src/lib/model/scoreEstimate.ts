@@ -1,22 +1,36 @@
-// "Ergebnis schätzen" (as in CGoban) for watched games: who owns which
-// point and roughly how the game would end now. No AI: many random
-// playouts from the position (both sides play random legal moves, never
-// into their own single-point eyes, until both pass), and every point is
-// given to the side that owned it in most of them. Stones that mostly ended
-// up as the opponent's area count as dead. Good enough for a clear position;
-// in open fights it is only a rough guess - the dialog says so.
+// "Ergebnis schätzen" (as in CGoban): who owns which point and roughly how
+// the game would end now. No AI: many random playouts from the position
+// (both sides play random legal moves, never into their own single-point
+// eyes or a self-atari of a group, until both pass); stones that mostly
+// ended up as the opponent's area count as dead. Open points go by the
+// playouts together with the influence of the living stones (as a player
+// counts a framework), and count only in part while they are still open.
+// Measured 27.11.2026 against KataGo (b18, 42 positions of four pro games):
+// 97.5 % of the points KataGo is sure of right, the leader right in 33 of 42,
+// the margin off by 14 points on average - big dead groups in a fight are
+// where it fails (the dialog says it is rough).
 import type { BoardMarkup, BoardState, GameRuleSet, PlayerColor } from './types';
 
 const BLACK = 1;
 const WHITE = 2;
 type Color = typeof BLACK | typeof WHITE;
 
-// An open point counts for a side if its average ownership is this clear
-// (+1: black's in every playout, -1: white's).
-const OWNED = 0.5;
+// An open point counts for a side if playouts and influence together lean
+// this clearly to it (+1: certainly black's, -1: white's); closer to 0 it
+// is neutral (dame). Random playouts alone leave open frameworks at about 0
+// - the first version marked almost nothing in the middle game (user,
+// 27.11.2026: "Was ist mit den anderen Gebieten?").
+const OWNED = 0.12;
+// How far a living stone's influence reaches over empty points, and how
+// much it weighs at distance 1, 2, 3, 4 (CGoban-like moyo counting).
+const INFLUENCE = [0, 1, 0.5, 0.25, 0.125];
+// Weight of the playouts against the influence in the combined lean.
+const PLAYOUT_WEIGHT = 0.5;
+// From this lean on an open point counts fully; below, in part.
+const SURE_LEAN = 0.5;
 // A group counts as dead if its points' average ownership is this clearly
 // the opponent's.
-const DEAD = 0.3;
+const DEAD = 0.2;
 export const DEFAULT_PLAYOUTS = 300;
 
 export type ScoreEstimate = {
@@ -238,6 +252,38 @@ class Playout {
 		return legal && !eye;
 	}
 
+	// Whether playing p would leave color's new group of two or more stones
+	// with one liberty, without capturing anything (a random self-atari that
+	// lets the opponent take a whole group - with it, dead groups "live" and
+	// living ones die in the playouts). A single stone may (throw-in, nakade).
+	isSelfAtari(p: number, color: Color): boolean {
+		const { cells, root, neighbours } = this;
+		const libs = new Set<number>();
+		let friends = 0;
+		for (const n of neighbours[p]) {
+			const c = cells[n];
+			if (c === 0) libs.add(n);
+			else if (c !== color && this.inAtari(root[n])) return false;
+		}
+		if (libs.size >= 2) return false;
+		const seenRoots: Array<number> = [];
+		for (const n of neighbours[p]) {
+			if (cells[n] !== color || seenRoots.includes(root[n])) continue;
+			const r = root[n];
+			seenRoots.push(r);
+			friends += this.stones[r];
+			let s = r;
+			do {
+				for (const q of neighbours[s]) {
+					if (cells[q] === 0 && q !== p) libs.add(q);
+				}
+				if (libs.size >= 2) return false;
+				s = this.next[s];
+			} while (s !== r);
+		}
+		return friends >= 1;
+	}
+
 	lastMove = -1;
 
 	private playMove(p: number, color: Color) {
@@ -284,7 +330,7 @@ class Playout {
 		const start = Math.floor(random() * count);
 		for (let i = 0; i < count; i++) {
 			const p = this.empty[(start + i) % count];
-			if (!this.isGoodMove(p, color)) continue;
+			if (!this.isGoodMove(p, color) || this.isSelfAtari(p, color)) continue;
 			this.playMove(p, color);
 			return true;
 		}
@@ -344,6 +390,33 @@ function flood(
 	return found;
 }
 
+// Influence of the living stones over the empty points: each stone
+// radiates INFLUENCE by distance, around stones but not through them;
+// black counts positive, white negative.
+function influenceOf(alive: Uint8Array, neighbours: Array<Array<number>>): Float64Array {
+	const result = new Float64Array(alive.length);
+	const reach = INFLUENCE.length - 1;
+	const distance = new Int8Array(alive.length);
+	for (let p = 0; p < alive.length; p++) {
+		if (!alive[p]) continue;
+		const sign = alive[p] === BLACK ? 1 : -1;
+		distance.fill(-1);
+		distance[p] = 0;
+		const queue = [p];
+		for (let i = 0; i < queue.length; i++) {
+			const q = queue[i];
+			if (distance[q] === reach) continue;
+			for (const n of neighbours[q]) {
+				if (alive[n] || distance[n] >= 0) continue;
+				distance[n] = distance[q] + 1;
+				result[n] += sign * INFLUENCE[distance[n]];
+				queue.push(n);
+			}
+		}
+	}
+	return result;
+}
+
 export function estimateScore(board: BoardState, options: EstimateOptions): ScoreEstimate {
 	const size = board.length;
 	const neighbours = neighboursOf(size);
@@ -390,8 +463,14 @@ export function estimateScore(board: BoardState, options: EstimateOptions): Scor
 	}
 
 	// Areas without living stones: closed by one colour -> its territory;
-	// touching both -> point by point by the playouts.
+	// touching both -> point by point by playouts and influence together.
+	const influence = influenceOf(alive, neighbours);
+	const lean = (q: number) =>
+		PLAYOUT_WEIGHT * own[q] + (1 - PLAYOUT_WEIGHT) * (influence[q] / (1 + Math.abs(influence[q])));
 	const owner = new Int8Array(cells.length);
+	// How much a point counts: 1 in an area only one side borders, less
+	// where it is still open (a framework is not yet territory).
+	const weight = new Float64Array(cells.length);
 	const visited = new Uint8Array(cells.length);
 	for (let p = 0; p < cells.length; p++) {
 		if (alive[p] || visited[p]) continue;
@@ -402,10 +481,15 @@ export function estimateScore(board: BoardState, options: EstimateOptions): Scor
 			for (const n of neighbours[q]) if (alive[n]) borders |= alive[n];
 		}
 		for (const q of area) {
+			weight[q] = 1;
 			if (borders === BLACK) owner[q] = 1;
 			else if (borders === WHITE) owner[q] = -1;
-			else if (own[q] >= OWNED) owner[q] = 1;
-			else if (own[q] <= -OWNED) owner[q] = -1;
+			else {
+				const value = lean(q);
+				weight[q] = Math.min(1, Math.abs(value) / SURE_LEAN);
+				if (value >= OWNED) owner[q] = 1;
+				else if (value <= -OWNED) owner[q] = -1;
+			}
 		}
 	}
 
@@ -421,10 +505,10 @@ export function estimateScore(board: BoardState, options: EstimateOptions): Scor
 		if (alive[p] === BLACK) blackStones++;
 		else if (alive[p] === WHITE) whiteStones++;
 		else if (owner[p] === 1) {
-			blackTerritory++;
+			blackTerritory += weight[p];
 			mark = 'blackTerritory';
 		} else if (owner[p] === -1) {
-			whiteTerritory++;
+			whiteTerritory += weight[p];
 			mark = 'whiteTerritory';
 		}
 		if (dead[p]) mark = 'dead';
@@ -433,6 +517,10 @@ export function estimateScore(board: BoardState, options: EstimateOptions): Scor
 			markup.marks[y][x] = mark;
 		}
 	}
+
+	// Whole points: an open point counts only in part.
+	blackTerritory = Math.round(blackTerritory);
+	whiteTerritory = Math.round(whiteTerritory);
 
 	// Territory rules count captures and dead stones as prisoners; area
 	// rules count living stones instead.

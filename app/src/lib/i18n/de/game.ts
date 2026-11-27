@@ -63,7 +63,7 @@ export const game = {
 	'game.estimate.pointsKomi': '{points} Punkte (mit {komi} Komi)',
 	'game.estimate.noBoard': 'Für diese Partie gibt es noch kein Brett.',
 	'game.estimate.note':
-		'Grobe Schätzung aus vielen Zufallspartien, ohne KI. In offenen Kämpfen ungenau. Kreuze: Steine, die tot aussehen.',
+		'Grobe Schätzung aus vielen Zufallspartien, ohne KI. Kleine Steine: wem der Punkt wohl gehört; blasse Steine sehen tot aus. Offene Flächen zählen nur zum Teil. Bei großen Kämpfen um Leben und Tod oft daneben.',
 	'game.moreMenu.localCopy': 'Lokal betrachten',
 	'game.moreMenu.copyToRoom': 'Spiel kopieren in …',
 	'game.moreMenu.copyText':
