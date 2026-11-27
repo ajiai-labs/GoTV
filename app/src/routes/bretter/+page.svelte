@@ -12,7 +12,7 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { openGameWindow } from '#lib/gameWindows.ts';
-	import { isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
+	import { getGameLine, isGamePlayer, isGamePlaying } from '#lib/model/game/index.ts';
 	import { TEAM_KEY, emptyBoards, loadBoards, removeBoard, saveBoards } from '#lib/model/team.ts';
 	import type { TeamBoards } from '#lib/model/team.ts';
 	import type { BoardMarkup, BoardState, GameChannel } from '#lib/model/types.ts';
@@ -207,7 +207,10 @@
 
 	function stateLine(game: GameChannel): string {
 		if (game.over && game.score != null) return formatScoreDe(game.score);
-		return t('app.boards.move', { move: String(game.moveNum ?? 0) });
+		// The move count of the list entry lags behind; the joined game's
+		// moves are the real count.
+		const line = game.tree ? getGameLine(game.tree, game.tree.activeNode).length - 1 : 0;
+		return t('app.boards.move', { move: String(Math.max(game.moveNum ?? 0, line)) });
 	}
 </script>
 

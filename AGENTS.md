@@ -38,7 +38,7 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
 - Nach jedem Schritt grün (wie die GitHub-CI): `cd app && npm run check && npm run lint &&
   npm test && npm run build`, dazu die Python-Tool-Tests (`python3 -m unittest
   tools.test_update_events tools.test_check_links tools.test_refresh_tv_events
-  tools.test_speedgo`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
+  tools.test_speedgo tools.test_fake_kgs`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -886,6 +886,21 @@ die schon offen sind, kommen nach vorn statt doppelt.
 - Vom Nutzer an der echten KGS-Sitzung ausprobiert (Videos 26.11.2026, 21:33-21:53):
   Brettübersicht mit vier Brettern, Vergrößern, Einzelfenster, Fenstergröße. Mehrere Fenster
   über längere Zeit und das Partiechat-Signal noch nicht.
+
+## Übungs-KGS (27.11.2026)
+
+Wunsch des Nutzers: ausprobieren, wie eine eigene Partie mit drei laufenden Partien daneben
+aussieht, ohne echtes KGS. `tools/fake_kgs.py` (nur Standardbibliothek, NICHT Teil einer
+App-Version) liefert `build-desktop/` aus (wie `goTV_local.py`, dessen Handler er erweitert)
+und beantwortet `/json/access` selbst: jeder Name meldet sich an, "Beobachten" zeigt drei
+Partien, die das EM-Finale nachspielen (alle 3-6 s ein Zug, versetzt begonnen), und die eigene
+Partie gegen "Uebungsgegner" (antwortet mit zufälligen erlaubten Zügen, schreibt alle 60 s im
+Partiechat). Er meldet jede JOIN-/UNJOIN-Anfrage, auf die der echte KGS mit "Unknown channel"
+abmelden würde (`--strict`: meldet dann ab wie KGS). Start: `sh tools/uebung.sh` (Port 8799,
+eigenes Chromium-Profil `~/.local/share/gotv/uebung-profile`, die echte App bleibt unberührt).
+Tests: `tools/test_fake_kgs.py`. Gefunden damit: eine doppelte Nutzerliste (Spieler zugleich
+Beobachter) ließ das Partiefenster abstürzen (`each_key_duplicate`) - Namen werden jetzt beim
+Einlesen und in `GameScreen` je einmal geführt.
 
 ## Steinoptik (26.11.2026)
 

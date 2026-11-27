@@ -121,7 +121,9 @@
 
 	let tree = $derived(game.tree);
 	let users = $derived.by(() => {
-		const list = (game.users ?? [])
+		// Each name once: a doubled name would break the keyed list (and with
+		// it the whole game screen).
+		const list = [...new Set(game.users ?? [])]
 			.map((name) => usersByName[name])
 			.filter((user): user is User => !!user);
 		sortUsers(list);

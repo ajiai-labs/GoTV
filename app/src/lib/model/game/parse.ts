@@ -361,7 +361,8 @@ export function parseGameChannel(
 	}
 
 	if (values.users) {
-		newChan.users = values.users.map((u: { name: string }) => u.name);
+		// Each name once (a doubled name breaks keyed lists).
+		newChan.users = [...new Set(values.users.map((u: { name: string }) => u.name))];
 	}
 
 	if (values.sgfEvents) {
