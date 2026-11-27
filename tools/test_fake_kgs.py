@@ -67,6 +67,12 @@ class ServerTest(unittest.TestCase):
                    "prop": {"name": "MOVE", "color": "white", "loc": {"x": 0, "y": 0}}}]
         self.fake.handle("s1", {"type": "KGS_SGF_CHANGE", "channelId": review.id, "sgfEvents": change})
         self.assertEqual(self.drain(), [{"type": "GAME_UPDATE", "channelId": review.id, "sgfEvents": change}])
+        self.fake.handle("s1", {"type": "GAME_LIST_ENTRY_SET_FLAGS", "channelId": review.id, "saved": True})
+        self.assertTrue(self.drain()[0]["saved"])
+        self.fake.handle("s1", {"type": "GAME_SET_ROLES", "channelId": review.id, "owner": "Zaharka"})
+        self.assertEqual(self.drain()[0]["actions"][0]["user"]["name"], "Zaharka")
+        self.fake.handle("s1", {"type": "GAME_SET_ROLES", "channelId": review.id, "owner": "andreas"})
+        self.drain()
         # The same node id again: the real KGS would refuse it.
         self.fake.strict = True
         self.fake.handle("s1", {"type": "KGS_SGF_CHANGE", "channelId": review.id, "sgfEvents": change})

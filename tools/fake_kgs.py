@@ -250,6 +250,8 @@ class Review:
                  "props": [{"name": "MOVE", "color": color, "loc": {"x": x, "y": y}}]},
             ]
         self.nodes = set(range(len(moves) + 1))
+        self.editor = owner["name"]  # who has the control (GAME_SET_ROLES)
+        self.saved = False
         self.active = len(moves)
         self.events.append({"type": "ACTIVATED", "nodeId": self.active, "prevNodeId": 0})
 
@@ -286,8 +288,8 @@ class Review:
         ]
 
     def state(self):
-        return {"type": "GAME_STATE", "channelId": self.id,
-                "actions": [{"action": "EDIT", "user": {"name": self.owner["name"]}}]}
+        return {"type": "GAME_STATE", "channelId": self.id, "saved": self.saved,
+                "actions": [{"action": "EDIT", "user": {"name": self.editor}}]}
 
 
 class FakeKgs:
@@ -468,13 +470,25 @@ class FakeKgs:
             session["joined"].add(archive_id)
             self.push(session, {"type": "TAG_ARCHIVE_JOIN", "channelId": archive_id,
                                 "user": {"name": name, "rank": "?", "flags": {}}, "games": games})
+        elif kind in ("GAME_SET_ROLES", "GAME_LIST_ENTRY_SET_FLAGS"):
+            review = self.reviews.get(channel_id)
+            if review is None or channel_id not in session["joined"]:
+                self.warn(session, kind + " für einen Kanal ohne Besprechung", channel_id)
+            elif review.owner["name"] != session["name"]:
+                print("WARNUNG: %s von %s, nicht vom Besitzer" % (kind, session["name"]), flush=True)
+            else:
+                if kind == "GAME_SET_ROLES" and message.get("owner"):
+                    review.editor = message["owner"]
+                if kind == "GAME_LIST_ENTRY_SET_FLAGS" and message.get("saved"):
+                    review.saved = True
+                self.broadcast_game(review, [review.state()])
         elif kind == "ROOM_LOAD_GAME":
             self.load_review(session, message)
         elif kind == "KGS_SGF_CHANGE":
             review = self.reviews.get(channel_id)
             if review is None or channel_id not in session["joined"]:
                 self.warn(session, "KGS_SGF_CHANGE für einen Kanal ohne Besprechung", channel_id)
-            elif review.owner["name"] != session["name"]:
+            elif review.editor != session["name"]:
                 print("WARNUNG: KGS_SGF_CHANGE ohne Kontrolle (%s)" % session["name"], flush=True)
             else:
                 error = review.change(message.get("sgfEvents") or [])

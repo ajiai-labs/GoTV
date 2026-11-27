@@ -6,7 +6,16 @@ import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } fro
 import { playGameStart, playMessage } from '../sound/gameSounds';
 import { isChatForMe, newChatAuthors } from './chatSound';
 import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './channelGuard';
-import { activateMessage, canEditReview, reviewMoveMessage } from './game/review';
+import {
+	activateMessage,
+	canEditReview,
+	giveControlMessage,
+	isReviewOwner,
+	reviewMarkMessage,
+	reviewMoveMessage,
+	saveReviewMessage,
+	type ReviewTool
+} from './game/review';
 import { SOUNDS } from '../sound';
 import { TvGameSubscriptions } from './TvGameSubscriptions';
 import { DEFAULT_AUTOMATCH_PREFS, automatchMessage } from './automatch';
@@ -1095,6 +1104,27 @@ export class AppActions {
 		if (!me || !game.over || !isGamePlayer(me, game.players)) return;
 		if (this._isOffline() || !state.channelMembership[game.id]) return;
 		this._client.sendMessage({ type: 'GAME_START_REVIEW', channelId: game.id });
+	};
+	// A mark (triangle, letter …) on the node shown, or taken away again.
+	onReviewMark = (game: GameChannel, loc: Point, tool: Exclude<ReviewTool, 'stone'>) => {
+		const tree = game.tree;
+		const me = this._store.getState().currentUser?.name ?? '';
+		if (!tree || !canEditReview(game, me)) return;
+		this._sendReviewChange(game, reviewMarkMessage(game, tree, tree.currentNode, loc, tool));
+	};
+	// The owner of a review gives the control to someone in it, or takes it back.
+	onGiveReviewControl = (game: GameChannel, name: string) => {
+		const state = this._store.getState();
+		const me = state.currentUser?.name ?? '';
+		if (!isReviewOwner(game, me) || this._isOffline() || !state.channelMembership[game.id]) return;
+		this._client.sendMessage(giveControlMessage(game, name));
+	};
+	// Keeps the review in the KGS archive ("Spiel speichern").
+	onSaveReview = (game: GameChannel) => {
+		const state = this._store.getState();
+		const me = state.currentUser?.name ?? '';
+		if (!isReviewOwner(game, me) || this._isOffline() || !state.channelMembership[game.id]) return;
+		this._client.sendMessage(saveReviewMessage(game));
 	};
 	// Moving through a review we control moves everyone's board.
 	onReviewGoTo = (game: GameChannel, nodeId: number) => {

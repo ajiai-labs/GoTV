@@ -45,11 +45,9 @@
 		onTag?: (game: GameSummary, text: string) => void;
 	} = $props();
 
-	let tagText = $state(untrack(() => tag));
+	// Our comment, as typed; it follows the stored one when that arrives.
+	let tagText = $derived(tag);
 	let tagSaved = $state(false);
-	$effect(() => {
-		tagText = tag;
-	});
 
 	const formId = $props.id();
 

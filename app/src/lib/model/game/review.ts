@@ -77,3 +77,61 @@ export function activateMessage(game: GameChannel, tree: GameTree, nodeId: numbe
 		sgfEvents: [{ type: 'ACTIVATED', nodeId, prevNodeId: tree.activeNode }]
 	};
 }
+
+// Marks on the board of a review (CGoban: triangle, square, circle, cross,
+// letters). A click with a tool puts the mark on the node shown, a second
+// click on the same mark takes it away. Letters go A, B, C … per node.
+export type ReviewTool = 'stone' | 'TRIANGLE' | 'SQUARE' | 'CIRCLE' | 'CROSS' | 'LABEL';
+
+function nextLabel(tree: GameTree, nodeId: number): string {
+	const used = new Set(
+		tree.nodes[nodeId].props.filter((prop) => prop.name === 'LABEL').map((prop) => prop.text)
+	);
+	for (let code = 65; code <= 90; code++) {
+		const letter = String.fromCharCode(code);
+		if (!used.has(letter)) return letter;
+	}
+	return String(used.size + 1);
+}
+
+export function reviewMarkMessage(
+	game: GameChannel,
+	tree: GameTree,
+	nodeId: number,
+	loc: Point,
+	tool: Exclude<ReviewTool, 'stone'>
+): KgsMessage {
+	const existing = tree.nodes[nodeId].props.find(
+		(prop) => prop.name === tool && !!prop.loc && prop.loc !== 'PASS' && samePoint(prop.loc, loc)
+	);
+	const sgfEvents: Array<SgfEvent> = existing
+		? [{ type: 'PROP_REMOVED', nodeId, prop: existing }]
+		: [
+				{
+					type: 'PROP_ADDED',
+					nodeId,
+					prop:
+						tool === 'LABEL'
+							? { name: tool, loc, text: nextLabel(tree, nodeId) }
+							: { name: tool, loc }
+				}
+			];
+	return { type: 'KGS_SGF_CHANGE', channelId: game.id, sgfEvents };
+}
+
+// The owner of a review (who loaded or started it) gives the control to
+// another user and can take it back (GAME_SET_ROLES, role "owner").
+export function isReviewOwner(game: GameChannel, name: string): boolean {
+	const owner = game.players?.owner?.name;
+	return !!owner && !!name && owner.toLowerCase() === name.toLowerCase();
+}
+
+export function giveControlMessage(game: GameChannel, name: string): KgsMessage {
+	return { type: 'GAME_SET_ROLES', channelId: game.id, owner: name };
+}
+
+// Reviews are not kept in the KGS archive by themselves: the owner saves
+// them (flag "saved", as CGoban's "Spiel speichern?" on closing).
+export function saveReviewMessage(game: GameChannel): KgsMessage {
+	return { type: 'GAME_LIST_ENTRY_SET_FLAGS', channelId: game.id, saved: true };
+}

@@ -7,8 +7,12 @@ import {
 	activateMessage,
 	canEditReview,
 	getReviewEditor,
+	giveControlMessage,
+	isReviewOwner,
 	nextNodeId,
-	reviewMoveMessage
+	reviewMarkMessage,
+	reviewMoveMessage,
+	saveReviewMessage
 } from './review';
 
 function atEnd(sgf: string): GameTree {
@@ -88,6 +92,53 @@ describe('KGS review editing', () => {
 		expect(reviewMoveMessage(review(tree), tree, node, { x: 0, y: 8 })).toEqual({
 			ok: false,
 			error: 'suicide'
+		});
+	});
+
+	it('puts a mark on the node shown and takes it away again', () => {
+		const tree = atEnd('(;GM[1]SZ[9];B[cc])');
+		const node = tree.currentNode;
+		const add = reviewMarkMessage(review(tree), tree, node, { x: 4, y: 4 }, 'TRIANGLE');
+		expect(add.sgfEvents).toEqual([
+			{ type: 'PROP_ADDED', nodeId: node, prop: { name: 'TRIANGLE', loc: { x: 4, y: 4 } } }
+		]);
+		const marked = atEnd('(;GM[1]SZ[9];B[cc]TR[ee])');
+		const remove = reviewMarkMessage(
+			review(marked),
+			marked,
+			marked.currentNode,
+			{ x: 4, y: 4 },
+			'TRIANGLE'
+		);
+		expect(remove.sgfEvents[0]).toMatchObject({ type: 'PROP_REMOVED', prop: { name: 'TRIANGLE' } });
+	});
+
+	it('gives letters in order, A first, then the next free one', () => {
+		const tree = atEnd('(;GM[1]SZ[9];B[cc]LB[ee:A])');
+		const message = reviewMarkMessage(
+			review(tree),
+			tree,
+			tree.currentNode,
+			{ x: 5, y: 5 },
+			'LABEL'
+		);
+		expect(message.sgfEvents[0]).toMatchObject({ prop: { name: 'LABEL', text: 'B' } });
+	});
+
+	it('the owner gives the control away and saves the review', () => {
+		const tree = atEnd('(;GM[1]SZ[9];B[cc])');
+		const game = { ...review(tree), players: { owner: { name: 'andy1975' } } } as GameChannel;
+		expect(isReviewOwner(game, 'ANDY1975')).toBe(true);
+		expect(isReviewOwner(game, 'anna')).toBe(false);
+		expect(giveControlMessage(game, 'anna')).toEqual({
+			type: 'GAME_SET_ROLES',
+			channelId: 77,
+			owner: 'anna'
+		});
+		expect(saveReviewMessage(game)).toEqual({
+			type: 'GAME_LIST_ENTRY_SET_FLAGS',
+			channelId: 77,
+			saved: true
 		});
 	});
 });

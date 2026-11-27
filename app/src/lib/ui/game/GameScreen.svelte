@@ -24,7 +24,14 @@
 		isGameScoring,
 		isPlayerMove
 	} from '#lib/model/game/tree.ts';
-	import { canEditReview, getReviewEditor, reviewMoveMessage } from '#lib/model/game/review.ts';
+	import {
+		canEditReview,
+		getReviewEditor,
+		isReviewOwner,
+		reviewMoveMessage,
+		type ReviewTool
+	} from '#lib/model/game/review.ts';
+	import ReviewTools from './ReviewTools.svelte';
 	import { getColorToPlay } from '#lib/model/ReplayVariation.ts';
 	import { kgsTvSource } from '#lib/model/TvSource.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
@@ -142,6 +149,8 @@
 	let editing = $derived(!playing && canEditReview(game, currentUser.name));
 	let editColor = $derived(editing && tree ? getColorToPlay(tree, tree.currentNode) : null);
 	let reviewNotice: 'ko' | 'suicide' | null = $state(null);
+	let reviewTool: ReviewTool = $state('stone');
+	let reviewOwner = $derived(isReviewOwner(game, currentUser.name));
 	// Own game: a stone click for every new move (not when it opens).
 	let heardMoveNum: number | undefined;
 	let heardGameId: number | undefined;
@@ -292,6 +301,11 @@
 	function onClickReviewPoint(clicked: GameChannel, loc: Point) {
 		const current = clicked.tree;
 		if (!current) return;
+		if (reviewTool !== 'stone') {
+			reviewNotice = null;
+			app.actions.onReviewMark(clicked, loc, reviewTool);
+			return;
+		}
 		const result = reviewMoveMessage(clicked, current, current.currentNode, loc);
 		reviewNotice = result.ok || result.error === 'occupied' ? null : result.error;
 		if (result.ok) app.actions.onReviewMove(clicked, loc);
@@ -425,7 +439,13 @@
 					<BoardContainer
 						{game}
 						{playing}
-						ghost={editing ? editColor : isOurMove && !scoring ? playerColor : null}
+						ghost={editing
+							? reviewTool === 'stone'
+								? editColor
+								: null
+							: isOurMove && !scoring
+								? playerColor
+								: null}
 						onClickPoint={editing
 							? onClickReviewPoint
 							: isOurMove || scoring
@@ -499,11 +519,17 @@
 					/>
 				{:else if tree}
 					{#if reviewEditor}
-						<p class="GameScreen-review-control">
-							{editing
-								? t('game.review.youControl')
-								: t('game.review.control', { name: reviewEditor })}
-						</p>
+						<ReviewTools
+							editor={reviewEditor}
+							{editing}
+							owner={reviewOwner}
+							saved={!!game.saved}
+							users={game.users ?? []}
+							me={currentUser.name}
+							bind:tool={reviewTool}
+							onGiveControl={(name: string) => app.actions.onGiveReviewControl(game, name)}
+							onSave={() => app.actions.onSaveReview(game)}
+						/>
 					{/if}
 					<GameBoardNav
 						nodeId={tree.currentNode}
@@ -672,12 +698,6 @@
 		background: var(--warn-bg, #fff3cd);
 		color: var(--warn-ink, #5c4400);
 		text-align: center;
-	}
-
-	.GameScreen-review-control {
-		margin: 0 0 6px;
-		font-size: 0.9rem;
-		color: var(--muted, #555);
 	}
 
 	.GameScreen-move-failed {
