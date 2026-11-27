@@ -524,6 +524,7 @@
 							{editing}
 							owner={reviewOwner}
 							saved={!!game.saved}
+							saveStatus={app.state.saveStatus?.['review:' + game.id]}
 							users={game.users ?? []}
 							me={currentUser.name}
 							bind:tool={reviewTool}

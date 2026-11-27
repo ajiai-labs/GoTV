@@ -234,6 +234,7 @@
 				onOpenReplay={(gameId: number) => app.openArchiveReplay(gameId)}
 				tag={myTags.find((game) => game.timestamp === gameToLoad?.timestamp)?.tag ?? ''}
 				onTag={currentUser ? app.actions.onTagGame : undefined}
+				tagStatus={gameToLoad ? appState.saveStatus?.['tag:' + gameToLoad.timestamp] : undefined}
 			/>
 		</Modal>
 	{:else}

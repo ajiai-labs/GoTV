@@ -35,6 +35,9 @@ export const game: Translation<typeof de> = {
 	'game.review.takeBack': 'Take control back',
 	'game.review.save': 'Save in the KGS archive',
 	'game.review.saved': 'Saved in the KGS archive',
+	'game.review.saving': 'Saving …',
+	'game.review.saveAgain': 'Save again',
+	'game.review.saveFailed': 'Not saved – KGS did not confirm.',
 	'game.review.youControl': 'You have control: everyone here sees your moves and navigation.',
 	'game.review.control': 'Control: {name}',
 	'game.screen.moveFailed':

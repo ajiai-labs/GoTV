@@ -97,6 +97,9 @@ export const chat = {
 		'Dein Kommentar zu dieser Partie (max. 50 Zeichen, sichtbar unter „Kommentierte Spiele“)',
 	'chat.summary.tagSave': 'Speichern',
 	'chat.summary.tagSaved': 'Kommentar gespeichert.',
+	'chat.summary.tagSaving': 'Wird gespeichert …',
+	'chat.summary.tagFailed':
+		'Kommentar nicht gespeichert – keine Verbindung zu KGS. Bitte noch einmal versuchen.',
 	'chat.summary.loading': 'Partie wird geladen …',
 	'chat.summary.loadInto': 'Partie laden in:',
 	'chat.summary.loadsIn': 'Die Partie wird in {room} geladen.',

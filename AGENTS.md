@@ -946,6 +946,17 @@ CGoban-Code in "kgs-mod" bewusst nicht angesehen).
   Knotennummern, Kontrolle, Speichern, Besprechung nach Aufgeben, Tags) und betritt nach der
   Anmeldung den Übungsraum wie KGS. Im Browser durchgespielt (Playwright gegen das Übungs-KGS,
   keine Warnung). An einer echten KGS-Sitzung NOCH NICHT geprüft.
+- Prüfbericht 27.11.2026 (Desktop 0.4.2 zurückgehalten, behoben): (1) Eine Besprechungsänderung
+  gilt erst als erledigt, wenn KGS genau sie zurückschickt (`confirmsChange`), sonst nach 10 s;
+  gesendete Knotennummern bleiben vergeben (`_reviewNodeIds`, `nextNodeId(tree, reserved)`) -
+  vorher konnte nach 3 s eine zweite Änderung dieselbe Nummer bekommen, ein strenger Server meldet
+  dann ab. (2) Kommentar und Besprechung-Speichern melden den echten Stand (`saveStatus` im
+  Zustand: saving/saved/failed, Besprechung "failed" auch ohne `saved`-Flag nach 10 s), mit
+  erneutem Versuch. (3) Ein GAME_JOIN zählt nur als geladene Partie, wenn sein gameSummary-
+  Zeitstempel der angeforderte ist (ohne gameSummary: keine Partie, die KGS schon als laufend
+  führte). Dazu: ACTIVATED auf einen Knoten außerhalb der gezeigten Linie zeigt jetzt diese Linie
+  (vorher "Zug 0" bei Sprüngen in Varianten). Übungs-KGS: `--review-delay SEKUNDEN` (langsamer
+  Server), zusammen mit `--strict` geprüft.
 - Offen: Rengo-/Simul-Herausforderungen (weiter "Noch nicht verfügbar").
 
 ## Steinoptik (26.11.2026)

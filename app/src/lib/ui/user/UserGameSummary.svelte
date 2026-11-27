@@ -6,7 +6,7 @@
 	// `resume`: our own unfinished game; loading it lets it go on (KGS opens
 	// it in the room, AppActions.onLoadedGameJoined shows it on Spielen).
 	import { untrack } from 'svelte';
-	import type { GameChannel, GameSummary, Room } from '#lib/model/types.ts';
+	import type { GameChannel, GameSummary, Room, SaveStatus } from '#lib/model/types.ts';
 	import { formatLocaleDateTime } from '#lib/util/date.ts';
 	import { formatGameTypeDe, formatScoreDe } from '#lib/ui/game/gameText.ts';
 	import { getKgsSgfUrl } from '#lib/model/game/tree.ts';
@@ -27,6 +27,7 @@
 		loadFailed = false,
 		onOpenReplay,
 		tag = '',
+		tagStatus,
 		onTag
 	}: {
 		activeConversationId: number | null | undefined;
@@ -42,12 +43,15 @@
 		onOpenReplay?: (gameId: number) => void;
 		// "Spiel kommentieren": our comment on this game (KGS tag).
 		tag?: string;
+		// Whether our last comment reached KGS (AppState.saveStatus).
+		tagStatus?: SaveStatus;
 		onTag?: (game: GameSummary, text: string) => void;
 	} = $props();
 
 	// Our comment, as typed; it follows the stored one when that arrives.
 	let tagText = $derived(tag);
-	let tagSaved = $state(false);
+	// The status is shown for a comment sent from this dialog only.
+	let tagSent = $state(false);
 
 	const formId = $props.id();
 
@@ -140,7 +144,7 @@
 			onsubmit={(event) => {
 				event.preventDefault();
 				onTag(game, tagText);
-				tagSaved = true;
+				tagSent = true;
 			}}
 		>
 			<label for="{formId}-tag">{t('chat.summary.tag')}</label>
@@ -150,11 +154,19 @@
 					type="text"
 					maxlength={TAG_MAX_LENGTH}
 					bind:value={tagText}
-					oninput={() => (tagSaved = false)}
+					oninput={() => (tagSent = false)}
 				/>
-				<button class="button" type="submit">{t('chat.summary.tagSave')}</button>
+				<button class="button" type="submit" disabled={tagSent && tagStatus === 'saving'}>
+					{t('chat.summary.tagSave')}
+				</button>
 			</div>
-			{#if tagSaved}<p class="muted" role="status">{t('chat.summary.tagSaved')}</p>{/if}
+			{#if tagSent && tagStatus === 'saving'}
+				<p class="muted" role="status">{t('chat.summary.tagSaving')}</p>
+			{:else if tagSent && tagStatus === 'saved'}
+				<p class="muted" role="status">{t('chat.summary.tagSaved')}</p>
+			{:else if tagSent && tagStatus === 'failed'}
+				<p class="error" role="alert">{t('chat.summary.tagFailed')}</p>
+			{/if}
 		</form>
 	{/if}
 	{#if !targetRoom}
@@ -237,8 +249,13 @@
 		min-width: 0;
 	}
 
-	.tag .muted {
+	.tag .muted,
+	.tag .error {
 		margin: 6px 0 0;
+	}
+
+	.tag .error {
+		color: var(--danger, #b3261e);
 	}
 
 	dl {

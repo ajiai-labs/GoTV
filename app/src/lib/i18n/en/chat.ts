@@ -93,6 +93,8 @@ export const chat: Translation<typeof de> = {
 		'Your comment on this game (max. 50 characters, shown under “Commented games”)',
 	'chat.summary.tagSave': 'Save',
 	'chat.summary.tagSaved': 'Comment saved.',
+	'chat.summary.tagSaving': 'Saving …',
+	'chat.summary.tagFailed': 'Comment not saved – no connection to KGS. Please try again.',
 	'chat.summary.loading': 'Loading game …',
 	'chat.summary.loadInto': 'Load game into:',
 	'chat.summary.loadsIn': 'The game is loaded into {room}.',

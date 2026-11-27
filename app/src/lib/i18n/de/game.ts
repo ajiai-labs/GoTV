@@ -36,6 +36,9 @@ export const game = {
 	'game.review.takeBack': 'Kontrolle zurücknehmen',
 	'game.review.save': 'Im KGS-Archiv speichern',
 	'game.review.saved': 'Im KGS-Archiv gespeichert',
+	'game.review.saving': 'Wird gespeichert …',
+	'game.review.saveAgain': 'Noch einmal speichern',
+	'game.review.saveFailed': 'Nicht gespeichert – KGS hat nicht bestätigt.',
 	'game.review.youControl': 'Du hast die Kontrolle: Züge und Blättern sehen alle im Raum.',
 	'game.review.control': 'Kontrolle: {name}',
 	'game.screen.moveFailed':

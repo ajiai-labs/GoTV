@@ -295,8 +295,10 @@ class Review:
 class FakeKgs:
     """One practice server: games, sessions and the long-poll queues."""
 
-    def __init__(self, strict=False, seed=None):
+    def __init__(self, strict=False, seed=None, review_delay=0.0):
         self.strict = strict
+        # Seconds before a review change goes back to the users (a slow KGS).
+        self.review_delay = review_delay
         self.rng = random.Random(seed)
         self.lock = threading.Condition()
         self.sessions = {}  # session id -> {"name", "queue", "joined"}
@@ -495,8 +497,12 @@ class FakeKgs:
                 if error:
                     self.warn(session, error, channel_id)
                 else:
-                    self.broadcast_game(review, [{"type": "GAME_UPDATE", "channelId": review.id,
-                                                  "sgfEvents": message["sgfEvents"]}])
+                    update = [{"type": "GAME_UPDATE", "channelId": review.id,
+                               "sgfEvents": message["sgfEvents"]}]
+                    if self.review_delay:
+                        threading.Timer(self.review_delay, self.broadcast_game, (review, update)).start()
+                    else:
+                        self.broadcast_game(review, update)
         return True
 
     # -- archive and reviews ----------------------------------------------------
@@ -683,13 +689,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Practice KGS for trying GoTV (developer tool).")
     parser.add_argument("--port", type=int, default=8799)
     parser.add_argument("--build", default=os.path.join(ROOT, "build-desktop"))
+    parser.add_argument("--review-delay", type=float, default=0.0,
+                        help="Sekunden, bis eine Besprechungsänderung bestätigt wird (langsamer Server)")
     parser.add_argument("--strict", action="store_true",
                         help="log out like the real KGS on a request for an unknown channel")
     args = parser.parse_args(argv)
     if not os.path.isfile(os.path.join(args.build, "index.html")):
         print("Kein Build in %s - erst `sh desktop/install.sh` ausführen." % args.build, file=sys.stderr)
         return 1
-    fake = FakeKgs(strict=args.strict)
+    fake = FakeKgs(strict=args.strict, review_delay=args.review_delay)
     FakeKgsHandler.fake = fake
     FakeKgsHandler.build_dir = os.path.abspath(args.build)
     stop = threading.Event()

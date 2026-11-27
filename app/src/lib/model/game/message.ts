@@ -194,6 +194,8 @@ function _handleGameMessage(prevState: AppState, msg: KgsMessage): AppState {
 			};
 		}
 		return nextState;
+	} else if (msg.type === 'SAVE_STATUS' && typeof msg.key === 'string') {
+		return { ...prevState, saveStatus: { ...prevState.saveStatus, [msg.key]: msg.status } };
 	} else if (msg.type === 'TAG_ARCHIVE_NONEXISTANT' && msg.name) {
 		return {
 			...prevState,

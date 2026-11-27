@@ -483,6 +483,10 @@ export type AppState = {
 	// "Kommentierte Spiele" (KGS tag archive) of a user: their games with
 	// the short comment ("tag") they gave them (TAG_ARCHIVE_JOIN).
 	readonly taggedGamesByUser?: Readonly<Record<string, Array<GameSummary>>>;
+	// Whether saving reached KGS: "tag:<time stamp>" (Spiel kommentieren),
+	// "review:<channel id>" (Besprechung speichern). In the state, so every
+	// window shows it.
+	readonly saveStatus?: Readonly<Record<string, SaveStatus>>;
 	readonly tvStreamUrl: string | null | undefined;
 	readonly tvReplayGameId: number | null | undefined;
 	// KGS could not load a game from the archive (LOAD_FAILED): the game's
@@ -494,6 +498,8 @@ export type AppState = {
 	readonly serverStats: import('./community').ServerStats | null;
 	readonly communityResult: import('./community').CommunityResult | null;
 };
+// See AppState.saveStatus.
+export type SaveStatus = 'saving' | 'saved' | 'failed';
 export type KgsMessage =
 	// TODO - exhaustive types
 	// {

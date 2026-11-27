@@ -204,6 +204,10 @@ function parseSgfEvents(prevTree: GameTree | null | undefined, events: Array<Sgf
 		} else if (event.type === 'ACTIVATED') {
 			if (tree.currentNode === tree.activeNode) {
 				tree.currentNode = event.nodeId;
+				// A jump into another variation (review): the line shown follows.
+				if (tree.nodes[event.nodeId] && !tree.currentLine.includes(event.nodeId)) {
+					tree.currentLine = getGameLine(tree, event.nodeId);
+				}
 			}
 
 			tree.activeNode = event.nodeId;

@@ -80,6 +80,42 @@ describe('loading a game from the archive', () => {
 		expect(history.push).not.toHaveBeenCalledWith('/play');
 	});
 
+	it('does not take the own running game, joined meanwhile, for the loaded one', () => {
+		const { store, history, actions } = setup();
+		actions.onLoadGame('2026-11-20T18:00:00.000Z', 5, true);
+		// The own running game, opened in its window right after.
+		actions.onReceiveServerMessages([
+			{
+				...gameJoin(913, 'ranked', { white: ME, black: ANNA }),
+				gameSummary: { gameType: 'ranked', timestamp: '2026-11-27T20:00:00.000Z', players: {} }
+			}
+		]);
+		expect(store.getState().playGameId).toBeNull();
+		expect(history.push).not.toHaveBeenCalledWith('/play');
+		// The loaded game itself still counts.
+		actions.onReceiveServerMessages([
+			{
+				...gameJoin(914, 'ranked', { white: ME, black: ANNA }),
+				gameSummary: { gameType: 'ranked', timestamp: '2026-11-20T18:00:00.000Z', players: {} }
+			}
+		]);
+		expect(store.getState().playGameId).toBe(914);
+	});
+
+	it('without a game summary, not a game KGS listed as running before', () => {
+		const { store, actions } = setup();
+		actions.onReceiveServerMessages([
+			{
+				type: 'GLOBAL_GAMES_JOIN',
+				channelId: 1,
+				games: [{ channelId: 915, gameType: 'ranked', players: { white: ME, black: ANNA } }]
+			}
+		]);
+		actions.onLoadGame('2026-11-20T18:00:00.000Z', 5, true);
+		actions.onReceiveServerMessages([gameJoin(915, 'ranked', { white: ME, black: ANNA })]);
+		expect(store.getState().playGameId).toBeNull();
+	});
+
 	it('does not take over games joined without a load request', () => {
 		const { store, actions } = setup();
 		actions.onReceiveServerMessages([gameJoin(912, 'ranked', { white: ME, black: ANNA })]);

@@ -5,12 +5,14 @@
 	// archive.
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import type { ReviewTool } from '#lib/model/game/review.ts';
+	import type { SaveStatus } from '#lib/model/types.ts';
 
 	let {
 		editor,
 		editing,
 		owner,
 		saved,
+		saveStatus,
 		users,
 		me,
 		tool = $bindable('stone'),
@@ -21,6 +23,8 @@
 		editing: boolean;
 		owner: boolean;
 		saved: boolean;
+		// Whether "Im KGS-Archiv speichern" is on its way or failed.
+		saveStatus?: SaveStatus;
 		users: Array<string>;
 		me: string;
 		tool?: ReviewTool;
@@ -39,7 +43,6 @@
 
 	let others = $derived(users.filter((name) => name.toLowerCase() !== editor.toLowerCase()));
 	let giveTo = $state('');
-	let sent = $state(false);
 </script>
 
 <div class="ReviewTools">
@@ -97,14 +100,18 @@
 				<button
 					type="button"
 					class="button"
-					disabled={sent}
-					onclick={() => {
-						onSave();
-						sent = true;
-					}}
+					disabled={saveStatus === 'saving'}
+					onclick={() => onSave()}
 				>
-					{t('game.review.save')}
+					{saveStatus === 'saving'
+						? t('game.review.saving')
+						: saveStatus === 'failed'
+							? t('game.review.saveAgain')
+							: t('game.review.save')}
 				</button>
+				{#if saveStatus === 'failed'}
+					<span class="error" role="alert">{t('game.review.saveFailed')}</span>
+				{/if}
 			{/if}
 		</div>
 	{/if}
@@ -161,5 +168,10 @@
 	.saved {
 		font-size: 0.9rem;
 		color: var(--ink-soft, #555);
+	}
+
+	.error {
+		font-size: 0.9rem;
+		color: var(--danger, #b3261e);
 	}
 </style>

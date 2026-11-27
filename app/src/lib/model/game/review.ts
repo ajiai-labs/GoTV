@@ -24,10 +24,31 @@ export function canEditReview(game: GameChannel, name: string): boolean {
 	return !!game.tree && !!name && !!editor && editor.toLowerCase() === name.toLowerCase();
 }
 
-export function nextNodeId(tree: GameTree): number {
+// `reserved`: node ids this client sent already and KGS may not have
+// confirmed yet - never given twice (review 27.11.2026: a late answer let a
+// second change reuse the id, and a strict server ends the session on that).
+export function nextNodeId(tree: GameTree, reserved: Iterable<number> = []): number {
+	const taken = new Set(reserved);
 	let id = 1;
-	while (tree.nodes[id]) id++;
+	while (tree.nodes[id] || taken.has(id)) id++;
 	return id;
+}
+
+// Whether KGS's answer (GAME_UPDATE) carries a change we sent: the same
+// event on the same node.
+export function confirmsChange(sent: SgfEvent, received: Array<SgfEvent>): boolean {
+	return received.some((event) => {
+		if (event.type !== sent.type || event.nodeId !== sent.nodeId) return false;
+		if (event.type === 'CHILD_ADDED' && sent.type === 'CHILD_ADDED') {
+			return event.childNodeId === sent.childNodeId;
+		}
+		if ('prop' in event && 'prop' in sent) {
+			const a = event.prop;
+			const b = sent.prop;
+			return a.name === b.name && JSON.stringify(a.loc ?? null) === JSON.stringify(b.loc ?? null);
+		}
+		return true;
+	});
 }
 
 function samePoint(a: Point | null | undefined, b: Point): boolean {
@@ -43,7 +64,8 @@ export function reviewMoveMessage(
 	game: GameChannel,
 	tree: GameTree,
 	nodeId: number,
-	loc: Point
+	loc: Point,
+	reserved: Iterable<number> = []
 ): ReviewMoveResult {
 	const color: PlayerColor = getColorToPlay(tree, nodeId);
 	const existing = tree.nodes[nodeId].children.find((child) => {
@@ -55,7 +77,7 @@ export function reviewMoveMessage(
 	}
 	const error = getMoveError(tree, nodeId, loc);
 	if (error) return { ok: false, error };
-	const childId = nextNodeId(tree);
+	const childId = nextNodeId(tree, reserved);
 	const sgfEvents: Array<SgfEvent> = [
 		{
 			type: 'CHILD_ADDED',

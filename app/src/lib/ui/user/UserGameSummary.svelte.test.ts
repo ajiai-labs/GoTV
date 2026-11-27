@@ -68,12 +68,27 @@ describe('UserGameSummary', () => {
 	it('saves our comment on the game', async () => {
 		const p = props();
 		const onTag = vi.fn();
-		await render(UserGameSummary, { ...p, tag: 'alt', onTag });
+		const screen = await render(UserGameSummary, { ...p, tag: 'alt', onTag });
 		const field = page.getByLabelText(/Dein Kommentar/);
 		await expect.element(field).toHaveValue('alt');
 		await field.fill('Fehler im Yose');
 		await page.getByRole('button', { name: 'Speichern' }).click();
 		expect(onTag).toHaveBeenCalledWith(summaries[0], 'Fehler im Yose');
+		await screen.rerender({ tagStatus: 'saving' });
+		await expect.element(page.getByText('Wird gespeichert …')).toBeVisible();
+		await screen.rerender({ tagStatus: 'saved' });
 		await expect.element(page.getByText('Kommentar gespeichert.')).toBeVisible();
+	});
+
+	it('says when the comment failed and lets you try again', async () => {
+		const p = props();
+		const onTag = vi.fn();
+		const screen = await render(UserGameSummary, { ...p, onTag });
+		await page.getByLabelText(/Dein Kommentar/).fill('Yose');
+		await page.getByRole('button', { name: 'Speichern' }).click();
+		await screen.rerender({ tagStatus: 'failed' });
+		await expect.element(page.getByText(/Kommentar nicht gespeichert/)).toBeVisible();
+		await page.getByRole('button', { name: 'Speichern' }).click();
+		expect(onTag).toHaveBeenCalledTimes(2);
 	});
 });

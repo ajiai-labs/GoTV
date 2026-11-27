@@ -45,9 +45,13 @@ describe('KGS tags', () => {
 		expect(sendMessage).toHaveBeenCalledWith({ type: 'UNJOIN_REQUEST', channelId: 640 });
 	});
 
-	it('tags a game (max. 50 characters) and keeps it at once', () => {
+	it('tags a game (max. 50 characters), kept once KGS took it', async () => {
 		const { store, sendMessage, actions } = setup();
 		actions.onTagGame(game, '  ' + 'x'.repeat(60));
+		expect(store.getState().saveStatus?.['tag:' + game.timestamp]).toBe('saving');
+		await vi.waitFor(() =>
+			expect(store.getState().saveStatus?.['tag:' + game.timestamp]).toBe('saved')
+		);
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: 'TAG_GAME',
 			gameTimestamp: game.timestamp,
@@ -55,7 +59,17 @@ describe('KGS tags', () => {
 		});
 		expect(store.getState().taggedGamesByUser?.andy1975[0].tag).toBe('x'.repeat(50));
 		actions.onTagGame(game, '');
-		expect(store.getState().taggedGamesByUser?.andy1975).toEqual([]);
+		await vi.waitFor(() => expect(store.getState().taggedGamesByUser?.andy1975).toEqual([]));
+	});
+
+	it('says so when the comment did not reach KGS, and keeps nothing', async () => {
+		const { store, sendMessage, actions } = setup();
+		sendMessage.mockImplementationOnce(() => Promise.reject(new Error('503')));
+		actions.onTagGame(game, 'Yose');
+		await vi.waitFor(() =>
+			expect(store.getState().saveStatus?.['tag:' + game.timestamp]).toBe('failed')
+		);
+		expect(store.getState().taggedGamesByUser?.andy1975).toBeUndefined();
 	});
 
 	it('an unknown player has no commented games', () => {

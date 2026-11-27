@@ -45,4 +45,17 @@ describe('ReviewTools', () => {
 		await expect.element(page.getByText('Kontrolle: Zaharka')).toBeVisible();
 		await expect.element(page.getByRole('button')).not.toBeInTheDocument();
 	});
+
+	it('shows a failed save and offers it again', async () => {
+		const p = props({ saveStatus: 'failed' });
+		await render(ReviewTools, p);
+		await expect.element(page.getByText(/KGS hat nicht bestätigt/)).toBeVisible();
+		await page.getByRole('button', { name: 'Noch einmal speichern' }).click();
+		expect(p.onSave).toHaveBeenCalled();
+	});
+
+	it('cannot be pressed twice while saving', async () => {
+		await render(ReviewTools, props({ saveStatus: 'saving' }));
+		await expect.element(page.getByRole('button', { name: 'Wird gespeichert …' })).toBeDisabled();
+	});
 });

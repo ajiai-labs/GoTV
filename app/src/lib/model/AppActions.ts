@@ -9,6 +9,7 @@ import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './ch
 import {
 	activateMessage,
 	canEditReview,
+	confirmsChange,
 	giveControlMessage,
 	isReviewOwner,
 	reviewMarkMessage,
@@ -25,15 +26,21 @@ const AUTOMATCH_JOIN_GRACE_MS = 60000;
 // After ROOM_LOAD_GAME: how long a GAME_JOIN counts as the loaded game.
 const LOAD_JOIN_GRACE_MS = 30000;
 // A review change KGS has not sent back after this long no longer blocks the next.
-const REVIEW_PENDING_MS = 3000;
+const REVIEW_PENDING_MS = 10_000;
+// KGS confirms a saved review with its flag; without that after this long
+// the save counts as failed.
+const REVIEW_SAVE_WAIT_MS = 10_000;
 import type { FriendType } from './community';
 import { loadNoChats } from './noChats';
 import { TAG_MAX_LENGTH } from './tags';
 import type {
+	AppState,
 	AutomatchPrefs,
 	GameChannel,
 	GameSummary,
 	KgsClientState,
+	SaveStatus,
+	SgfEvent,
 	GameFilter,
 	GameProposal,
 	GameRole,
@@ -64,8 +71,10 @@ export class AppActions {
 	// When KGS ended a running automatch search on its own (it found a game),
 	// 0 otherwise. The game itself may arrive in a later answer.
 	_automatchEndedAt = 0;
-	// When we last asked KGS to load a game from the archive (onLoadGame).
+	// When we last asked KGS to load a game from the archive (onLoadGame),
+	// and which (its time stamp).
 	_loadRequestedAt = 0;
+	_loadRequestedGame = '';
 	// When we last asked KGS to copy a game into a room (onCloneGame).
 	_cloneRequestedAt = 0;
 
@@ -158,7 +167,14 @@ export class AppActions {
 		for (const msg of Array.isArray(msgs) ? msgs : [msgs]) {
 			this._channels.observe(msg);
 			if (msg.type === 'GAME_UPDATE' && typeof msg.channelId === 'number') {
-				this._reviewPending.delete(msg.channelId);
+				const pending = this._reviewPending.get(msg.channelId);
+				if (
+					pending &&
+					Array.isArray(msg.sgfEvents) &&
+					confirmsChange(pending.event, msg.sgfEvents)
+				) {
+					this._reviewPending.delete(msg.channelId);
+				}
 			}
 			if (msg.type === 'LOGIN_SUCCESS' || msg.type === 'LOGOUT') this._endViewTimers();
 			if (typeof msg.channelId !== 'number') continue;
@@ -240,7 +256,8 @@ export class AppActions {
 			} else if (
 				msg.type === 'GAME_JOIN' &&
 				msg.channelId &&
-				Date.now() - this._loadRequestedAt < LOAD_JOIN_GRACE_MS
+				Date.now() - this._loadRequestedAt < LOAD_JOIN_GRACE_MS &&
+				this._isLoadedGame(msg, before)
 			) {
 				this.onLoadedGameJoined(msg.channelId);
 			} else if (
@@ -758,6 +775,7 @@ export class AppActions {
 	};
 	onLoadGame = (timestamp: string, channelId: number, privateGame: boolean) => {
 		this._loadRequestedAt = Date.now();
+		this._loadRequestedGame = timestamp;
 		this._store.dispatch({ type: 'LOAD_GAME_START' });
 		this._client.sendMessage({
 			type: 'ROOM_LOAD_GAME',
@@ -819,11 +837,23 @@ export class AppActions {
 		const me = this._store.getState().currentUser?.name;
 		if (this._isOffline() || !me) return;
 		const tag = text.trim().slice(0, TAG_MAX_LENGTH);
-		this._client.sendMessage({ type: 'TAG_GAME', gameTimestamp: game.timestamp, text: tag });
-		const tagged: GameSummary = { ...game };
-		if (tag) tagged.tag = tag;
-		else delete tagged.tag;
-		this._store.dispatch({ type: 'GAME_TAGGED', name: me, game: tagged });
+		const key = 'tag:' + game.timestamp;
+		this._setSaveStatus(key, 'saving');
+		// Kept and reported as saved only once KGS took it (review 27.11.2026:
+		// a failed request said "gespeichert").
+		this._client
+			.sendMessage({ type: 'TAG_GAME', gameTimestamp: game.timestamp, text: tag })
+			.then(() => {
+				const tagged: GameSummary = { ...game };
+				if (tag) tagged.tag = tag;
+				else delete tagged.tag;
+				this._store.dispatch({ type: 'GAME_TAGGED', name: me, game: tagged });
+				this._setSaveStatus(key, 'saved');
+			})
+			.catch(() => this._setSaveStatus(key, 'failed'));
+	};
+	_setSaveStatus = (key: string, status: SaveStatus) => {
+		this._store.dispatch({ type: 'SAVE_STATUS', key, status });
 	};
 	onCloseUserDetail = () => {
 		const { userDetailsRequest, usersByName } = this._store.getState();
@@ -1073,16 +1103,34 @@ export class AppActions {
 	};
 	// Editing a KGS review we hold the control of (model/game/review.ts).
 	// One change at a time: the next only after KGS sent the last one back
-	// (GAME_UPDATE), or after REVIEW_PENDING_MS without an answer.
-	_reviewPending = new Map<number, number>();
+	// with exactly that change, or after REVIEW_PENDING_MS without it. Node
+	// ids we sent stay taken for good (_reviewNodeIds): a late answer must
+	// not meet a second node with the same id.
+	_reviewPending = new Map<number, { at: number; event: SgfEvent }>();
+	_reviewNodeIds = new Map<number, Set<number>>();
 
 	_sendReviewChange = (game: GameChannel, message: KgsMessage): boolean => {
-		const since = this._reviewPending.get(game.id);
-		if (since !== undefined && Date.now() - since < REVIEW_PENDING_MS) return false;
+		const pending = this._reviewPending.get(game.id);
+		if (pending && Date.now() - pending.at < REVIEW_PENDING_MS) return false;
 		if (this._isOffline() || !this._store.getState().channelMembership[game.id]) return false;
-		this._reviewPending.set(game.id, Date.now());
+		const events: Array<SgfEvent> = Array.isArray(message.sgfEvents) ? message.sgfEvents : [];
+		const key = events.find((event) => event.type === 'CHILD_ADDED') ?? events[0];
+		if (!key) return false;
+		for (const event of events) {
+			if (event.type === 'CHILD_ADDED') this._reservedNodeIds(game.id).add(event.childNodeId);
+		}
+		this._reviewPending.set(game.id, { at: Date.now(), event: key });
+		// Not sent: the next change may go (its ids stay taken all the same).
 		this._client.sendMessage(message).catch(() => this._reviewPending.delete(game.id));
 		return true;
+	};
+	_reservedNodeIds = (channelId: number): Set<number> => {
+		let ids = this._reviewNodeIds.get(channelId);
+		if (!ids) {
+			ids = new Set();
+			this._reviewNodeIds.set(channelId, ids);
+		}
+		return ids;
 	};
 	// A click on the board of a review: the move for everyone, or a hint why
 	// not (taken point, suicide, ko - as on Nachspielen).
@@ -1090,7 +1138,13 @@ export class AppActions {
 		const tree = game.tree;
 		const me = this._store.getState().currentUser?.name ?? '';
 		if (!tree || !canEditReview(game, me)) return null;
-		const result = reviewMoveMessage(game, tree, tree.currentNode, loc);
+		const result = reviewMoveMessage(
+			game,
+			tree,
+			tree.currentNode,
+			loc,
+			this._reservedNodeIds(game.id)
+		);
 		if (!result.ok) return result.error;
 		this._sendReviewChange(game, result.message);
 		return null;
@@ -1124,7 +1178,17 @@ export class AppActions {
 		const state = this._store.getState();
 		const me = state.currentUser?.name ?? '';
 		if (!isReviewOwner(game, me) || this._isOffline() || !state.channelMembership[game.id]) return;
-		this._client.sendMessage(saveReviewMessage(game));
+		// Saved is what KGS says (flag "saved" in GAME_STATE); without that
+		// after REVIEW_SAVE_WAIT_MS, or a failed request: try again.
+		const key = 'review:' + game.id;
+		this._setSaveStatus(key, 'saving');
+		const failUnlessSaved = () => {
+			if (!this._store.getState().gamesById[game.id]?.saved) this._setSaveStatus(key, 'failed');
+		};
+		this._client
+			.sendMessage(saveReviewMessage(game))
+			.then(() => setTimeout(failUnlessSaved, REVIEW_SAVE_WAIT_MS))
+			.catch(() => this._setSaveStatus(key, 'failed'));
 	};
 	// Moving through a review we control moves everyone's board.
 	onReviewGoTo = (game: GameChannel, nodeId: number) => {
@@ -1387,6 +1451,16 @@ export class AppActions {
 		this._store.dispatch({ type: 'PLAY_GAME', gameId });
 		this.onChangeNav('play');
 		playGameStart();
+	};
+	// Whether a GAME_JOIN is the game we asked KGS to load (review 27.11.2026:
+	// any game joined within the grace time - e.g. the own running game
+	// opened in its window - was taken for it and its window replaced). KGS
+	// names the game in gameSummary; without one, only a game KGS did not
+	// list as running before can be it.
+	_isLoadedGame = (msg: KgsMessage, before: AppState): boolean => {
+		const stamp = (msg.gameSummary as { timestamp?: unknown } | undefined)?.timestamp;
+		if (typeof stamp === 'string') return stamp === this._loadRequestedGame;
+		return !before.activeGames.some((game) => game.id === msg.channelId);
 	};
 	onClickContribute = () => {
 		window.open('https://github.com/jkk/shinkgs', '_blank');
