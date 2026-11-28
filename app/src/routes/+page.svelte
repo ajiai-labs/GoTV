@@ -31,6 +31,7 @@
 	import { formatEventDateRange } from '#lib/ui/tv/eventDate.ts';
 	import CinemaExample from '#lib/ui/tv/CinemaExample.svelte';
 	import MyGoTv from '#lib/ui/tv/MyGoTv.svelte';
+	import KgsNow from '#lib/ui/tv/KgsNow.svelte';
 	import FollowedPlayers from '#lib/ui/user/FollowedPlayers.svelte';
 	import { config } from '#lib/config.ts';
 	import OfflineNotice from '#lib/ui/tv/OfflineNotice.svelte';
@@ -210,6 +211,10 @@
 			<a class="button button-primary" href={resolve('/kalender')}>{t('app.live.toCalendar')}</a>
 		</section>
 		<CinemaExample />
+	{/if}
+
+	{#if !config.guestOnly}
+		<KgsNow shownIds={broadcasts.flatMap((broadcast) => broadcast.games.map((game) => game.id))} />
 	{/if}
 
 	<div class="below">

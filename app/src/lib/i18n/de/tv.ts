@@ -198,5 +198,21 @@ export const tv = {
 	// model/OgsTvSource.ts: errors shown at the OGS board
 	'tv.ogs.playerNotFound': 'OGS-Spieler nicht gefunden: {name}',
 	'tv.ogs.unreachable': 'OGS nicht erreichbar',
-	'tv.ogs.boardUnreachable': 'OGS-Brett nicht erreichbar'
+	'tv.ogs.boardUnreachable': 'OGS-Brett nicht erreichbar',
+	'tv.kgsNow.title': 'Jetzt auf KGS',
+	'tv.kgsNow.hint':
+		'Laufende KGS-Turnierpartien und von KGS übertragene Partien – auch ohne Stream und Kalendereintrag.',
+	'tv.kgsNow.tournament': 'Turnier',
+	'tv.kgsNow.broadcast': 'Übertragung',
+	'tv.kgsNow.unknownRoom': 'Raum unbekannt',
+	'tv.kgsNow.boards': { one: '{count} Brett', other: '{count} Bretter' },
+	'tv.kgsNow.toBoards': 'In die Brettübersicht',
+	'tv.kgsNow.boardsAdded': {
+		one: '{count} Brett in der Brettübersicht.',
+		other: '{count} Bretter in der Brettübersicht.'
+	},
+	'tv.kgsNow.boardsFull': {
+		one: 'Die Brettübersicht ist voll – {count} Brett passte noch hinein.',
+		other: 'Die Brettübersicht ist voll – {count} Bretter passten noch hinein.'
+	}
 } satisfies Record<string, Message>;

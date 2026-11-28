@@ -929,6 +929,44 @@ export function getLiveBroadcasts(
 			games: eventGames.filter((game) => gameMatchesEvent(game, event, roomsById))
 		}));
 }
+// "Jetzt auf KGS" on Live (28.11.2026): KGS tournament games (game type
+// "tournament", run by KGS's tournament director in their rooms) and games
+// KGS marks as server events - also without a calendar entry or stream,
+// which is why a KGS tournament could be missing from Live. Grouped by
+// room, most boards first; games already shown on a broadcast card are left
+// out. Only data KGS sends anyway (the game lists), no extra requests.
+export type KgsNowGroup = {
+	roomId: number | null;
+	roomName: string | null;
+	// A tournament room (or games of type "tournament"), else a server event.
+	tournament: boolean;
+	games: Array<GameChannel>;
+};
+
+export function getKgsNowGroups(
+	games: Array<GameChannel>,
+	roomsById: Index<Room>,
+	shownIds: Iterable<number> = []
+): Array<KgsNowGroup> {
+	const shown = new Set(shownIds);
+	const groups = new Map<number | null, KgsNowGroup>();
+	for (const game of getLiveGames(games)) {
+		if (game.deletedTime || shown.has(game.id) || game.tvSource === 'ogs') continue;
+		const tournament = game.type === 'tournament';
+		if (!tournament && !(game.event && REAL_GAME_TYPES.includes(game.type))) continue;
+		const roomId = typeof game.roomId === 'number' ? game.roomId : null;
+		const room = roomId !== null ? roomsById[roomId] : undefined;
+		let group = groups.get(roomId);
+		if (!group) {
+			group = { roomId, roomName: room?.name || null, tournament: false, games: [] };
+			groups.set(roomId, group);
+		}
+		group.tournament = group.tournament || tournament || !!room?.tournOnly;
+		group.games.push(game);
+	}
+	return [...groups.values()].sort((a, b) => b.games.length - a.games.length);
+}
+
 // Is anything on Live right now? Same rule as the Live page (a broadcast
 // with stream or boards in its live window) - lights the "Live" menu item.
 export function hasLiveBroadcast(

@@ -53,6 +53,30 @@ export function parseGameSummary(values: Record<string, any>): GameSummary {
 	return summary;
 }
 
+const TIME_SYSTEMS = ['none', 'absolute', 'byo_yomi', 'canadian'];
+const RULE_NUMBERS = ['mainTime', 'byoYomiTime', 'byoYomiPeriods', 'byoYomiStones'] as const;
+
+// The rules of a game channel from a game list entry: KGS sends them as
+// fields of the channel itself (dataTypes "Game channel": "the fields for
+// the rules of the game are present") - size, komi, handicap, the rule set
+// as text and, if sent, the time system. Komi 0 counts (it used to drop
+// the board size and handicap with it); missing fields stay out.
+export function parseFlatRules(values: Record<string, any>): Partial<GameRules> | null {
+	if (typeof values.size !== 'number') return null;
+	const rules: Partial<GameRules> = { size: values.size };
+	if (typeof values.komi === 'number') rules.komi = values.komi;
+	if (typeof values.handicap === 'number' && values.handicap > 0) rules.handicap = values.handicap;
+	if (typeof values.rules === 'string') {
+		const ruleset = validateRuleSet(values.rules);
+		if (ruleset) rules.rules = ruleset;
+	}
+	if (TIME_SYSTEMS.includes(values.timeSystem)) rules.timeSystem = values.timeSystem;
+	for (const key of RULE_NUMBERS) {
+		if (typeof values[key] === 'number') rules[key] = values[key];
+	}
+	return rules;
+}
+
 function parseGameComments(
 	node: GameNode,
 	commentDate?: Date | null | undefined
@@ -351,17 +375,9 @@ export function parseGameChannel(
 		}
 	}
 
-	if (!values.rules && values.size && values.komi) {
-		const rules: GameRules = {
-			size: values.size,
-			komi: values.komi
-		};
-
-		if (values.handicap) {
-			rules.handicap = values.handicap;
-		}
-
-		newChan.rules = newChan.rules ? { ...newChan.rules, ...rules } : rules;
+	const flatRules = parseFlatRules(values);
+	if (flatRules) {
+		newChan.rules = newChan.rules ? { ...newChan.rules, ...flatRules } : flatRules;
 	}
 
 	if (values.users) {
@@ -391,6 +407,9 @@ export function parseGameChannel(
 	}
 
 	for (const key of GAME_CHAN_PROPS) {
+		// A game list entry names its rule set in "rules" (a string, read
+		// above); only a rules object replaces the rules.
+		if (key === 'rules' && (typeof values.rules !== 'object' || !values.rules)) continue;
 		if (key in values) {
 			newChan[key] = values[key];
 		}

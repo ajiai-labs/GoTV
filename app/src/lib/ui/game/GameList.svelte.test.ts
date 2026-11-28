@@ -49,6 +49,19 @@ describe('GameList', () => {
 		expect(onSelect).toHaveBeenCalledWith(2, games[1]);
 	});
 
+	it('shows board size, time and rule set of each game', async () => {
+		const games = [
+			game(1, { rules: { ...game(1).rules!, rules: 'japanese' } }),
+			game(2, { rules: { size: 9, komi: 0, handicap: 2 } })
+		];
+		await render(GameList, { games, roomsById, onSelect: vi.fn() });
+		const first = page.getByRole('button', { name: /anna/ }).first();
+		await expect.element(first.getByText('19×19')).toBeVisible();
+		await expect.element(first.getByText(/10:00/)).toBeVisible();
+		await expect.element(first.getByText('Japanisch')).toBeVisible();
+		await expect.element(page.getByText('9×9 H2')).toBeVisible();
+	});
+
 	it('speaks English when English is chosen', async () => {
 		language.current = 'en';
 		await render(GameList, { games: [game(1, { observers: 1 })], roomsById, onSelect: () => {} });

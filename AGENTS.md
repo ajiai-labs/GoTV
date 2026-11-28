@@ -429,6 +429,25 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   in `public/tv/events.json`, Kalender dort lokal statt von GitHub laden.
   `public/tv/demo.sgf` bleibt Test-Fixture für `sgf_url`.
 
+## Jetzt auf KGS, Regeln in der Partieliste (28.11.2026)
+
+Anlass: ein KGS-Turnier fehlte unter Live - Live baut Karten nur aus Kalendereinträgen und hängt
+`event`-Partien daran; KGS-Turniere (Partietyp `tournament`, vom KGS-Turnierleiter in eigenen
+Räumen, `tournOnly`) tragen kein `event`. Neu (Vorschlag eines Prüfberichts, vom Nutzer
+übernommen):
+- Live, Abschnitt "Jetzt auf KGS" (`ui/tv/KgsNow.svelte`, `getKgsNowGroups` in `model/tv.ts`):
+  laufende Turnierpartien und von KGS als `event` geführte echte Partien, nach Raum gruppiert
+  (meiste Bretter zuerst), ohne die schon auf einer Übertragungskarte gezeigten. Klick öffnet wie
+  auf Beobachten; "In die Brettübersicht" holt die Bretter eines Raums dorthin (bis sie voll ist).
+  Nur Daten der KGS-Partielisten, keine zusätzlichen Anfragen; nicht in der Web-Version.
+- Partieliste (Beobachten, Live, Spielen): Brettgröße immer (auch 19×19) und vorn, dann Zeit und
+  Regelwerk (`GameRulesDisplay full`). Ein Listeneintrag trägt die Regeln als eigene Felder
+  (dataTypes "Game channel"): `parseFlatRules` (`model/game/parse.ts`) liest Größe, Komi (auch 0 -
+  vorher fielen bei Komi 0 Größe und Vorgabe weg), Vorgabe, Regelwerk (Text) und, falls KGS sie
+  schickt, Zeitsystem und Zeiten. Ob die echte KGS-Liste Zeitregeln enthält, ist ungeprüft
+  (GoUniverse und CGobans Liste zeigen keine); ohne sie erscheint die Zeit wie bisher erst nach
+  dem Öffnen. Das Regelwerk als Text ersetzt nie das Regel-Objekt (`GAME_CHAN_PROPS`).
+
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 
 Policy, von dir als "Stufe 1" bezeichnet:

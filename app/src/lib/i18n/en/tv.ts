@@ -192,5 +192,21 @@ export const tv: Translation<typeof de> = {
 	// model/OgsTvSource.ts: errors shown at the OGS board
 	'tv.ogs.playerNotFound': 'OGS player not found: {name}',
 	'tv.ogs.unreachable': 'OGS not reachable',
-	'tv.ogs.boardUnreachable': 'OGS board not reachable'
+	'tv.ogs.boardUnreachable': 'OGS board not reachable',
+	'tv.kgsNow.title': 'Now on KGS',
+	'tv.kgsNow.hint':
+		'Running KGS tournament games and games broadcast by KGS – also without a stream or calendar entry.',
+	'tv.kgsNow.tournament': 'Tournament',
+	'tv.kgsNow.broadcast': 'Broadcast',
+	'tv.kgsNow.unknownRoom': 'unknown room',
+	'tv.kgsNow.boards': { one: '{count} board', other: '{count} boards' },
+	'tv.kgsNow.toBoards': 'To the board overview',
+	'tv.kgsNow.boardsAdded': {
+		one: '{count} board in the board overview.',
+		other: '{count} boards in the board overview.'
+	},
+	'tv.kgsNow.boardsFull': {
+		one: 'The board overview is full – {count} board still fitted.',
+		other: 'The board overview is full – {count} boards still fitted.'
+	}
 };

@@ -102,7 +102,7 @@
 					</span>
 				{/if}
 				{#if rules}
-					<span class="GameList-item-rules"><GameRulesDisplay {rules} /></span>
+					<span class="GameList-item-rules"><GameRulesDisplay {rules} full /></span>
 				{/if}
 				{#if game.name}
 					<span class="GameList-item-name">{game.name}</span>
