@@ -83,12 +83,24 @@ describe('Einstellungen', () => {
 		await page.getByText('Modern', { exact: true }).click();
 	});
 
-	it('lets the countdown sound be chosen, the electronic bowl first', async () => {
+	it('offers four variants of every sound and remembers the choice', async () => {
 		await render(Page);
-		const select = page.getByRole('combobox', { name: 'Klang für die letzten Sekunden' });
-		await expect.element(select).toHaveValue('ebowl');
-		await select.selectOptions('Klangschale');
+		const stones = page.getByRole('combobox', { name: 'Klang: Steinklick' });
+		await expect.element(stones).toHaveValue('kaya');
+		await stones.selectOptions('Dickes Brett');
+		expect(localStorage.getItem('gotv.stoneSound')).toBe('thick');
+		const start = page.getByRole('combobox', { name: 'Klang: Partiebeginn' });
+		await expect.element(start).toHaveValue('gongChord');
+		await start.selectOptions('Tiefer Gong');
+		expect(localStorage.getItem('gotv.startSound')).toBe('deepGong');
+		const countdown = page.getByRole('combobox', { name: 'Klang: Zeit läuft ab' });
+		await expect.element(countdown).toHaveValue('ebowl');
+		await countdown.selectOptions('Klangschale');
 		expect(localStorage.getItem('gotv.countdownSound')).toBe('bowl');
+		const messages = page.getByRole('combobox', { name: 'Klang: Chatnachricht' });
+		await expect.element(messages).toHaveValue('dingDong');
+		await messages.selectOptions('Tropfen');
+		expect(localStorage.getItem('gotv.messageSound')).toBe('drop');
 	});
 
 	it('switches the sounds of an own game and remembers them', async () => {

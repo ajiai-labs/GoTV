@@ -1,10 +1,10 @@
-// Sounds of an own KGS game, played with the Web Audio API from sound files:
-// a stone click for every move (stones/), a gong with a low chord when the
-// game starts (start/), a tick for each of the last ten seconds on our clock,
-// higher for the last three, in a sound of the user's choice (clock/) - so you hear it from the kitchen. Plus
-// a generated ding-dong when someone writes to you (chatSound.ts decides
-// when). Each one can be switched off in
-// Einstellungen (gotv.sounds); the switches are read at every sound.
+// Sounds of an own KGS game, played with the Web Audio API from sound files -
+// so you hear it from the kitchen: a stone click for every move (stones/),
+// a sound when the game starts (start/), a tick for each of the last ten
+// seconds on our clock, higher for the last three (clock/), and one when
+// someone writes to you (chat/; chatSound.ts decides when). Each can be
+// switched off in Einstellungen (gotv.sounds), and each comes in four
+// variants to choose from (28.11.2026, wish of the user; SOUND_VARIANTS).
 
 import stone1 from './stones/stone1.wav';
 import stone2 from './stones/stone2.wav';
@@ -19,7 +19,14 @@ import ebowlTick from './clock/ebowl-tick.wav';
 import ebowlLast from './clock/ebowl-last.wav';
 import pulseTick from './clock/pulse-tick.wav';
 import pulseLast from './clock/pulse-last.wav';
-import gameStart from './start/game-start.wav';
+import startGongChord from './start/game-start.wav';
+import startDeepGong from './start/deep-gong.wav';
+import startBowl from './start/bowl.wav';
+import startBassPulse from './start/bass-pulse.wav';
+import chatDingDong from './chat/ding-dong.wav';
+import chatSmallBowl from './chat/small-bowl.wav';
+import chatTwoBowls from './chat/two-bowls.wav';
+import chatDrop from './chat/drop.wav';
 
 export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
 export type GameSoundPrefs = Record<GameSoundKind, boolean>;
@@ -68,19 +75,6 @@ function audio(): AudioContext | null {
 	return context;
 }
 
-// A short tone with a quick fade-out.
-function tone(ctx: AudioContext, freq: number, start: number, length: number, volume: number) {
-	const osc = ctx.createOscillator();
-	const gain = ctx.createGain();
-	osc.type = 'sine';
-	osc.frequency.value = freq;
-	gain.gain.setValueAtTime(volume, start);
-	gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
-	osc.connect(gain).connect(ctx.destination);
-	osc.start(start);
-	osc.stop(start + length);
-}
-
 // Recorded sounds, loaded and decoded once on first use (per set).
 const recordings = new Map<string, Promise<Array<AudioBuffer>>>();
 
@@ -113,38 +107,118 @@ function loadRecordings(ctx: AudioContext, urls: Array<string>): Promise<Array<A
 function playRecording(
 	ctx: AudioContext,
 	urls: Array<string>,
-	pick: (count: number) => number = () => 0
+	pick: (count: number) => number = () => 0,
+	shape?: (ctx: AudioContext, source: AudioBufferSourceNode) => AudioNode
 ) {
 	loadRecordings(ctx, urls)
 		.then((buffers) => {
 			const source = ctx.createBufferSource();
 			source.buffer = buffers[pick(buffers.length)];
-			source.connect(ctx.destination);
+			(shape ? shape(ctx, source) : source).connect(ctx.destination);
 			source.start();
 		})
 		.catch(() => {});
 }
 
-// The stone click: real recordings of a stone set on a wooden board
-// (from KaTrain, MIT - stones/NOTICE.txt), one of five at random so not
-// every move sounds the same. Replaces a synthetic click that sounded like
-// a tin drum (user, 28.11.2026).
-const STONE_URLS = [stone1, stone2, stone3, stone4, stone5];
+// The four variants of each sound (28.11.2026, wish of the user: a choice
+// like the countdown's for every sound), chosen in the settings and kept in
+// gotv.stoneSound / gotv.startSound / gotv.countdownSound /
+// gotv.messageSound. The first one is the default.
+export const SOUND_VARIANTS = {
+	// Real recordings of a stone on a wooden board (KaTrain, MIT -
+	// stones/NOTICE.txt), one of five at random; the other boards are the same
+	// recordings shaped: deeper and warmer, brighter and shorter, in a room.
+	stones: ['kaya', 'thick', 'table', 'room'],
+	// GoTV's own (tools/sounds): gong over a low chord, deep gong, big singing
+	// bowl, bass pulse - deep, so it differs from the chat sounds.
+	gameStart: ['gongChord', 'deepGong', 'bowl', 'bassPulse'],
+	// A tick for 10-4 s and a higher one for the last three: electronic bowl,
+	// singing bowl, low pulse (GoTV's own) or KaTrain's clock (MIT).
+	countdown: ['ebowl', 'bowl', 'pulse', 'katrain'],
+	// Brighter than the game start, so a message is known by ear: the former
+	// ding-dong, a small bowl, two bowls, an electronic drop.
+	messages: ['dingDong', 'smallBowl', 'twoBowls', 'drop']
+} as const satisfies Record<GameSoundKind, ReadonlyArray<string>>;
+export type SoundVariant<K extends GameSoundKind> = (typeof SOUND_VARIANTS)[K][number];
+export type CountdownSound = SoundVariant<'countdown'>;
 
-function click(ctx: AudioContext) {
-	playRecording(ctx, STONE_URLS, (count) => Math.floor(Math.random() * count));
+export const SOUND_VARIANT_KEYS: Record<GameSoundKind, string> = {
+	stones: 'gotv.stoneSound',
+	gameStart: 'gotv.startSound',
+	countdown: 'gotv.countdownSound',
+	messages: 'gotv.messageSound'
+};
+
+export function loadSoundVariant<K extends GameSoundKind>(kind: K): SoundVariant<K> {
+	const variants: ReadonlyArray<string> = SOUND_VARIANTS[kind];
+	try {
+		const saved = localStorage.getItem(SOUND_VARIANT_KEYS[kind]);
+		if (saved && variants.includes(saved)) return saved as SoundVariant<K>;
+	} catch {
+		// storage disabled: the default
+	}
+	return variants[0] as SoundVariant<K>;
 }
 
-// The countdown, chosen in the settings (28.11.2026: the user liked all
-// three new sounds and wanted to pick): an electronic singing bowl (default),
-// a singing bowl, a low electronic pulse - GoTV's own, made by
-// tools/sounds/make_countdown.py - or KaTrain's clock beep (MIT,
-// clock/NOTICE.txt). Each has a tick for 10-4 s and a higher one for the
-// last three seconds.
-export type CountdownSound = 'ebowl' | 'bowl' | 'pulse' | 'katrain';
-export const COUNTDOWN_SOUNDS: Array<CountdownSound> = ['ebowl', 'bowl', 'pulse', 'katrain'];
-export const COUNTDOWN_SOUND_KEY = 'gotv.countdownSound';
-export const DEFAULT_COUNTDOWN_SOUND: CountdownSound = 'ebowl';
+export function saveSoundVariant<K extends GameSoundKind>(kind: K, variant: SoundVariant<K>) {
+	try {
+		localStorage.setItem(SOUND_VARIANT_KEYS[kind], variant);
+	} catch {
+		// not remembered without storage
+	}
+}
+
+const STONE_URLS = [stone1, stone2, stone3, stone4, stone5];
+
+// A short, soft room: an echo of decaying noise (made once per context).
+let roomImpulse: { ctx: AudioContext; buffer: AudioBuffer } | null = null;
+function room(ctx: AudioContext): AudioBuffer {
+	if (roomImpulse?.ctx === ctx) return roomImpulse.buffer;
+	const length = Math.floor(ctx.sampleRate * 0.45);
+	const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+	const data = buffer.getChannelData(0);
+	for (let i = 0; i < length; i++) {
+		data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3) * 0.6;
+	}
+	data[0] = 1; // the dry stone itself
+	roomImpulse = { ctx, buffer };
+	return buffer;
+}
+
+function shapeStone(
+	variant: SoundVariant<'stones'>
+): ((ctx: AudioContext, source: AudioBufferSourceNode) => AudioNode) | undefined {
+	if (variant === 'kaya') return undefined;
+	return (ctx, source) => {
+		if (variant === 'room') {
+			const convolver = ctx.createConvolver();
+			convolver.buffer = room(ctx);
+			return source.connect(convolver);
+		}
+		const filter = ctx.createBiquadFilter();
+		if (variant === 'thick') {
+			source.playbackRate.value = 0.8; // a thicker board rings lower
+			filter.type = 'lowpass';
+			filter.frequency.value = 2600;
+		} else {
+			source.playbackRate.value = 1.18; // a thin table board, brighter
+			filter.type = 'highpass';
+			filter.frequency.value = 350;
+		}
+		return source.connect(filter);
+	};
+}
+
+function click(ctx: AudioContext, variant = loadSoundVariant('stones')) {
+	playRecording(ctx, STONE_URLS, (count) => Math.floor(Math.random() * count), shapeStone(variant));
+}
+
+const START_URLS: Record<SoundVariant<'gameStart'>, string> = {
+	gongChord: startGongChord,
+	deepGong: startDeepGong,
+	bowl: startBowl,
+	bassPulse: startBassPulse
+};
 
 const CLOCK_URLS: Record<CountdownSound, [string, string]> = {
 	ebowl: [ebowlTick, ebowlLast],
@@ -153,24 +227,12 @@ const CLOCK_URLS: Record<CountdownSound, [string, string]> = {
 	katrain: [clockTick, clockLast]
 };
 
-export function loadCountdownSound(): CountdownSound {
-	try {
-		const saved = localStorage.getItem(COUNTDOWN_SOUND_KEY);
-		return COUNTDOWN_SOUNDS.includes(saved as CountdownSound)
-			? (saved as CountdownSound)
-			: DEFAULT_COUNTDOWN_SOUND;
-	} catch {
-		return DEFAULT_COUNTDOWN_SOUND;
-	}
-}
-
-export function saveCountdownSound(sound: CountdownSound) {
-	try {
-		localStorage.setItem(COUNTDOWN_SOUND_KEY, sound);
-	} catch {
-		// not remembered without storage
-	}
-}
+const CHAT_URLS: Record<SoundVariant<'messages'>, string> = {
+	dingDong: chatDingDong,
+	smallBowl: chatSmallBowl,
+	twoBowls: chatTwoBowls,
+	drop: chatDrop
+};
 
 // A window opened by GoTV itself (a game window) may not play sound before
 // someone clicks in it (browser rule): such a window hands its sounds to the
@@ -208,27 +270,18 @@ function play(kind: GameSoundKind, sound: (ctx: AudioContext) => void) {
 
 export function playStoneClick() {
 	if (relayed('stone')) return;
-	play('stones', click);
+	play('stones', (ctx) => click(ctx));
 }
 
 export function playGameStart() {
 	if (relayed('gameStart')) return;
-	// A deep electronic gong over a warm low chord (28.11.2026, chosen by the
-	// user from samples; made by tools/sounds/make_game_start.py) - instead
-	// of a bright rising three-note chime the user did not like.
-	play('gameStart', (ctx) => playRecording(ctx, [gameStart]));
+	play('gameStart', (ctx) => playRecording(ctx, [START_URLS[loadSoundVariant('gameStart')]]));
 }
 
-// A chat message for me: ding-dong, twice, clearly audible.
+// A chat message for me.
 export function playMessage() {
 	if (relayed('message')) return;
-	play('messages', (ctx) => {
-		const t = ctx.currentTime;
-		for (const offset of [0, 0.6]) {
-			tone(ctx, 988, t + offset, 0.3, 0.4);
-			tone(ctx, 740, t + offset + 0.22, 0.4, 0.4);
-		}
-	});
+	play('messages', (ctx) => playRecording(ctx, [CHAT_URLS[loadSoundVariant('messages')]]));
 }
 
 // One beep for `seconds` left (1 to COUNTDOWN_SECONDS).
@@ -237,6 +290,6 @@ export function playCountdown(seconds: number) {
 	if (relayed('countdown', seconds)) return;
 	play('countdown', (ctx) => {
 		const urgent = seconds <= URGENT_SECONDS;
-		playRecording(ctx, CLOCK_URLS[loadCountdownSound()], () => (urgent ? 1 : 0));
+		playRecording(ctx, CLOCK_URLS[loadSoundVariant('countdown')], () => (urgent ? 1 : 0));
 	});
 }

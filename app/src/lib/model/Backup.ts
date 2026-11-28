@@ -42,7 +42,10 @@ export const BACKUP_SETTING_NAMES = {
 	'gotv.language': 'language',
 	'gotv.navOrder': 'navOrder',
 	'gotv.sounds': 'sounds',
+	'gotv.stoneSound': 'stoneSound',
+	'gotv.startSound': 'startSound',
 	'gotv.countdownSound': 'countdownSound',
+	'gotv.messageSound': 'messageSound',
 	'gotv.gameWindows': 'gameWindows',
 	'gotv.katago': 'katago'
 } as const;

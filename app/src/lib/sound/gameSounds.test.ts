@@ -94,6 +94,57 @@ describe('game sounds', () => {
 		await vi.waitFor(() => expect(played).toEqual(['tick', 'last']));
 	});
 
+	it('shapes the stone recordings for the other boards', async () => {
+		const sources: Array<{ playbackRate: { value: number }; via: Array<string> }> = [];
+		const node = (kind: string, via: Array<string>) => ({
+			type: '',
+			frequency: { value: 0 },
+			buffer: null,
+			connect(target: { kind?: string }) {
+				via.push(target.kind ?? 'out');
+				return target;
+			},
+			kind
+		});
+		vi.stubGlobal(
+			'AudioContext',
+			class {
+				state = 'running';
+				sampleRate = 8000;
+				destination = { kind: 'out' };
+				decodeAudioData = () => Promise.resolve({});
+				createBuffer = () => ({ getChannelData: () => new Float32Array(10) });
+				createBiquadFilter = () => node('filter', []);
+				createConvolver = () => node('room', []);
+				createBufferSource() {
+					const via: Array<string> = [];
+					const source = {
+						playbackRate: { value: 1 },
+						via,
+						buffer: null,
+						start: vi.fn(),
+						connect(target: { kind?: string; connect?: unknown }) {
+							via.push(target.kind ?? 'out');
+							return target;
+						}
+					};
+					sources.push(source);
+					return source;
+				}
+			}
+		);
+		vi.stubGlobal('fetch', () => Promise.resolve(new Response(new ArrayBuffer(8))));
+		localStorage.setItem('gotv.stoneSound', 'thick');
+		playStoneClick();
+		await vi.waitFor(() => expect(sources).toHaveLength(1));
+		expect(sources[0].playbackRate.value).toBe(0.8);
+		expect(sources[0].via).toEqual(['filter']);
+		localStorage.setItem('gotv.stoneSound', 'room');
+		playStoneClick();
+		await vi.waitFor(() => expect(sources).toHaveLength(2));
+		expect(sources[1].via).toEqual(['room']);
+	});
+
 	it('plays nothing that is switched off, and only the last ten seconds', () => {
 		const created = vi.fn();
 		vi.stubGlobal(

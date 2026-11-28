@@ -8,7 +8,10 @@
 		language: 'replay.backup.setting.language',
 		navOrder: 'replay.backup.setting.navOrder',
 		sounds: 'replay.backup.setting.sounds',
+		stoneSound: 'replay.backup.setting.stoneSound',
+		startSound: 'replay.backup.setting.startSound',
 		countdownSound: 'replay.backup.setting.countdownSound',
+		messageSound: 'replay.backup.setting.messageSound',
 		gameWindows: 'replay.backup.setting.gameWindows',
 		katago: 'replay.backup.setting.katago'
 	};

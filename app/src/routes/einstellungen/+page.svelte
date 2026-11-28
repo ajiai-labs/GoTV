@@ -11,12 +11,11 @@
 		playGameStart,
 		playMessage,
 		playStoneClick,
-		loadCountdownSound,
-		saveCountdownSound,
-		COUNTDOWN_SOUNDS,
-		DEFAULT_COUNTDOWN_SOUND
+		loadSoundVariant,
+		saveSoundVariant,
+		SOUND_VARIANTS
 	} from '#lib/sound/gameSounds.ts';
-	import type { CountdownSound, GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
+	import type { GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
 	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
 	import { LANGUAGES, language, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
@@ -63,20 +62,36 @@
 		soundPrefs = { ...soundPrefs, [kind]: on };
 		saveSoundPrefs(soundPrefs);
 	}
-	const COUNTDOWN_SOUND_NAMES: Record<CountdownSound, MessageKey> = {
-		ebowl: 'settings.sounds.countdownSound.ebowl',
-		bowl: 'settings.sounds.countdownSound.bowl',
-		pulse: 'settings.sounds.countdownSound.pulse',
-		katrain: 'settings.sounds.countdownSound.katrain'
+	// Four variants of each sound (28.11.2026); choosing one plays it.
+	const VARIANT_NAMES: Record<string, MessageKey> = {
+		kaya: 'settings.sounds.variant.kaya',
+		thick: 'settings.sounds.variant.thick',
+		table: 'settings.sounds.variant.table',
+		room: 'settings.sounds.variant.room',
+		gongChord: 'settings.sounds.variant.gongChord',
+		deepGong: 'settings.sounds.variant.deepGong',
+		bowl: 'settings.sounds.variant.bowl',
+		bassPulse: 'settings.sounds.variant.bassPulse',
+		ebowl: 'settings.sounds.variant.ebowl',
+		pulse: 'settings.sounds.variant.pulse',
+		katrain: 'settings.sounds.variant.katrain',
+		dingDong: 'settings.sounds.variant.dingDong',
+		smallBowl: 'settings.sounds.variant.smallBowl',
+		twoBowls: 'settings.sounds.variant.twoBowls',
+		drop: 'settings.sounds.variant.drop'
 	};
-	// Which sound the countdown uses; choosing one plays its last seconds.
-	let countdownSound: CountdownSound = $state(
-		typeof localStorage === 'undefined' ? DEFAULT_COUNTDOWN_SOUND : loadCountdownSound()
+	let variants: Record<GameSoundKind, string> = $state(
+		Object.fromEntries(
+			SOUND_KINDS.map((kind) => [
+				kind,
+				typeof localStorage === 'undefined' ? SOUND_VARIANTS[kind][0] : loadSoundVariant(kind)
+			])
+		) as Record<GameSoundKind, string>
 	);
-	function setCountdownSound(sound: CountdownSound) {
-		countdownSound = sound;
-		saveCountdownSound(sound);
-		sample('countdown');
+	function setVariant(kind: GameSoundKind, variant: string) {
+		variants = { ...variants, [kind]: variant };
+		saveSoundVariant(kind, variant as never);
+		sample(kind);
 	}
 	function sample(kind: GameSoundKind) {
 		if (kind === 'stones') playStoneClick();
@@ -155,18 +170,16 @@
 					</span>
 				</label>
 				<span class="sound-actions">
-					{#if kind === 'countdown'}
-						<select
-							aria-label={t('settings.sounds.countdownSound')}
-							disabled={!soundPrefs.countdown}
-							value={countdownSound}
-							onchange={(event) => setCountdownSound(event.currentTarget.value as CountdownSound)}
-						>
-							{#each COUNTDOWN_SOUNDS as sound (sound)}
-								<option value={sound}>{t(COUNTDOWN_SOUND_NAMES[sound])}</option>
-							{/each}
-						</select>
-					{/if}
+					<select
+						aria-label={t('settings.sounds.variant', { sound: t(`settings.sounds.${kind}.name`) })}
+						disabled={!soundPrefs[kind]}
+						value={variants[kind]}
+						onchange={(event) => setVariant(kind, event.currentTarget.value)}
+					>
+						{#each SOUND_VARIANTS[kind] as variant (variant)}
+							<option value={variant}>{t(VARIANT_NAMES[variant])}</option>
+						{/each}
+					</select>
 					<button
 						type="button"
 						class="button"
