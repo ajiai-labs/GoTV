@@ -678,5 +678,133 @@
       "channel_id": "yungusengdojang",
       "kind": "player"
     }
+  ],
+  "videos": [
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "oNRz0jfeE2Y",
+      "title": "【1・2回戦】第21回広島アルミ杯・若鯉戦",
+      "published": "2026-11-28T08:23:32Z"
+    },
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "RJJOyI7ROEc",
+      "title": "【有志棋士応援】農心辛ラーメン杯　世界囲碁最強戦【2026/11/27】",
+      "published": "2026-11-27T07:35:02Z"
+    },
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "wd52LVSSFY8",
+      "title": "【有志棋士応援】農心辛ラーメン杯　世界囲碁最強戦【2026/11/29】",
+      "published": "2026-11-27T07:34:26Z"
+    },
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "b_APsutX5ss",
+      "title": "【最終第5戦】第6回テイケイグループ杯俊英戦リーグ",
+      "published": "2026-11-25T05:36:38Z"
+    },
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "IvZKpKtX33w",
+      "title": "【第4戦】第6回テイケイグループ杯俊英戦リーグ",
+      "published": "2026-11-25T05:12:23Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "K-6PgI0qkAQ",
+      "title": "Zwei 3-3 und ein 4-5... und noch ein Joseki von früher",
+      "published": "2026-11-24T11:00:38Z"
+    },
+    {
+      "channel": "nihonkiin-youtube",
+      "video_id": "yHL-fXV1UEU",
+      "title": "【囲碁】置き去りの傷を探せ50【級位者向け問題】",
+      "published": "2026-11-24T08:00:06Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "z2wxYl7hpcM",
+      "title": "Fox 9-Dans... sind sie zu stark ist Jupp zu schwach",
+      "published": "2026-11-22T22:51:59Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "_rJP43ufQEQ",
+      "title": "Luschenzüge und Wendetreppen",
+      "published": "2026-11-20T15:55:08Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "PnIS2mUOlTg",
+      "title": "Joseki vermeiden... und Fehler um Millisekunden zu spät erkennen",
+      "published": "2026-11-18T16:00:26Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "w8_6L43-jqw",
+      "title": "In der Vorweihnachtszeit beginnt das dicke Backen!",
+      "published": "2026-11-16T10:59:46Z"
+    },
+    {
+      "channel": "jupptube-youtube",
+      "video_id": "U9evlYWVqkc",
+      "title": "Bleibt das Glück treu? (Jupp Fox 8d oder 9d)",
+      "published": "2026-11-15T23:11:20Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "9eptpf5OC80",
+      "title": "Review party with Ali Jabarin 3p | Pandanet Go European Team Championship R2",
+      "published": "2026-11-11T11:38:59Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "nw2xf6W9eXw",
+      "title": "German Championship Round 4 with Andrii Kravets, 4p",
+      "published": "2026-10-31T00:50:35Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "fM5OIdio5LE",
+      "title": "German Championship Round 3 with Andrii Kravets, 4p",
+      "published": "2026-10-31T00:46:57Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "pV2rSMReD0g",
+      "title": "German Championship Round 1 with Andrii Kravets, 4p",
+      "published": "2026-10-31T00:44:57Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "TEaHy8zsB_g",
+      "title": "German Championship Round 7 with Andrii Kravets, 4p",
+      "published": "2026-10-31T00:42:37Z"
+    },
+    {
+      "channel": "egf-youtube",
+      "video_id": "KksKA9kD11A",
+      "title": "German Championship Round 2 with Andrii Kravets, 4p",
+      "published": "2026-10-31T00:38:13Z"
+    },
+    {
+      "channel": "aga-youtube",
+      "video_id": "CnknYkpXJF4",
+      "title": "2026 NAGF Pro Championship Final",
+      "published": "2026-10-18T21:38:56Z"
+    },
+    {
+      "channel": "aga-youtube",
+      "video_id": "rVlpYkO6wXs",
+      "title": "2026 NAGF Pro Championship ROUND 2",
+      "published": "2026-10-17T21:29:49Z"
+    },
+    {
+      "channel": "aga-youtube",
+      "video_id": "yXsR-1iB_1c",
+      "title": "2026 NAGF Pro Championship ROUND 1",
+      "published": "2026-10-16T22:05:26Z"
+    }
   ]
 }

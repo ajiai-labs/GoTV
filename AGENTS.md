@@ -38,7 +38,7 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
 - Nach jedem Schritt grün (wie die GitHub-CI): `cd app && npm run check && npm run lint &&
   npm test && npm run build`, dazu die Python-Tool-Tests (`python3 -m unittest
   tools.test_update_events tools.test_check_links tools.test_refresh_tv_events
-  tools.test_speedgo tools.test_fake_kgs tools.test_script_update`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
+  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -421,6 +421,16 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   schlüssellose iCalendar-Weg wie `twitch-egf` (der seinen Quellnamen behält). Einträge `source`
   `twitch-<login>`; täglich im Workflow (Schritt „Import other Twitch schedules“, ein Kanal-Fehler
   stoppt die anderen nicht) und in `refresh_tv_events.py`. Stand 28.11.: beide Sendepläne leer.
+- Neue Videos der YouTube-Kanäle (28.11.2026): `--source youtube-rss` (`tools/youtube_videos.py`)
+  liest den offiziellen Kanal-Feed `youtube.com/feeds/videos.xml?channel_id=UC…` (ohne Schlüssel,
+  aber ohne CORS - daher im täglichen Import, nicht in der App) jedes YouTube-Kanals aus `channels[]`
+  und schreibt die oberste Liste `videos` [{channel, video_id, title, published}] (je Kanal max. 6,
+  max. 60 Tage); ein fehlender Feed behält die Videos seines Kanals, keiner lesbar → nichts
+  geschrieben. Angekündigte Livestreams stehen mit im Feed (ohne Startzeit). App: Kanäle-Tab
+  „Neue Videos der Kanäle“ (`ui/tv/ChannelVideos.svelte`, `getRecentVideos`: 12, höchstens 3 je
+  Kanal, 45 Tage), Klick öffnet das Video hinter der Zwei-Klick-Sperre (`StreamEmbed`), daneben
+  „Auf YouTube“. Täglich im Workflow (Schritt „Import YouTube channel videos“) und in
+  `refresh_tv_events.py` (Quelle `youtube-rss`, behält beim Fehlschlag die alten Videos).
 - Link-Check (`tools/check_links.py`) überspringt `*.test.js` (erfundene Test-URLs). Bekannte
   Restfunde (23.11.2026): Platzhalter `online-go.com/game/…` in `BroadcastCard.js` und
   go-bundesliga.de (antwortet automatischen Abrufen mit 403).

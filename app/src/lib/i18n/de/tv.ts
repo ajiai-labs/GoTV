@@ -199,6 +199,8 @@ export const tv = {
 	'tv.ogs.playerNotFound': 'OGS-Spieler nicht gefunden: {name}',
 	'tv.ogs.unreachable': 'OGS nicht erreichbar',
 	'tv.ogs.boardUnreachable': 'OGS-Brett nicht erreichbar',
+	'tv.videos.title': 'Neue Videos der Kanäle',
+	'tv.videos.onYouTube': 'Auf YouTube',
 	'tv.kgsNow.title': 'Jetzt auf KGS',
 	'tv.kgsNow.hint':
 		'Laufende KGS-Turnierpartien und von KGS übertragene Partien – auch ohne Stream und Kalendereintrag.',

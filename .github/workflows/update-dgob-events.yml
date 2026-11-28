@@ -41,7 +41,7 @@ jobs:
       - name: Run import/link tests
         id: tests
         run: |
-          python3 -m unittest tools.test_update_events tools.test_check_links tools.test_speedgo -v 2>&1 | tee /tmp/dgob-workflow.log
+          python3 -m unittest tools.test_update_events tools.test_check_links tools.test_speedgo tools.test_youtube_videos -v 2>&1 | tee /tmp/dgob-workflow.log
 
       - name: Import DGoB events
         id: import
@@ -94,6 +94,16 @@ jobs:
         run: |
           python3 tools/update_events.py --source speedgo 2>&1 | tee -a /tmp/dgob-workflow.log
 
+      # Newest videos of the YouTube channels (official channel feed, no
+      # key - tools/youtube_videos.py) into the "videos" array. A feed that
+      # fails keeps its channel's videos; the alarm below reports it.
+      - name: Import YouTube channel videos
+        id: import_youtube
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python3 tools/update_events.py --source youtube-rss 2>&1 | tee -a /tmp/dgob-workflow.log
+
       # A broken/dead link must turn this run red, but must never block
       # the events.json update that already happened above - continued
       # below in "Commit and push" regardless of this step's result.
@@ -131,6 +141,7 @@ jobs:
           steps.import_twitch_more.outcome == 'success' &&
           steps.import_egf_calendar.outcome == 'success' &&
           steps.import_speedgo.outcome == 'success' &&
+          steps.import_youtube.outcome == 'success' &&
           steps.commit.outcome == 'success'
         run: |
           issue_number=$(gh issue list --search '"DGoB-Import fehlgeschlagen" in:title' --state open --json number --jq '.[0].number // empty')
@@ -148,6 +159,7 @@ jobs:
            steps.import_twitch_more.outcome == 'failure' ||
            steps.import_egf_calendar.outcome == 'failure' ||
            steps.import_speedgo.outcome == 'failure' ||
+           steps.import_youtube.outcome == 'failure' ||
            steps.commit.outcome == 'failure')
         run: |
           gh label create tv-import --color ededed --description "DGoB-Import-Alarm" 2>/dev/null || true

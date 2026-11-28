@@ -414,9 +414,61 @@ export const REMOTE_EVENTS_URL =
 const LOCAL_EVENTS_URL = config.basePath + '/tv/events.json';
 const EVENTS_CACHE_MS = 60 * 60 * 1000; // 1 hour
 
+// A recent video of a YouTube channel (events.json "videos", filled daily
+// from the channel's official feed by tools/youtube_videos.py, 28.11.2026):
+// recordings of tournament rounds, lectures and announced live streams.
+export type TvVideo = {
+	channel: string; // TvChannel id
+	videoId: string;
+	title: string;
+	published: string; // ISO time
+};
+
+export function validateTvVideo(value: unknown): TvVideo | null {
+	if (!value || typeof value !== 'object') return null;
+	const raw = value as Record<string, unknown>;
+	if (typeof raw.channel !== 'string' || !raw.channel) return null;
+	if (typeof raw.video_id !== 'string' || !YOUTUBE_ID_RE.test(raw.video_id)) return null;
+	if (typeof raw.title !== 'string' || !raw.title.trim()) return null;
+	if (typeof raw.published !== 'string' || Number.isNaN(Date.parse(raw.published))) return null;
+	return {
+		channel: raw.channel,
+		videoId: raw.video_id,
+		title: raw.title.trim(),
+		published: raw.published
+	};
+}
+
+// The newest videos of the known channels, newest first: at most `limit`,
+// at most `perChannel` of one channel (a busy channel must not push the
+// tournament recordings of the others out), not older than `maxDays`.
+export function getRecentVideos(
+	videos: Array<TvVideo>,
+	channels: Array<TvChannel>,
+	now: Date,
+	limit = 12,
+	maxDays = 45,
+	perChannel = 3
+): Array<TvVideo & { channelName: string }> {
+	const names = new Map(channels.map((channel) => [channel.id, channel.name]));
+	const oldest = now.getTime() - maxDays * 24 * 60 * 60 * 1000;
+	const counts = new Map<string, number>();
+	return videos
+		.filter((video) => names.has(video.channel) && Date.parse(video.published) >= oldest)
+		.sort((a, b) => Date.parse(b.published) - Date.parse(a.published))
+		.filter((video) => {
+			const count = counts.get(video.channel) ?? 0;
+			counts.set(video.channel, count + 1);
+			return count < perChannel;
+		})
+		.slice(0, limit)
+		.map((video) => ({ ...video, channelName: names.get(video.channel) ?? '' }));
+}
+
 type TvData = {
 	events: Array<TvEvent>;
 	channels: Array<TvChannel>;
+	videos: Array<TvVideo>;
 };
 let _tvDataCache:
 	| {
@@ -516,9 +568,16 @@ function fetchAndValidateTvData(url: string): Promise<TvData> {
 				}
 			}
 
+			// "videos" (28.11.2026) - missing in older copies: none.
+			const rawVideos = data && Array.isArray(data.videos) ? data.videos : [];
+			const videos = rawVideos
+				.map(validateTvVideo)
+				.filter((video: TvVideo | null): video is TvVideo => !!video);
+
 			return {
 				events,
-				channels
+				channels,
+				videos
 			};
 		});
 }
@@ -575,6 +634,10 @@ export function fetchTvEvents(): Promise<Array<TvEvent>> {
 // as fetchTvEvents(), always available regardless of any event's dates.
 export function fetchTvChannels(): Promise<Array<TvChannel>> {
 	return fetchTvData().then((data) => data.channels);
+}
+// The newest videos of the YouTube channels - same file and cache.
+export function fetchTvVideos(): Promise<Array<TvVideo>> {
+	return fetchTvData().then((data) => data.videos);
 }
 // Test-only: the module-level cache above would otherwise leak between
 // tests (and between e.g. repeated dev-harness reloads in the same tab).

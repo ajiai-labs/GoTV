@@ -23,6 +23,7 @@ SOURCES = (
     "twitch-yungusengdojang",
     "egf-calendar",
     "speedgo",
+    "youtube-rss",  # the "videos" array, not calendar entries
 )
 
 
@@ -53,6 +54,8 @@ def refresh(root, cache):
         for source in SOURCES:
             cached = [e for e in previous.get("events", []) if e.get("source") == source]
             data["events"].extend(cached)
+        if isinstance(previous.get("videos"), list):
+            data["videos"] = previous["videos"]
 
     cache.parent.mkdir(parents=True, exist_ok=True)
     failures = []

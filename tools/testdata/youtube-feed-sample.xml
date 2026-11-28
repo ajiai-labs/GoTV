@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <title>Sample Go Channel</title>
+ <entry>
+  <id>yt:video:AAAAAAAAAA1</id>
+  <yt:videoId>AAAAAAAAAA1</yt:videoId>
+  <yt:channelId>UC00000000000000000000aa</yt:channelId>
+  <title>Sample Championship Round 2</title>
+  <published>2026-11-20T18:00:00+00:00</published>
+  <media:group><media:community><media:statistics views="0"/></media:community></media:group>
+ </entry>
+ <entry>
+  <id>yt:video:AAAAAAAAAA0</id>
+  <yt:videoId>AAAAAAAAAA0</yt:videoId>
+  <title>Sample Championship Round 1 &amp; review</title>
+  <published>2026-11-19T18:00:00+00:00</published>
+ </entry>
+ <entry>
+  <id>yt:video:OLDOLDOLD01</id>
+  <yt:videoId>OLDOLDOLD01</yt:videoId>
+  <title>An old lecture</title>
+  <published>2025-01-01T10:00:00+00:00</published>
+ </entry>
+</feed>

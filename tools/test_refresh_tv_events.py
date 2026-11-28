@@ -35,7 +35,7 @@ class RefreshTvEventsTest(unittest.TestCase):
             self.assertEqual(refresh_tv_events.refresh(self.root, self.cache), [])
         expected_ids = [
             "hand", "dgob", "twitch-egf", "twitch-usgoweb", "twitch-yungusengdojang",
-            "egf-calendar", "speedgo",
+            "egf-calendar", "speedgo", "youtube-rss",
         ]
         self.assertEqual([e["id"] for e in json.loads(self.cache.read_text())["events"]], expected_ids)
         for build in ("build", "build-desktop"):
@@ -57,7 +57,7 @@ class RefreshTvEventsTest(unittest.TestCase):
         ids = [e["id"] for e in json.loads(self.cache.read_text())["events"]]
         self.assertEqual(ids, [
             "hand", "old-dgob", "twitch-egf", "twitch-usgoweb", "twitch-yungusengdojang",
-            "egf-calendar", "speedgo",
+            "egf-calendar", "speedgo", "youtube-rss",
         ])
 
     def test_empty_cached_source_cannot_resurrect_cancelled_seed_events(self):

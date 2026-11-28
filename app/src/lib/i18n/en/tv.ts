@@ -193,6 +193,8 @@ export const tv: Translation<typeof de> = {
 	'tv.ogs.playerNotFound': 'OGS player not found: {name}',
 	'tv.ogs.unreachable': 'OGS not reachable',
 	'tv.ogs.boardUnreachable': 'OGS board not reachable',
+	'tv.videos.title': 'New videos of the channels',
+	'tv.videos.onYouTube': 'On YouTube',
 	'tv.kgsNow.title': 'Now on KGS',
 	'tv.kgsNow.hint':
 		'Running KGS tournament games and games broadcast by KGS – also without a stream or calendar entry.',

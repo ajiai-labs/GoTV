@@ -6,9 +6,10 @@
 	import type { Snippet } from 'svelte';
 	import ChannelCard from './ChannelCard.svelte';
 	import ChannelWeek from './ChannelWeek.svelte';
+	import ChannelVideos from './ChannelVideos.svelte';
 	import Spinner from '#lib/ui/Spinner.svelte';
 	import { groupChannels, isChannelOnAir } from '#lib/model/tvChannels.ts';
-	import type { TvChannel } from '#lib/model/tv.ts';
+	import type { TvChannel, TvVideo } from '#lib/model/tv.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
@@ -18,7 +19,8 @@
 		onRetry,
 		renderChannel,
 		favoriteIds = [],
-		onToggleFavorite
+		onToggleFavorite,
+		videos = []
 	}: {
 		status: 'loading' | 'ready' | 'error';
 		channels: Array<TvChannel>;
@@ -30,6 +32,8 @@
 		// Starred channel ids ("Mein GoTV"), in the order they were starred.
 		favoriteIds?: Array<string>;
 		onToggleFavorite?: (channelId: string) => unknown;
+		// The newest videos of the YouTube channels (events.json "videos").
+		videos?: Array<TvVideo>;
 	} = $props();
 
 	const GROUPS = [
@@ -82,6 +86,7 @@
 		</div>
 	{:else}
 		<ChannelWeek {channels} {now} {favoriteIds} />
+		<ChannelVideos {videos} {channels} {now} />
 		{#each sections as section (section.key)}
 			{#if section.channels.length}
 				<section

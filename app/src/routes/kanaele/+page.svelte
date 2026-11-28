@@ -9,8 +9,8 @@
 	import ChannelsView from '#lib/ui/tv/ChannelsView.svelte';
 	import ChannelCard from '#lib/ui/tv/ChannelCard.svelte';
 	import BroadcastCard from '#lib/ui/tv/BroadcastCard.svelte';
-	import { fetchTvChannels, fetchTvEvents } from '#lib/model/tv.ts';
-	import type { TvChannel, TvEvent } from '#lib/model/tv.ts';
+	import { fetchTvChannels, fetchTvEvents, fetchTvVideos } from '#lib/model/tv.ts';
+	import type { TvChannel, TvEvent, TvVideo } from '#lib/model/tv.ts';
 	import { kgsTvSource } from '#lib/model/TvSource.ts';
 	import { applyOgsLinks, loadOgsLinks, saveOgsLinks } from '#lib/model/OgsLinks.ts';
 	import { loadFavorites, saveFavorites, toggleFavorite } from '#lib/model/TvFavorites.ts';
@@ -23,6 +23,7 @@
 	let now = $state(Date.now());
 	let favorites = $state.raw(loadFavorites());
 	let events = $state.raw<Array<TvEvent>>([]);
+	let videos = $state.raw<Array<TvVideo>>([]);
 	let ogsLinks = $state.raw(loadOgsLinks());
 	let mounted = false;
 
@@ -37,6 +38,16 @@
 				console.warn('[tv] Failed to load channels:', err);
 				if (mounted && !channels.length) status = 'error';
 			}
+		);
+	}
+
+	// The newest videos of the YouTube channels (shared request too).
+	function loadVideos() {
+		fetchTvVideos().then(
+			(loaded) => {
+				if (mounted) videos = loaded;
+			},
+			(err: unknown) => console.warn('[tv] Failed to load channel videos:', err)
 		);
 	}
 
@@ -92,10 +103,12 @@
 		mounted = true;
 		loadChannels();
 		loadEvents();
+		loadVideos();
 		const timer = setInterval(() => {
 			now = Date.now();
 			loadChannels();
 			loadEvents();
+			loadVideos();
 		}, REFRESH_MS);
 		return () => {
 			mounted = false;
@@ -142,6 +155,7 @@
 	{renderChannel}
 	favoriteIds={favorites.channels}
 	{onToggleFavorite}
+	{videos}
 />
 
 <style>

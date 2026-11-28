@@ -822,8 +822,12 @@ def merge_egf_bt_events(existing_events, fresh_tv_events, today_date):
 
 try:  # as a package (tools.refresh_tv_events) or as a script
     from tools import speedgo
+    from tools import youtube_videos
 except ImportError:  # pragma: no cover - script run from tools/
     import speedgo
+    import youtube_videos
+
+YOUTUBE_SOURCE = youtube_videos.YOUTUBE_SOURCE
 
 SPEEDGO_SOURCE = speedgo.SPEEDGO_SOURCE
 
@@ -863,13 +867,52 @@ def _today_utc_str():
     return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
 
+def import_youtube_videos(data, events_path, dry_run, fetch=None, now=None):
+    """--source youtube-rss: the newest videos of the YouTube channels into
+    the top-level "videos" array (see tools/youtube_videos.py). Refuses to
+    write when no feed could be read at all."""
+    channels = youtube_videos.youtube_channels(data)
+    videos, failed = youtube_videos.collect_videos(
+        data,
+        fetch or youtube_videos.fetch_feed,
+        now or datetime.datetime.now(datetime.timezone.utc),
+    )
+    for channel_id in failed:
+        print("Could not read the YouTube feed of %s - keeping its videos." % channel_id, file=sys.stderr)
+    if channels and len(failed) == len(channels):
+        print("Refusing to import: no YouTube feed could be read.", file=sys.stderr)
+        return 1
+    if videos == data.get("videos"):
+        print("No changes.")
+        return 0
+    old_ids = {v.get("video_id") for v in data.get("videos", []) if isinstance(v, dict)}
+    new = [v for v in videos if v["video_id"] not in old_ids]
+    print("Videos: %d, new: %d" % (len(videos), len(new)))
+    for v in new:
+        print('  + %s: "%s" (%s)' % (v["channel"], v["title"], v["published"][:10]))
+    if dry_run:
+        return 0
+    data["videos"] = videos
+    with events_path.open("w", encoding="utf-8") as f:
+        f.write(json.dumps(data, indent=2, ensure_ascii=False))
+        f.write("\n")
+    return 1 if failed else 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         "--source",
-        choices=[SOURCE, TWITCH_SOURCE, DGOB_SOURCE, EGF_CALENDAR_SOURCE, SPEEDGO_SOURCE],
+        choices=[
+            SOURCE,
+            TWITCH_SOURCE,
+            DGOB_SOURCE,
+            EGF_CALENDAR_SOURCE,
+            SPEEDGO_SOURCE,
+            YOUTUBE_SOURCE,
+        ],
         default=SOURCE,
         help="Which source to import from (default: %(default)s)",
     )
@@ -948,6 +991,9 @@ def main(argv=None):
 
     events_path = Path(args.events_file)
     data = load_events(events_path)
+
+    if args.source == YOUTUBE_SOURCE:
+        return import_youtube_videos(data, events_path, args.dry_run)
 
     if args.source in (SOURCE, TWITCH_SOURCE):
         login = CHANNEL_LOGIN
