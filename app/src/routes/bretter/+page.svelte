@@ -19,7 +19,7 @@
 	import Board from '#lib/ui/Board.svelte';
 	import GameScreen from '#lib/ui/game/GameScreen.svelte';
 	import KgsGate from '#lib/ui/KgsGate.svelte';
-	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
+	import { accessNoticeDe, formatScoreDe } from '#lib/ui/game/gameText.ts';
 
 	const VIEW_KEY = 'gotv.teamView';
 	const OWN_KEY = 'gotv.boardsOwnGame';
@@ -329,7 +329,9 @@
 										/>
 									{:else}
 										<span class="loading">
-											{game ? t('app.boards.loading') : t('app.boards.gone')}
+											{game
+												? (accessNoticeDe(game) ?? t('app.boards.loading'))
+												: t('app.boards.gone')}
 										</span>
 									{/if}
 								</button>

@@ -16,7 +16,7 @@
 	import GameInfo from '#lib/ui/game/GameInfo.svelte';
 	import GameMoreMenu from '#lib/ui/game/GameMoreMenu.svelte';
 	import GamePlayersInfo from '#lib/ui/game/GamePlayersInfo.svelte';
-	import { formatScoreDe } from '#lib/ui/game/gameText.ts';
+	import { accessNoticeDe, formatScoreDe } from '#lib/ui/game/gameText.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import ChatMessageBar from '#lib/ui/chat/ChatMessageBar.svelte';
 	import UserList from '#lib/ui/user/UserList.svelte';
@@ -128,7 +128,7 @@
 		<GameMoreMenu game={liveGame} {roomsById} />
 	</div>
 	{#if game.accessDenied}
-		<p class="TvGamePanel-notice" role="alert">{game.accessDenied}</p>
+		<p class="TvGamePanel-notice" role="alert">{accessNoticeDe(game)}</p>
 	{:else if tree && typeof currentNode === 'number' && currentLine}
 		<div class="TvGamePanel-board-section">
 			<div class="TvGamePanel-board">

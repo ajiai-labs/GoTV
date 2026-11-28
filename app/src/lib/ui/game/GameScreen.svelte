@@ -57,7 +57,7 @@
 	import GamePlayersInfo from './GamePlayersInfo.svelte';
 	import GameReplaySuggestion from './GameReplaySuggestion.svelte';
 	import GameUndoPrompt from './GameUndoPrompt.svelte';
-	import { formatScoreDe } from './gameText.ts';
+	import { accessNoticeDe, formatScoreDe } from './gameText.ts';
 	import Splitter from '#lib/ui/Splitter.svelte';
 
 	type Tab = 'chat' | 'info' | 'users';
@@ -142,6 +142,8 @@
 		playing && tree ? getGameLine(tree, tree.activeNode).length - 1 : undefined
 	);
 	let isOurMove = $derived(playing && !!tree && isPlayerMove(game, currentUser.name));
+	// A private or KGS Plus game: why there is no board.
+	let accessNotice = $derived(accessNoticeDe(game));
 	let scoring = $derived(isGameScoring(game));
 	// A KGS review: who holds the control, and whether that is us (then the
 	// board takes clicks and moving through it moves everyone's board).
@@ -453,8 +455,8 @@
 								: undefined}
 					/>
 				</div>
-				{#if game.accessDenied}
-					<p class="GameScreen-access-denied" role="alert">{game.accessDenied}</p>
+				{#if accessNotice}
+					<p class="GameScreen-access-denied" role="alert">{accessNotice}</p>
 				{/if}
 				{#if reviewNotice}
 					<p class="GameScreen-move-failed" role="alert">

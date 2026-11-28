@@ -4,7 +4,7 @@
 // keeps the original texts (the keys' English values are exactly those).
 import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 import { formatGameScore } from '#lib/model/game/display.ts';
-import type { GameRules, GameRuleSet, GameScore, GameType } from '#lib/model/types.ts';
+import type { GameChannel, GameRules, GameRuleSet, GameScore, GameType } from '#lib/model/types.ts';
 
 const RESULT_WORDS: Record<string, MessageKey> = {
 	Resign: 'game.result.resign',
@@ -108,4 +108,15 @@ export function formatTimeSystemDe(rules: GameRules): string {
 		default:
 			return '';
 	}
+}
+
+// Why a game cannot be watched, in the interface language - or null. KGS
+// answers a join with PRIVATE_KEEP_OUT / CHANNEL_SUBSCRIBERS_ONLY
+// (game.accessDenied); a private game is known from the game list before
+// that (28.11.2026: the board overview said "wird geladen" for ever).
+export function accessNoticeDe(game: GameChannel): string | null {
+	if (game.accessDenied === 'KGS Plus Subscribers Only') return t('game.access.subscribers');
+	if (game.accessDenied) return t('game.access.private');
+	if (game.private && !game.tree) return t('game.access.private');
+	return null;
 }

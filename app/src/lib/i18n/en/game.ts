@@ -135,6 +135,8 @@ export const game: Translation<typeof de> = {
 	'game.time.minutesSeconds': '{m}:{s} min',
 	'game.time.hours': '{n} h',
 	'game.time.canadian': '{stones} stones in {time}',
+	'game.access.private': 'Private game – invited observers only',
+	'game.access.subscribers': 'KGS Plus subscribers only',
 	'game.time.none': 'No time limit',
 	'game.time.absolute': 'absolute',
 	'game.time.veryFast': 'very fast',

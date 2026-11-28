@@ -52,6 +52,24 @@ describe('Brettübersicht', () => {
 		localStorage.removeItem('gotv.teamView');
 	});
 
+	it('says that a private game has no board instead of loading for ever', async () => {
+		const privateGame = game(92, lukan, anna, { private: true, tree: undefined });
+		const refused = game(93, anna, lukan, { tree: undefined, accessDenied: 'Private Game' });
+		app.state = {
+			...app.state,
+			gamesById: { ...app.state.gamesById, 92: privateGame, 93: refused },
+			activeGames: [privateGame, refused]
+		};
+		localStorage.setItem('gotv.team', JSON.stringify([92, 93, null, null, null, null]));
+		await render(Page);
+		for (const board of ['Brett 1', 'Brett 2']) {
+			await expect
+				.element(page.getByRole('region', { name: board }).getByText(/Private Partie/))
+				.toBeVisible();
+		}
+		await expect.element(page.getByText('Brett lädt', { exact: false })).not.toBeInTheDocument();
+	});
+
 	it('shows the boards in their places and joins the running games', async () => {
 		await render(Page);
 		await expect.element(page.getByRole('region', { name: 'Brett 1' })).toBeVisible();

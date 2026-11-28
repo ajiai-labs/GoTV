@@ -136,6 +136,8 @@ export const game = {
 	'game.time.minutesSeconds': '{m}:{s} Min.',
 	'game.time.hours': '{n} Std.',
 	'game.time.canadian': '{stones} Steine in {time}',
+	'game.access.private': 'Private Partie – nur für eingeladene Zuschauer',
+	'game.access.subscribers': 'Nur für KGS-Plus-Abonnenten',
 	'game.time.none': 'Ohne Zeitlimit',
 	'game.time.absolute': 'absolut',
 	'game.time.veryFast': 'sehr schnell',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { language } from '#lib/i18n/index.svelte.ts';
-import { formatDurationDe, formatTimeSystemDe } from './gameText.ts';
+import { accessNoticeDe, formatDurationDe, formatTimeSystemDe } from './gameText.ts';
+import type { GameChannel } from '#lib/model/types.ts';
 
 describe('time system in words', () => {
 	it('says durations as people do', () => {
@@ -54,5 +55,17 @@ describe('time system in words', () => {
 			})
 		).toBe('30 min + 5×30 s');
 		language.current = 'de';
+	});
+
+	it('says why a game has no board: private or KGS Plus', () => {
+		const base = { id: 1, type: 'ranked' } as GameChannel;
+		expect(accessNoticeDe({ ...base, private: true })).toBe(
+			'Private Partie – nur für eingeladene Zuschauer'
+		);
+		expect(accessNoticeDe({ ...base, accessDenied: 'Private Game' })).toMatch(/^Private Partie/);
+		expect(accessNoticeDe({ ...base, accessDenied: 'KGS Plus Subscribers Only' })).toBe(
+			'Nur für KGS-Plus-Abonnenten'
+		);
+		expect(accessNoticeDe(base)).toBeNull();
 	});
 });
