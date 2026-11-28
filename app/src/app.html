@@ -26,6 +26,10 @@
 				var d = localStorage.getItem('gotv.design');
 				if (d === 'oldschool' || d === 'modern' || d === 'modern-dark')
 					document.documentElement.dataset.design = d;
+				// The background tone of Modern (src/lib/ui/tone.svelte.ts).
+				var tone = localStorage.getItem('gotv.tone');
+				if (/^(paper|yellow|red|blue|green)$/.test(tone || ''))
+					document.documentElement.dataset.tone = tone;
 			} catch (e) {}
 			// The interface language (src/lib/i18n/index.svelte.ts) for <html lang>.
 			try {

@@ -52,6 +52,24 @@ describe('Einstellungen', () => {
 		expect(localStorage.getItem('gotv.navOrder')).toBe('gotv');
 	});
 
+	it('offers a soft tone per basic colour for Modern and remembers it', async () => {
+		await render(Page);
+		// Warm paper is the default (28.11.2026).
+		await expect.element(page.getByRole('radio', { name: 'Warmes Papier' })).toBeChecked();
+		for (const name of ['Gelb', 'Rot', 'Blau', 'Grün (bisher)']) {
+			await expect.element(page.getByText(name, { exact: true })).toBeVisible();
+		}
+		await page.getByText('Blau', { exact: true }).click();
+		expect(document.documentElement.dataset.tone).toBe('blue');
+		expect(localStorage.getItem('gotv.tone')).toBe('blue');
+		// Only for Modern: the dark and the classic design keep their colours.
+		await page.getByText('Modern dunkel', { exact: true }).click();
+		await expect.element(page.getByText('Blau', { exact: true })).not.toBeInTheDocument();
+		await page.getByText('Modern', { exact: true }).click();
+		await expect.element(page.getByRole('radio', { name: 'Blau' })).toBeChecked();
+		await page.getByText('Warmes Papier', { exact: true }).click();
+	});
+
 	it('switches the sounds of an own game and remembers them', async () => {
 		localStorage.removeItem('gotv.sounds');
 		const view = await render(Page);

@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Settings: the interface language and the design.
 	import { DESIGNS, design } from '#lib/ui/design.svelte.ts';
+	import { TONES, tone } from '#lib/ui/tone.svelte.ts';
 	import { loadGameWindows, saveGameWindows } from '#lib/gameWindows.ts';
 	import {
 		DEFAULT_SOUND_PREFS,
@@ -178,7 +179,13 @@
 					checked={design.current === option.id}
 					onchange={() => design.set(option.id)}
 				/>
-				<span class="preview" style:background={c.bg} aria-hidden="true">
+				<span
+					class="preview"
+					style:background={option.id === 'modern'
+						? (TONES.find((item) => item.id === tone.current)?.swatch ?? c.bg)
+						: c.bg}
+					aria-hidden="true"
+				>
 					<span class="mini-board" style:background={c.board}>
 						<span class="mini-stone black" style:left="30%" style:top="34%"></span>
 						<span class="mini-stone white" style:left="58%" style:top="58%"></span>
@@ -191,6 +198,24 @@
 			</label>
 		{/each}
 	</div>
+	{#if design.current === 'modern'}
+		<div class="tones" role="radiogroup" aria-label={t('settings.tone')}>
+			<span class="tones-label">{t('settings.tone')}</span>
+			{#each TONES as option (option.id)}
+				<label class="tone" class:chosen={tone.current === option.id}>
+					<input
+						type="radio"
+						name="tone"
+						value={option.id}
+						checked={tone.current === option.id}
+						onchange={() => tone.set(option.id)}
+					/>
+					<span class="tone-swatch" style:background={option.swatch} aria-hidden="true"></span>
+					{t(option.name)}
+				</label>
+			{/each}
+		</div>
+	{/if}
 </fieldset>
 
 {#if config.guestOnly}
@@ -288,6 +313,51 @@
 		border-radius: var(--radius-m);
 		background: var(--surface);
 		cursor: pointer;
+	}
+
+	.tones {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 14px;
+		margin-top: 14px;
+	}
+
+	.tones-label {
+		font-weight: 650;
+	}
+
+	.tone {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 12px 6px 6px;
+		border: 2px solid var(--rule);
+		border-radius: var(--radius-pill);
+		background: var(--surface);
+		cursor: pointer;
+	}
+
+	.tone.chosen {
+		border-color: var(--accent);
+	}
+
+	.tone input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.tone:focus-within {
+		outline: 2px solid var(--focus);
+		outline-offset: 2px;
+	}
+
+	.tone-swatch {
+		width: 22px;
+		height: 22px;
+		border: 1px solid rgba(0, 0, 0, 0.15);
+		border-radius: 50%;
 	}
 
 	.choice.chosen {

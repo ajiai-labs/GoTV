@@ -512,6 +512,13 @@ Sek.“, „20 Min. absolut“, „10 Min. + 25 Steine in 5 Min.“ (statt „30
 grüner Balken links an der Zeile des Spielers, dessen Uhr läuft (`GamePlayersInfo-toMove`).
 Schrift Noto Sans nur als Bildvergleich gezeigt (Bricolage Grotesque bleibt, bis der Nutzer
 entscheidet).
+Farbton (Nutzer: wärmer als das Graugrün, selbst wählbar, je ein sanfter Ton pro Grundfarbe):
+Einstellungen → Design → „Farbton“ (nur bei „Modern“; „Modern dunkel“ und „Classic“ behalten
+ihre Farben): Warmes Papier (Vorgabe seit 28.11.2026, die Grundwerte in `app.css`), Gelb, Rot,
+Blau, Grün (das bisherige Graugrün). `ui/tone.svelte.ts`, `<html data-tone>`, `gotv.tone`,
+`app.html` setzt ihn vor dem ersten Zeichnen; es ändern sich nur `--bg`, `--surface-sunk`,
+`--rule`, `--ink-soft` - Flächen bleiben weiß, das Brett Holz. Web-App-Manifest
+`background_color` auf Warmes Papier.
 
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 

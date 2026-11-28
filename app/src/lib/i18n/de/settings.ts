@@ -7,6 +7,12 @@ export const settings = {
 	'settings.language': 'Sprache / Language',
 	'settings.languageHint': 'Gilt sofort und bleibt in diesem Browser gespeichert.',
 	'settings.design': 'Design',
+	'settings.tone': 'Farbton:',
+	'settings.tone.paper': 'Warmes Papier',
+	'settings.tone.yellow': 'Gelb',
+	'settings.tone.red': 'Rot',
+	'settings.tone.blue': 'Blau',
+	'settings.tone.green': 'Grün (bisher)',
 	'settings.designHint': 'Gilt sofort und bleibt in diesem Browser gespeichert.',
 	'settings.navOrder': 'Menü-Anordnung',
 	'settings.navOrderHint':

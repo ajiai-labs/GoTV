@@ -7,6 +7,12 @@ export const settings: Translation<typeof de> = {
 	'settings.language': 'Sprache / Language',
 	'settings.languageHint': 'Applies at once and is remembered in this browser.',
 	'settings.design': 'Design',
+	'settings.tone': 'Tone:',
+	'settings.tone.paper': 'Warm paper',
+	'settings.tone.yellow': 'Yellow',
+	'settings.tone.red': 'Red',
+	'settings.tone.blue': 'Blue',
+	'settings.tone.green': 'Green (before)',
 	'settings.designHint': 'Applies at once and is remembered in this browser.',
 	'settings.navOrder': 'Menu order',
 	'settings.navOrderHint':

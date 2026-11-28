@@ -11,12 +11,13 @@
 	--font-size: 15px;
 	--line: 1.45;
 
-	--bg: #eef1ec; /* shell */
+	/* Background tone "paper" (default since 28.11.2026; others below). */
+	--bg: #f4efe6;
 	--surface: #ffffff;
-	--surface-sunk: #e3e8e2;
+	--surface-sunk: #ebe4d7;
 	--ink: #1d2421; /* slate */
-	--ink-soft: #5e6a64;
-	--rule: #d2d9d3;
+	--ink-soft: #645f57;
+	--rule: #ddd5c6;
 	--accent: #1f7a5c; /* jade: actions, current move, live */
 	--accent-ink: #ffffff;
 	--accent-soft: #d6ebe2;
@@ -43,6 +44,37 @@
 	--title-size: 1.05rem;
 	--title-weight: 650;
 	--gap: 20px;
+}
+
+/* Background tones of Modern (Einstellungen → Farbton, ui/tone.svelte.ts):
+   a soft tone per basic colour; only the page and muted surfaces change. */
+:root[data-design='modern'][data-tone='yellow'] {
+	--bg: #f2ead6;
+	--surface-sunk: #e7dcc2;
+	--rule: #d9cdb0;
+	--ink-soft: #655c4f;
+}
+
+:root[data-design='modern'][data-tone='red'] {
+	--bg: #f5ebe7;
+	--surface-sunk: #ecdcd6;
+	--rule: #dfcbc3;
+	--ink-soft: #685b57;
+}
+
+:root[data-design='modern'][data-tone='blue'] {
+	--bg: #ebf0f5;
+	--surface-sunk: #dde5ee;
+	--rule: #cbd6e1;
+	--ink-soft: #5a6470;
+}
+
+/* Green: the grey-green shell of the first Modern design. */
+:root[data-design='modern'][data-tone='green'] {
+	--bg: #eef1ec;
+	--surface-sunk: #e3e8e2;
+	--rule: #d2d9d3;
+	--ink-soft: #5e6a64;
 }
 
 :root[data-design='modern-dark'] {
