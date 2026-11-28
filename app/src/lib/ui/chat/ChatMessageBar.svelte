@@ -4,6 +4,7 @@
 	import type { Conversation } from '#lib/model/types.ts';
 	import { isTouchDevice } from '#lib/util/dom.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
+	import { CHAT_MAX } from '#lib/model/kgsLimits.ts';
 
 	let {
 		conversation,
@@ -48,6 +49,7 @@
 			type="text"
 			enterkeyhint="send"
 			autocomplete="off"
+			maxlength={CHAT_MAX}
 			aria-label={t('chat.bar.label')}
 			placeholder={disabled ? t('chat.disabled') : t('chat.bar.placeholder')}
 		/>

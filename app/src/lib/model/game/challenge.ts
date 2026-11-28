@@ -62,20 +62,34 @@ export function getMatchupInfo(user1: User, user2: User, initialKomi?: number): 
 		unranked
 	};
 }
+// Whether KGS's echo of a proposal is the proposal we sent. KGS leaves out
+// false booleans and the time fields its time system does not use: our
+// nigiri: false and its missing nigiri are the same (review 28.11.2026 -
+// before, a handicap game was never accepted by itself).
+function timeFields(rules: GameProposal['rules']): Array<unknown> {
+	switch (rules.timeSystem) {
+		case 'none':
+			return [];
+		case 'absolute':
+			return [rules.mainTime ?? 0];
+		case 'canadian':
+			return [rules.mainTime ?? 0, rules.byoYomiStones ?? 0, rules.byoYomiTime ?? 0];
+		default:
+			return [rules.mainTime ?? 0, rules.byoYomiPeriods ?? 0, rules.byoYomiTime ?? 0];
+	}
+}
+
 export function proposalsEqual(p1: GameProposal, p2: GameProposal) {
 	if (
 		p1.gameType !== p2.gameType ||
-		p1.nigiri !== p2.nigiri ||
-		p1.private !== p2.private ||
+		!!p1.nigiri !== !!p2.nigiri ||
+		!!p1.private !== !!p2.private ||
 		p1.rules.size !== p2.rules.size ||
-		p1.rules.komi !== p2.rules.komi ||
+		(p1.rules.komi ?? 0) !== (p2.rules.komi ?? 0) ||
 		(p1.rules.handicap || 0) !== (p2.rules.handicap || 0) ||
 		p1.rules.rules !== p2.rules.rules ||
 		p1.rules.timeSystem !== p2.rules.timeSystem ||
-		p1.rules.mainTime !== p2.rules.mainTime ||
-		p1.rules.byoYomiPeriods !== p2.rules.byoYomiPeriods ||
-		p1.rules.byoYomiStones !== p2.rules.byoYomiStones ||
-		p1.rules.byoYomiTime !== p2.rules.byoYomiTime ||
+		timeFields(p1.rules).join() !== timeFields(p2.rules).join() ||
 		p1.players.length !== p2.players.length
 	) {
 		return false;

@@ -7,6 +7,7 @@ import { playGameStart, playMessage } from '../sound/gameSounds';
 import { isChatForMe, newChatAuthors } from './chatSound';
 import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './channelGuard';
 import { buildDetailsChange } from './user';
+import { CHALLENGE_TEXT_MAX, CHAT_MAX } from './kgsLimits';
 import {
 	activateMessage,
 	canEditReview,
@@ -113,6 +114,9 @@ export class AppActions {
 			}
 		);
 	}
+
+	// My KGS rank ("1d"), if I have one.
+	_myRank = (): string | null => this._store.getState().currentUser?.rank ?? null;
 
 	_restoreChannels = () => {
 		const joined = this._joinedChannels();
@@ -622,7 +626,7 @@ export class AppActions {
 			type: 'CHALLENGE_CREATE',
 			proposal: finalProposal,
 			channelId: roomId,
-			text: notes,
+			text: (notes ?? '').slice(0, CHALLENGE_TEXT_MAX),
 			global: visibility === 'public',
 			callbackKey: 12345 // Note - we don't use this
 		});
@@ -981,7 +985,7 @@ export class AppActions {
 
 		this._client.sendMessage({
 			type: 'CHAT',
-			text: body,
+			text: body.slice(0, CHAT_MAX),
 			channelId: conversationId
 		});
 	};
@@ -992,7 +996,7 @@ export class AppActions {
 
 		this._client.sendMessage({
 			type: 'CHAT',
-			text: body,
+			text: body.slice(0, CHAT_MAX),
 			channelId: gameId
 		});
 	};
@@ -1033,7 +1037,7 @@ export class AppActions {
 		if (roomIds.length) {
 			this._client.sendMessage({
 				type: 'ROOM_NAMES_REQUEST',
-				rooms: roomIds
+				rooms: roomIds.map(Number) // KGS: an array of integers
 			});
 		}
 	};
@@ -1319,6 +1323,7 @@ export class AppActions {
 		if (this._isOffline() || !name.trim()) return;
 		this._client.sendMessage({
 			type: 'FRIEND_ADD',
+			callbackKey: 0, // in KGS's field list ("pass in 0" if unused)
 			friendType,
 			name: name.trim(),
 			text: notes.trim().slice(0, 50)
@@ -1326,7 +1331,7 @@ export class AppActions {
 	};
 	onRemoveFriend = (friendType: FriendType, name: string) => {
 		if (this._isOffline()) return;
-		this._client.sendMessage({ type: 'FRIEND_REMOVE', friendType, name });
+		this._client.sendMessage({ type: 'FRIEND_REMOVE', callbackKey: 0, friendType, name });
 	};
 	// "Nachricht hinterlassen": KGS keeps it for the player's next login.
 	onLeaveMessage = (name: string, text: string) => {
@@ -1334,6 +1339,7 @@ export class AppActions {
 		this._store.dispatch({ type: 'COMMUNITY_RESULT_CLEAR' });
 		this._client.sendMessage({
 			type: 'MESSAGE_CREATE',
+			callbackKey: 0,
 			name: name.trim(),
 			text: text.trim().slice(0, 1000)
 		});
@@ -1354,6 +1360,7 @@ export class AppActions {
 		this._store.dispatch({ type: 'COMMUNITY_RESULT_CLEAR' });
 		this._client.sendMessage({
 			type: 'CREATE_ROOM_REQUEST',
+			callbackKey: 0,
 			name: name.trim().slice(0, 50),
 			description: description.trim().slice(0, 1000),
 			category: 'TEMPORARY',
@@ -1399,12 +1406,16 @@ export class AppActions {
 	};
 	// Automatic opponent selection (see ./automatch.ts).
 	onSetAutomatchPrefs = (prefs: AutomatchPrefs) => {
-		this._client.sendMessage(automatchMessage('AUTOMATCH_SET_PREFS', prefs) as KgsMessage);
+		this._client.sendMessage(
+			automatchMessage('AUTOMATCH_SET_PREFS', prefs, this._myRank()) as KgsMessage
+		);
 		this._store.dispatch({ ...prefs, type: 'AUTOMATCH_PREFS' });
 	};
 	onStartAutomatch = () => {
 		const prefs = this._store.getState().automatchPrefs || DEFAULT_AUTOMATCH_PREFS;
-		this._client.sendMessage(automatchMessage('AUTOMATCH_CREATE', prefs) as KgsMessage);
+		this._client.sendMessage(
+			automatchMessage('AUTOMATCH_CREATE', prefs, this._myRank()) as KgsMessage
+		);
 		// Shown right away; KGS confirms or corrects with AUTOMATCH_STATUS.
 		this._store.dispatch({ type: 'AUTOMATCH_STATUS', enabled: true });
 	};

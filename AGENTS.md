@@ -1103,6 +1103,20 @@ Kanal geschlossen hat oder GoTV ihn verlässt/verlassen hat (`left`, übersteht 
 Anmeldung läuft, nimmt Anfragen wie bisher. Geprüft: Rundgang (Profil, Beobachten + Chat,
 Brettübersicht, eigene Partie mit Zug und Chat) gegen das Übungs-KGS `--strict` ohne Warnung.
 
+## Nachrichten gegen die KGS-Doku geprüft (28.11.2026)
+
+Alle Sendestellen mit upstream/downstream/dataTypes und GoUniverse abgeglichen (Prüfauftrag an einen
+Hilfsagenten, Befunde im Code nachgeprüft). Behoben: Automatik-Gegnerwahl schickt immer alle zehn
+Felder (Ja/Nein als true/false, `estimatedRank` - die Doku schreibt „estiamtedRank“ -, ohne Angabe
+mein Rang, „?“ bei `AUTOMATCH_CREATE` als „30k“ wie GoUniverse); `callbackKey: 0` bei FRIEND_ADD/
+REMOVE, MESSAGE_CREATE, CREATE_ROOM_REQUEST (steht in KGS' Feldliste); Chat auf 1000 und
+Herausforderungs-Notiz auf 80 Zeichen (`model/kgsLimits.ts`, auch `maxlength`); `proposalsEqual`
+nimmt ein fehlendes false als false und vergleicht nur die Zeitfelder des Zeitsystems (vorher wurde
+eine Vorgabepartie nie von selbst angenommen: `nigiri: false` gegen fehlendes `nigiri`);
+ROOM_NAMES_REQUEST mit Zahlen. Bewusst gelassen: „Gelesen – löschen“ (MESSAGE_DELETE ohne Liste löscht
+alles, auch eine gerade angekommene Nachricht) - das Format der Löschliste ist in der Doku anders als
+das der empfangenen Nachrichten; eine falsche Liste könnte die Sitzung beenden.
+
 ## Übungs-KGS (27.11.2026)
 
 Wunsch des Nutzers: ausprobieren, wie eine eigene Partie mit drei laufenden Partien daneben

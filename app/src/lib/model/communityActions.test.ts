@@ -24,6 +24,7 @@ describe('community actions', () => {
 		actions.onAddFriend('censored', ' troll ', 'stört im Raum');
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: 'FRIEND_ADD',
+			callbackKey: 0,
 			friendType: 'censored',
 			name: 'troll',
 			text: 'stört im Raum'
@@ -31,6 +32,7 @@ describe('community actions', () => {
 		actions.onRemoveFriend('buddy', 'thirdstep');
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: 'FRIEND_REMOVE',
+			callbackKey: 0,
 			friendType: 'buddy',
 			name: 'thirdstep'
 		});
@@ -41,6 +43,7 @@ describe('community actions', () => {
 		actions.onLeaveMessage('guiguistar', 'Partie fortsetzen?');
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: 'MESSAGE_CREATE',
+			callbackKey: 0,
 			name: 'guiguistar',
 			text: 'Partie fortsetzen?'
 		});
@@ -60,6 +63,7 @@ describe('community actions', () => {
 		actions.onCreateRoom('Andys Lernraum', 'Zum Nachbesprechen', true);
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: 'CREATE_ROOM_REQUEST',
+			callbackKey: 0,
 			name: 'Andys Lernraum',
 			description: 'Zum Nachbesprechen',
 			category: 'TEMPORARY',

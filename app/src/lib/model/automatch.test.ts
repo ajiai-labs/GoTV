@@ -56,8 +56,10 @@ describe('automatch', () => {
 	it('starts the search with the saved prefs, or the defaults', () => {
 		const { sendMessage, store, actions } = setup();
 		actions.onStartAutomatch();
+		// Before KGS ever sent prefs: the defaults, with my rank.
 		expect(sendMessage).toHaveBeenLastCalledWith({
 			...DEFAULT_AUTOMATCH_PREFS,
+			estimatedRank: '1d',
 			type: 'AUTOMATCH_CREATE'
 		});
 		expect(store.getState().automatchEnabled).toBe(true);
@@ -153,5 +155,27 @@ describe('automatch', () => {
 		]);
 		expect(store.getState().playGameId).toBeNull();
 		expect(history.push).not.toHaveBeenCalled();
+	});
+
+	// KGS sends its booleans only when true (review 28.11.2026): every field
+	// goes back, false ones as false; "?" is not taken by AUTOMATCH_CREATE.
+	it('sends every field, also the false ones KGS left out', () => {
+		const sparse = { type: 'AUTOMATCH_PREFS', maxHandicap: 3, estimatedRank: '?', humanOk: true };
+		expect(automatchMessage('AUTOMATCH_SET_PREFS', sparse as never)).toEqual({
+			type: 'AUTOMATCH_SET_PREFS',
+			maxHandicap: 3,
+			estimatedRank: '?',
+			freeOk: false,
+			rankedOk: false,
+			robotOk: false,
+			humanOk: true,
+			unrankedOk: false,
+			blitzOk: false,
+			fastOk: false,
+			mediumOk: false
+		});
+		expect(automatchMessage('AUTOMATCH_CREATE', sparse as never)).toMatchObject({
+			estimatedRank: '30k'
+		});
 	});
 });

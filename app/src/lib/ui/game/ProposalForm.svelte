@@ -2,6 +2,7 @@
 	import type { GameRuleSet, GameType } from '#lib/model/types.ts';
 
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+	import { CHALLENGE_TEXT_MAX } from '#lib/model/kgsLimits.ts';
 
 	const GAME_TYPE_KEYS: Record<GameType, MessageKey> = {
 		challenge: 'play.gameType.challenge',
@@ -358,6 +359,7 @@
 				<input
 					type="text"
 					placeholder={t('play.form.notePlaceholder')}
+					maxlength={CHALLENGE_TEXT_MAX}
 					value={notes}
 					oninput={(e) => onChangeNotes(e.currentTarget.value)}
 				/>
