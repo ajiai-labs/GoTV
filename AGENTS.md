@@ -1020,6 +1020,10 @@ Steine und sind unverändert. README um die Funktionen vom 25./26.11. ergänzt.
   abgelehnt und geschlossen), Server-Statistik (`REQUEST_SERVER_STATS`).
   Modell: `model/community.ts`. Chat von Spielern auf der Ignorierliste blendet GoTV aus.
   Spielerprofil: Knöpfe Freund/Fan/Ignorieren, "Nachricht hinterlassen" bei Offline.
+  Reiter "Rang" (`ui/user/UserRankGraph.svelte`, 28.11.2026 nach CGoban-Vorbild aus dem Video des
+  Nutzers detaillierter): dünne, ungeglättete Linie, Linie je Rang plus Viertelrang-Linien (bis vier
+  Ränge Spannweite), Überschrift "Ranggraph für NAME (von bis)", Jahreszahl unter dem ersten Monat
+  und jedem Januar; im Design Classic schwarze Fläche mit grüner Linie wie CGoban.
   Die Fanliste von KGS ist getrennt von GoTVs "Spielern folgen" (lokal).
 - Brettgröße wie CGoban (26.11.2026): die Trennkante merkt sich den ANTEIL der Seitenspalte an
   der Breite (`gotv.gameSideShare`, 0,12-0,55, Vorgabe 0,3, mindestens 280 px), das Brett nimmt

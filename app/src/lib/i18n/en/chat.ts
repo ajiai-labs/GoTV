@@ -109,6 +109,7 @@ export const chat: Translation<typeof de> = {
 	'chat.summary.loadFailed': 'KGS could not load the game.',
 	'chat.summary.retry': 'Try again',
 	// UserRankGraph
+	'chat.rankGraph.title': 'Rank graph of {name} ({from} to {to})',
 	'chat.rankGraph.summary': 'Rank history of the last {count} days',
 	'chat.rankGraph.summaryCurrent': 'Rank history of the last {count} days, lately about {rank}',
 	'chat.rankGraph.loading': 'Loading rank history …',

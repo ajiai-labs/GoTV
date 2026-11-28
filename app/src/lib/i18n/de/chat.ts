@@ -114,6 +114,7 @@ export const chat = {
 	'chat.summary.loadFailed': 'KGS konnte die Partie nicht laden.',
 	'chat.summary.retry': 'Erneut versuchen',
 	// UserRankGraph
+	'chat.rankGraph.title': 'Ranggraph für {name} ({from} bis {to})',
 	'chat.rankGraph.summary': 'Rangverlauf der letzten {count} Tage',
 	'chat.rankGraph.summaryCurrent': 'Rangverlauf der letzten {count} Tage, zuletzt etwa {rank}',
 	'chat.rankGraph.loading': 'Rangverlauf lädt …',

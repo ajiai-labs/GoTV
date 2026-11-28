@@ -417,6 +417,7 @@
 							{:else if shownTab === 'rankGraph'}
 								<UserRankGraph
 									graph={channelId ? appState.rankGraphsByChannelId[channelId] : null}
+									name={user?.name ?? request?.name ?? ''}
 								/>
 							{/if}
 						</div>
