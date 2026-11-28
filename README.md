@@ -354,7 +354,9 @@ sh desktop/uninstall.sh
 ```
 
 Browser profile and server log live in `~/.local/share/gotv/` and are left
-in place by the uninstaller.
+in place by the uninstaller. `kgs-protocol.log` there lists every request to KGS and
+every answer, one line each (type and channel - never a password, of chat lines and
+other texts only the length), to find out what led to a lost connection.
 
 Updating: GoTV looks for new commits on GitHub at start and every hour and says so
 in a one-line notice ("Update verfügbar: GoTV 0.4.1+45 · 2 neue Funktionen"). Under
@@ -509,7 +511,7 @@ Before pushing, the same checks as the CI:
 ```
 cd app && npm run check && npm run lint && npm test && npm run build
 python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events \
-  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos
+  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos tools.test_kgs_log
 ```
 
 Check the exit codes, not only the last line of output (`npm run lint | tail -1`

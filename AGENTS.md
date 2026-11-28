@@ -38,7 +38,7 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
 - Nach jedem Schritt grün (wie die GitHub-CI): `cd app && npm run check && npm run lint &&
   npm test && npm run build`, dazu die Python-Tool-Tests (`python3 -m unittest
   tools.test_update_events tools.test_check_links tools.test_refresh_tv_events
-  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
+  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos tools.test_kgs_log`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -1117,6 +1117,17 @@ eine Vorgabepartie nie von selbst angenommen: `nigiri: false` gegen fehlendes `n
 ROOM_NAMES_REQUEST mit Zahlen. Bewusst gelassen: „Gelesen – löschen“ (MESSAGE_DELETE ohne Liste löscht
 alles, auch eine gerade angekommene Nachricht) - das Format der Löschliste ist in der Doku anders als
 das der empfangenen Nachrichten; eine falsche Liste könnte die Sitzung beenden.
+
+## KGS-Protokoll des lokalen Dienstes (28.11.2026)
+
+Wunsch des Nutzers nach „Unknown channel 109735821“ mit der neuen Version (welche Anfrage, stand
+nirgends): `desktop/kgs_log.py`, eingehängt in `goTV_local.py` (`_proxy_request`), schreibt jede
+Anfrage an KGS (`->`) und jede Antwort (`<-`) als eine Zeile nach
+`~/.local/share/gotv/kgs-protocol.log` (rotiert bei 5 MB nach `.1`; Pfad per `GOTV_PROTOCOL_LOG`).
+Nur Art, Kanal und wenige Felder (Spiel, Liste, Benutzername bei Profil/Archiv, callbackKey); NIE ein
+Passwort, von Chat, Nachrichten, Profiltexten nur die Länge; die Abmeldegründe von KGS (LOGOUT …)
+vollständig. Bleibt auf dem Rechner. Bei einem Abbruch: die Zeilen vor dem `<- LOGOUT [...]` lesen.
+Gilt nur für die Skriptinstallation (Tauri-`gotv-server` hat es nicht). Tests: `tools/test_kgs_log.py`.
 
 ## Übungs-KGS (27.11.2026)
 

@@ -42,7 +42,12 @@ LOG_LINES = 40
 INSTALLED_FILE = "gotv-commit.txt"
 CHANGE_LINES = 30
 # Files of the running server and launcher: changed -> GoTV must restart.
-RESTART_FILES = ("desktop/goTV_local.py", "desktop/script_update.py", "desktop/launch-gotv")
+RESTART_FILES = (
+    "desktop/goTV_local.py",
+    "desktop/script_update.py",
+    "desktop/kgs_log.py",
+    "desktop/launch-gotv",
+)
 
 
 def _tool_path():

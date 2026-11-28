@@ -104,6 +104,9 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
     # Set only by main() of this server (not by tools built on its handler,
     # such as the practice KGS): the update actions of the script install.
     updater = None
+    # kgs_log.ProtocolLog: every request to KGS and answer, one line each
+    # (set in main(); not in tests and the practice KGS).
+    protocol_log = None
 
     def do_GET(self):
         if not self._request_allowed():
@@ -244,8 +247,13 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
             resp_body = resp.read()
         except Exception as err:
             sys.stderr.write("gotv-local proxy error: %s\n" % err)
+            if type(self).protocol_log:
+                type(self).protocol_log.error(method, body, err)
             self.send_error(502, "KGS proxy error")
             return
+
+        if type(self).protocol_log:
+            type(self).protocol_log.request(method, body, resp.status, resp_body)
 
         self.send_response(resp.status)
         for name, value in resp.getheaders():
@@ -371,6 +379,9 @@ def main(argv=None):
         sys.stderr.write("GoTV local server: restarting after the update\n")
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
+    from kgs_log import ProtocolLog, default_path  # noqa: E402 - next to this file
+
+    GoTvHandler.protocol_log = ProtocolLog(os.environ.get("GOTV_PROTOCOL_LOG") or default_path())
     GoTvHandler.updater = ScriptUpdater(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         on_restart=restart,
