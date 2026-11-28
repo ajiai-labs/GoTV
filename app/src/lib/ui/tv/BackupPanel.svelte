@@ -243,7 +243,7 @@
 	}
 
 	:global([data-design='oldschool']) .BackupPanel-confirm {
-		border: 1px solid #808080;
+		border: 1px solid var(--bevel-dark, #808080);
 		border-left-width: 3px;
 		border-left-color: var(--accent);
 		background: var(--surface-sunk);

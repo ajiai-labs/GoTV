@@ -535,7 +535,7 @@
 	}
 
 	:global([data-design='oldschool']) .ChatScreen-side {
-		border-right: 2px solid #808080;
+		border-right: 2px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .ChatScreen-tab {

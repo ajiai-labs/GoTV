@@ -986,7 +986,8 @@
 	}
 
 	:global([data-design='oldschool']) .GameScreen-side {
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .GameScreen-players {
@@ -996,12 +997,12 @@
 
 	:global([data-design='oldschool']) .GameScreen-users {
 		background: var(--surface-sunk);
-		border-left: 1px solid #808080;
+		border-left: 1px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .GameScreen-chat-scroll {
 		background: var(--surface-sunk);
-		border-top: 1px solid #808080;
+		border-top: 1px solid var(--bevel-dark, #808080);
 		padding: 2px 6px;
 	}
 

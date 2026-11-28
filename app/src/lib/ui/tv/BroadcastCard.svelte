@@ -1076,7 +1076,8 @@
 	:global([data-design='oldschool']) .BroadcastCard-boards {
 		padding: 6px 8px 8px;
 		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .BroadcastCard-boards-title {
@@ -1092,7 +1093,7 @@
 	}
 
 	:global([data-design='oldschool']) .BroadcastCard-link-input {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--surface-sunk);
 	}

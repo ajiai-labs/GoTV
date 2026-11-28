@@ -77,7 +77,7 @@
 	:global([data-design='oldschool']) .ChatMessageBar-input {
 		min-height: 28px;
 		padding: 3px 6px;
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--surface-sunk);
 		font-size: max(16px, 1em);

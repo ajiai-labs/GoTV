@@ -570,13 +570,13 @@
 
 	:global([data-design='oldschool']) .tabs {
 		gap: 2px;
-		border-bottom: 2px solid #808080;
+		border-bottom: 2px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .tabs button {
 		min-height: 24px;
 		padding: 2px 10px;
-		border: 2px outset #ece9e2;
+		border: 2px outset var(--bevel-face, #ece9e2);
 		border-bottom: 0;
 		background: var(--surface);
 		color: var(--ink);
@@ -588,7 +588,7 @@
 	}
 
 	:global([data-design='oldschool']) .avatar {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 	}
 
 	@media (max-width: 520px) {

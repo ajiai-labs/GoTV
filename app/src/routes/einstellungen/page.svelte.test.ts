@@ -52,7 +52,7 @@ describe('Einstellungen', () => {
 		expect(localStorage.getItem('gotv.navOrder')).toBe('gotv');
 	});
 
-	it('offers a soft tone per basic colour for Modern and remembers it', async () => {
+	it('offers a soft tone per basic colour for every design and remembers it', async () => {
 		await render(Page);
 		// Warm paper is the default (28.11.2026).
 		await expect.element(page.getByRole('radio', { name: 'Warmes Papier' })).toBeChecked();
@@ -62,12 +62,25 @@ describe('Einstellungen', () => {
 		await page.getByText('Blau', { exact: true }).click();
 		expect(document.documentElement.dataset.tone).toBe('blue');
 		expect(localStorage.getItem('gotv.tone')).toBe('blue');
-		// Only for Modern: the dark and the classic design keep their colours.
+		// Every design combines with every tone (user, 28.11.2026).
 		await page.getByText('Modern dunkel', { exact: true }).click();
-		await expect.element(page.getByText('Blau', { exact: true })).not.toBeInTheDocument();
-		await page.getByText('Modern', { exact: true }).click();
 		await expect.element(page.getByRole('radio', { name: 'Blau' })).toBeChecked();
+		expect(document.documentElement.dataset.design).toBe('modern-dark');
+		expect(document.documentElement.dataset.tone).toBe('blue');
+		await page.getByText('Modern', { exact: true }).click();
 		await page.getByText('Warmes Papier', { exact: true }).click();
+	});
+
+	it('has Classic in light and dark, the dark one with the Classic rules', async () => {
+		await render(Page);
+		await page.getByText('Classic dunkel', { exact: true }).click();
+		expect(document.documentElement.dataset.design).toBe('oldschool');
+		expect(document.documentElement.dataset.scheme).toBe('dark');
+		expect(localStorage.getItem('gotv.design')).toBe('oldschool-dark');
+		await page.getByText('Classic', { exact: true }).click();
+		expect(document.documentElement.dataset.design).toBe('oldschool');
+		expect(document.documentElement.dataset.scheme).toBeUndefined();
+		await page.getByText('Modern', { exact: true }).click();
 	});
 
 	it('switches the sounds of an own game and remembers them', async () => {

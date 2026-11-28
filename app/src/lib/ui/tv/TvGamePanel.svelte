@@ -279,7 +279,7 @@
 	}
 
 	:global([data-design='oldschool']) .TvGamePanel-tab {
-		border: 2px outset #ece9e2;
+		border: 2px outset var(--bevel-face, #ece9e2);
 		border-bottom-width: 2px;
 		background: var(--button-bg);
 		color: var(--ink);
@@ -291,7 +291,7 @@
 	}
 
 	:global([data-design='oldschool']) .TvGamePanel-chat {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		background: var(--surface-sunk);
 	}
 </style>

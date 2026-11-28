@@ -202,7 +202,7 @@
 	}
 
 	:global([data-design='oldschool']) .BoardPreview {
-		border: 2px outset #ece9e2;
+		border: 2px outset var(--bevel-face, #ece9e2);
 		background: var(--button-bg);
 	}
 

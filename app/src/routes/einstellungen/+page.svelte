@@ -26,7 +26,8 @@
 	const SWATCH = {
 		modern: { bg: '#eef1ec', ink: '#1d2421', board: '#ddb77a', accent: '#1f7a5c' },
 		'modern-dark': { bg: '#121816', ink: '#e4ebe7', board: '#cfa86c', accent: '#3fb68b' },
-		oldschool: { bg: '#d4d0c8', ink: '#000000', board: '#d9a54a', accent: '#1c3f7a' }
+		oldschool: { bg: '#d4d0c8', ink: '#000000', board: '#d9a54a', accent: '#1c3f7a' },
+		'oldschool-dark': { bg: '#3a3833', ink: '#e8e4dc', board: '#c8962b', accent: '#3d6bb3' }
 	} as const;
 
 	const ORDERS: Array<{ id: NavOrder; groups: Array<Array<string>> }> = [
@@ -198,24 +199,22 @@
 			</label>
 		{/each}
 	</div>
-	{#if design.current === 'modern'}
-		<div class="tones" role="radiogroup" aria-label={t('settings.tone')}>
-			<span class="tones-label">{t('settings.tone')}</span>
-			{#each TONES as option (option.id)}
-				<label class="tone" class:chosen={tone.current === option.id}>
-					<input
-						type="radio"
-						name="tone"
-						value={option.id}
-						checked={tone.current === option.id}
-						onchange={() => tone.set(option.id)}
-					/>
-					<span class="tone-swatch" style:background={option.swatch} aria-hidden="true"></span>
-					{t(option.name)}
-				</label>
-			{/each}
-		</div>
-	{/if}
+	<div class="tones" role="radiogroup" aria-label={t('settings.tone')}>
+		<span class="tones-label">{t('settings.tone')}</span>
+		{#each TONES as option (option.id)}
+			<label class="tone" class:chosen={tone.current === option.id}>
+				<input
+					type="radio"
+					name="tone"
+					value={option.id}
+					checked={tone.current === option.id}
+					onchange={() => tone.set(option.id)}
+				/>
+				<span class="tone-swatch" style:background={option.swatch} aria-hidden="true"></span>
+				{t(option.name)}
+			</label>
+		{/each}
+	</div>
 </fieldset>
 
 {#if config.guestOnly}

@@ -270,7 +270,7 @@
 	:global([data-design='oldschool']) .GamePlayersInfo-color {
 		padding: 3px 4px;
 		background: var(--surface-sunk);
-		border: 1px solid #808080;
+		border: 1px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .GamePlayersInfo-winner {

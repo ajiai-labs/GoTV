@@ -1,9 +1,10 @@
-// The background tone of the Modern design (wish of the user, 28.11.2026:
-// warmer than the grey-green, chosen in the settings - a neutral warm paper
-// and one soft tone for each basic colour: yellow, red, blue, green). Put on
-// <html data-tone>, where app.css changes only the page and its muted
-// surfaces - panels stay white, the board stays wood. app.html applies it
-// before the first paint. "Modern dunkel" and "Classic" keep their colours.
+// The background tone (wish of the user, 28.11.2026: warmer than the
+// grey-green, chosen in the settings - a neutral warm paper and one soft tone
+// for each basic colour: yellow, red, blue, green). It combines with every
+// design (user: "daraus ergibt sich die Kombination"): Modern, Modern dunkel
+// (a dark version of the hue) and Classic (tinted window grey). Put on
+// <html data-tone>, where app.css changes the page and its muted surfaces -
+// the board stays wood. app.html applies it before the first paint.
 
 import type { MessageKey } from '#lib/i18n/index.svelte.ts';
 

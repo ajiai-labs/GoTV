@@ -1239,7 +1239,7 @@
 	}
 
 	:global([data-design='oldschool']) .comment {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--paper, #ffffff);
 	}
@@ -1264,7 +1264,7 @@
 	:global([data-design='oldschool']) textarea,
 	:global([data-design='oldschool']) .bookmark-input,
 	:global([data-design='oldschool']) .share-field {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--paper, #ffffff);
 	}

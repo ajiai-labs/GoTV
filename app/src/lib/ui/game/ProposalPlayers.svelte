@@ -219,7 +219,8 @@
 
 	:global([data-design='oldschool']) .ProposalPlayers-item {
 		border: 2px solid;
-		border-color: #808080 #ffffff #ffffff #808080;
+		border-color: var(--bevel-dark, #808080) var(--bevel-light, #ffffff) var(--bevel-light, #ffffff)
+			var(--bevel-dark, #808080);
 		border-radius: 0;
 	}
 

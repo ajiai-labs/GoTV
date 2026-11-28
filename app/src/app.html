@@ -24,6 +24,11 @@
 			// Apply the chosen design and language before the first paint (no flash of the other one).
 			try {
 				var d = localStorage.getItem('gotv.design');
+				// Classic dunkel: the Classic rules plus a dark scheme (design.svelte.ts).
+				if (d === 'oldschool-dark') {
+					document.documentElement.dataset.scheme = 'dark';
+					d = 'oldschool';
+				}
 				if (d === 'oldschool' || d === 'modern' || d === 'modern-dark')
 					document.documentElement.dataset.design = d;
 				// The background tone of Modern (src/lib/ui/tone.svelte.ts).

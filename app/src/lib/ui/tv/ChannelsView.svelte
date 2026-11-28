@@ -149,7 +149,8 @@
 		padding: 0 6px 6px;
 		background: var(--surface);
 		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .ChannelsView-group-title {

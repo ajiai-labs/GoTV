@@ -263,7 +263,7 @@
 	}
 
 	:global([data-design='oldschool']) fieldset {
-		border: 2px groove #ece9e2;
+		border: 2px groove var(--bevel-face, #ece9e2);
 		border-radius: 0;
 	}
 </style>

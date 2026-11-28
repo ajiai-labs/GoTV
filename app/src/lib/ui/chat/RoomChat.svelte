@@ -188,7 +188,7 @@
 	}
 
 	:global([data-design='oldschool']) .RoomChat-desc {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		background: var(--surface-sunk);
 	}
 
@@ -201,7 +201,7 @@
 	}
 
 	:global([data-design='oldschool']) .RoomChat-sidebar {
-		border-left: 2px solid #808080;
+		border-left: 2px solid var(--bevel-dark, #808080);
 		background: var(--surface-sunk);
 	}
 </style>

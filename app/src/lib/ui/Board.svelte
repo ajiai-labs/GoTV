@@ -11,7 +11,7 @@
 	// see-through stone follows the pointer (playing).
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import type { BoardMarkup, BoardPointMark, BoardState, Point } from '#lib/model/types.ts';
-	import { design } from './design.svelte.ts';
+	import { design, isClassic } from './design.svelte.ts';
 	import {
 		SHELL_VARIANTS,
 		STONE_RADIUS,
@@ -100,7 +100,7 @@
 	});
 	// The last move: given directly, or the "active" mark of the markup.
 	let last = $derived(lastMove ?? marks.find((m) => m.mark === 'active') ?? null);
-	let oldschool = $derived(design.current === 'oldschool');
+	let oldschool = $derived(isClassic(design.current));
 	let colorAt = (x: number, y: number) => board[y]?.[x] ?? null;
 	// Marks on a black stone are drawn light, everywhere else dark.
 	let ink = (x: number, y: number) => (colorAt(x, y) === 'black' ? '#ffffff' : '#1d2421');

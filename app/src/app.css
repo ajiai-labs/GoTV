@@ -114,6 +114,45 @@
 	--calendar-bar-plain: #3a4642;
 }
 
+/* Night versions of the background tones (28.11.2026): the same hue in the
+   dark. Warm paper is the default, green the first Modern dunkel above. */
+:root[data-design='modern-dark']:not([data-tone]),
+:root[data-design='modern-dark'][data-tone='paper'] {
+	--bg: #1a1714;
+	--surface: #24201b;
+	--surface-sunk: #15120f;
+	--rule: #3a332b;
+	--ink-soft: #a89d90;
+	--paper: #2b2620;
+}
+
+:root[data-design='modern-dark'][data-tone='yellow'] {
+	--bg: #1b1810;
+	--surface: #25211a;
+	--surface-sunk: #16130c;
+	--rule: #3b3426;
+	--ink-soft: #ab9f86;
+	--paper: #2c271b;
+}
+
+:root[data-design='modern-dark'][data-tone='red'] {
+	--bg: #1c1415;
+	--surface: #261d1e;
+	--surface-sunk: #170f10;
+	--rule: #3d2d2f;
+	--ink-soft: #ab9899;
+	--paper: #2d2223;
+}
+
+:root[data-design='modern-dark'][data-tone='blue'] {
+	--bg: #11161d;
+	--surface: #1a2029;
+	--surface-sunk: #0d1117;
+	--rule: #2b3542;
+	--ink-soft: #94a1b0;
+	--paper: #222a35;
+}
+
 :root[data-design='oldschool'] {
 	/* Oldschool: classic Go programs - window grey, deep kaya, navy selection. */
 	--font-ui: Tahoma, Verdana, 'DejaVu Sans', 'Segoe UI', sans-serif;
@@ -152,6 +191,95 @@
 	--title-size: 13px;
 	--title-weight: 700;
 	--gap: 8px;
+}
+
+/* Classic dunkel (28.11.2026): <html data-design="oldschool" data-scheme="dark">
+   - the Classic shapes (bevels, Tahoma, square corners) in dark colours. The
+   bevel colours of the components read --bevel-light/-face/-dark. */
+:root[data-design='oldschool'][data-scheme='dark'] {
+	color-scheme: dark;
+
+	--bg: #1e1d1b;
+	--surface: #3a3833; /* dark window grey */
+	--surface-sunk: #232220;
+	--ink: #e8e4dc;
+	--ink-soft: #bdb6aa;
+	--rule: #5c5850;
+	--accent: #3d6bb3;
+	--accent-ink: #ffffff;
+	--accent-soft: #2a3550;
+	--live: #e0574d;
+	--focus: #e8e4dc;
+
+	--board: #c8962b;
+	--board-edge: #9a6d1f;
+	--board-line: #241705;
+	--board-coord: #2e1f08;
+
+	--button-bg: #3a3833;
+	--button-border: 2px outset var(--bevel-face);
+	--bevel-light: #6e6a62;
+	--bevel-face: #5a5750;
+	--bevel-dark: #141312;
+
+	--danger: #ff8a80;
+	--danger-bg: #3a1d1a;
+	--danger-ink: #ffb4aa;
+	--warn-bg: #3a3218;
+	--warn-ink: #f3dd8e;
+	--paper: #2a2925;
+	--paper-ink: #e8e4dc;
+	--calendar-bar-plain: #4a463e;
+}
+
+/* Classic in the background tones (28.11.2026): the window grey and the
+   desktop behind it take on the hue; warm paper is the classic grey. */
+:root[data-design='oldschool'][data-tone='yellow'] {
+	--bg: #bdb398;
+	--surface: #d9d1bd;
+	--button-bg: #d9d1bd;
+}
+
+:root[data-design='oldschool'][data-tone='red'] {
+	--bg: #bcaaa5;
+	--surface: #d9cdc8;
+	--button-bg: #d9cdc8;
+}
+
+:root[data-design='oldschool'][data-tone='blue'] {
+	--bg: #a7b0ba;
+	--surface: #cdd3da;
+	--button-bg: #cdd3da;
+}
+
+:root[data-design='oldschool'][data-tone='green'] {
+	--bg: #aab3a5;
+	--surface: #cdd3c8;
+	--button-bg: #cdd3c8;
+}
+
+:root[data-design='oldschool'][data-scheme='dark'][data-tone='yellow'] {
+	--bg: #1f1c14;
+	--surface: #3c3627;
+	--button-bg: #3c3627;
+}
+
+:root[data-design='oldschool'][data-scheme='dark'][data-tone='red'] {
+	--bg: #201819;
+	--surface: #3d3031;
+	--button-bg: #3d3031;
+}
+
+:root[data-design='oldschool'][data-scheme='dark'][data-tone='blue'] {
+	--bg: #161b21;
+	--surface: #2f3640;
+	--button-bg: #2f3640;
+}
+
+:root[data-design='oldschool'][data-scheme='dark'][data-tone='green'] {
+	--bg: #181d18;
+	--surface: #313830;
+	--button-bg: #313830;
 }
 
 * {

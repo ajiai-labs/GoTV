@@ -580,7 +580,7 @@
 	:global([data-design='oldschool']) .ProposalForm input {
 		min-height: 28px;
 		padding: 2px 4px;
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--surface-sunk);
 	}

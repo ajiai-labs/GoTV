@@ -516,7 +516,7 @@
 		padding: 4px 6px;
 		margin: 0 -16px 8px;
 		background: var(--surface);
-		border-bottom: 2px solid #808080;
+		border-bottom: 2px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .brand {

@@ -280,13 +280,13 @@
 
 	:global([data-design='oldschool']) .GameListFilter {
 		padding: 4px 6px;
-		border-bottom: 1px solid #808080;
+		border-bottom: 1px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) select {
 		min-height: 0;
 		padding: 1px 4px;
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		background: var(--surface-sunk);
 	}
 

@@ -423,7 +423,7 @@
 	}
 
 	:global([data-design='oldschool']) .CalendarMonth-day-outside {
-		background: #ece9e2;
+		background: var(--bevel-face, #ece9e2);
 	}
 
 	:global([data-design='oldschool']) .CalendarMonth-day-selected {
@@ -443,14 +443,15 @@
 	}
 
 	:global([data-design='oldschool']) .CalendarMonth-legend li::before {
-		border: 1px solid #808080;
+		border: 1px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .CalendarMonth-selected {
 		padding: 0 6px 6px;
 		background: var(--surface);
 		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .CalendarMonth-selected-title {

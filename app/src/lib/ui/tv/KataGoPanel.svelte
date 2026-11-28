@@ -587,7 +587,7 @@
 	}
 
 	:global([data-design='oldschool']) .compare {
-		border: 1px solid #808080;
+		border: 1px solid var(--bevel-dark, #808080);
 		background: var(--warn-bg, #ffffe1);
 	}
 

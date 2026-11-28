@@ -148,7 +148,7 @@
 	:global([data-design='oldschool']) .UserDetailsEditForm input[type='password'],
 	:global([data-design='oldschool']) .UserDetailsEditForm textarea {
 		padding: 3px 5px;
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		background: var(--surface-sunk);
 	}
 </style>

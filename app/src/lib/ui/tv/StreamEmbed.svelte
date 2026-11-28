@@ -202,6 +202,6 @@
 	}
 
 	:global([data-design='oldschool']) .StreamEmbed-placeholder {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 	}
 </style>

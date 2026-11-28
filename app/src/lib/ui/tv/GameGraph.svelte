@@ -228,7 +228,7 @@
 	}
 
 	:global([data-design='oldschool']) .curve {
-		border: 2px inset #ece9e2;
+		border: 2px inset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 	}
 

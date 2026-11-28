@@ -29,6 +29,9 @@ export const settings: Translation<typeof de> = {
 	'settings.design.modernDark.name': 'Modern dark',
 	'settings.design.modernDark.description':
 		'The modern design in dark – easy on the eyes in the evening and in cinema mode.',
+	'settings.design.oldschoolDark.name': 'Classic dark',
+	'settings.design.oldschoolDark.description':
+		'Classic in the evening: dark windows with the same frames and buttons, the board stays wood.',
 	'settings.design.oldschool.name': 'Classic',
 	'settings.design.oldschool.description':
 		'Like classic Go programs: grey windows, a wooden board with shaded stones.',

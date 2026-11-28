@@ -31,7 +31,8 @@
 
 	:global([data-design='oldschool']) .OfflineNotice {
 		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 		border-left: 4px solid #c8962b;
 		background: var(--warn-bg, #ffffe1);
 	}

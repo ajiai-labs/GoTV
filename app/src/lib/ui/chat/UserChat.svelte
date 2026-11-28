@@ -127,7 +127,7 @@
 
 	:global([data-design='oldschool']) .UserChat-head {
 		padding: 4px 8px;
-		border-bottom: 2px solid #808080;
+		border-bottom: 2px solid var(--bevel-dark, #808080);
 	}
 
 	:global([data-design='oldschool']) .UserChat-messages {

@@ -513,12 +513,20 @@ grüner Balken links an der Zeile des Spielers, dessen Uhr läuft (`GamePlayersI
 Schrift Noto Sans nur als Bildvergleich gezeigt (Bricolage Grotesque bleibt, bis der Nutzer
 entscheidet).
 Farbton (Nutzer: wärmer als das Graugrün, selbst wählbar, je ein sanfter Ton pro Grundfarbe):
-Einstellungen → Design → „Farbton“ (nur bei „Modern“; „Modern dunkel“ und „Classic“ behalten
-ihre Farben): Warmes Papier (Vorgabe seit 28.11.2026, die Grundwerte in `app.css`), Gelb, Rot,
-Blau, Grün (das bisherige Graugrün). `ui/tone.svelte.ts`, `<html data-tone>`, `gotv.tone`,
-`app.html` setzt ihn vor dem ersten Zeichnen; es ändern sich nur `--bg`, `--surface-sunk`,
-`--rule`, `--ink-soft` - Flächen bleiben weiß, das Brett Holz. Web-App-Manifest
-`background_color` auf Warmes Papier.
+Einstellungen → Design → „Farbton“: Warmes Papier (Vorgabe seit 28.11.2026, die Grundwerte in
+`app.css`), Gelb, Rot, Blau, Grün (das bisherige Graugrün). Er kombiniert sich mit jedem Design
+(Nutzer: „daraus ergibt sich die Kombination“): Modern (Seite und gedämpfte Flächen), Modern
+dunkel (dunkle Fassung des Tons), Classic hell/dunkel (Fenstergrau und Hintergrund getönt).
+`ui/tone.svelte.ts`, `<html data-tone>`, `gotv.tone`; `app.html` setzt Design und Ton vor dem
+ersten Zeichnen; das Brett bleibt Holz. Web-App-Manifest `background_color` auf Warmes Papier.
+Ein Design „Automatisch (Tag/Nacht)“ gab es kurz und ist wieder entfernt (Nutzer: hell und dunkel
+wählt man selbst).
+Classic dunkel (`oldschool-dark`, 28.11.2026, Wunsch: Classic hell und dunkel wie Modern): auf
+`<html>` `data-design="oldschool"` (alle Classic-Regeln der Komponenten greifen) plus
+`data-scheme="dark"` (`applyDesign`, `isClassic` in `ui/design.svelte.ts`). Die festen
+3D-Rahmenfarben der Komponenten sind Variablen mit den alten Werten als Standard
+(`--bevel-light` #ffffff, `--bevel-face` #ece9e2, `--bevel-dark` #808080) - Classic hell bleibt
+pixelgleich, Classic dunkel setzt dunkle Rahmen.
 
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 

@@ -28,6 +28,9 @@ export const settings = {
 	'settings.design.modernDark.name': 'Modern dunkel',
 	'settings.design.modernDark.description':
 		'Das moderne Design in dunkel – angenehm am Abend und im Kinomodus.',
+	'settings.design.oldschoolDark.name': 'Classic dunkel',
+	'settings.design.oldschoolDark.description':
+		'Classic am Abend: dunkle Fenster mit denselben Rahmen und Schaltflächen, das Brett bleibt Holz.',
 	'settings.design.oldschool.name': 'Classic',
 	'settings.design.oldschool.description':
 		'Wie klassische Go-Programme: graue Fenster, Holzbrett mit plastischen Steinen.',

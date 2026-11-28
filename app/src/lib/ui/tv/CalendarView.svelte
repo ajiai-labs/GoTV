@@ -291,7 +291,7 @@
 	:global([data-design='oldschool']) .CalendarView-switch-item {
 		min-height: 26px;
 		padding: 2px 12px;
-		border: 2px outset #ece9e2;
+		border: 2px outset var(--bevel-face, #ece9e2);
 		border-radius: 0;
 		background: var(--button-bg);
 		color: var(--ink);
@@ -307,7 +307,8 @@
 		padding: 0 6px 6px;
 		background: var(--surface);
 		border: 2px solid;
-		border-color: #ffffff #808080 #808080 #ffffff;
+		border-color: var(--bevel-light, #ffffff) var(--bevel-dark, #808080) var(--bevel-dark, #808080)
+			var(--bevel-light, #ffffff);
 	}
 
 	:global([data-design='oldschool']) .CalendarView-group-title {
