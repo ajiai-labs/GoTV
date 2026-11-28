@@ -28,3 +28,6 @@ wie `ScriptUpdate` und `UserDetailsModal`).
 
 Nachtrag 28.11.2026: dasselbe beim Profil - nach einem Neuladen (`page.goto`) blieb „Profil lädt …“
 stehen, weil das `DETAILS_JOIN` bei der alten, abgebrochenen Abfrage landete. Weiter nicht untersucht.
+
+Nachtrag 28.11.2026: derselbe KgsClient-Test lief in Lauf 46156954276 erneut in die 5-s-Grenze -
+er bekommt jetzt 20 s (zehn Minuten Wiederholversuche mit vorgespulten Zeitgebern).
