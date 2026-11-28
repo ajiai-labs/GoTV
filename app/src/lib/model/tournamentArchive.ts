@@ -12,9 +12,11 @@ export const ARCHIVE_PAUSE_MS = 300;
 
 // Characters file systems refuse, and runs of spaces.
 export function safeFileName(text: string): string {
+	// Control characters (below a space) become spaces too.
+	const printable = Array.from(text, (char) => (char.charCodeAt(0) < 32 ? ' ' : char)).join('');
 	return (
-		text
-			.replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
+		printable
+			.replace(/[\\/:*?"<>|]/g, ' ')
 			.replace(/\s+/g, ' ')
 			.trim()
 			.slice(0, 120) || 'Partie'

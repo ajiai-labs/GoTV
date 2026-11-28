@@ -4,7 +4,7 @@
 // keeps the original texts (the keys' English values are exactly those).
 import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 import { formatGameScore } from '#lib/model/game/display.ts';
-import type { GameRuleSet, GameScore, GameType } from '#lib/model/types.ts';
+import type { GameRules, GameRuleSet, GameScore, GameType } from '#lib/model/types.ts';
 
 const RESULT_WORDS: Record<string, MessageKey> = {
 	Resign: 'game.result.resign',
@@ -70,4 +70,42 @@ export function formatChatActionDe(action: string): string {
 	const over = /^Game Over: (.*)$/.exec(action);
 	if (over) return t('game.action.gameOver', { result: translateScoreText(over[1]) });
 	return action;
+}
+
+// A duration as people say it: "30 Sek.", "10 Min.", "1:30 Min.", "1 Std."
+export function formatDurationDe(seconds: number): string {
+	const total = Math.max(0, Math.round(seconds));
+	if (total < 60) return t('game.time.seconds', { n: total });
+	if (total % 3600 === 0) return t('game.time.hours', { n: total / 3600 });
+	if (total % 60 === 0) return t('game.time.minutes', { n: total / 60 });
+	const secs = total % 60;
+	return t('game.time.minutesSeconds', {
+		m: Math.floor(total / 60),
+		s: (secs < 10 ? '0' : '') + secs
+	});
+}
+
+// The time system in words (wish of the user, 28.11.2026, after the
+// mockups): "30 Min. + 5×30 Sek." instead of "30:00 + 5×0:30".
+export function formatTimeSystemDe(rules: GameRules): string {
+	const main = rules.mainTime || 0;
+	const mainText = main > 0 ? formatDurationDe(main) : '';
+	const join = (extra: string) => (mainText ? `${mainText} + ${extra}` : extra);
+	switch (rules.timeSystem) {
+		case 'none':
+			return t('game.time.none');
+		case 'absolute':
+			return `${formatDurationDe(main)} ${t('game.time.absolute')}`;
+		case 'byo_yomi':
+			return join(`${rules.byoYomiPeriods || 0}×${formatDurationDe(rules.byoYomiTime || 0)}`);
+		case 'canadian':
+			return join(
+				t('game.time.canadian', {
+					stones: rules.byoYomiStones || 0,
+					time: formatDurationDe(rules.byoYomiTime || 0)
+				})
+			);
+		default:
+			return '';
+	}
 }

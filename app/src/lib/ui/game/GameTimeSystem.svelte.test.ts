@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { language } from '#lib/i18n/index.svelte.ts';
-import { formatDurationDe, formatTimeSystemDe } from './GameTimeSystem.svelte';
+import { formatDurationDe, formatTimeSystemDe } from './gameText.ts';
 
 describe('time system in words', () => {
 	it('says durations as people do', () => {
