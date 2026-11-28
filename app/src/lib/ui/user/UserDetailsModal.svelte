@@ -203,7 +203,7 @@
 	}
 
 	function saveDetails(changedUser: User, changed: UserDetails, newPassword: string) {
-		app.actions.onUpdateProfileDetails(changedUser, changed);
+		void app.actions.onUpdateProfileDetails(changedUser, changed);
 		if (newPassword) app.actions.onUpdatePassword(changedUser, newPassword);
 		editing = false;
 	}

@@ -308,6 +308,7 @@ class FakeKgs:
         self.watched = []
         self.reviews = {}  # channel id -> Review
         self.tags = {}  # user name -> {game time stamp: tag}
+        self.details = {}  # user name (lower case) -> changed profile fields
         self._load_scripts()
 
     def _load_scripts(self):
@@ -373,6 +374,43 @@ class FakeKgs:
         print("WARNUNG: %s (Kanal %s) - der echte KGS würde hier abmelden." % (text, channel_id), flush=True)
         if self.strict:
             self.push(session, {"type": "LOGOUT", "text": LOGOUT_TEXT % channel_id})
+
+    # DETAILS_CHANGE (gokgs.com/json/upstream.html): every field, booleans as
+    # booleans, texts within the limits. What KGS does with a missing field is
+    # not documented; GoTV's first version left some out, KGS did not take the
+    # change and the connection broke (user, 28.11.2026) - so this server
+    # treats it like an unknown channel: a warning, with --strict a logout.
+    DETAILS_TEXTS = {"personalName": 50, "personalEmail": 70, "personalInfo": 1500}
+    DETAILS_FLAGS = ("emailWanted", "privateEmail", "rankWanted", "forcedNoRank")
+
+    def change_details(self, session, channel_id, message):
+        if channel_id not in session["joined"]:
+            self.warn(session, "DETAILS_CHANGE für einen nicht beigetretenen Kanal", channel_id)
+            return
+        for name, limit in self.DETAILS_TEXTS.items():
+            value = message.get(name)
+            if not isinstance(value, str) or len(value) > limit:
+                self.warn(session, "DETAILS_CHANGE: %s fehlt oder ist zu lang" % name, channel_id)
+                return
+        for name in self.DETAILS_FLAGS:
+            if not isinstance(message.get(name), bool):
+                self.warn(session, "DETAILS_CHANGE: %s ist kein true/false" % name, channel_id)
+                return
+        if message.get("authLevel") != "normal":
+            self.warn(session, "DETAILS_CHANGE: authLevel geändert", channel_id)
+            return
+        update = {"type": "DETAILS_UPDATE", "channelId": channel_id,
+                  "personalName": message["personalName"], "personalInfo": message["personalInfo"],
+                  "locale": "de_DE"}
+        for name in ("emailWanted", "privateEmail"):
+            if message[name]:
+                update[name] = True  # KGS sends booleans only when true
+        if message["personalEmail"]:
+            update["email"] = message["personalEmail"]
+        self.details[session["name"].lower()] = {
+            k: v for k, v in update.items() if k not in ("type", "channelId")
+        }
+        self.push(session, update)
 
     def handle(self, session_id, message):
         with self.lock:  # one request at a time against the games
@@ -444,11 +482,14 @@ class FakeKgs:
                         {"name": name, "rank": "?", "flags": {"connected": True}})
             details_id = next(self.channel_ids)
             session["joined"].add(details_id)
+            saved = self.details.get(user["name"].lower(), {})
             self.push(session, {"type": "DETAILS_JOIN", "channelId": details_id, "user": user,
                                 "personalName": "", "personalInfo": "Spieler auf dem Übungs-Server.",
                                 "regStartDate": "2020-01-01T00:00:00.000Z",
                                 "lastOn": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
-                                "locale": "de_DE"})
+                                "locale": "de_DE", **saved})
+        elif kind == "DETAILS_CHANGE":
+            self.change_details(session, channel_id, message)
         elif kind == "JOIN_ARCHIVE_REQUEST":
             archive_id = next(self.channel_ids)
             session["joined"].add(archive_id)

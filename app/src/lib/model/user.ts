@@ -3,6 +3,7 @@ import type {
 	AppState,
 	KgsMessage,
 	User,
+	UserDetails,
 	UserFlags,
 	Index,
 	ChannelMembership,
@@ -357,4 +358,33 @@ export function handleUserMessage(prevState: AppState, msg: KgsMessage): AppStat
 	}
 
 	return prevState;
+}
+
+// KGS's limits for DETAILS_CHANGE (gokgs.com/json/upstream.html).
+export const PROFILE_LIMITS = { personalName: 50, personalEmail: 70, personalInfo: 1500 } as const;
+
+// The DETAILS_CHANGE message for your own profile. KGS sends its booleans
+// only when they are true; sent back as they came, the false ones were
+// missing - and so was forcedNoRank, and the e-mail without an address. KGS
+// did not take the change and could end the whole session (user,
+// 28.11.2026: "Profil ändern ging nicht ... die Verbindung abgebrochen").
+// Every field goes now, booleans as true/false, texts within KGS's limits -
+// as the open client GoUniverse sends it (which also names the e-mail
+// switch privateEmail, as KGS's own downstream messages do).
+export function buildDetailsChange(user: User, details: UserDetails) {
+	const text = (value: string | undefined, max: number) => (value ?? '').slice(0, max);
+	return {
+		type: 'DETAILS_CHANGE',
+		channelId: details.channelId,
+		personalName: text(details.personalName, PROFILE_LIMITS.personalName),
+		personalEmail: text(details.email, PROFILE_LIMITS.personalEmail),
+		personalInfo: text(details.personalInfo, PROFILE_LIMITS.personalInfo),
+		emailWanted: details.emailWanted === true,
+		privateEmail: details.privateEmail === true,
+		rankWanted: details.rankWanted === true,
+		// Admins only; passed on unchanged.
+		forcedNoRank: details.forcedNoRank === true,
+		// Non-admins must pass their current level unchanged.
+		authLevel: user.authLevel || 'normal'
+	};
 }

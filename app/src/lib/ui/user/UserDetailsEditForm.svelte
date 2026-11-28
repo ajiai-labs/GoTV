@@ -4,6 +4,7 @@
 	// was typed) to onSave.
 	import { untrack } from 'svelte';
 	import type { User, UserDetails } from '#lib/model/types.ts';
+	import { PROFILE_LIMITS } from '#lib/model/user.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
@@ -44,12 +45,19 @@
 			name="personalName"
 			autocapitalize="words"
 			autocomplete="name"
+			maxlength={PROFILE_LIMITS.personalName}
 			bind:value={draft.personalName}
 		/>
 	</label>
 	<label>
 		<span>{t('chat.edit.email')}</span>
-		<input type="email" name="email" autocomplete="email" bind:value={draft.email} />
+		<input
+			type="email"
+			name="email"
+			autocomplete="email"
+			maxlength={PROFILE_LIMITS.personalEmail}
+			bind:value={draft.email}
+		/>
 	</label>
 	<label>
 		<span>{t('chat.edit.newPassword')}</span>
@@ -63,7 +71,11 @@
 	</label>
 	<label>
 		<span>{t('chat.edit.about')}</span>
-		<textarea name="personalInfo" rows="5" bind:value={draft.personalInfo}></textarea>
+		<textarea
+			name="personalInfo"
+			rows="5"
+			maxlength={PROFILE_LIMITS.personalInfo}
+			bind:value={draft.personalInfo}></textarea>
 	</label>
 	<label class="check">
 		<input type="checkbox" name="emailWanted" bind:checked={draft.emailWanted} />

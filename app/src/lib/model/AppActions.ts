@@ -6,6 +6,7 @@ import { isGamePlayer, isGamePlaying, isGameProposalPlayer, proposalsEqual } fro
 import { playGameStart, playMessage } from '../sound/gameSounds';
 import { isChatForMe, newChatAuthors } from './chatSound';
 import { ChannelGuard, loadChannelGuardState, saveChannelGuardState } from './channelGuard';
+import { buildDetailsChange } from './user';
 import {
 	activateMessage,
 	canEditReview,
@@ -1284,33 +1285,22 @@ export class AppActions {
 			channelId: gameId
 		});
 	};
-	onUpdateProfileDetails = (user: User, details: UserDetails) => {
+	// One after the other, each sent only when KGS answered the one before:
+	// sent at once, the UNJOIN_REQUEST could reach KGS before the change, and
+	// KGS ended the whole session over a change for a channel it had closed
+	// ("Unknown channel", user 28.11.2026: profile not saved, connection
+	// gone). Then the details are read afresh, since a changed rankWanted
+	// does not show in DETAILS_UPDATE.
+	onUpdateProfileDetails = async (user: User, details: UserDetails) => {
 		if (this._isOffline()) {
 			return;
 		}
 
-		this._client.sendMessage({
-			type: 'DETAILS_CHANGE',
-			channelId: details.channelId,
-			personalName: details.personalName,
-			personalEmail: details.email,
-			personalInfo: details.personalInfo,
-			emailWanted: details.emailWanted,
-			privateEmail: details.privateEmail,
-			rankWanted: details.rankWanted,
-			authLevel: user.authLevel || 'normal'
-		});
-
-		// Force a refresh, since changing rankWanted doesn't get reflected in
-		// DETAILS_UPDATE response
-		this.onUnjoin(details.channelId);
-		setTimeout(() => {
-			// If we do it right away it doesn't always work
-			this._client.sendMessage({
-				type: 'DETAILS_JOIN_REQUEST',
-				name: user.name
-			});
-		}, 200);
+		await this._client.sendMessage(buildDetailsChange(user, details));
+		if (this._isOffline() || this._isClosedByServer(details.channelId)) return;
+		await this._client.sendMessage({ type: 'UNJOIN_REQUEST', channelId: details.channelId });
+		if (this._isOffline()) return;
+		await this._client.sendMessage({ type: 'DETAILS_JOIN_REQUEST', name: user.name });
 	};
 	onUpdatePassword = (user: User, newPassword: string) => {
 		if (this._isOffline()) {

@@ -111,5 +111,28 @@ class ServerTest(unittest.TestCase):
         self.assertIn("Unknown channel 4242", logouts[0]["text"])
 
 
+    def test_profile_change_needs_every_field(self):
+        self.fake.strict = True
+        self.fake.handle("s1", {"type": "DETAILS_JOIN_REQUEST", "name": "andreas"})
+        channel = [m for m in self.drain() if m["type"] == "DETAILS_JOIN"][0]["channelId"]
+        good = {"type": "DETAILS_CHANGE", "channelId": channel, "personalName": "Andreas",
+                "personalEmail": "", "personalInfo": "Kyu", "emailWanted": False,
+                "privateEmail": True, "rankWanted": True, "forcedNoRank": False,
+                "authLevel": "normal"}
+        self.fake.handle("s1", good)
+        update = self.drain()
+        self.assertEqual(update[0]["type"], "DETAILS_UPDATE")
+        self.assertEqual(update[0]["personalName"], "Andreas")
+        # Opened again, the profile shows the change.
+        self.fake.handle("s1", {"type": "DETAILS_JOIN_REQUEST", "name": "andreas"})
+        again = [m for m in self.drain() if m["type"] == "DETAILS_JOIN"][0]
+        self.assertEqual(again["personalInfo"], "Kyu")
+        self.assertTrue(again["privateEmail"])
+        # As GoTV sent it before: false booleans and forcedNoRank missing.
+        old = {k: v for k, v in good.items() if k not in ("emailWanted", "forcedNoRank")}
+        self.fake.handle("s1", old)
+        self.assertEqual([m["type"] for m in self.drain()], ["LOGOUT"])
+
+
 if __name__ == "__main__":
     unittest.main()

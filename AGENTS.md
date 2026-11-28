@@ -1078,6 +1078,20 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Brettübersicht mit vier Brettern, Vergrößern, Einzelfenster, Fenstergröße. Mehrere Fenster
   über längere Zeit und das Partiechat-Signal noch nicht.
 
+## Profil ändern (28.11.2026)
+
+Befund des Nutzers: „Profil bearbeiten“ wurde nicht übernommen, danach brach die Verbindung ab.
+Zwei Ursachen, beide behoben (`buildDetailsChange` in `model/user.ts`, `onUpdateProfileDetails`):
+(1) GoTV schickte Änderung und Abmeldung des Profilkanals gleichzeitig - kam `UNJOIN_REQUEST` vor
+`DETAILS_CHANGE` an, meldete KGS die ganze Sitzung ab („Unknown channel“; mit dem Übungs-KGS
+`--strict` nachgestellt). Jetzt nacheinander, jede Anfrage erst nach der Antwort auf die vorige,
+dann `DETAILS_JOIN_REQUEST`. (2) KGS schickt Ja/Nein-Felder nur, wenn sie wahr sind; GoTV gab sie
+so zurück, falsche fehlten, `forcedNoRank` immer, die E-Mail ohne Adresse. Jetzt jedes Feld, Ja/Nein
+als true/false, Texte in KGS' Grenzen (50/70/1500, auch `maxlength` im Formular) - wie GoUniverse.
+Die Doku nennt das Feld fürs Ändern `emailPrivate`, beim Lesen `privateEmail`; GoTV sendet wie
+GoUniverse `privateEmail`. Ob der Haken „E-Mail verbergen“ damit bei KGS ankommt, ist an einer echten
+Sitzung NOCH NICHT geprüft. Übungs-KGS: prüft `DETAILS_CHANGE` streng und merkt das Profil.
+
 ## Übungs-KGS (27.11.2026)
 
 Wunsch des Nutzers: ausprobieren, wie eine eigene Partie mit drei laufenden Partien daneben

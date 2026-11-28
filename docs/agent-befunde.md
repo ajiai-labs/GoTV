@@ -25,3 +25,6 @@ aussieht. Nicht untersucht, nichts geändert.
 in der GitHub-CI (Lauf 46140104574, Commit d0aa26e) in die 5-s-Grenze; lokal grün, KgsClient war
 nicht geändert. Lauf neu gestartet. Ursache nicht untersucht (vermutlich Zeitgrenze unter Last,
 wie `ScriptUpdate` und `UserDetailsModal`).
+
+Nachtrag 28.11.2026: dasselbe beim Profil - nach einem Neuladen (`page.goto`) blieb „Profil lädt …“
+stehen, weil das `DETAILS_JOIN` bei der alten, abgebrochenen Abfrage landete. Weiter nicht untersucht.
