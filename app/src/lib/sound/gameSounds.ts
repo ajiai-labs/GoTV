@@ -10,6 +10,8 @@ import stone2 from './stones/stone2.wav';
 import stone3 from './stones/stone3.wav';
 import stone4 from './stones/stone4.wav';
 import stone5 from './stones/stone5.wav';
+import clockTick from './clock/tick.wav';
+import clockLast from './clock/last.wav';
 
 export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
 export type GameSoundPrefs = Record<GameSoundKind, boolean>;
@@ -71,40 +73,64 @@ function tone(ctx: AudioContext, freq: number, start: number, length: number, vo
 	osc.stop(start + length);
 }
 
-// The stone click: real recordings of a stone set on a wooden board
-// (from KaTrain, MIT - stones/NOTICE.txt), one of five at random so not
-// every move sounds the same. Replaces a synthetic click that sounded like
-// a tin drum (user, 28.11.2026). Loaded and decoded once, on first use.
-const STONE_URLS = [stone1, stone2, stone3, stone4, stone5];
-let stoneBuffers: Promise<Array<AudioBuffer>> | null = null;
+// Recorded sounds, loaded and decoded once on first use (per set).
+const recordings = new Map<string, Promise<Array<AudioBuffer>>>();
 
-function loadStones(ctx: AudioContext): Promise<Array<AudioBuffer>> {
-	stoneBuffers =
-		stoneBuffers ??
-		Promise.all(
-			STONE_URLS.map(async (url) => {
+// Test-only: forget the audio context and the loaded recordings.
+export function resetSoundsForTests() {
+	context = null;
+	recordings.clear();
+}
+
+function loadRecordings(ctx: AudioContext, urls: Array<string>): Promise<Array<AudioBuffer>> {
+	const key = urls.join('|');
+	let loading = recordings.get(key);
+	if (!loading) {
+		loading = Promise.all(
+			urls.map(async (url) => {
 				const response = await fetch(url);
 				return ctx.decodeAudioData(await response.arrayBuffer());
 			})
 		).catch((error: unknown) => {
-			stoneBuffers = null; // try again with the next move
+			recordings.delete(key); // try again with the next sound
 			throw error;
 		});
-	return stoneBuffers;
+		recordings.set(key, loading);
+	}
+	return loading;
 }
 
-function click(ctx: AudioContext) {
-	loadStones(ctx)
+// Plays one of the recordings (picked by `pick`); no sound is better than
+// a broken game screen.
+function playRecording(
+	ctx: AudioContext,
+	urls: Array<string>,
+	pick: (count: number) => number = () => 0
+) {
+	loadRecordings(ctx, urls)
 		.then((buffers) => {
 			const source = ctx.createBufferSource();
-			source.buffer = buffers[Math.floor(Math.random() * buffers.length)];
+			source.buffer = buffers[pick(buffers.length)];
 			source.connect(ctx.destination);
 			source.start();
 		})
-		.catch(() => {
-			// no click is better than a broken game screen
-		});
+		.catch(() => {});
 }
+
+// The stone click: real recordings of a stone set on a wooden board
+// (from KaTrain, MIT - stones/NOTICE.txt), one of five at random so not
+// every move sounds the same. Replaces a synthetic click that sounded like
+// a tin drum (user, 28.11.2026).
+const STONE_URLS = [stone1, stone2, stone3, stone4, stone5];
+
+function click(ctx: AudioContext) {
+	playRecording(ctx, STONE_URLS, (count) => Math.floor(Math.random() * count));
+}
+
+// The countdown: KaTrain's clock beeps (MIT - clock/NOTICE.txt), a low
+// electronic tick and a higher one for the last three seconds. Replaces a
+// sine beep of 800/1200 Hz the user found too shrill (28.11.2026).
+const CLOCK_URLS = [clockTick, clockLast];
 
 // A window opened by GoTV itself (a game window) may not play sound before
 // someone clicks in it (browser rule): such a window hands its sounds to the
@@ -176,6 +202,6 @@ export function playCountdown(seconds: number) {
 	if (relayed('countdown', seconds)) return;
 	play('countdown', (ctx) => {
 		const urgent = seconds <= URGENT_SECONDS;
-		tone(ctx, urgent ? 1200 : 800, ctx.currentTime, urgent ? 0.18 : 0.1, 0.45);
+		playRecording(ctx, CLOCK_URLS, () => (urgent ? 1 : 0));
 	});
 }

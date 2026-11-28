@@ -4,6 +4,7 @@ import {
 	loadSoundPrefs,
 	playCountdown,
 	playStoneClick,
+	resetSoundsForTests,
 	saveSoundPrefs,
 	SOUND_PREFS_KEY
 } from './gameSounds';
@@ -12,6 +13,7 @@ describe('game sounds', () => {
 	afterEach(() => {
 		localStorage.clear();
 		vi.unstubAllGlobals();
+		resetSoundsForTests();
 	});
 
 	it('has every sound on by default and keeps what was chosen', () => {
@@ -62,6 +64,34 @@ describe('game sounds', () => {
 		await vi.waitFor(() => expect(started).toHaveBeenCalledTimes(2));
 		expect(fetchFn).toHaveBeenCalledTimes(5);
 		expect(decoded).toHaveBeenCalledTimes(5);
+	});
+
+	it('ticks the last seconds with the recorded clock, the last three higher', async () => {
+		const played: Array<string> = [];
+		vi.stubGlobal(
+			'AudioContext',
+			class {
+				state = 'running';
+				destination = {};
+				decodeAudioData = (data: ArrayBuffer) =>
+					Promise.resolve({ name: new TextDecoder().decode(data) });
+				createBufferSource() {
+					const source = {
+						buffer: null as { name: string } | null,
+						connect: vi.fn(),
+						start: () => played.push(source.buffer?.name ?? '')
+					};
+					return source;
+				}
+			}
+		);
+		vi.stubGlobal('fetch', (url: string) =>
+			Promise.resolve(new Response(/last/.test(url) ? 'last' : 'tick'))
+		);
+		playCountdown(5);
+		await vi.waitFor(() => expect(played).toEqual(['tick']));
+		playCountdown(3);
+		await vi.waitFor(() => expect(played).toEqual(['tick', 'last']));
 	});
 
 	it('plays nothing that is switched off, and only the last ten seconds', () => {
