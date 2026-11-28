@@ -18,6 +18,8 @@ export const app = {
 	'app.layout.login': 'Anmelden',
 	'app.layout.settings': 'Einstellungen',
 	'app.layout.github': 'GoTV auf GitHub',
+	'app.layout.mainGone': 'Das GoTV-Hauptfenster ist zu – deine Partie läuft hier weiter.',
+	'app.layout.openMain': 'Hauptfenster öffnen',
 	'app.layout.openProject': 'Offenes Projekt – Fehler und Ideen gern dort melden.',
 
 	// HomeScreenHint (web version on iPad and iPhone)

@@ -17,6 +17,8 @@ export const app: Translation<typeof de> = {
 	'app.layout.login': 'Log in',
 	'app.layout.settings': 'Settings',
 	'app.layout.github': 'GoTV on GitHub',
+	'app.layout.mainGone': 'The GoTV main window is closed – your game goes on here.',
+	'app.layout.openMain': 'Open main window',
 	'app.layout.openProject': 'An open project – bug reports and ideas are welcome there.',
 
 	// HomeScreenHint (web version on iPad and iPhone)

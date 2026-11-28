@@ -1044,6 +1044,17 @@ die schon offen sind, kommen nach vorn statt doppelt.
   Übersicht gleich groß mit Chat (`single`), Kacheln erst ab zwei Partien.
   Private Partien zeigen „Private Partie – nur für eingeladene Zuschauer“ statt „Brett lädt …“
   (`accessNoticeDe` in `ui/game/gameText.ts`, auch im Partiefenster und an TV-Brettern).
+- Hauptfenster und seine Fenster (`lib/windowFamily.ts`, Nutzer 28.11.2026: Partien kommen nur aus
+  dem Hauptfenster in Brettübersicht und Partiefenster): alle GoTV-Fenster melden sich auf dem Kanal
+  `gotv-windows` („here“ alle 5 s, „gone“ beim Schließen). Das Hauptfenster (alles außer `/partie`
+  und `/bretter`) fragt beim Schließen nach (Browser-Rückfrage, eigener Text geht nicht), solange
+  andere GoTV-Fenster offen sind. Ist es weg (nach „gone“ 2,5 s warten, dann fragen - ein neu
+  geladenes Hauptfenster oder ein zweiter Tab antwortet, dann schließt nichts), schließen sich
+  Brettübersicht und Partiefenster; das Fenster der EIGENEN laufenden Partie bleibt offen
+  (`isOwnRunningGame`), übernimmt die KGS-Verbindung (kurz „Verbindung getrennt“, dann wieder da)
+  und zeigt „Hauptfenster öffnen“. GoTVs eigenes Neuladen nach einem Update fragt nicht
+  (`unloadWithoutAsking`). Mit Playwright gegen das Übungs-KGS geprüft (Rückfrage, beobachtete Partie
+  zu, eigene offen, Zug kommt an). Tauri-Apps: ungeprüft, ob die Rückfrage dort erscheint.
 - README-Bilder (28.11.2026) aufgenommen per Playwright gegen `tools/fake_kgs.py` (Port 8797, Kopie
   von `app/build`, 1280x800); die Brettübersicht als echtes Pop-up des angemeldeten Hauptfensters -
   ein Seitenwechsel per `page.goto` verliert dort Antworten (siehe `docs/agent-befunde.md`).

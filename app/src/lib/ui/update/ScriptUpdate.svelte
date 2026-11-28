@@ -10,6 +10,7 @@
 	import { t, language, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { hasOwnRunningGame } from '#lib/model/game/ownGame.ts';
+	import { unloadWithoutAsking } from '#lib/windowFamily.ts';
 	import {
 		BUILD_VERSION,
 		requestScriptUpdate,
@@ -31,7 +32,10 @@
 
 	let {
 		fetchFn = fetch,
-		reload = () => window.location.reload(),
+		reload = () => {
+			unloadWithoutAsking(); // no "leave the page?" for our own reload
+			window.location.reload();
+		},
 		pollMs = POLL_MS,
 		playing,
 		installed = BUILD_VERSION

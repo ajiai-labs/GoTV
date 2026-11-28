@@ -17,3 +17,11 @@ export function hasOwnRunningGame(state: AppState): boolean {
 			isGamePlaying(game)
 	);
 }
+
+// Is this game your own running one? (A game window with it stays open when
+// the main window closes - windowFamily.ts.)
+export function isOwnRunningGame(state: AppState, gameId: number): boolean {
+	const me = state.currentUser?.name;
+	const game = state.gamesById[gameId];
+	return !!me && !!game?.players && isGamePlayer(me, game.players) && isGamePlaying(game);
+}

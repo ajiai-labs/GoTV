@@ -27,6 +27,8 @@
 	import { fetchTvEvents, hasLiveBroadcast } from '#lib/model/tv.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import type { LayoutProps } from './$types';
+	import { asksBeforeUnload, joinWindowFamily } from '#lib/windowFamily.ts';
+	import { isOwnRunningGame } from '#lib/model/game/ownGame.ts';
 
 	let { children }: LayoutProps = $props();
 
@@ -77,6 +79,38 @@
 	onMount(() => {
 		app.start();
 		registerServiceWorker();
+	});
+
+	// The main window and its game windows / board overview (windowFamily.ts,
+	// user 28.11.2026): closing the main window with others open asks first;
+	// once it is gone they close too - except the window of your own running
+	// game, which offers to open the main window again.
+	let mainGone = $state(false);
+	onMount(() => {
+		const child = page.route.id === '/partie' || page.route.id === '/bretter';
+		const family = joinWindowFamily(
+			child ? 'child' : 'main',
+			() => {
+				const id = Number(page.url.searchParams.get('id'));
+				const ownGame = page.route.id === '/partie' && id > 0 && isOwnRunningGame(app.state, id);
+				if (ownGame) mainGone = true;
+				else window.close();
+			},
+			() => (mainGone = false)
+		);
+		const beforeUnload = (event: BeforeUnloadEvent) => {
+			if (child || !asksBeforeUnload() || family.count('child') === 0) return;
+			event.preventDefault();
+			event.returnValue = ''; // older Chromium needs it for the question
+		};
+		const leave = () => family.leave();
+		window.addEventListener('beforeunload', beforeUnload);
+		window.addEventListener('pagehide', leave);
+		return () => {
+			window.removeEventListener('beforeunload', beforeUnload);
+			window.removeEventListener('pagehide', leave);
+			family.leave();
+		};
 	});
 
 	// The old app's "nav" follows the page (links, back/forward).
@@ -289,6 +323,15 @@
 	{/if}
 	{#if !config.guestOnly && !mirror}
 		<MailboxNotice />
+	{/if}
+
+	{#if mainGone}
+		<aside class="main-gone" role="status">
+			<span>{t('app.layout.mainGone')}</span>
+			<button type="button" class="button" onclick={() => window.open(resolve('/'), '_blank')}>
+				{t('app.layout.openMain')}
+			</button>
+		</aside>
 	{/if}
 
 	<main>
@@ -571,5 +614,17 @@
 			order: 3;
 			flex-basis: 100%;
 		}
+	}
+
+	.main-gone {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 10px;
+		margin: 6px 8px 0;
+		padding: 6px 10px;
+		border-left: 4px solid var(--accent);
+		background: var(--surface);
+		font-size: 0.9rem;
 	}
 </style>
