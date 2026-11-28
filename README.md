@@ -190,9 +190,6 @@ click (two-click solution).
 
 ## Screenshots
 
-(Taken on 26.11.2026 - before the warm background tones and the column layout of
-Beobachten; the boards and stones look the same.)
-
 **Live** - a broadcast with the official player and the board next to it (here the
 example: the EGF channel and the bundled EM 2026 final), design "Modern":
 
@@ -204,24 +201,29 @@ board, clam shell and slate stones, design "Modern dunkel":
 <img src="./docs/screenshots/app/nachspielen-katago.png" width="800" alt="Replay of the EM 2026 final at move 88 with KataGo's five best moves">
 
 **Kalender** - tournaments as a month sheet (or a list by region), ▶ marks games to
-replay:
+replay; background tone "Warmes Papier":
 
 <img src="./docs/screenshots/app/kalender.png" width="800" alt="Calendar month November 2026 with tournaments as bars">
 
-**Kanäle** - channels of players and federations with fixed air times, design
-"Classic":
+**Kanäle** - week plan of fixed air times and the newest videos of the channels,
+design "Classic":
 
 <img src="./docs/screenshots/app/kanaele-classic.png" width="800" alt="Channels page with week plan in the Classic design">
 
-**Brettübersicht** - four games in one window, e.g. a Go-Bundesliga team match (names
+**Beobachten** - running KGS games in columns with search, filters and sorting (names
+from the practice server `tools/fake_kgs.py`):
+
+<img src="./docs/screenshots/app/beobachten.png" width="800" alt="Watch page: game list in columns with filters for size, tournaments and sorting">
+
+**Brettübersicht** - several games in one window, e.g. a Go-Bundesliga team match (names
 and positions made up for the picture):
 
-<img src="./docs/screenshots/app/brettuebersicht.png" width="800" alt="Board overview with four live KGS games in a two by two grid">
+<img src="./docs/screenshots/app/brettuebersicht.png" width="800" alt="Board overview with three live KGS games">
 
-**Einstellungen** - language, menu order, sounds while playing and three designs,
-switched at once:
+**Einstellungen** - sounds while playing, each with four variants to choose from and
+listen to; further down language, menu order, designs and tones:
 
-<img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings: language, menu order, sounds while playing, design choice">
+<img src="./docs/screenshots/app/einstellungen.png" width="800" alt="Settings: sounds while playing with a choice of four variants each">
 
 ## Brettübersicht (board overview)
 

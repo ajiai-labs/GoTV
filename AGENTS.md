@@ -1013,6 +1013,14 @@ die schon offen sind, kommen nach vorn statt doppelt.
   "gibt es nicht (mehr)"; im einspaltigen Layout (≤ 900 px) passt das Brett in die Höhe.
   Speed-Go-Importer: Konten werden in mehreren Durchgängen gelernt (Reihenfolge egal),
   `ogs_players` nur für einen Eintrag am selben Tag.
+- Letztes Brett weg (× oder „Alle entfernen“) → die Brettübersicht schließt sich selbst
+  (`closeWhenEmpty`, Nutzer 28.11.2026: sie geht, wie sie mit dem ersten Brett kam; die eigene
+  Partie als Vorschau allein hält sie nicht offen). Leer über den Knopf geöffnet bleibt sie offen.
+  Private Partien zeigen „Private Partie – nur für eingeladene Zuschauer“ statt „Brett lädt …“
+  (`accessNoticeDe` in `ui/game/gameText.ts`, auch im Partiefenster und an TV-Brettern).
+- README-Bilder (28.11.2026) aufgenommen per Playwright gegen `tools/fake_kgs.py` (Port 8797, Kopie
+  von `app/build`, 1280x800); die Brettübersicht als echtes Pop-up des angemeldeten Hauptfensters -
+  ein Seitenwechsel per `page.goto` verliert dort Antworten (siehe `docs/agent-befunde.md`).
 - "Zur Brettübersicht" lässt eine schon offene Übersicht stehen (sie liest die neuen Bretter per
   storage-Event, Position und vergrößertes Brett bleiben) und sagt das; nur der Knopf
   "Brettübersicht" holt sie (geschlossen + neu geöffnet) nach vorn.

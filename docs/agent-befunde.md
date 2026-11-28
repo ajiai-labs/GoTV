@@ -6,3 +6,15 @@
 `app/src/lib/ui/user/UserDetailsModal.svelte.test.ts` „shows the details of another user and starts
 a chat“ scheiterte einmal im vollen `npm test`, einzeln zweimal grün, im nächsten vollen Lauf grün.
 Ursache nicht untersucht (vermutlich Zeitgrenze unter Last, wie zuvor `ScriptUpdate`).
+
+## 28.11.2026 – Partie ohne GAME_JOIN zeigt ein fast leeres Brett
+
+Beim Aufnehmen der README-Bilder (Übungs-KGS, Seitenwechsel per `page.goto` von `/konto` nach
+`/bretter`): ein noch offener Abruf (GET) der alten Seite holte die Antwort auf die neue
+JOIN_REQUEST ab, die Verbindung war schon zu (`BrokenPipeError` in `tools/fake_kgs.py` `_json`),
+das `GAME_JOIN` für Partie 2102 ging verloren. Danach kam nur ein `GAME_UPDATE` mit einem Zug, und
+die Brettübersicht zeigte ein Brett mit 1-2 Steinen bei „Zug 104“ - ohne Hinweis, dass der
+Partiebaum fehlt. Zwei offene Fragen: (1) Verhält sich der echte KGS bei einem abgebrochenen
+Long-Poll genauso (Nachrichten weg) - dann betrifft es F5 auch dort. (2) Baut `parseGameChannel`
+aus einem `GAME_UPDATE` ohne vorheriges `GAME_JOIN` einen Baum, der wie eine echte Stellung
+aussieht. Nicht untersucht, nichts geändert.
