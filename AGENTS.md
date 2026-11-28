@@ -708,7 +708,9 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   vorher ein erzeugter Klick, der nach Blechtrommel klang (Nutzer: "keine Klangerzeugung, einfach
   einen anderen Sound", keine Auswahl), Klang bei Partiebeginn (`playGameStart` in AppActions bei
   `CHALLENGE_FINAL` als Spieler, Automatch, fortgesetzter Partie), Piepton für jede der letzten
-  10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher), Ding-Dong bei
+  10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher; die Uhr ist
+  seit 28.11.2026 größer und im Byo-Yomi/kanadischer Nachspielzeit rot - `periodsLeft`/
+  `stonesLeft` > 0, KGS schickt in der Hauptzeit 0; laufende Uhr dann mit rotem Rahmen), Ding-Dong bei
   einer Chatnachricht an mich (26.11.2026, `model/chatSound.ts`: private Nachricht oder Chat in
   der eigenen laufenden Partie, nie eigene Nachrichten, Räume oder beobachtete Partien; Schalter
   „Chatnachricht“; ersetzt das alte `two_tone_03b.mp3`, die Datei liegt ungenutzt). Wunsch:

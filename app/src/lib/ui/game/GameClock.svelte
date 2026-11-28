@@ -18,8 +18,10 @@
 	// server's time every 100 ms, through byo-yomi periods and Canadian
 	// overtime; looking at an earlier move, it shows the time left then.
 	// "SD" marks sudden death (last period), "(3)" the periods left, "/ 5"
-	// the stones left in Canadian overtime; under 3 seconds of sudden death
-	// the clock turns red.
+	// the stones left in Canadian overtime. Once the main time is over
+	// (byo-yomi or Canadian overtime) the digits turn red - you see that the
+	// time is running out (user, 28.11.2026); under 3 seconds of sudden death
+	// the whole clock turns red.
 	import type { ClockState, GameRules } from '#lib/model/types.ts';
 	import { COUNTDOWN_SECONDS, playCountdown } from '#lib/sound/gameSounds.ts';
 
@@ -119,6 +121,10 @@
 		qualifier.sd && typeof shown.seconds === 'number' && shown.seconds < URGENT_SECONDS
 	);
 	let running = $derived(active && !!clock.running && !clock.paused);
+	// In overtime: periodsLeft / stonesLeft above 0 (KGS sends 0 or nothing
+	// while the main time lasts - the countdown of the old app relies on it;
+	// the countdown sets them when the main time runs out here).
+	let overtime = $derived(active && ((shown.periods ?? 0) > 0 || (shown.stones ?? 0) > 0));
 
 	// The whole seconds shown; a beep when it drops into the last ten.
 	let wholeSeconds = $derived(
@@ -141,6 +147,7 @@
 	class:GameClock-active={active}
 	class:GameClock-running={running}
 	class:GameClock-paused={clock.paused}
+	class:GameClock-overtime={overtime}
 	class:GameClock-urgent={active && urgent}
 	role="timer"
 >
@@ -159,10 +166,14 @@
 		display: inline-flex;
 		align-items: baseline;
 		gap: 4px;
-		padding: 2px 10px;
+		/* Big enough to read at a glance (user, 28.11.2026). */
+		padding: 3px 12px;
 		border-radius: var(--radius-pill);
 		background: var(--surface-sunk);
 		color: var(--ink);
+		font-size: 1.3rem;
+		font-weight: 600;
+		line-height: 1.2;
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
@@ -177,12 +188,26 @@
 		color: var(--accent-ink);
 	}
 
+	/* Overtime: red digits; the running clock keeps a red frame instead of
+	   the accent colour, so it still shows whose clock runs. */
+	.GameClock-overtime {
+		color: var(--danger, #b3261e);
+	}
+
+	.GameClock-running.GameClock-overtime {
+		background: var(--danger-bg, #fde7e5);
+		color: var(--danger, #b3261e);
+		box-shadow: inset 0 0 0 2px var(--danger, #b3261e);
+	}
+
 	.GameClock-paused {
 		opacity: 0.6;
 	}
 
-	.GameClock-urgent {
+	/* Last seconds of sudden death: wins over overtime and running. */
+	.GameClock.GameClock.GameClock-urgent {
 		background: #b3261e;
+		box-shadow: none;
 		color: #ffffff;
 	}
 
@@ -197,7 +222,20 @@
 		color: #ffde59;
 	}
 
-	:global([data-design='oldschool']) .GameClock-urgent {
+	:global([data-design='oldschool']) .GameClock-overtime {
+		background: #000;
+		box-shadow: none;
 		color: #ff5a4e;
+	}
+
+	:global([data-design='oldschool']) .GameClock-running.GameClock-overtime {
+		background: #000;
+		box-shadow: inset 0 0 0 2px #ff5a4e;
+		color: #ff5a4e;
+	}
+
+	:global([data-design='oldschool']) .GameClock.GameClock.GameClock-urgent {
+		background: #b3261e;
+		color: #ffffff;
 	}
 </style>

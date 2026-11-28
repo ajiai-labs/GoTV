@@ -28,6 +28,45 @@ describe('GameClock', () => {
 		});
 	});
 
+	it('turns red in byo-yomi, not in the main time', async () => {
+		const main = await render(GameClock, {
+			nodeId: 1,
+			active: true,
+			clock: { running: true, time: 600, periodsLeft: 0 },
+			timeLeft: 600,
+			gameRules: RULES
+		});
+		const timer = main.container.querySelector('.GameClock')!;
+		expect(timer.classList.contains('GameClock-overtime')).toBe(false);
+		await main.unmount();
+		const byoYomi = await render(GameClock, {
+			nodeId: 1,
+			active: true,
+			clock: { running: true, time: 25, periodsLeft: 3 },
+			timeLeft: 25,
+			gameRules: RULES
+		});
+		const clock = byoYomi.container.querySelector('.GameClock')!;
+		expect(clock.classList.contains('GameClock-overtime')).toBe(true);
+		expect(getComputedStyle(clock).color).toBe('rgb(179, 38, 30)');
+		expect(clock.textContent).toContain('(3)');
+	});
+
+	it('counts into byo-yomi when the main time runs out', async () => {
+		const view = await render(GameClock, {
+			nodeId: 1,
+			active: true,
+			// KGS: periodsLeft 0 while the main time lasts.
+			clock: { running: true, time: 0.4, periodsLeft: 0 },
+			timeLeft: 0.4,
+			gameRules: RULES
+		});
+		const clock = view.container.querySelector('.GameClock')!;
+		await vi.waitFor(() => expect(clock.classList.contains('GameClock-overtime')).toBe(true), {
+			timeout: 2000
+		});
+	});
+
 	it('stays silent on the opponent’s clock', async () => {
 		sounds.playCountdown.mockClear();
 		await render(GameClock, {
