@@ -37,6 +37,33 @@ describe('game sounds', () => {
 		expect(loadSoundPrefs()).toEqual(DEFAULT_SOUND_PREFS);
 	});
 
+	it('plays one of the recorded stone clicks, loaded once', async () => {
+		const started = vi.fn();
+		const decoded = vi.fn((data: ArrayBuffer) => Promise.resolve({ length: data.byteLength }));
+		vi.stubGlobal(
+			'AudioContext',
+			class {
+				state = 'running';
+				destination = {};
+				decodeAudioData = decoded;
+				createBufferSource() {
+					return { buffer: null, connect: vi.fn(), start: started };
+				}
+			}
+		);
+		const fetchFn = vi.fn((url: string) => {
+			expect(url).toMatch(/stone\d\.wav/);
+			return Promise.resolve(new Response(new ArrayBuffer(8)));
+		});
+		vi.stubGlobal('fetch', fetchFn);
+		playStoneClick();
+		await vi.waitFor(() => expect(started).toHaveBeenCalledTimes(1));
+		playStoneClick();
+		await vi.waitFor(() => expect(started).toHaveBeenCalledTimes(2));
+		expect(fetchFn).toHaveBeenCalledTimes(5);
+		expect(decoded).toHaveBeenCalledTimes(5);
+	});
+
 	it('plays nothing that is switched off, and only the last ten seconds', () => {
 		const created = vi.fn();
 		vi.stubGlobal(

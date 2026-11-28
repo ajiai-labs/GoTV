@@ -1,9 +1,15 @@
-// Sounds of an own KGS game, made with the Web Audio API (no sound files):
-// a stone click for every move, a chime when the game starts, and a beep for
+// Sounds of an own KGS game, played with the Web Audio API: a stone click
+// for every move (recordings, stones/), and generated: a chime when the game starts, and a beep for
 // each of the last ten seconds on our clock (higher for the last three) -
 // so you hear it from the kitchen. Plus a ding-dong when someone writes to
 // you (chatSound.ts decides when). Each one can be switched off in
 // Einstellungen (gotv.sounds); the switches are read at every sound.
+
+import stone1 from './stones/stone1.wav';
+import stone2 from './stones/stone2.wav';
+import stone3 from './stones/stone3.wav';
+import stone4 from './stones/stone4.wav';
+import stone5 from './stones/stone5.wav';
 
 export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
 export type GameSoundPrefs = Record<GameSoundKind, boolean>;
@@ -65,25 +71,39 @@ function tone(ctx: AudioContext, freq: number, start: number, length: number, vo
 	osc.stop(start + length);
 }
 
+// The stone click: real recordings of a stone set on a wooden board
+// (from KaTrain, MIT - stones/NOTICE.txt), one of five at random so not
+// every move sounds the same. Replaces a synthetic click that sounded like
+// a tin drum (user, 28.11.2026). Loaded and decoded once, on first use.
+const STONE_URLS = [stone1, stone2, stone3, stone4, stone5];
+let stoneBuffers: Promise<Array<AudioBuffer>> | null = null;
+
+function loadStones(ctx: AudioContext): Promise<Array<AudioBuffer>> {
+	stoneBuffers =
+		stoneBuffers ??
+		Promise.all(
+			STONE_URLS.map(async (url) => {
+				const response = await fetch(url);
+				return ctx.decodeAudioData(await response.arrayBuffer());
+			})
+		).catch((error: unknown) => {
+			stoneBuffers = null; // try again with the next move
+			throw error;
+		});
+	return stoneBuffers;
+}
+
 function click(ctx: AudioContext) {
-	// A stone on wood: a burst of filtered noise plus a low knock.
-	const length = 0.06;
-	const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * length), ctx.sampleRate);
-	const data = buffer.getChannelData(0);
-	for (let i = 0; i < data.length; i++) {
-		data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 4);
-	}
-	const noise = ctx.createBufferSource();
-	noise.buffer = buffer;
-	const filter = ctx.createBiquadFilter();
-	filter.type = 'bandpass';
-	filter.frequency.value = 2400;
-	filter.Q.value = 1.2;
-	const gain = ctx.createGain();
-	gain.gain.value = 0.9;
-	noise.connect(filter).connect(gain).connect(ctx.destination);
-	noise.start();
-	tone(ctx, 180, ctx.currentTime, 0.05, 0.35);
+	loadStones(ctx)
+		.then((buffers) => {
+			const source = ctx.createBufferSource();
+			source.buffer = buffers[Math.floor(Math.random() * buffers.length)];
+			source.connect(ctx.destination);
+			source.start();
+		})
+		.catch(() => {
+			// no click is better than a broken game screen
+		});
 }
 
 // A window opened by GoTV itself (a game window) may not play sound before

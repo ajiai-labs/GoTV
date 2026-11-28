@@ -701,9 +701,12 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   (`app/src/lib/ui/HomeLink.svelte`) vor „Zurück“ - auch während der eigenen Partie der Weg
   zurück. Nachspielen hat ein eigenes „Zurück“ (zur Herkunftsseite, sonst zu den Listen;
   `app.closeReplay`).
-- **Töne beim Spielen** (`app/src/lib/sound/gameSounds.ts`, Web Audio, keine Tondateien;
+- **Töne beim Spielen** (`app/src/lib/sound/gameSounds.ts`, Web Audio;
   Einstellungen „Töne beim Spielen“, `gotv.sounds`, alles an): Steinklick bei jedem Zug der
-  eigenen Partie (`GameScreen`), Klang bei Partiebeginn (`playGameStart` in AppActions bei
+  eigenen Partie (`GameScreen`) - seit 28.11.2026 echte Aufnahmen eines Steins auf Holz (fünf,
+  zufällig eine; aus KaTrain, MIT, Herkunft und Lizenz in `app/src/lib/sound/stones/NOTICE.txt`),
+  vorher ein erzeugter Klick, der nach Blechtrommel klang (Nutzer: "keine Klangerzeugung, einfach
+  einen anderen Sound", keine Auswahl), Klang bei Partiebeginn (`playGameStart` in AppActions bei
   `CHALLENGE_FINAL` als Spieler, Automatch, fortgesetzter Partie), Piepton für jede der letzten
   10 Sekunden auf der eigenen laufenden Uhr (`GameClock announce`, letzte 3 höher), Ding-Dong bei
   einer Chatnachricht an mich (26.11.2026, `model/chatSound.ts`: private Nachricht oder Chat in
