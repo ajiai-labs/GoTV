@@ -58,3 +58,34 @@ Feste Grenzen, an denen viele Vorschläge scheitern:
 - Turnierräume in der Raumliste kennzeichnen: etwa 30 Minuten.
 - ICS-Export eines Kalendertermins: etwa 1 Stunde.
 - QR-Code für Übertragungslinks: etwa 1 Stunde (neue Abhängigkeit – vorher fragen).
+
+## Datenquellen für Übertragungen (geprüft 28.11.2026)
+
+Wunsch des Nutzers: internationale und Städteturniere **übertragen mit Brett und Video**, ohne sich
+auf anderen Servern anzumelden. Ein zweites Modell (GPT-OSS 120B) nannte dazu Quellen; jede Adresse
+wurde mit einem einzelnen Abruf geprüft – fast alle sind erfunden:
+
+| Genannte Quelle | Prüfung |
+|---|---|
+| KGS `https://www.gokgs.com/json/tournaments` | 404 – gibt es nicht |
+| EGF `https://www.eurogofed.org/egf/tournaments.json` | 403 – gibt es nicht |
+| AGA `https://www.usgo.org/tournaments.json` | 404 – gibt es nicht |
+| go4net.org, pandanet-igg.com, europeangodirectory.org | Domains existieren nicht |
+| `https://www.intergo.com/api/events` („IGF“) | geparkte Werbeseite |
+| `https://gobase.org/api/tournaments` | leitet auf eine fremde Artikelseite um |
+| OGS `https://online-go.com/api/v1/tournaments/` | echt, aber OGS-interne Online-Turniere (61 763) – wie KGS-interne Turniere nicht gewollt |
+
+Schon in GoTV (tools/update_events.py, täglich per GitHub Actions): Twitch-Sendeplan der EGF
+(iCalendar ohne Schlüssel), DGoB-Turnierkalender (WordPress-API), EGF-Grand-Prix-Kalender (HTML),
+Speed-Go-Turnierseite (Begegnungen + OGS-Partien); Bretter über `ogs_game_ids`/`ogs_players` und
+KGS (`kgs_room`/`kgs_players`).
+
+Echte, noch ungenutzte Quellen:
+
+| Quelle | Was sie bringt | Weg | Einschränkung |
+|---|---|---|---|
+| YouTube-Kanal-RSS `youtube.com/feeds/videos.xml?channel_id=UC…` | die letzten 15 Videos eines Kanals mit Titel und Datum (EGF: Deutsche Meisterschaft Runde 1–7, Pandanet-Mannschafts-EM) | täglicher Import (Python, kein Schlüssel) → Aufzeichnungen zu Kanälen/Turnieren | kein CORS (nicht direkt aus der Web-Version); ob angekündigte Livestreams im Feed stehen, ist ungeprüft |
+| Twitch-Sendeplan anderer Kanäle (gleicher iCalendar-Weg wie EGF) | geplante Sendungen von AGA, Yunguseng Dojang … | `update_events.py` für alle Twitch-Kanäle in `channels[]` | nur Kanäle, die einen Twitch-Sendeplan pflegen |
+| European Go Database (europeangodatabase.eu) | Ergebnisse vergangener europäischer Turniere | Link „Ergebnisse“ an Archiv-Einträgen | erst nach dem Turnier, kein Live |
+| Pandanet/IGS | Pandanet Go European Team Championship läuft dort | – | blockiert, bis die IGS-Nutzungsbedingungen geklärt sind |
+| Fox Weiqi | Partien von FJ Dickhut u. a. | – | keine offene Schnittstelle (Nutzer wartet auf Antwort von Fox) |
