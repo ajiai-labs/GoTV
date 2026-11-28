@@ -53,8 +53,12 @@ neuen App (`app/`) nachbaut. Plan: `docs/umbau-svelte.md`.
 - Design: nur die CSS-Variablen aus `app/src/app.css` (`--bg`, `--surface`, `--ink`,
   `--ink-soft`, `--rule`, `--accent`, `--accent-ink`, `--accent-soft`, `--live`,
   `--radius-s/m/pill`, `--gap`, ...) und die Klassen `.panel`, `.panel-title`, `.button`,
-  `.button-primary`, `.muted`. Beide Designs müssen gut aussehen: wo "Oldschool" anders
-  aussehen soll, `:global([data-design='oldschool']) .x { ... }` im Komponenten-Stil.
+  `.button-primary`, `.muted`. Alle vier Designs (Modern, Modern dunkel, Classic, Classic
+  dunkel) in allen fünf Farbtönen müssen gut aussehen - deshalb keine festen Farben, sondern
+  Variablen. Wo "Classic" anders aussehen soll,
+  `:global([data-design='oldschool']) .x { ... }` im Komponenten-Stil (gilt für Classic hell
+  und dunkel); 3D-Rahmen mit `var(--bevel-light, #ffffff)`, `var(--bevel-face, #ece9e2)`,
+  `var(--bevel-dark, #808080)`, nie mit festen Werten.
   Vorbild für Look und Aufbau: die Entwurfsseiten `app/src/routes/+page.svelte`,
   `nachspielen/+page.svelte`, `kalender/+page.svelte`.
 - iPad und Handy: funktioniert ab 360 px Breite, Querformat iPad (1180x820) ohne
@@ -70,6 +74,9 @@ npm run check      # 0 Fehler, 0 Warnungen in DEINEN Dateien
 npx eslint <deine Dateien>
 npm test           # alle grün
 ```
+
+Exit-Codes prüfen, nicht nur die letzte Ausgabezeile: `npm run lint | tail -1` verschluckt
+einen roten Lint (so blieb am 28.11.2026 die Web-Version stehen).
 
 - Komponententests (`*.svelte.test.ts`, laufen im echten Browser) für das Wichtigste
   jeder Seite: zeigt Daten an, Knöpfe rufen die richtige Aktion. Muster:

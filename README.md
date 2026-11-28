@@ -58,6 +58,9 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   appears next to the stream as soon as a game starts.
 - **Several boards at once:** a team match shows small live boards with
   players, ranks and move number; a click brings one up next to the stream.
+- **Jetzt auf KGS:** running KGS tournament games and games KGS broadcasts appear
+  on Live grouped by room - also without a calendar entry or stream; a room's games
+  go to the board overview with one click.
 - **Kinomodus:** stream and board fill the window side by side, with an
   adjustable split and a collapsible chat. The split between stream and board
   can be dragged in the normal view too.
@@ -85,12 +88,25 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   growth lines, every stone different), black like matte slate; white is
   drawn 2 % smaller, as in real Go sets, because light stones look bigger.
 - **Watching, as in CGoban:** "Ergebnis schätzen" (score estimate - random
-  playouts, no AI, not in your own running game), "Lokal betrachten" (a copy
-  to step through on your own; KataGo stays off while the game runs on KGS)
-  and "Spiel kopieren in …" (into one of your rooms).
-- **Sounds while playing:** a stone click on every move, a clear chime when your
-  game starts and a beep for each of the last 10 seconds on your clock - so you
-  hear it away from the screen. Each can be switched off in the settings.
+  playouts together with the influence of the stones, no AI; territory shown as
+  small stones as in CGoban; wherever a game is open - watched games, the board
+  overview, TV boards, reviews, Nachspielen - but never in your own running game),
+  "Lokal betrachten" (a copy to step through on your own; KataGo stays off while
+  the game runs on KGS) and "Spiel kopieren in …" (into one of your rooms).
+- **Finding a game to watch:** Beobachten lists the games in columns - players,
+  move, observers, board and time ("19×19 · 30 Min. + 5×30 Sek. · Japanisch") -
+  with a search for players and rooms, filters for board size, pace and tournament
+  games, and sorting by strength, observers or "just started". The room is shown
+  for tournament games.
+- **The clock:** big digits, red once the main time is over (byo-yomi), a green bar
+  on the player to move.
+- **Sounds while playing:** a stone click on every move, a sound when your game
+  starts, a tick for each of the last 10 seconds on your clock and a sound for a
+  chat message to you - so you hear it away from the screen. Each comes in four
+  variants (e.g. stone on a kaya, thick or table board; gong, singing bowl, bass
+  pulse) and can be switched off in the settings.
+- **Designs:** Modern and Classic, each light and dark, in five background tones
+  (warm paper, yellow, red, blue, green) - chosen in the settings.
 - **Changed challenge terms:** if the challenge's creator answers with other
   terms, GoTV shows them with the changes highlighted to accept or decline.
 - **Unfinished and archived games:** all unfinished games of yours are listed
@@ -108,7 +124,8 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   opponent.
 - **KGS community:** friends, ignore and fan lists, messages for offline
   players and your mailbox, "Keine Unterhaltungen" (decline private chats),
-  creating a room and the KGS server statistics.
+  creating a room and the KGS server statistics. A player's rank graph shows the
+  daily ups and downs with a line for every rank, as in CGoban.
 - **Follow KGS players:** "Folgen" in a player's profile; "Gefolgte Spieler"
   shows who plays right now with a link to the game, and GoTV notifies you
   when one starts a game (while GoTV is open). Favourite KGS rooms are joined
@@ -120,10 +137,13 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
 - **German and English:** the language follows the browser and can be switched
   in the settings.
 - **Kalender** and **Nachspielen:** a tournament calendar that refreshes
-  daily (DGoB, EGF Grand Prix, the EGF Twitch schedule and the Speed Go
-  Championship bracket, whose OGS games are linked automatically), and SGF
-  replay move by move - including the finished OGS games of tournaments
-  from the last three months.
+  daily (DGoB, EGF Grand Prix, the Twitch schedules of the EGF, the AGA and
+  Yunguseng Dojang, and the Speed Go Championship bracket, whose OGS games are
+  linked automatically), and SGF replay move by move - including the finished OGS
+  games of tournaments from the last three months. A finished Grand Prix
+  tournament names its winner - only on request, so replaying spoils nothing.
+- **Tournament archive:** "Alle Partien herunterladen (ZIP)" saves all finished
+  OGS games of a calendar tournament as SGF files with a list of the games.
 - **In any browser, also on a tablet:** https://ajiai-labs.github.io/GoTV/
   (open it and choose "Add to home screen"). This web version has
   everything except KGS boards, KGS chat and the KGS login - KGS answers
@@ -161,12 +181,17 @@ download); "Einstellungen → Über GoTV" shows the version and checks by hand.
   gerade (geplant)" while one runs, and is then also named under Live.
   A week plan shows all fixed air times; each channel links straight to
   its live page on YouTube/Twitch (chat, likes), and Twitch chats can be
-  opened inside GoTV.
+  opened inside GoTV. "Neue Videos der Kanäle" lists the newest videos of the
+  YouTube channels - round recordings, lectures, announced live streams - from
+  the channels' official feeds, playable inside GoTV.
 
 Streams are embedded only through the official players, and only after a
 click (two-click solution).
 
 ## Screenshots
+
+(Taken on 26.11.2026 - before the warm background tones and the column layout of
+Beobachten; the boards and stones look the same.)
 
 **Live** - a broadcast with the official player and the board next to it (here the
 example: the EGF channel and the bundled EM 2026 final), design "Modern":
@@ -233,7 +258,8 @@ negotiate, changed terms), automatic opponent selection, resuming unfinished gam
 games in their own windows and the board overview,
 playing, score estimate, local copies, copying a game into a room, friend/ignore/fan
 lists, messages and mailbox, declining private chats, creating rooms and server
-statistics. Not available: rengo/simul, recorded KGS lectures (the KGS interface
+statistics, KGS reviews with control, marks and saving in the archive, comments on
+archive games and SGF download. Not available: rengo/simul, recorded KGS lectures (the KGS interface
 GoTV uses carries no sound for them) and admin tools.
 
 ## Rebuilt interface (Svelte 5)
@@ -327,6 +353,11 @@ sh desktop/uninstall.sh
 
 Browser profile and server log live in `~/.local/share/gotv/` and are left
 in place by the uninstaller.
+
+Updating: Einstellungen → "Über GoTV" → "Nach Updates suchen" fetches the new
+commits from GitHub and "Jetzt aktualisieren" pulls and reinstalls (`git pull
+--ff-only` and `desktop/install.sh`, run by the local GoTV service; not with changes
+of your own in the GoTV folder). By hand: `git pull` and `sh desktop/install.sh`.
 
 ### Fehlerbehebung
 
@@ -471,8 +502,12 @@ Before pushing, the same checks as the CI:
 
 ```
 cd app && npm run check && npm run lint && npm test && npm run build
-python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo
+python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events \
+  tools.test_speedgo tools.test_fake_kgs tools.test_script_update tools.test_youtube_videos
 ```
+
+Check the exit codes, not only the last line of output (`npm run lint | tail -1`
+hides a failing lint).
 
 More in [`app/README.md`](app/README.md).
 
@@ -482,7 +517,8 @@ More in [`app/README.md`](app/README.md).
   and publishes https://ajiai-labs.github.io/GoTV/ (guest TV only,
   `VITE_GUEST_ONLY=true BASE_PATH=/GoTV`). The old addresses `/GoTV/neu/` and
   `/GoTV/tv` lead there.
-- **Calendar data:** a daily workflow imports new events into
+- **Calendar data:** a daily workflow imports new events, the Twitch schedules, the
+  newest YouTube videos of the channels and the Grand Prix winners into
   `public/tv/events.json`; the web version loads that file at runtime.
 - **Desktop apps:** pushing a tag `desktop-vX.Y.Z` builds Windows, macOS and Linux
   and publishes a release (`.github/workflows/desktop.yml`); on Linux

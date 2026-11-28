@@ -1,5 +1,40 @@
 # Change Log
 
+## Desktop 0.4.2 (vorbereitet, noch nicht veröffentlicht)
+
+Änderungen seit `desktop-v0.4.1`; die Web-Version hat sie schon (außer KGS-Funktionen).
+
+### KGS
+- Alte eigene Partien laden und analysieren; KGS-Besprechungen bearbeiten wie in CGoban
+  (Kontrolle, Varianten, Markierungen, im Archiv speichern), „Mit Gegner besprechen“,
+  Archivpartien kommentieren, SGF herunterladen.
+- Besprechungsänderungen warten auf KGS (keine doppelten Knotennummern), ehrlicher
+  Speicherstatus, Ladeanfragen treffen nur die angeforderte Partie.
+- „Ergebnis schätzen“ überall, wo eine Partie offen ist (nie in der eigenen laufenden),
+  mit Einfluss der Steine und kleinen Steinen als Gebiet wie in CGoban.
+- „Jetzt auf KGS“ unter Live: Turnier- und Übertragungspartien nach Raum, auch ohne Stream.
+- Beobachten: Spalten (Spieler, Zug, Zuschauer, Brett und Zeit), Suche, Filter (Größe,
+  Tempo, nur Turniere), Sortierung; Raum nur bei Turnierpartien; Zeitregel in Worten.
+- Uhr größer, im Byo-Yomi rot; grüner Balken beim Spieler am Zug.
+- Ranggraph detaillierter (Linie je Rang, Viertelrang-Linien, Zeitraum, Jahre).
+
+### Töne
+- Steinklick aus echten Aufnahmen (KaTrain), Countdown aus Uhr-/Schalenklängen,
+  Partiebeginn als Gong mit Akkord; je Ton vier Varianten zur Wahl.
+
+### Design
+- Warmer Hintergrund; Farbtöne Papier, Gelb, Rot, Blau, Grün für jedes Design; neues Design
+  „Classic dunkel“.
+
+### TV, Kalender, Kanäle
+- Twitch-Sendepläne von AGA und Yunguseng Dojang, neue Videos der YouTube-Kanäle, Sieger
+  der EGF-Grand-Prix-Turniere (auf Wunsch), Turnierarchiv als ZIP.
+
+### Desktop und Sonstiges
+- Update-Knopf für die Linux-Skriptinstallation („Nach Updates suchen“).
+- „Über GoTV“: Datenquellen und Vorbehalt gegen KI-Training; „Meine Daten“ nennt die
+  Einstellungen der Sicherung beim Namen.
+
 ### Desktop-App (GNOME, lokal)
 - `desktop/goTV_local.py`: ThreadingHTTPServer (nur 127.0.0.1, Port 8788),
   liefert den Desktop-Build aus; /igs-bridge antwortet 501 (Platzhalter)

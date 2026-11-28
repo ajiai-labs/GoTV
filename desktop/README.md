@@ -17,7 +17,8 @@ systemd-Benutzer-Timer ohne sudo. Er startet sofort einen Import und läuft dana
 täglich um 06:15–06:25 Uhr Ortszeit. Verpasste Läufe werden nach dem nächsten
 Login nachgeholt (`Persistent=true`); der Rechner muss dafür eingeschaltet sein.
 
-Die bestehenden DGoB-, EGF-Twitch- und EGF-Kalender-Importer aktualisieren
+Die Importer (DGoB, Twitch-Sendepläne von EGF, AGA und Yunguseng Dojang, EGF-Grand-Prix
+mit Siegern, Speed Go, neue Videos der YouTube-Kanäle; `tools/refresh_tv_events.py`) aktualisieren
 `~/.local/share/gotv/events.json` sowie die Kalenderdateien vorhandener
 `build-desktop/`- und `build/`-Verzeichnisse atomar. Ein fehlerhafter Import behält
 die bisherigen Daten seiner Quelle bei. Getrackte Quelldateien und Git bleiben
@@ -38,3 +39,12 @@ Manueller Lauf: `python3 -m tools.refresh_tv_events`
 Der bestehende GitHub-Workflow `.github/workflows/update-dgob-events.yml` ist die
 alternative Aktualisierung für die Web-Veröffentlichung. Der lokale Timer
 benötigt weder GitHub-Zugang noch Push-Rechte.
+
+## Update der Skriptinstallation
+
+Einstellungen → „Über GoTV“ → „Nach Updates suchen“ fragt den lokalen Dienst
+(`desktop/script_update.py`): `git fetch` und die Zahl neuer Commits. „Jetzt
+aktualisieren“ führt `git pull --ff-only` und `sh desktop/install.sh` aus und lädt GoTV
+danach neu; hat sich der Dienst selbst geändert, startet er sich neu. Mit eigenen
+Änderungen im GoTV-Ordner wird nichts geholt. Nur feste Befehle, nur Anfragen der
+GoTV-Seite selbst (lokaler Origin und Kopfzeile `X-GoTV-Update`).
