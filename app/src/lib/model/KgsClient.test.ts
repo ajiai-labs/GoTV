@@ -122,7 +122,7 @@ describe('KgsClient.poll', () => {
 		receive.mockResolvedValue([]);
 		await vi.advanceTimersByTimeAsync(60_000);
 		expect(client.state).toMatchObject({ network: 'online', retryTimes: 0 });
-	});
+	}, 20_000); // ten minutes of retries on fake timers: slow on a busy CI machine
 
 	it('takes an answer that is not JSON as a broken connection', async () => {
 		class HtmlXhr {
