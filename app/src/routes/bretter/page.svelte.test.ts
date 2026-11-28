@@ -52,6 +52,30 @@ describe('Brettübersicht', () => {
 		localStorage.removeItem('gotv.teamView');
 	});
 
+	it('closes itself when the last board is taken off', async () => {
+		const close = vi.spyOn(window, 'close').mockImplementation(() => {});
+		await render(Page);
+		await page
+			.getByRole('region', { name: 'Brett 1' })
+			.getByRole('button', { name: 'Vom Brett nehmen' })
+			.click();
+		expect(close).not.toHaveBeenCalled();
+		await page
+			.getByRole('region', { name: 'Brett 3' })
+			.getByRole('button', { name: 'Vom Brett nehmen' })
+			.click();
+		expect(close).toHaveBeenCalledOnce();
+		close.mockRestore();
+	});
+
+	it('closes itself after "Alle entfernen"', async () => {
+		const close = vi.spyOn(window, 'close').mockImplementation(() => {});
+		await render(Page);
+		await page.getByRole('button', { name: 'Alle entfernen' }).click();
+		expect(close).toHaveBeenCalledOnce();
+		close.mockRestore();
+	});
+
 	it('says that a private game has no board instead of loading for ever', async () => {
 		const privateGame = game(92, lukan, anna, { private: true, tree: undefined });
 		const refused = game(93, anna, lukan, { tree: undefined, accessDenied: 'Private Game' });

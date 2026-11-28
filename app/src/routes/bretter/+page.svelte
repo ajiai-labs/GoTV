@@ -84,12 +84,23 @@
 		boards = emptyBoards();
 		saveBoards(boards);
 		show(null);
+		closeWhenEmpty();
 	}
 
 	function takeOff(board: number) {
 		boards = removeBoard(boards, board);
 		saveBoards(boards);
 		if (big === board) show(null);
+		closeWhenEmpty();
+	}
+
+	// The last board taken off (× or "Alle entfernen"): the window goes, as
+	// it came with the first board - the window behind it shows again (user,
+	// 28.11.2026). Your own game's preview alone is no reason to stay: it has
+	// its own window. Opened empty with the button, it stays open.
+	function closeWhenEmpty() {
+		const left = boards.some((id) => id != null && !ownRunning(app.state.gamesById[id]));
+		if (!left) window.close();
 	}
 
 	// Boards with their game (a list entry before joining has no moves yet).
