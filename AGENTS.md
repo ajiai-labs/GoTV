@@ -1089,8 +1089,9 @@ dann `DETAILS_JOIN_REQUEST`. (2) KGS schickt Ja/Nein-Felder nur, wenn sie wahr s
 so zurück, falsche fehlten, `forcedNoRank` immer, die E-Mail ohne Adresse. Jetzt jedes Feld, Ja/Nein
 als true/false, Texte in KGS' Grenzen (50/70/1500, auch `maxlength` im Formular) - wie GoUniverse.
 Die Doku nennt das Feld fürs Ändern `emailPrivate`, beim Lesen `privateEmail`; GoTV sendet wie
-GoUniverse `privateEmail`. Ob der Haken „E-Mail verbergen“ damit bei KGS ankommt, ist an einer echten
-Sitzung NOCH NICHT geprüft. Übungs-KGS: prüft `DETAILS_CHANGE` streng und merkt das Profil.
+GoUniverse `privateEmail`. Am 28.11.2026 vom Nutzer an seinem echten KGS-Konto geprüft: Profil ändern
+funktioniert (nach dem Update; die Version davon brach mit „The connection to the server has been
+closed unexpectedly“ ab). Ob der Haken „E-Mail verbergen“ ankommt, ist einzeln nicht geprüft. Übungs-KGS: prüft `DETAILS_CHANGE` streng und merkt das Profil.
 
 ## Anfragen nacheinander, Kanal-Schranke für alles (28.11.2026)
 
