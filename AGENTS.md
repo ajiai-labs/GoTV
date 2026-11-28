@@ -808,10 +808,15 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   zufällig eine; aus KaTrain, MIT, Herkunft und Lizenz in `app/src/lib/sound/stones/NOTICE.txt`;
   ebenso seit 28.11.2026 der Countdown: KaTrains Uhr-Töne, tiefer Ton für 10-4 s, der höhere für
   die letzten 3, `sound/clock/` - vorher Sinus 800/1200 Hz, Nutzer: „zu piepsig“. Seit dem
-  Nachmittag wählbar (Nutzer mochte alle drei neuen Proben): Einstellungen → „Zeit läuft ab“ →
-  Elektronische Schale (Vorgabe), Klangschale, Tiefer Puls (eigene Klänge aus
-  `tools/sounds/make_countdown.py`) oder Uhr (KaTrain); `gotv.countdownSound`. Weitere
-  Auswahlen (Steinklick, Partiebeginn) bewusst nicht - nur ein guter Steinklick vorhanden; und der
+  28.11.2026 hat JEDER Ton vier Varianten zur Wahl (Nutzer: „überall vier Variationen“;
+  `SOUND_VARIANTS` in `sound/gameSounds.ts`, Auswahlliste neben „Anhören“, Wechsel spielt den Klang,
+  `gotv.stoneSound`/`startSound`/`countdownSound`/`messageSound`, in „Meine Daten“ benannt):
+  Steinklick Kaya-Brett (Aufnahme) / Dickes Brett / Tischbrett / Brett im Raum (dieselben
+  Aufnahmen per Web Audio bearbeitet: Tonhöhe+Filter bzw. kurzer Raumhall); Partiebeginn Gong mit
+  Akkord / Tiefer Gong / Klangschale / Bass-Puls; Zeit läuft ab Elektronische Schale / Klangschale
+  / Tiefer Puls / Uhr (KaTrain); Chatnachricht Ding-Dong / Kleine Schale / Doppelschale / Tropfen -
+  heller als Partiebeginn und Countdown, damit man sie am Klang erkennt. Eigene Klänge erzeugt von
+  `tools/sounds/make_countdown.py`, `make_game_start.py`, `make_sounds.py`; und der
   Partiebeginn: tiefer elektronischer Gong mit warmem D-Dur-Akkord darunter, vom Nutzer aus
   Klangproben gemischt gewünscht, eigener Klang aus `tools/sounds/make_game_start.py`,
   `sound/start/game-start.wav` - vorher drei helle Sinustöne),
