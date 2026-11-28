@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { app, currentPath } from '#lib/app.svelte.ts';
-	import { config } from '#lib/config.ts';
+	import { config, isDesktop } from '#lib/config.ts';
 	import { registerServiceWorker } from '#lib/util/serviceWorker.ts';
 	import UnseenBadge from '#lib/ui/UnseenBadge.svelte';
 	import UserName from '#lib/ui/UserName.svelte';
@@ -19,6 +19,8 @@
 	import FavoriteRoomsWatcher from '#lib/ui/chat/FavoriteRoomsWatcher.svelte';
 	import HomeScreenHint from '#lib/ui/HomeScreenHint.svelte';
 	import DesktopUpdateBanner from '#lib/ui/update/DesktopUpdateBanner.svelte';
+	import ScriptUpdateBanner from '#lib/ui/update/ScriptUpdateBanner.svelte';
+	import { DESKTOP_VERSION } from '#lib/desktopUpdate.ts';
 	import MailboxNotice from '#lib/ui/community/MailboxNotice.svelte';
 	import { effectiveNavOrder, navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
@@ -275,6 +277,10 @@
 	<!-- Desktop apps: a newer GoTV on GitHub -->
 	{#if !mirror}
 		<DesktopUpdateBanner />
+	{/if}
+	<!-- Script installation: new changes on GitHub, updated from "Über GoTV" -->
+	{#if !DESKTOP_VERSION && !config.guestOnly && isDesktop()}
+		<ScriptUpdateBanner fetchesGitHub={!mirror} />
 	{/if}
 	{#if !config.guestOnly && !mirror}
 		<MailboxNotice />

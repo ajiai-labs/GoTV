@@ -19,7 +19,7 @@
 	} = $props();
 </script>
 
-<section class="AboutGoTv" aria-labelledby="about-title">
+<section id="ueber-gotv" class="AboutGoTv" aria-labelledby="about-title">
 	<h2 id="about-title" class="panel-title">{t('app.update.about')}</h2>
 	{#if kind === 'desktop' && version}
 		<p>{t('app.update.version', { version })}</p>

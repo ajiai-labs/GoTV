@@ -2,10 +2,26 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { execSync } from 'node:child_process';
 
 // GitHub Pages serves the web version under /GoTV; the desktop server and the
 // development server serve it at the root. BASE_PATH="/GoTV" for Pages builds.
 const base = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
+
+// Which GoTV this build is (shown under "Über GoTV"): git describe against
+// the release tags, commit and its date. Set from outside (CI), it stays.
+function git(args: string): string {
+	try {
+		return execSync(`git ${args}`, { stdio: ['ignore', 'pipe', 'ignore'] })
+			.toString()
+			.trim();
+	} catch {
+		return '';
+	}
+}
+process.env.VITE_GOTV_DESCRIBE ??= git("describe --tags --match 'desktop-v*' --long");
+process.env.VITE_GOTV_COMMIT ??= git('log -1 --format=%h');
+process.env.VITE_GOTV_DATE ??= git('log -1 --format=%cI');
 
 // Component tests run in real browsers: Chromium, and WebKit (Safari's engine,
 // as on the iPad) wherever its system libraries are installed (the CI does).

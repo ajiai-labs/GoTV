@@ -280,6 +280,30 @@ export const app = {
 	'app.update.scriptTimeout': 'Das Update hat zu lange gedauert und wurde abgebrochen.',
 	'app.update.scriptServer':
 		'Dieser GoTV-Dienst kann sich noch nicht selbst aktualisieren. Einmal von Hand im GoTV-Ordner: „git pull“ und „sh desktop/install.sh“, dann GoTV neu starten – ab dann geht es mit dem Knopf.',
+	'app.update.yourVersion': 'Deine Version: {version}',
+	'app.update.versionLine': '{name} · Stand {date} ({commit})',
+	'app.update.versionHint':
+		'„+{count}“ heißt: {count} Änderungen nach der veröffentlichten Version {base}.',
+	'app.update.newVersion': 'Neue Version: {version}',
+	'app.update.installing': 'Wird installiert: {version}',
+	'app.update.step': 'Schritt {n} von 3: {name}',
+	'app.update.stepPull': 'Herunterladen von GitHub',
+	'app.update.stepBuild': 'Bauen (dauert am längsten, 1 bis 2 Minuten)',
+	'app.update.stepInstall': 'Installieren',
+	'app.update.scriptPlaying':
+		'Du spielst gerade eine Partie – aktualisieren geht danach, damit die Verbindung zu KGS nicht abbricht.',
+	'app.update.scriptWaitGame':
+		'Aktualisiert. GoTV startet den Dienst neu und lädt die Seite, sobald deine Partie zu Ende ist – vorher würde die Verbindung zu KGS abbrechen.',
+	'app.update.scriptReloadLater': 'Neu laden geht nach deiner Partie.',
+	'app.update.scriptBanner': 'Update verfügbar: GoTV {version}',
+	'app.update.scriptBannerGo': 'Zu „Über GoTV“',
+	'app.update.scriptBannerAfterGame':
+		'Du spielst gerade – aktualisiere nach deiner Partie unter Einstellungen → „Über GoTV“.',
+	'app.update.whatsNew': 'Was ist neu',
+	'app.update.kindFeat': 'Neu:',
+	'app.update.kindFix': 'Behoben:',
+	'app.update.countFeat': { one: '1 neue Funktion', other: '{count} neue Funktionen' },
+	'app.update.countFix': { one: '1 Fehler behoben', other: '{count} Fehler behoben' },
 	'app.update.scriptDetails': 'Details',
 	'app.update.sources': 'Daten und Quellen',
 	'app.update.sourcesText':

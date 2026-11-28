@@ -356,10 +356,14 @@ sh desktop/uninstall.sh
 Browser profile and server log live in `~/.local/share/gotv/` and are left
 in place by the uninstaller.
 
-Updating: Einstellungen → "Über GoTV" → "Nach Updates suchen" fetches the new
-commits from GitHub and "Jetzt aktualisieren" pulls and reinstalls (`git pull
---ff-only` and `desktop/install.sh`, run by the local GoTV service; not with changes
-of your own in the GoTV folder). By hand: `git pull` and `sh desktop/install.sh`.
+Updating: GoTV looks for new commits on GitHub at start and every hour and says so
+in a one-line notice ("Update verfügbar: GoTV 0.4.1+45 · 2 neue Funktionen"). Under
+Einstellungen → "Über GoTV" you see your version ("0.4.1+40" = 40 changes after release
+0.4.1, with date and commit), the new one and what is new; "Jetzt aktualisieren" pulls
+and reinstalls (`git pull --ff-only` and `desktop/install.sh`, run by the local GoTV
+service; not with changes of your own in the GoTV folder) and shows the steps as a bar.
+While your own KGS game runs, GoTV neither updates nor restarts nor reloads - the
+connection to KGS stays. By hand: `git pull` and `sh desktop/install.sh`.
 
 ### Fehlerbehebung
 

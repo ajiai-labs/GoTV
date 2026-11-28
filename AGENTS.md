@@ -877,6 +877,22 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   `model/scriptUpdate.ts`. Ein älterer Dienst kennt das noch nicht: einmal von Hand `git pull` +
   `install.sh` und GoTV neu starten, das sagt die Seite dann auch. Tests:
   `tools/test_script_update.py` (echte Git-Repos in temp), `ScriptUpdate.svelte.test.ts`.
+  Ausbau 28.11.2026 (Nutzer: spielt in GoTV, während er entwickelt, und prüft so die Stabilität):
+  „Deine Version: 0.4.1+40 · Stand 28.11.2026, 12:45 (404ad61)“ (`git describe` gegen die Tags
+  `desktop-v*` beim Bauen, `vite.config.ts` → `VITE_GOTV_*`, `BUILD_VERSION`; „+40“ = Commits nach
+  dem Release), vor dem Update „Neue Version …“ und „Was ist neu“ (Commit-Betreffe, nur feat/fix,
+  `describeChanges`, aufklappbar), beim Update ein Balken mit Schritten Herunterladen / Bauen /
+  Installieren (`phase`, `install.sh` wird zeilenweise mitgelesen). Während der eigenen laufenden
+  KGS-Partie (`hasOwnRunningGame`) kein „Jetzt aktualisieren“, kein Dienst-Neustart, kein Neuladen:
+  der Dienst startet sich nur noch auf Anfrage der Seite neu (`POST …/restart`), die Seite fragt
+  erst nach Partieende. Hinweis „Update verfügbar: GoTV 0.4.1+45 · 2 neue Funktionen, 1 Fehler
+  behoben“ (`ScriptUpdateBanner`, kompakt, × = „Später“ für diese Version in allen Fenstern): das
+  Hauptfenster lässt den Dienst beim Start und stündlich auf GitHub nachsehen, andere Fenster lesen
+  minütlich nur dessen letzte Antwort; während der eigenen Partie nur eine Zeile „aktualisiere nach
+  deiner Partie“. Der bis dahin installierte Dienst startet sich nach dem Update noch selbst neu
+  (alte Logik) - dieses eine Update zwischen zwei Partien.
+  **Claude installiert die Desktop-App nicht mehr selbst** (`install.sh`, Dienst-Neustart) - der
+  Nutzer aktualisiert nur über den Knopf (unterbricht sonst seine Partie).
 
 ## Mehrere Fenster, eine KGS-Verbindung (26.11.2026)
 

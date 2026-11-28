@@ -12,6 +12,11 @@ function state(partial: Partial<ScriptUpdateStatus>): ScriptUpdateStatus {
 		dirty: false,
 		restart: false,
 		log: [],
+		current: null,
+		target: null,
+		phase: null,
+		restarting: false,
+		changes: [],
 		...partial
 	};
 }
@@ -110,5 +115,84 @@ describe('ScriptUpdate', () => {
 		});
 		await expect.element(page.getByText(/startet neu/)).toBeVisible();
 		await vi.waitFor(() => expect(reload).toHaveBeenCalled(), { timeout: 8000 });
+	});
+
+	const v1 = {
+		describe: 'desktop-v0.4.1-40-g404ad61',
+		commit: '404ad61',
+		date: '2026-11-28T11:45:00Z'
+	};
+	const v2 = {
+		describe: 'desktop-v0.4.1-45-gd0aa26e',
+		commit: 'd0aa26e',
+		date: '2026-11-28T13:10:00Z'
+	};
+
+	it('names your version, the new one and what is new', async () => {
+		const fetchFn = service({
+			status: [state({ current: v1 })],
+			check: state({
+				behind: 5,
+				current: v1,
+				target: v2,
+				changes: ['feat(app): update notice', 'docs: README', 'fix(app): board overview']
+			})
+		});
+		await render(ScriptUpdate, { fetchFn: fetchFn as typeof fetch, installed: v1, playing: false });
+		await expect.element(page.getByText(/Deine Version: 0\.4\.1\+40 · Stand/)).toBeVisible();
+		await expect
+			.element(page.getByText(/40 Änderungen nach der veröffentlichten Version 0\.4\.1/))
+			.toBeVisible();
+		await page.getByRole('button', { name: 'Nach Updates suchen' }).click();
+		await expect
+			.element(page.getByText(/Neue Version: 0\.4\.1\+45 · Stand .* \(d0aa26e\)/))
+			.toBeVisible();
+		await page.getByText('Was ist neu').click();
+		await expect.element(page.getByText(/Update notice/)).toBeVisible();
+		await expect.element(page.getByText(/Board overview/)).toBeVisible();
+		await expect.element(page.getByText(/README/)).not.toBeInTheDocument();
+	});
+
+	it('shows the steps as a bar while updating', async () => {
+		const fetchFn = service({
+			status: [
+				state({ state: 'running', behind: 5, target: v2, phase: 'pull' }),
+				state({ state: 'running', behind: 5, target: v2, phase: 'build' }),
+				state({ state: 'running', behind: 5, target: v2, phase: 'install' }),
+				state({ state: 'done', behind: 0 })
+			]
+		});
+		await render(ScriptUpdate, { fetchFn: fetchFn as typeof fetch, pollMs: 1000, playing: false });
+		await expect.element(page.getByText(/Wird installiert: 0\.4\.1\+45/)).toBeVisible();
+		await expect.element(page.getByText(/Schritt 2 von 3: Bauen/)).toBeVisible();
+		await expect.element(page.getByText(/Schritt 3 von 3: Installieren/)).toBeVisible();
+		await expect.element(page.getByText('Aktualisiert.', { exact: true })).toBeVisible();
+	});
+
+	it('does not update during your own game', async () => {
+		const fetchFn = service({ check: state({ behind: 2, target: v2 }) });
+		await render(ScriptUpdate, { fetchFn: fetchFn as typeof fetch, playing: true });
+		await page.getByRole('button', { name: 'Nach Updates suchen' }).click();
+		await expect.element(page.getByRole('button', { name: 'Jetzt aktualisieren' })).toBeDisabled();
+		await expect.element(page.getByText(/Du spielst gerade eine Partie/)).toBeVisible();
+	});
+
+	it('restarts the service only when your game is over', async () => {
+		const reload = vi.fn();
+		const fetchFn = service({ status: [state({ state: 'done', behind: 0, restart: true })] });
+		const view = await render(ScriptUpdate, {
+			fetchFn: fetchFn as typeof fetch,
+			reload,
+			pollMs: 50,
+			playing: true
+		});
+		await expect.element(page.getByText(/sobald deine Partie zu Ende ist/)).toBeVisible();
+		await new Promise((done) => setTimeout(done, 300));
+		expect(fetchFn.mock.calls.some(([url]) => url.endsWith('/restart'))).toBe(false);
+		expect(reload).not.toHaveBeenCalled();
+		await view.rerender({ playing: false });
+		await vi.waitFor(() => expect(reload).toHaveBeenCalled(), { timeout: 8000 });
+		const restart = fetchFn.mock.calls.find(([url]) => url.endsWith('/restart'));
+		expect(restart?.[1]).toMatchObject({ method: 'POST', headers: { 'X-GoTV-Update': '1' } });
 	});
 });

@@ -274,6 +274,29 @@ export const app: Translation<typeof de> = {
 	'app.update.scriptTimeout': 'The update took too long and was stopped.',
 	'app.update.scriptServer':
 		'This GoTV service cannot update itself yet. Once by hand in the GoTV folder: “git pull” and “sh desktop/install.sh”, then restart GoTV – from then on the button does it.',
+	'app.update.yourVersion': 'Your version: {version}',
+	'app.update.versionLine': '{name} · as of {date} ({commit})',
+	'app.update.versionHint': '"+{count}" means: {count} changes after the released version {base}.',
+	'app.update.newVersion': 'New version: {version}',
+	'app.update.installing': 'Installing: {version}',
+	'app.update.step': 'Step {n} of 3: {name}',
+	'app.update.stepPull': 'Downloading from GitHub',
+	'app.update.stepBuild': 'Building (takes longest, 1 to 2 minutes)',
+	'app.update.stepInstall': 'Installing',
+	'app.update.scriptPlaying':
+		'You are playing a game – update afterwards, so the connection to KGS does not break.',
+	'app.update.scriptWaitGame':
+		'Updated. GoTV restarts its service and reloads the page as soon as your game is over – before that the connection to KGS would break.',
+	'app.update.scriptReloadLater': 'Reloading works after your game.',
+	'app.update.scriptBanner': 'Update available: GoTV {version}',
+	'app.update.scriptBannerGo': 'To "About GoTV"',
+	'app.update.scriptBannerAfterGame':
+		'You are playing – update after your game under Settings → "About GoTV".',
+	'app.update.whatsNew': "What's new",
+	'app.update.kindFeat': 'New:',
+	'app.update.kindFix': 'Fixed:',
+	'app.update.countFeat': { one: '1 new feature', other: '{count} new features' },
+	'app.update.countFix': { one: '1 fix', other: '{count} fixes' },
 	'app.update.scriptDetails': 'Details',
 	'app.update.sources': 'Data and sources',
 	'app.update.sourcesText':

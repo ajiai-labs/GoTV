@@ -94,6 +94,50 @@ class UpdaterTest(unittest.TestCase):
             self.assertEqual(fh.read(), "zwei\n")
         self.assertTrue(os.path.isfile(os.path.join(self.repos.work, "installed.txt")))
 
+    def test_names_the_installed_and_the_new_version(self):
+        git(self.repos.other, "tag", "desktop-v0.4.1")
+        git(self.repos.other, "push", "origin", "desktop-v0.4.1")
+        git(self.repos.work, "fetch", "--tags")
+        self.repos.push_new()
+        status = self.updater.check()
+        self.assertEqual(status["current"]["describe"].rsplit("-", 1)[0], "desktop-v0.4.1-0")
+        self.assertEqual(status["target"]["describe"].rsplit("-", 1)[0], "desktop-v0.4.1-1")
+        self.assertRegex(status["target"]["commit"], r"^[0-9a-f]{7,}$")
+        self.assertRegex(status["target"]["date"], r"^\d{4}-\d\d-\d\dT")
+        self.assertIsNone(status["phase"])
+        self.updater.start()
+        status = wait_done(self.updater)
+        self.assertEqual(status["current"], status["target"])
+        self.assertIsNone(status["phase"])
+
+    def test_names_the_new_changes(self):
+        self.repos.push_new()
+        self.repos.push_new("README", "drei\n")
+        self.assertEqual(self.updater.check()["changes"], ["zwei", "zwei"])
+        self.updater.start()
+        self.assertEqual(wait_done(self.updater)["changes"], [])
+
+    def test_steps_while_updating(self):
+        # install.sh prints its steps; the state follows them.
+        self.repos.push_new(
+            "desktop/install.sh",
+            "echo '1/4 Build'\nsleep 0.6\necho '2/4 Launcher'\nsleep 0.6\necho '4/4 Fertig.'\n",
+        )
+        self.updater.check()
+        self.updater.start()
+        seen = set()
+        end = time.time() + 20
+        while time.time() < end:
+            status = self.updater.status()
+            if status["state"] != "running":
+                break
+            seen.add(status["phase"])
+            time.sleep(0.05)
+        self.assertIn("build", seen)
+        self.assertIn("install", seen)
+        self.assertEqual(self.updater.status()["state"], "done")
+        self.assertIn("4/4 Fertig.", self.updater.status()["log"])
+
     def test_asks_for_a_restart_when_the_server_changed(self):
         restarted = threading.Event()
         self.updater.on_restart = restarted.set
@@ -103,7 +147,21 @@ class UpdaterTest(unittest.TestCase):
         git(self.repos.other, "push", "origin", "HEAD:master")
         self.updater.start()
         self.assertTrue(wait_done(self.updater)["restart"])
+        # Not by itself: a restart cuts the KGS connection, the page asks
+        # for it when no own game runs.
+        self.assertFalse(restarted.wait(3))
+        self.assertTrue(self.updater.restart_now()["restarting"])
         self.assertTrue(restarted.wait(5))
+
+    def test_restarts_only_after_an_update_that_needs_it(self):
+        restarted = threading.Event()
+        self.updater.on_restart = restarted.set
+        self.assertFalse(self.updater.restart_now()["restarting"])
+        self.repos.push_new()
+        self.updater.start()
+        wait_done(self.updater)
+        self.assertFalse(self.updater.restart_now()["restarting"])
+        self.assertFalse(restarted.wait(3))
 
     def test_leaves_own_changes_alone(self):
         self.repos.push_new()
@@ -169,6 +227,12 @@ class ServerTest(unittest.TestCase):
         status, body = self.request("POST", "/desktop/script-update/check", self.page_headers())
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body)["behind"], 1)
+
+    def test_restart_from_the_page(self):
+        status, body = self.request("POST", "/desktop/script-update/restart", self.page_headers())
+        self.assertEqual(status, 200)
+        self.assertFalse(json.loads(body)["restarting"])
+        self.assertEqual(self.request("POST", "/desktop/script-update/restart")[0], 403)
 
     def test_refuses_posts_not_from_the_page(self):
         # Without Origin, without the header, from a foreign site.

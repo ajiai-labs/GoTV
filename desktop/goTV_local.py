@@ -171,7 +171,9 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
         """The update actions; returns True if the path was one of them.
 
         GET UPDATE_PATH: the state. POST UPDATE_PATH/check: fetch and count
-        new commits. POST UPDATE_PATH/run: pull and install. A POST must come
+        new commits. POST UPDATE_PATH/run: pull and install. POST
+        UPDATE_PATH/restart: start the server again after an update that
+        changed it (the page asks when no own game runs). A POST must come
         from the page itself: local Origin (checked in _request_allowed, here
         also required) and the header X-GoTV-Update (a plain form or link
         elsewhere cannot set it).
@@ -186,7 +188,8 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
         if method == "GET" and path == UPDATE_PATH:
             self._send_json(200, updater.status())
             return True
-        if method != "POST" or path not in (UPDATE_PATH + "/check", UPDATE_PATH + "/run"):
+        actions = (UPDATE_PATH + "/check", UPDATE_PATH + "/run", UPDATE_PATH + "/restart")
+        if method != "POST" or path not in actions:
             self.send_error(404, "Not found")
             return True
         if not self.headers.get("Origin") or self.headers.get(UPDATE_HEADER) != "1":
@@ -197,6 +200,8 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
             self.rfile.read(min(length, 4096))
         if path.endswith("/check"):
             self._send_json(200, updater.check())
+        elif path.endswith("/restart"):
+            self._send_json(200, updater.restart_now())
         else:
             self._send_json(200, updater.start())
         return True
