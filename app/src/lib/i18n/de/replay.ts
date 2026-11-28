@@ -116,6 +116,17 @@ export const replay = {
 	'replay.recently.bookmarks': { one: '{count} Lesezeichen', other: '{count} Lesezeichen' },
 
 	// ReplayGameList
+	'replay.archive.download': {
+		one: 'Partie herunterladen (ZIP)',
+		other: 'Alle {count} Partien herunterladen (ZIP)'
+	},
+	'replay.archive.loading': 'Lade Partie {done} von {total} …',
+	'replay.archive.done': 'Heruntergeladen: SGF-Dateien und Partienliste in einer ZIP-Datei.',
+	'replay.archive.doneMissing':
+		'Heruntergeladen – {games} fehlen, OGS hat sie gerade nicht geliefert.',
+	'replay.archive.error': 'OGS hat keine Partie geliefert. Bitte später noch einmal versuchen.',
+	'replay.archive.source': 'Partien von OGS (online-go.com), heruntergeladen mit GoTV.',
+	'replay.archive.missingList': 'Nicht geladen: {games}',
 	'replay.games.ogsUnreachable': 'OGS nicht erreichbar',
 	'replay.games.hide': 'Partien ausblenden',
 	'replay.games.replayCount': {

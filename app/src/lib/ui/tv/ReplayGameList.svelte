@@ -1,17 +1,22 @@
 <script lang="ts">
 	// The finished OGS games of a tournament as G1, G2, ... - players and start
-	// time only, no result, so nothing is spoiled before replaying.
+	// time only, no result, so nothing is spoiled before replaying. Below the
+	// list: all games as one ZIP of SGF files (tournament archive, 28.11.2026).
 	import { onMount, untrack } from 'svelte';
 	import { ogsTvSource } from '#lib/model/OgsTvSource.ts';
 	import type { ReplayGame } from '#lib/model/OgsReplay.ts';
 	import type { TvEvent } from '#lib/model/tv.ts';
 	import { locale, t } from '#lib/i18n/index.svelte.ts';
+	import { buildTournamentArchive } from '#lib/model/tournamentArchive.ts';
+	import { formatEventDateRange } from './eventDate.ts';
 
 	let {
 		event,
 		onOpenReplay,
 		defaultOpen = false,
-		fetchGames
+		fetchGames,
+		fetchSgf,
+		saveFile
 	}: {
 		event: TvEvent;
 		onOpenReplay: (sgfUrl: string) => unknown;
@@ -19,7 +24,58 @@
 		defaultOpen?: boolean;
 		// Injected in tests; defaults to the shared OGS source.
 		fetchGames?: (event: TvEvent) => Promise<Array<ReplayGame>>;
+		// Injected in tests: loading the SGFs and saving the ZIP.
+		fetchSgf?: typeof fetch;
+		saveFile?: (blob: Blob, fileName: string) => void;
 	} = $props();
+
+	type Archive =
+		| { state: 'idle' }
+		| { state: 'loading'; done: number; total: number }
+		| { state: 'done'; missing: Array<number> }
+		| { state: 'error' };
+	let archive: Archive = $state({ state: 'idle' });
+
+	function saveBlob(blob: Blob, fileName: string) {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = fileName;
+		document.body.append(link);
+		link.click();
+		link.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	}
+
+	function listText(lines: Array<string>, missing: Array<number>): string {
+		const head = [`${event.name} (${formatEventDateRange(event)})`, t('replay.archive.source'), ''];
+		const tail = missing.length
+			? ['', t('replay.archive.missingList', { games: missing.map((n) => 'G' + n).join(', ') })]
+			: [];
+		return [...head, ...lines, ...tail, ''].join('\n');
+	}
+
+	async function downloadAll() {
+		archive = { state: 'loading', done: 0, total: games.length };
+		try {
+			const result = await buildTournamentArchive(event, games, {
+				fetchFn: fetchSgf,
+				onProgress: (done, total) => {
+					if (mounted) archive = { state: 'loading', done, total };
+				},
+				listText
+			});
+			if (!mounted) return;
+			if (result.missing.length === games.length) {
+				archive = { state: 'error' };
+				return;
+			}
+			(saveFile ?? saveBlob)(new Blob([result.zip], { type: 'application/zip' }), result.fileName);
+			archive = { state: 'done', missing: result.missing };
+		} catch {
+			if (mounted) archive = { state: 'error' };
+		}
+	}
 
 	let open = $state(untrack(() => !!defaultOpen));
 	let status: 'idle' | 'loading' | 'ready' | 'error' = $state('idle');
@@ -104,6 +160,29 @@
 					</li>
 				{/each}
 			</ol>
+			<div class="ReplayGameList-archive">
+				<button
+					type="button"
+					class="button"
+					disabled={archive.state === 'loading'}
+					onclick={() => void downloadAll()}
+				>
+					{t('replay.archive.download', { count: games.length })}
+				</button>
+				<span class="ReplayGameList-note" role="status">
+					{#if archive.state === 'loading'}
+						{t('replay.archive.loading', { done: archive.done, total: archive.total })}
+					{:else if archive.state === 'done'}
+						{archive.missing.length
+							? t('replay.archive.doneMissing', {
+									games: archive.missing.map((n) => 'G' + n).join(', ')
+								})
+							: t('replay.archive.done')}
+					{:else if archive.state === 'error'}
+						{t('replay.archive.error')}
+					{/if}
+				</span>
+			</div>
 		{/if}
 	{/if}
 </div>
@@ -136,6 +215,19 @@
 		color: var(--accent);
 		text-decoration: underline;
 		cursor: pointer;
+	}
+
+	.ReplayGameList-archive {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 12px;
+		margin-top: 4px;
+	}
+
+	.ReplayGameList-archive .button {
+		padding: 4px 12px;
+		font-size: 0.9em;
 	}
 
 	.ReplayGameList-games {

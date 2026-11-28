@@ -250,6 +250,12 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Ergebnis in der Liste (kein Spoiler); geladen wird das OGS-SGF, das anonym verfügbar
   ist, sobald die Partie beendet ist. Events mit OGS-Partien bleiben 90 Tage
   (`REPLAY_KEEP_DAYS`) im Archiv statt 14.
+  Turnierarchiv (28.11.2026, Wunsch: internationale und Städteturniere, KGS-interne Turniere bewusst
+  nicht): unter der Partieliste „Alle N Partien herunterladen (ZIP)“ - die SGFs von OGS nacheinander
+  (300 ms Pause, OGS antwortet Serien mit 429), Ordner = Turniername, Dateien „G1 Schwarz - Weiß.sgf“,
+  dazu `Partien.txt` mit OGS-Links; fehlende Partien werden genannt, ganz ohne Partie wird nichts
+  gespeichert. `model/tournamentArchive.ts`, ZIP ohne Kompression und ohne Bibliothek `util/zip.ts`
+  (UTF-8-Namen). Geht auch in der Web-Version (OGS sendet CORS).
   Unter Live steht ein Turnier nach Ende seines Live-Fensters noch 24 Stunden als
   "Gerade zu Ende – Partien nachspielen" (Partien sofort aufgelistet), sonst wäre es
   ab Fensterende nur noch unten im Nachspielen-Tab zu finden.

@@ -66,4 +66,49 @@ describe('ReplayGameList', () => {
 		await expect.element(page.getByText('Noch keine beendete Partie gefunden.')).toBeVisible();
 		expect(fetchGames).toHaveBeenCalledTimes(2);
 	});
+
+	it('downloads all games as one ZIP and names the missing ones', async () => {
+		const fetchSgf = vi.fn((url: string) =>
+			Promise.resolve(
+				url === 'sgf-2'
+					? new Response('busy', { status: 429 })
+					: new Response('(;GM[1]PB[Surma]PW[Ovsiienko];B[pd])')
+			)
+		);
+		const saveFile = vi.fn();
+		await render(ReplayGameList, {
+			event,
+			onOpenReplay: vi.fn(),
+			fetchGames: () => Promise.resolve(games),
+			fetchSgf: fetchSgf as typeof fetch,
+			saveFile,
+			defaultOpen: true
+		});
+		await page.getByRole('button', { name: 'Alle 2 Partien herunterladen (ZIP)' }).click();
+		await expect.element(page.getByText(/G2 fehlen/)).toBeVisible();
+		expect(saveFile).toHaveBeenCalledTimes(1);
+		const [blob, fileName] = saveFile.mock.calls[0] as [Blob, string];
+		expect(fileName).toBe('Speed Go Championship.zip');
+		const content = new TextDecoder().decode(await blob.arrayBuffer());
+		expect(content).toContain('Speed Go Championship/G1 Surma - Ovsiienko.sgf');
+		expect(content).toContain('(;GM[1]PB[Surma]PW[Ovsiienko];B[pd])');
+		expect(content).toContain('Speed Go Championship/Partien.txt');
+		expect(content).toContain('https://online-go.com/game/2');
+		expect(content).toContain('Nicht geladen: G2');
+	});
+
+	it('saves nothing when OGS delivers no game at all', async () => {
+		const saveFile = vi.fn();
+		await render(ReplayGameList, {
+			event,
+			onOpenReplay: vi.fn(),
+			fetchGames: () => Promise.resolve(games),
+			fetchSgf: (() => Promise.reject(new Error('offline'))) as typeof fetch,
+			saveFile,
+			defaultOpen: true
+		});
+		await page.getByRole('button', { name: /herunterladen/ }).click();
+		await expect.element(page.getByText(/keine Partie geliefert/)).toBeVisible();
+		expect(saveFile).not.toHaveBeenCalled();
+	});
 });

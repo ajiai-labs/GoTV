@@ -115,6 +115,16 @@ export const replay: Translation<typeof de> = {
 	'replay.recently.bookmarks': { one: '{count} bookmark', other: '{count} bookmarks' },
 
 	// ReplayGameList
+	'replay.archive.download': {
+		one: 'Download game (ZIP)',
+		other: 'Download all {count} games (ZIP)'
+	},
+	'replay.archive.loading': 'Loading game {done} of {total} …',
+	'replay.archive.done': 'Downloaded: SGF files and the list of games in one ZIP file.',
+	'replay.archive.doneMissing': 'Downloaded – {games} missing, OGS did not deliver them just now.',
+	'replay.archive.error': 'OGS delivered no game. Please try again later.',
+	'replay.archive.source': 'Games from OGS (online-go.com), downloaded with GoTV.',
+	'replay.archive.missingList': 'Not loaded: {games}',
 	'replay.games.ogsUnreachable': 'OGS unreachable',
 	'replay.games.hide': 'Hide games',
 	'replay.games.replayCount': { one: 'Replay {count} game', other: 'Replay {count} games' },
