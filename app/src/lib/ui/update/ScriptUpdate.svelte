@@ -14,8 +14,14 @@
 
 	let {
 		fetchFn = fetch,
-		reload = () => window.location.reload()
-	}: { fetchFn?: typeof fetch; reload?: () => void } = $props();
+		reload = () => window.location.reload(),
+		pollMs = POLL_MS
+	}: {
+		fetchFn?: typeof fetch;
+		reload?: () => void;
+		// Shorter in tests.
+		pollMs?: number;
+	} = $props();
 
 	let status = $state<ScriptUpdateStatus | null>(null);
 	let busy = $state<'check' | 'run' | null>(null);
@@ -49,10 +55,10 @@
 		if (timer) clearTimeout(timer);
 		timer = null;
 		if (status?.state === 'running') {
-			timer = setTimeout(() => void call('status'), POLL_MS);
+			timer = setTimeout(() => void call('status'), pollMs);
 		} else if (status?.state === 'done' && status.restart) {
 			restarting = true;
-			timer = setTimeout(() => void waitForRestart(), RESTART_WAIT_MS);
+			timer = setTimeout(() => void waitForRestart(), Math.min(RESTART_WAIT_MS, pollMs * 2));
 		}
 	}
 
@@ -61,7 +67,7 @@
 			await requestScriptUpdate('status', fetchFn);
 			reload();
 		} catch {
-			timer = setTimeout(() => void waitForRestart(), POLL_MS);
+			timer = setTimeout(() => void waitForRestart(), pollMs);
 		}
 	}
 

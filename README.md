@@ -499,6 +499,18 @@ More in [`app/README.md`](app/README.md).
 * [Go Universe](https://github.com/IlyaKirillov/GoUniverse)
 * [KGS Leben](https://github.com/stephenmartindale/kgs-leben)
 
+## Data sources and AI training
+
+GoTV shows tournament dates, games and videos of others: KGS, OGS (online-go.com), the
+European Go Federation, the Deutscher Go-Bund, the Speed Go Championship, YouTube and Twitch.
+GoTV links to them; the rights stay with them, and GoTV grants none.
+
+**Text and data mining of GoTV and its calendar file (`public/tv/events.json`) for training AI
+models is not permitted** – reservation of rights under Art. 4 of EU Directive 2019/790
+(§ 44b UrhG). Every page says so machine-readably (`<meta name="tdm-reservation" content="1">`,
+`<meta name="robots" content="noai, noimageai">`), the calendar file in its `notice` field. The
+MIT license below covers the program code, not data of third parties.
+
 ## Origin and license
 
 GoTV is an independent project. It started from the code of

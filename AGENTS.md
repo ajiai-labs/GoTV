@@ -477,6 +477,18 @@ Räumen, `tournOnly`) tragen kein `event`. Neu (Vorschlag eines Prüfberichts, v
   (GoUniverse und CGobans Liste zeigen keine); ohne sie erscheint die Zeit wie bisher erst nach
   dem Öffnen. Das Regelwerk als Text ersetzt nie das Regel-Objekt (`GAME_CHAN_PROPS`).
 
+## Daten Dritter, kein KI-Training (28.11.2026)
+
+Wunsch des Nutzers: GoTV zeigt Termine, Partien und Videos anderer (KGS, OGS, EGF, DGoB, Speed Go,
+YouTube, Twitch) - wer GoTV ausliest, soll sie nicht für KI-Training verwenden. Einmal erwähnt,
+nicht auf jeder Seite (Nutzer): Einstellungen → „Über GoTV“ → „Daten und Quellen“
+(`AboutGoTv.svelte`), README-Abschnitt „Data sources and AI training“, Feld `notice` oben in
+`public/tv/events.json` (die Importe behalten es). Maschinenlesbar, unsichtbar in jeder Seite
+(`app/src/app.html`): `<meta name="tdm-reservation" content="1">` (W3C TDMRep) und
+`<meta name="robots" content="noai, noimageai">` - Suchmaschinen dürfen weiter indexieren. Eine
+robots.txt wirkt bei GitHub Pages nicht (Projektseite unter /GoTV/, robots.txt gilt nur für die
+Domainwurzel). Die MIT-Lizenz gilt für den Code, nicht für Daten Dritter.
+
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 
 Policy, von dir als "Stufe 1" bezeichnet:

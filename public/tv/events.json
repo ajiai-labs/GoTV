@@ -1,4 +1,5 @@
 {
+  "notice": "GoTV calendar data. Dates, games and videos come from their organisers and platforms (KGS, OGS, European Go Federation, Deutscher Go-Bund, Speed Go Championship, YouTube, Twitch); the rights stay with them. Text and data mining of this file for training AI models is not permitted - reservation of rights under Art. 4 EU Directive 2019/790 (§ 44b UrhG).",
   "events": [
     {
       "id": "deepmind-lee-sedol-2016-game1",

@@ -10,6 +10,12 @@
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/icons/gotv-256.png" />
 		<title>GoTV</title>
+		<!-- No text and data mining / AI training (user, 28.11.2026): GoTV shows
+		     calendars, games and videos of third parties. Reservation of rights
+		     in machine-readable form - W3C TDMRep and the "noai" robots values;
+		     search engines may still index the pages. -->
+		<meta name="tdm-reservation" content="1" />
+		<meta name="robots" content="noai, noimageai" />
 		<meta
 			name="description"
 			content="GoTV: live Go broadcasts with the board next to the stream, a tournament calendar, Go channels and game replay with KataGo analysis - in the browser, on a tablet or as a desktop app."

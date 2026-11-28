@@ -52,6 +52,9 @@
 	{:else}
 		<p>{t('app.update.web')}</p>
 	{/if}
+	<h3 class="AboutGoTv-sub">{t('app.update.sources')}</h3>
+	<p class="muted">{t('app.update.sourcesText')}</p>
+	<p class="muted">{t('app.update.noAiTraining')}</p>
 </section>
 
 <style>
@@ -63,6 +66,11 @@
 
 	.AboutGoTv .panel-title {
 		padding-left: 0;
+	}
+
+	.AboutGoTv-sub {
+		margin: 6px 0 0;
+		font-size: 0.95rem;
 	}
 
 	.AboutGoTv p {

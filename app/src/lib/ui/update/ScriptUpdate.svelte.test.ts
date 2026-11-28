@@ -45,7 +45,7 @@ describe('ScriptUpdate', () => {
 			check: state({ behind: 2 }),
 			run: state({ state: 'running', behind: 2 })
 		});
-		await render(ScriptUpdate, { fetchFn: fetchFn as typeof fetch, reload });
+		await render(ScriptUpdate, { fetchFn: fetchFn as typeof fetch, reload, pollMs: 50 });
 		await page.getByRole('button', { name: 'Nach Updates suchen' }).click();
 		await expect.element(page.getByText('Neue Änderungen auf GitHub: 2.')).toBeVisible();
 		await page.getByRole('button', { name: 'Jetzt aktualisieren' }).click();
@@ -53,10 +53,8 @@ describe('ScriptUpdate', () => {
 		// The page sends only fixed actions, the POSTs with the page header.
 		const run = fetchFn.mock.calls.find(([url]) => url.endsWith('/run'));
 		expect(run?.[1]).toMatchObject({ method: 'POST', headers: { 'X-GoTV-Update': '1' } });
-		// Two polls of the running update (2 s each), then done.
-		await expect
-			.element(page.getByRole('button', { name: 'Neu laden' }), { timeout: 10000 })
-			.toBeVisible();
+		// Two polls of the running update, then done.
+		await expect.element(page.getByRole('button', { name: 'Neu laden' })).toBeVisible();
 		await expect.element(page.getByText('Aktualisiert.', { exact: true })).toBeVisible();
 		await page.getByRole('button', { name: 'Neu laden' }).click();
 		expect(reload).toHaveBeenCalled();
@@ -107,7 +105,8 @@ describe('ScriptUpdate', () => {
 			fetchFn: service({
 				status: [state({ state: 'done', behind: 0, restart: true })]
 			}) as typeof fetch,
-			reload
+			reload,
+			pollMs: 50
 		});
 		await expect.element(page.getByText(/startet neu/)).toBeVisible();
 		await vi.waitFor(() => expect(reload).toHaveBeenCalled(), { timeout: 8000 });

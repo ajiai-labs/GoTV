@@ -277,5 +277,10 @@ export const app = {
 	'app.update.scriptServer':
 		'Dieser GoTV-Dienst kann sich noch nicht selbst aktualisieren. Einmal von Hand im GoTV-Ordner: „git pull“ und „sh desktop/install.sh“, dann GoTV neu starten – ab dann geht es mit dem Knopf.',
 	'app.update.scriptDetails': 'Details',
+	'app.update.sources': 'Daten und Quellen',
+	'app.update.sourcesText':
+		'Termine, Partien und Videos in GoTV stammen von ihren Veranstaltern und Plattformen: KGS, OGS (online-go.com), European Go Federation, Deutscher Go-Bund, Speed Go Championship, YouTube und Twitch. GoTV zeigt sie an und verlinkt auf die Quellen; die Rechte bleiben bei ihnen.',
+	'app.update.noAiTraining':
+		'Das automatische Auslesen von GoTV und seiner Kalenderdatei für das Training von KI-Modellen (Text- und Data-Mining) ist nicht gestattet – Nutzungsvorbehalt nach § 44b UrhG und Art. 4 der EU-Richtlinie 2019/790.',
 	'app.update.web': 'Web-Version – sie ist immer auf dem neuesten Stand.'
 } satisfies Record<string, Message>;

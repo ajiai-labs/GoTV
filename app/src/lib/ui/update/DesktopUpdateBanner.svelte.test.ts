@@ -77,5 +77,8 @@ describe('desktop update notice', () => {
 	it('tells the web version it is always current', async () => {
 		await render(AboutGoTv, { version: null, kind: 'web' });
 		await expect.element(page.getByText(/immer auf dem neuesten Stand/)).toBeVisible();
+		// The data comes from third parties - no AI training (28.11.2026).
+		await expect.element(page.getByRole('heading', { name: 'Daten und Quellen' })).toBeVisible();
+		await expect.element(page.getByText(/KI-Modellen .* nicht gestattet/)).toBeVisible();
 	});
 });
