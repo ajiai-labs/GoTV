@@ -26,6 +26,7 @@ Environment:
 
 import argparse
 import http.client
+import json
 import http.server
 import os
 import re
@@ -88,6 +89,10 @@ CONTENT_TYPES = {
     ".xml": "application/xml",
 }
 
+# "Nach Updates suchen" of the script installation (script_update.py).
+UPDATE_PATH = "/desktop/script-update"
+UPDATE_HEADER = "X-GoTV-Update"
+
 # Anything outside these characters in a URL path is refused outright.
 SAFE_PATH_RE = re.compile(r"^[A-Za-z0-9_\-./]+$")
 
@@ -96,11 +101,16 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
     server_version = "GoTvLocal/1.0"
 
     build_dir = DEFAULT_BUILD_DIR
+    # Set only by main() of this server (not by tools built on its handler,
+    # such as the practice KGS): the update actions of the script install.
+    updater = None
 
     def do_GET(self):
         if not self._request_allowed():
             return
         if self._maybe_proxy("GET"):
+            return
+        if self._maybe_update("GET"):
             return
         self._handle("GET")
 
@@ -108,6 +118,8 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
         if not self._request_allowed():
             return
         if self._maybe_proxy("POST"):
+            return
+        if self._maybe_update("POST"):
             return
         self._handle("POST")
 
@@ -152,6 +164,49 @@ class GoTvHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(403)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _maybe_update(self, method):
+        """The update actions; returns True if the path was one of them.
+
+        GET UPDATE_PATH: the state. POST UPDATE_PATH/check: fetch and count
+        new commits. POST UPDATE_PATH/run: pull and install. A POST must come
+        from the page itself: local Origin (checked in _request_allowed, here
+        also required) and the header X-GoTV-Update (a plain form or link
+        elsewhere cannot set it).
+        """
+        path = urllib.parse.urlparse(self.path).path
+        if path != UPDATE_PATH and not path.startswith(UPDATE_PATH + "/"):
+            return False
+        updater = type(self).updater
+        if updater is None:
+            self.send_error(404, "Not found")
+            return True
+        if method == "GET" and path == UPDATE_PATH:
+            self._send_json(200, updater.status())
+            return True
+        if method != "POST" or path not in (UPDATE_PATH + "/check", UPDATE_PATH + "/run"):
+            self.send_error(404, "Not found")
+            return True
+        if not self.headers.get("Origin") or self.headers.get(UPDATE_HEADER) != "1":
+            self._deny("Forbidden")
+            return True
+        length = int(self.headers.get("Content-Length") or 0)
+        if length:
+            self.rfile.read(min(length, 4096))
+        if path.endswith("/check"):
+            self._send_json(200, updater.check())
+        else:
+            self._send_json(200, updater.start())
+        return True
+
+    def _send_json(self, status, data):
+        body = json.dumps(data).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
 
@@ -302,6 +357,18 @@ def main(argv=None):
         return 1
 
     GoTvHandler.build_dir = build_dir
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from script_update import ScriptUpdater  # noqa: E402 - next to this file
+
+    def restart():
+        # The update changed this server: start the new one in its place
+        # (same arguments; the listening socket closes on exec).
+        sys.stderr.write("GoTV local server: restarting after the update\n")
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+
+    GoTvHandler.updater = ScriptUpdater(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), on_restart=restart
+    )
     server = ThreadingServer(("127.0.0.1", args.port), GoTvHandler)
     sys.stderr.write(
         "GoTV local server: http://127.0.0.1:%d (build: %s, 127.0.0.1 only)\n"

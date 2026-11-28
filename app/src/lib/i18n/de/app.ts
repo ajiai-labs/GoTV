@@ -255,7 +255,24 @@ export const app = {
 	'app.update.opened': 'Der Download wurde im Browser geöffnet.',
 	'app.update.failed': 'Der Browser ließ sich nicht öffnen. Die Dateien liegen hier:',
 	'app.update.later': 'Später',
-	'app.update.script':
-		'GoTV Desktop für Linux (Skriptinstallation). Neue Version: im GoTV-Ordner „git pull“ und „sh desktop/install.sh“.',
+	'app.update.script': 'GoTV Desktop für Linux (Skriptinstallation aus dem GoTV-Ordner).',
+	'app.update.scriptAvailable': 'Neue Änderungen auf GitHub: {count}.',
+	'app.update.scriptRun': 'Jetzt aktualisieren',
+	'app.update.scriptRunning':
+		'GoTV wird aktualisiert (holen, bauen, installieren) – das dauert 1 bis 3 Minuten. Du kannst so lange weiter spielen.',
+	'app.update.scriptDone': 'Aktualisiert.',
+	'app.update.scriptReload': 'Neu laden',
+	'app.update.scriptRestarting':
+		'Aktualisiert – der GoTV-Dienst startet neu, gleich lädt die Seite neu …',
+	'app.update.scriptDirty':
+		'Im GoTV-Ordner gibt es eigene Änderungen – bitte von Hand aktualisieren: „git pull“ und „sh desktop/install.sh“.',
+	'app.update.scriptNoGit':
+		'Der GoTV-Ordner ist kein Git-Klon oder folgt keinem Zweig auf GitHub – bitte von Hand aktualisieren.',
+	'app.update.scriptPullFailed': 'Holen von GitHub („git pull“) ist fehlgeschlagen.',
+	'app.update.scriptInstallFailed': 'Bauen oder Installieren ist fehlgeschlagen.',
+	'app.update.scriptTimeout': 'Das Update hat zu lange gedauert und wurde abgebrochen.',
+	'app.update.scriptServer':
+		'Dieser GoTV-Dienst kann sich noch nicht selbst aktualisieren. Einmal von Hand im GoTV-Ordner: „git pull“ und „sh desktop/install.sh“, dann GoTV neu starten – ab dann geht es mit dem Knopf.',
+	'app.update.scriptDetails': 'Details',
 	'app.update.web': 'Web-Version – sie ist immer auf dem neuesten Stand.'
 } satisfies Record<string, Message>;

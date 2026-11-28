@@ -249,7 +249,24 @@ export const app: Translation<typeof de> = {
 	'app.update.opened': 'The download was opened in your browser.',
 	'app.update.failed': 'The browser could not be opened. The files are here:',
 	'app.update.later': 'Later',
-	'app.update.script':
-		'GoTV Desktop for Linux (script installation). New version: in the GoTV folder run "git pull" and "sh desktop/install.sh".',
+	'app.update.script': 'GoTV Desktop for Linux (script installation from the GoTV folder).',
+	'app.update.scriptAvailable': 'New changes on GitHub: {count}.',
+	'app.update.scriptRun': 'Update now',
+	'app.update.scriptRunning':
+		'Updating GoTV (fetch, build, install) – this takes 1 to 3 minutes. You can keep playing meanwhile.',
+	'app.update.scriptDone': 'Updated.',
+	'app.update.scriptReload': 'Reload',
+	'app.update.scriptRestarting':
+		'Updated – the GoTV service restarts, the page reloads in a moment …',
+	'app.update.scriptDirty':
+		'The GoTV folder has changes of your own – please update by hand: “git pull” and “sh desktop/install.sh”.',
+	'app.update.scriptNoGit':
+		'The GoTV folder is no git clone or follows no branch on GitHub – please update by hand.',
+	'app.update.scriptPullFailed': 'Fetching from GitHub (“git pull”) failed.',
+	'app.update.scriptInstallFailed': 'Building or installing failed.',
+	'app.update.scriptTimeout': 'The update took too long and was stopped.',
+	'app.update.scriptServer':
+		'This GoTV service cannot update itself yet. Once by hand in the GoTV folder: “git pull” and “sh desktop/install.sh”, then restart GoTV – from then on the button does it.',
+	'app.update.scriptDetails': 'Details',
 	'app.update.web': 'Web version – always up to date.'
 };

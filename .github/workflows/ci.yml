@@ -35,7 +35,7 @@ jobs:
           python-version: "3.11"
 
       - name: Unit tests (Python tools)
-        run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo tools.test_fake_kgs -v
+        run: python3 -m unittest tools.test_update_events tools.test_check_links tools.test_refresh_tv_events tools.test_speedgo tools.test_fake_kgs tools.test_script_update -v
 
   # The GoTV app (Svelte 5 + TypeScript, app/). Its component tests run in
   # Chromium and in WebKit - Safari's engine, as on the iPad - so every

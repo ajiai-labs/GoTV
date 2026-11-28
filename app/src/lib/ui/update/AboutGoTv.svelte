@@ -6,6 +6,7 @@
 	import { DESKTOP_VERSION } from '#lib/desktopUpdate.ts';
 	import { desktopUpdate } from './desktopUpdate.svelte.ts';
 	import UpdateDownloads from './UpdateDownloads.svelte';
+	import ScriptUpdate from './ScriptUpdate.svelte';
 
 	let {
 		version = DESKTOP_VERSION,
@@ -47,7 +48,7 @@
 			<UpdateDownloads {fetchFn} />
 		{/if}
 	{:else if kind === 'script'}
-		<p>{t('app.update.script')}</p>
+		<ScriptUpdate {fetchFn} />
 	{:else}
 		<p>{t('app.update.web')}</p>
 	{/if}

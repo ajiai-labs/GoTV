@@ -38,7 +38,7 @@ Kein Rust-Code, keine Rust-Abhängigkeiten.
 - Nach jedem Schritt grün (wie die GitHub-CI): `cd app && npm run check && npm run lint &&
   npm test && npm run build`, dazu die Python-Tool-Tests (`python3 -m unittest
   tools.test_update_events tools.test_check_links tools.test_refresh_tv_events
-  tools.test_speedgo tools.test_fake_kgs`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
+  tools.test_speedgo tools.test_fake_kgs tools.test_script_update`). Regeln für Oberflächen-Arbeit: `docs/neubau-regeln.md`.
 - Vor jeder Änderung die betroffenen bestehenden Dateien lesen.
 - Kein KGS-Logo, kein Branding, das den Fork als offiziellen KGS-Client ausgibt.
   `LICENSE.txt` unverändert lassen.
@@ -742,6 +742,21 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   KEIN globales Abfangen von Navigationen (`on_navigation` trifft auf macOS/Linux auch
   Iframes, also YouTube/Twitch). Kein Tauri-Updater-Plugin (bräuchte Signaturschlüssel).
   Wirkt erst ab dem nächsten Release (0.2.0 hat den Hinweis noch nicht).
+- Update-Knopf auch für die Skriptinstallation (28.11.2026, Wunsch des Nutzers: auf dem
+  Debian-Rechner fehlte der Knopf der Release-App): "Über GoTV" → "Nach Updates suchen" fragt den
+  lokalen Dienst (`desktop/script_update.py`, eingehängt in `goTV_local.py` unter
+  `/desktop/script-update`): `git fetch`, Anzahl neuer Commits gegenüber dem verfolgten Zweig;
+  "Jetzt aktualisieren" = `git pull --ff-only` + `sh desktop/install.sh` im Hintergrund, die Seite
+  fragt alle 2 s nach und bietet "Neu laden". Hat sich der Dienst selbst geändert
+  (`goTV_local.py`, `script_update.py`, `launch-gotv`), startet er sich per `os.execv` neu und die
+  Seite lädt danach von selbst. Sicherheit: nur feste Befehle ohne Eingaben aus der Anfrage; POST
+  nur mit lokalem Origin UND Kopfzeile `X-GoTV-Update: 1`; mit eigenen Änderungen im Ordner
+  (`git status` ohne unversionierte Dateien) wird nichts geholt; PATH bekommt das Nix-Profil
+  dazu (Starter vom Desktop kennen es oft nicht). Nur der echte Dienst hat das (`updater` wird in
+  `main()` gesetzt), nicht das Übungs-KGS. Oberfläche: `ui/update/ScriptUpdate.svelte`,
+  `model/scriptUpdate.ts`. Ein älterer Dienst kennt das noch nicht: einmal von Hand `git pull` +
+  `install.sh` und GoTV neu starten, das sagt die Seite dann auch. Tests:
+  `tools/test_script_update.py` (echte Git-Repos in temp), `ScriptUpdate.svelte.test.ts`.
 
 ## Mehrere Fenster, eine KGS-Verbindung (26.11.2026)
 
