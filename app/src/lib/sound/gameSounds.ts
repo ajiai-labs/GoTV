@@ -1,8 +1,9 @@
-// Sounds of an own KGS game, played with the Web Audio API: a stone click
-// for every move (recordings, stones/), and generated: a chime when the game starts, and a beep for
-// each of the last ten seconds on our clock (higher for the last three) -
-// so you hear it from the kitchen. Plus a ding-dong when someone writes to
-// you (chatSound.ts decides when). Each one can be switched off in
+// Sounds of an own KGS game, played with the Web Audio API from sound files:
+// a stone click for every move (stones/), a gong with a low chord when the
+// game starts (start/), a tick for each of the last ten seconds on our clock,
+// higher for the last three (clock/) - so you hear it from the kitchen. Plus
+// a generated ding-dong when someone writes to you (chatSound.ts decides
+// when). Each one can be switched off in
 // Einstellungen (gotv.sounds); the switches are read at every sound.
 
 import stone1 from './stones/stone1.wav';
@@ -12,6 +13,7 @@ import stone4 from './stones/stone4.wav';
 import stone5 from './stones/stone5.wav';
 import clockTick from './clock/tick.wav';
 import clockLast from './clock/last.wav';
+import gameStart from './start/game-start.wav';
 
 export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
 export type GameSoundPrefs = Record<GameSoundKind, boolean>;
@@ -173,15 +175,10 @@ export function playStoneClick() {
 
 export function playGameStart() {
 	if (relayed('gameStart')) return;
-	play('gameStart', (ctx) => {
-		const t = ctx.currentTime;
-		// Rising three-note chime, played twice - meant to be heard.
-		for (const offset of [0, 0.7]) {
-			tone(ctx, 660, t + offset, 0.35, 0.4);
-			tone(ctx, 880, t + offset + 0.15, 0.35, 0.4);
-			tone(ctx, 1320, t + offset + 0.3, 0.5, 0.4);
-		}
-	});
+	// A deep electronic gong over a warm low chord (28.11.2026, chosen by the
+	// user from samples; made by tools/sounds/make_game_start.py) - instead
+	// of a bright rising three-note chime the user did not like.
+	play('gameStart', (ctx) => playRecording(ctx, [gameStart]));
 }
 
 // A chat message for me: ding-dong, twice, clearly audible.

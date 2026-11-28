@@ -805,7 +805,10 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   eigenen Partie (`GameScreen`) - seit 28.11.2026 echte Aufnahmen eines Steins auf Holz (fünf,
   zufällig eine; aus KaTrain, MIT, Herkunft und Lizenz in `app/src/lib/sound/stones/NOTICE.txt`;
   ebenso seit 28.11.2026 der Countdown: KaTrains Uhr-Töne, tiefer Ton für 10-4 s, der höhere für
-  die letzten 3, `sound/clock/` - vorher Sinus 800/1200 Hz, Nutzer: „zu piepsig“),
+  die letzten 3, `sound/clock/` - vorher Sinus 800/1200 Hz, Nutzer: „zu piepsig“; und der
+  Partiebeginn: tiefer elektronischer Gong mit warmem D-Dur-Akkord darunter, vom Nutzer aus
+  Klangproben gemischt gewünscht, eigener Klang aus `tools/sounds/make_game_start.py`,
+  `sound/start/game-start.wav` - vorher drei helle Sinustöne),
   vorher ein erzeugter Klick, der nach Blechtrommel klang (Nutzer: "keine Klangerzeugung, einfach
   einen anderen Sound", keine Auswahl), Klang bei Partiebeginn (`playGameStart` in AppActions bei
   `CHALLENGE_FINAL` als Spieler, Automatch, fortgesetzter Partie), Piepton für jede der letzten
