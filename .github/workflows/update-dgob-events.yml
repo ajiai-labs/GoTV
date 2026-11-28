@@ -57,6 +57,21 @@ jobs:
         run: |
           python3 tools/update_events.py --source twitch-egf --broadcaster-id 154830311 2>&1 | tee -a /tmp/dgob-workflow.log
 
+      # The other Twitch channels of events.json, same keyless iCalendar
+      # (broadcaster ids in TWITCH_CHANNELS, looked up 2026-11-28 via
+      # decapi.me and checked against the iCalendar's X-WR-CALNAME). One
+      # channel failing must not stop the others.
+      - name: Import other Twitch schedules
+        id: import_twitch_more
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          status=0
+          for login in usgoweb yungusengdojang; do
+            python3 tools/update_events.py --source twitch --twitch-channel "$login" 2>&1 | tee -a /tmp/dgob-workflow.log || status=1
+          done
+          exit $status
+
       # EGF Grand Prix circuit calendar (server-rendered HTML, no API -
       # see tools/update_events.py's EGF_CALENDAR_* section). German
       # entries are skipped by the importer itself (DGOB_CATEGORIES/
@@ -113,6 +128,7 @@ jobs:
           steps.tests.outcome == 'success' &&
           steps.import.outcome == 'success' &&
           steps.import_twitch.outcome == 'success' &&
+          steps.import_twitch_more.outcome == 'success' &&
           steps.import_egf_calendar.outcome == 'success' &&
           steps.import_speedgo.outcome == 'success' &&
           steps.commit.outcome == 'success'
@@ -129,6 +145,7 @@ jobs:
           (steps.tests.outcome == 'failure' ||
            steps.import.outcome == 'failure' ||
            steps.import_twitch.outcome == 'failure' ||
+           steps.import_twitch_more.outcome == 'failure' ||
            steps.import_egf_calendar.outcome == 'failure' ||
            steps.import_speedgo.outcome == 'failure' ||
            steps.commit.outcome == 'failure')

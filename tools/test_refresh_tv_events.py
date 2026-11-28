@@ -23,6 +23,8 @@ class RefreshTvEventsTest(unittest.TestCase):
     def import_source(self, argv):
         target = Path(argv[argv.index("--events-file") + 1])
         source = argv[argv.index("--source") + 1]
+        if "--twitch-channel" in argv:
+            source = "twitch-" + argv[argv.index("--twitch-channel") + 1]
         data = json.loads(target.read_text())
         data["events"].append({"id": source, "source": source})
         target.write_text(json.dumps(data))
@@ -31,7 +33,10 @@ class RefreshTvEventsTest(unittest.TestCase):
     def test_publishes_imports_atomically_without_changing_repo_source(self):
         with mock.patch.object(refresh_tv_events.update_events, "main", self.import_source):
             self.assertEqual(refresh_tv_events.refresh(self.root, self.cache), [])
-        expected_ids = ["hand", "dgob", "twitch-egf", "egf-calendar", "speedgo"]
+        expected_ids = [
+            "hand", "dgob", "twitch-egf", "twitch-usgoweb", "twitch-yungusengdojang",
+            "egf-calendar", "speedgo",
+        ]
         self.assertEqual([e["id"] for e in json.loads(self.cache.read_text())["events"]], expected_ids)
         for build in ("build", "build-desktop"):
             self.assertEqual((self.root / build / "tv/events.json").read_bytes(), self.cache.read_bytes())
@@ -50,7 +55,10 @@ class RefreshTvEventsTest(unittest.TestCase):
         with mock.patch.object(refresh_tv_events.update_events, "main", broken_import):
             self.assertEqual(refresh_tv_events.refresh(self.root, self.cache), ["dgob"])
         ids = [e["id"] for e in json.loads(self.cache.read_text())["events"]]
-        self.assertEqual(ids, ["hand", "old-dgob", "twitch-egf", "egf-calendar", "speedgo"])
+        self.assertEqual(ids, [
+            "hand", "old-dgob", "twitch-egf", "twitch-usgoweb", "twitch-yungusengdojang",
+            "egf-calendar", "speedgo",
+        ])
 
     def test_empty_cached_source_cannot_resurrect_cancelled_seed_events(self):
         self.seed.write_text(json.dumps({"events": [{"id": "cancelled", "source": "twitch-egf"}]}))

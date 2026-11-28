@@ -62,6 +62,46 @@ class StableIdTest(unittest.TestCase):
         )
 
 
+class OtherTwitchChannelTest(unittest.TestCase):
+    """--source twitch --twitch-channel <login> (28.11.2026): the same
+    schedule import for the other Twitch channels of events.json."""
+
+    def setUp(self):
+        self.ics_events = update_events.parse_ics(
+            FIXTURE_PATH.read_text(encoding="utf-8")
+        )
+
+    def test_entries_name_their_own_channel_and_source(self):
+        merged, added, _, _ = update_events.merge_events([], self.ics_events, "usgoweb")
+        self.assertEqual(len(added), 2)
+        for event in added:
+            self.assertTrue(event["id"].startswith("twitch-usgoweb-"))
+            self.assertEqual(event["source"], "twitch-usgoweb")
+            self.assertEqual(event["stream_url"], "https://www.twitch.tv/usgoweb")
+            self.assertEqual(event["channel"], {"platform": "twitch", "id": "usgoweb"})
+
+    def test_channels_never_touch_each_others_entries(self):
+        egf, _, _, _ = update_events.merge_events([], self.ics_events)
+        both, added, updated, removed = update_events.merge_events(
+            egf, [], "yungusengdojang"
+        )
+        self.assertEqual(both, egf)
+        self.assertEqual((added, updated, removed), ([], [], []))
+
+    def test_cli_uses_the_known_broadcaster_id_or_a_local_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            events_file = Path(tmp) / "events.json"
+            events_file.write_text('{"events": []}', encoding="utf-8")
+            code = update_events.main([
+                "--source", "twitch", "--twitch-channel", "usgoweb",
+                "--ics-file", str(FIXTURE_PATH), "--events-file", str(events_file),
+            ])
+            self.assertEqual(code, 0)
+            data = json.loads(events_file.read_text(encoding="utf-8"))
+            self.assertTrue(all(e["source"] == "twitch-usgoweb" for e in data["events"]))
+        self.assertEqual(update_events.TWITCH_CHANNELS["usgoweb"]["broadcaster_id"], "105720862")
+
+
 class MergeEventsTest(unittest.TestCase):
     def setUp(self):
         self.ics_events = update_events.parse_ics(

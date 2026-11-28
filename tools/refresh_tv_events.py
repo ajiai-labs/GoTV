@@ -14,7 +14,26 @@ from tools import update_events
 
 ROOT = Path(__file__).resolve().parent.parent
 # speedgo last: it adds OGS games to entries the others may have replaced.
-SOURCES = ("dgob", "twitch-egf", "egf-calendar", "speedgo")
+# The "source" values of the entries each import owns; the other Twitch
+# channels come from --source twitch --twitch-channel <login> (28.11.2026).
+SOURCES = (
+    "dgob",
+    "twitch-egf",
+    "twitch-usgoweb",
+    "twitch-yungusengdojang",
+    "egf-calendar",
+    "speedgo",
+)
+
+
+def import_argv(source, events_file):
+    """The update_events arguments for the import that owns `source`."""
+    if source == "twitch-egf":
+        return ["--source", source, "--broadcaster-id", "154830311", "--events-file", events_file]
+    if source.startswith("twitch-"):
+        login = source[len("twitch-"):]
+        return ["--source", "twitch", "--twitch-channel", login, "--events-file", events_file]
+    return ["--source", source, "--events-file", events_file]
 
 
 def atomic_write(path, content):
@@ -42,9 +61,7 @@ def refresh(root, cache):
         staged.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         for source in SOURCES:
             before = staged.read_bytes()
-            argv = ["--source", source, "--events-file", str(staged)]
-            if source == "twitch-egf":
-                argv += ["--broadcaster-id", "154830311"]
+            argv = import_argv(source, str(staged))
             try:
                 result = update_events.main(argv)
                 if result:

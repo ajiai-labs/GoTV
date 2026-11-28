@@ -56,6 +56,7 @@ source only ever touches its own entries (events.json "source" field).
 
 Usage:
   python3 tools/update_events.py --source twitch-egf --broadcaster-id 123456789 --dry-run
+  python3 tools/update_events.py --source twitch --twitch-channel usgoweb --dry-run
   python3 tools/update_events.py --source twitch-egf --ics-file schedule.ics
   python3 tools/update_events.py --source dgob --dry-run
   python3 tools/update_events.py --source dgob
@@ -80,6 +81,30 @@ except ImportError:  # pragma: no cover - Python < 3.9
 
 SOURCE = "twitch-egf"
 CHANNEL_LOGIN = "europeangofederation"
+# --source twitch --twitch-channel <login> (28.11.2026): the same official,
+# keyless iCalendar schedule for every Twitch channel of events.json. The
+# numeric broadcaster ids were looked up once (decapi.me/twitch/id/<login>,
+# checked against the known EGF id 154830311) - resolving them on every run
+# would need Twitch API auth (see above). The EGF keeps its own source name
+# "twitch-egf", so the ids of its existing entries do not change.
+TWITCH_SOURCE = "twitch"
+TWITCH_CHANNELS = {
+    "europeangofederation": {
+        "broadcaster_id": "154830311",
+        "source": SOURCE,
+        "fallback_name": "EGF Twitch Stream",
+    },
+    "usgoweb": {
+        "broadcaster_id": "105720862",
+        "source": "twitch-usgoweb",
+        "fallback_name": "AGA Twitch Stream",
+    },
+    "yungusengdojang": {
+        "broadcaster_id": "564494977",
+        "source": "twitch-yungusengdojang",
+        "fallback_name": "Yunguseng Dojang Twitch Stream",
+    },
+}
 EVENTS_JSON_PATH = (
     Path(__file__).resolve().parent.parent / "public" / "tv" / "events.json"
 )
@@ -205,16 +230,17 @@ def stable_id(raw_id, source=SOURCE):
     return source + "-" + slug
 
 
-def ics_event_to_tv_event(ics_event):
+def ics_event_to_tv_event(ics_event, login=CHANNEL_LOGIN):
+    channel = TWITCH_CHANNELS[login]
     return {
-        "id": stable_id(ics_event.uid),
-        "name": ics_event.summary or "EGF Twitch Stream",
+        "id": stable_id(ics_event.uid, channel["source"]),
+        "name": ics_event.summary or channel["fallback_name"],
         "date_start": ics_event.dtstart.date().isoformat(),
         "start": ics_event.dtstart.isoformat(),
         "platform": "twitch",
-        "stream_url": "https://www.twitch.tv/" + CHANNEL_LOGIN,
-        "channel": {"platform": "twitch", "id": CHANNEL_LOGIN},
-        "source": SOURCE,
+        "stream_url": "https://www.twitch.tv/" + login,
+        "channel": {"platform": "twitch", "id": login},
+        "source": channel["source"],
     }
 
 
@@ -251,7 +277,7 @@ def _merge_source_events(existing_events, fresh_by_id, source):
     return kept + merged_imported, added, updated, removed
 
 
-def merge_events(existing_events, fresh_ics_events):
+def merge_events(existing_events, fresh_ics_events, login=CHANNEL_LOGIN):
     """Hand-maintained entries (no "source") and entries from any other
     source are never touched. Entries with source == SOURCE are matched
     by id and added/updated/removed to reflect the fresh fetch - a
@@ -261,9 +287,9 @@ def merge_events(existing_events, fresh_ics_events):
     for ics_event in fresh_ics_events:
         if ics_event.cancelled:
             continue
-        tv_event = ics_event_to_tv_event(ics_event)
+        tv_event = ics_event_to_tv_event(ics_event, login)
         fresh_by_id[tv_event["id"]] = tv_event
-    return _merge_source_events(existing_events, fresh_by_id, SOURCE)
+    return _merge_source_events(existing_events, fresh_by_id, TWITCH_CHANNELS[login]["source"])
 
 
 def format_diff(added, updated, removed):
@@ -843,7 +869,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--source",
-        choices=[SOURCE, DGOB_SOURCE, EGF_CALENDAR_SOURCE, SPEEDGO_SOURCE],
+        choices=[SOURCE, TWITCH_SOURCE, DGOB_SOURCE, EGF_CALENDAR_SOURCE, SPEEDGO_SOURCE],
         default=SOURCE,
         help="Which source to import from (default: %(default)s)",
     )
@@ -855,6 +881,12 @@ def main(argv=None):
         + CHANNEL_LOGIN
         + " (resolving the login name to this id is not implemented - see"
         " the module docstring)",
+    )
+    parser.add_argument(
+        "--twitch-channel",
+        choices=sorted(TWITCH_CHANNELS),
+        help="--source " + TWITCH_SOURCE + " only: the Twitch login whose schedule"
+        " to import (its broadcaster id is known, --broadcaster-id overrides it)",
     )
     parser.add_argument(
         "--ics-file",
@@ -917,11 +949,18 @@ def main(argv=None):
     events_path = Path(args.events_file)
     data = load_events(events_path)
 
-    if args.source == SOURCE:
+    if args.source in (SOURCE, TWITCH_SOURCE):
+        login = CHANNEL_LOGIN
+        if args.source == TWITCH_SOURCE:
+            if not args.twitch_channel:
+                parser.error("--source " + TWITCH_SOURCE + " requires --twitch-channel")
+            login = args.twitch_channel
+            if not args.ics_file and not args.broadcaster_id:
+                args.broadcaster_id = TWITCH_CHANNELS[login]["broadcaster_id"]
         if bool(args.broadcaster_id) == bool(args.ics_file):
             parser.error(
                 "--source "
-                + SOURCE
+                + args.source
                 + " requires exactly one of --broadcaster-id or --ics-file"
             )
         if args.ics_file:
@@ -935,7 +974,7 @@ def main(argv=None):
                 return 1
         ics_events = parse_ics(ics_text)
         merged, added, updated, removed = merge_events(
-            data.get("events", []), ics_events
+            data.get("events", []), ics_events, login
         )
     elif args.source == DGOB_SOURCE:
         start_date = args.dgob_start_date or _today_utc_str()

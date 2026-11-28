@@ -415,6 +415,12 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   `continue-on-error`, Fehler melden sich über das Fehler-Issue) und in
   `refresh_tv_events.py` (letzte Quelle). Tests: `tools/test_speedgo.py` mit künstlicher
   Seite `tools/testdata/speedgo-bracket-sample.html`.
+- Twitch-Sendepläne aller Twitch-Kanäle (28.11.2026): `--source twitch --twitch-channel <login>`
+  (`TWITCH_CHANNELS` in `tools/update_events.py`: usgoweb/AGA 105720862, yungusengdojang 564494977;
+  Kennungen einmalig über decapi.me nachgeschlagen, EGF 154830311 zur Gegenprobe), derselbe
+  schlüssellose iCalendar-Weg wie `twitch-egf` (der seinen Quellnamen behält). Einträge `source`
+  `twitch-<login>`; täglich im Workflow (Schritt „Import other Twitch schedules“, ein Kanal-Fehler
+  stoppt die anderen nicht) und in `refresh_tv_events.py`. Stand 28.11.: beide Sendepläne leer.
 - Link-Check (`tools/check_links.py`) überspringt `*.test.js` (erfundene Test-URLs). Bekannte
   Restfunde (23.11.2026): Platzhalter `online-go.com/game/…` in `BroadcastCard.js` und
   go-bundesliga.de (antwortet automatischen Abrufen mit 403).
