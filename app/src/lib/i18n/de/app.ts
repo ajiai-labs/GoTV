@@ -240,6 +240,9 @@ export const app = {
 	'app.calendarCard.kgsLinkedNone':
 		'KGS-Zuordnung hinterlegt · derzeit kein passendes Brett online',
 	'app.calendarCard.streamOnly': 'Nur Stream · kein Brett zugeordnet',
+	'app.calendarCard.showWinner': 'Ergebnis anzeigen',
+	'app.calendarCard.winner': 'Sieger: {winner}',
+	'app.calendarCard.results': 'Ergebnisse',
 	'app.calendarCard.replaySgf': 'SGF nachspielen',
 	'app.update.about': 'Über GoTV',
 	'app.update.version': 'GoTV Desktop, Version {version}',

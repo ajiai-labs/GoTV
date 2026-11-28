@@ -86,6 +86,6 @@ Echte, noch ungenutzte Quellen:
 |---|---|---|---|
 | YouTube-Kanal-RSS `youtube.com/feeds/videos.xml?channel_id=UC…` (**gebaut 28.11.2026**: „Neue Videos der Kanäle“) | die letzten 15 Videos eines Kanals mit Titel und Datum (EGF: Deutsche Meisterschaft Runde 1–7, Pandanet-Mannschafts-EM) | täglicher Import (Python, kein Schlüssel) → Aufzeichnungen zu Kanälen/Turnieren | kein CORS (nicht direkt aus der Web-Version); angekündigte Livestreams stehen im Feed (geprüft: Nongshim-Cup-Übertragung bei Nihon Ki-in), aber ohne Startzeit |
 | Twitch-Sendeplan anderer Kanäle (gleicher iCalendar-Weg wie EGF; **gebaut 28.11.2026**, AGA und Yunguseng – Sendepläne derzeit leer) | geplante Sendungen von AGA, Yunguseng Dojang … | `update_events.py` für alle Twitch-Kanäle in `channels[]` | nur Kanäle, die einen Twitch-Sendeplan pflegen |
-| European Go Database (europeangodatabase.eu) | Ergebnisse vergangener europäischer Turniere | Link „Ergebnisse“ an Archiv-Einträgen | erst nach dem Turnier, kein Live |
+| European Go Database (europeangodatabase.eu) | Ergebnisse vergangener europäischer Turniere | – | Cloudflare-Prüfung sperrt automatische Abrufe (geprüft 28.11.2026). **Stattdessen gebaut:** Sieger aus der EGF-Grand-Prix-Seite („Ergebnis anzeigen“) und Feld `results_url` von Hand |
 | Pandanet/IGS | Pandanet Go European Team Championship läuft dort | – | blockiert, bis die IGS-Nutzungsbedingungen geklärt sind |
 | Fox Weiqi | Partien von FJ Dickhut u. a. | – | keine offene Schnittstelle (Nutzer wartet auf Antwort von Fox) |

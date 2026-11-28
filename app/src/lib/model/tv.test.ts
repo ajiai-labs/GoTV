@@ -88,6 +88,27 @@ describe('getLiveEventGames', () => {
 	});
 });
 describe('validateTvEvent', () => {
+	it('keeps the winner and an https results page of a tournament', () => {
+		const base = {
+			id: 'x',
+			name: 'Open',
+			date_start: '2026-11-21',
+			platform: 'other',
+			stream_url: 'https://example.org/'
+		};
+		expect(
+			validateTvEvent({
+				...base,
+				winner: ' Pal Balogh 7d (HU) ',
+				results_url: 'https://example.org/r'
+			})
+		).toMatchObject({ winner: 'Pal Balogh 7d (HU)', results_url: 'https://example.org/r' });
+		expect(
+			validateTvEvent({ ...base, results_url: 'javascript:alert(1)' })?.results_url
+		).toBeUndefined();
+		expect(validateTvEvent({ ...base, winner: 7 })).toBeNull();
+	});
+
 	it('accepts a valid youtube event', () => {
 		const event = validateTvEvent({
 			id: 'ev1',

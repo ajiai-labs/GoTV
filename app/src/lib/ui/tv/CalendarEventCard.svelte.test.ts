@@ -19,7 +19,41 @@ const SPEED_GO: TvEvent = {
 	ogs_players: ['mateusz.surma1995', 'OvsiienkoVsevolod']
 };
 
+const HUNGARIAN_OPEN: TvEvent = {
+	id: 'egf-calendar-hungarian-open-go-championship-2026-2026-11-21',
+	name: 'Hungarian Open Go Championship 2026',
+	date_start: '2026-11-21',
+	date_end: '2026-11-22',
+	platform: 'other',
+	stream_url: 'https://goszovetseg.hu/?page=competition',
+	winner: 'Pal Balogh 7d (HU)',
+	results_url: 'https://example.org/results'
+};
+
 describe('CalendarEventCard', () => {
+	it('shows the winner of a finished tournament only on request', async () => {
+		await render(CalendarEventCard, {
+			event: HUNGARIAN_OPEN,
+			now: new Date(2026, 10, 28).getTime()
+		});
+		await expect.element(page.getByText(/Pal Balogh/)).not.toBeInTheDocument();
+		await expect
+			.element(page.getByRole('link', { name: 'Ergebnisse' }))
+			.toHaveAttribute('href', 'https://example.org/results');
+		await page.getByRole('button', { name: 'Ergebnis anzeigen' }).click();
+		await expect.element(page.getByText('Sieger: Pal Balogh 7d (HU)')).toBeVisible();
+	});
+
+	it('shows no result before the tournament is over', async () => {
+		await render(CalendarEventCard, {
+			event: HUNGARIAN_OPEN,
+			now: new Date(2026, 10, 21, 12).getTime()
+		});
+		await expect
+			.element(page.getByRole('button', { name: 'Ergebnis anzeigen' }))
+			.not.toBeInTheDocument();
+	});
+
 	it('shows name, badge, notes and board status', async () => {
 		await render(CalendarEventCard, { event: SPEED_GO, now: NOW });
 		await expect

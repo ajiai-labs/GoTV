@@ -431,6 +431,13 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Kanal, 45 Tage), Klick öffnet das Video hinter der Zwei-Klick-Sperre (`StreamEmbed`), daneben
   „Auf YouTube“. Täglich im Workflow (Schritt „Import YouTube channel videos“) und in
   `refresh_tv_events.py` (Quelle `youtube-rss`, behält beim Fehlschlag die alten Videos).
+- Ergebnisse vergangener Turniere (28.11.2026): der EGF-Grand-Prix-Import liest zusätzlich die
+  vergangenen Zeilen (`egf-gp-past`) und setzt bei den behaltenen Einträgen `winner` (Spalte „Winner“,
+  ggf. mit „EGF 1st: …“; `parse_egf_calendar_winners`/`apply_egf_winners`). Optional von Hand:
+  `results_url` (nur https). Die Turnierkarte zeigt nach dem Ende „Ergebnis anzeigen“ (Sieger erst
+  auf Klick - kein Spoiler beim Nachspielen) und „Ergebnisse“. Die European Go Database ist hinter
+  einer Cloudflare-Prüfung (automatische Abrufe bekommen „Attention Required“) - kein Import, und ein
+  von Hand gesetzter EGD-Link würde im Link-Check als Fehler erscheinen (wie go-bundesliga.de).
 - Link-Check (`tools/check_links.py`) überspringt `*.test.js` (erfundene Test-URLs). Bekannte
   Restfunde (23.11.2026): Platzhalter `online-go.com/game/…` in `BroadcastCard.js` und
   go-bundesliga.de (antwortet automatischen Abrufen mit 403).

@@ -129,28 +129,6 @@
       "notes": "Elisabeth-Selbert-Gymnasium"
     },
     {
-      "id": "egf-calendar-hungarian-open-go-championship-2026-2026-11-21",
-      "name": "Hungarian Open Go Championship 2026",
-      "date_start": "2026-11-21",
-      "platform": "other",
-      "stream_url": "https://goszovetseg.hu/?page=competition&mode=readid&compid=1098",
-      "region": "intl",
-      "source": "egf-calendar",
-      "date_end": "2026-11-22",
-      "notes": "EGF Grand Prix Circuit · Level C · Budapest, Hungary"
-    },
-    {
-      "id": "egf-calendar-10th-velika-gorica-city-day-go-tournament-2026-12-12",
-      "name": "10th Velika Gorica City Day Go Tournament",
-      "date_start": "2026-12-12",
-      "platform": "other",
-      "stream_url": "https://gkvg.hr/",
-      "region": "intl",
-      "source": "egf-calendar",
-      "date_end": "2026-12-13",
-      "notes": "EGF Grand Prix Circuit · Level C · Velika Gorica, Croatia"
-    },
-    {
       "id": "speed-go-championship-2026-11-01-kachanovskyi-campagnie",
       "name": "Speed Go Championship: Artem Kachanovskyi 3p – Rémi Campagnie 6d",
       "date_start": "2026-11-01",
@@ -591,6 +569,29 @@
       "region": "intl",
       "notes": "Achtelfinale, Best of five. Die Partien laufen auf online-go.com (OGS).",
       "source": "speedgo"
+    },
+    {
+      "id": "egf-calendar-hungarian-open-go-championship-2026-2026-11-21",
+      "name": "Hungarian Open Go Championship 2026",
+      "date_start": "2026-11-21",
+      "platform": "other",
+      "stream_url": "https://goszovetseg.hu/?page=competition&mode=readid&compid=1098",
+      "region": "intl",
+      "source": "egf-calendar",
+      "date_end": "2026-11-22",
+      "notes": "EGF Grand Prix Circuit · Level C · Budapest, Hungary",
+      "winner": "Pal Balogh 7d (HU)"
+    },
+    {
+      "id": "egf-calendar-10th-velika-gorica-city-day-go-tournament-2026-12-12",
+      "name": "10th Velika Gorica City Day Go Tournament",
+      "date_start": "2026-12-12",
+      "platform": "other",
+      "stream_url": "https://gkvg.hr/",
+      "region": "intl",
+      "source": "egf-calendar",
+      "date_end": "2026-12-13",
+      "notes": "EGF Grand Prix Circuit · Level C · Velika Gorica, Croatia"
     }
   ],
   "channels": [

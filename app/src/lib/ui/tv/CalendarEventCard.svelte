@@ -109,6 +109,10 @@
 	}
 
 	let currentTime = $derived(now === undefined ? Date.now() : now);
+	// Finished: the result may be shown - the winner only on request, so a
+	// tournament can still be replayed without knowing it.
+	let isOver = $derived(getLiveWindow(event).end.getTime() < currentTime);
+	let winnerShown = $state(false);
 	let platformLabel = $derived(PLATFORM_LABEL[event.platform]);
 	// Finished games can be replayed once the event has begun.
 	let canReplayOgs = $derived(
@@ -143,6 +147,26 @@
 	<p class="CalendarEvent-date">{formatEventDateRange(event)}</p>
 	{#if event.notes}
 		<p class="CalendarEvent-notes">{event.notes}</p>
+	{/if}
+	{#if isOver && (event.winner || event.results_url)}
+		<p class="CalendarEvent-result">
+			{#if event.winner}
+				{#if winnerShown}
+					<span>{t('app.calendarCard.winner', { winner: event.winner })}</span>
+				{:else}
+					<button type="button" class="link" onclick={() => (winnerShown = true)}>
+						{t('app.calendarCard.showWinner')}
+					</button>
+				{/if}
+			{/if}
+			{#if event.results_url}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- the organiser's results page -->
+				<a href={event.results_url} target="_blank" rel="noopener noreferrer">
+					{t('app.calendarCard.results')}
+				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			{/if}
+		</p>
 	{/if}
 	{#if isWatchable(event) || event.sgf_url}
 		<p
@@ -230,6 +254,24 @@
 		margin: 4px 0 0;
 		color: var(--ink-soft);
 		font-variant-numeric: tabular-nums;
+	}
+
+	.CalendarEvent-result {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 14px;
+		margin: 0;
+		font-size: 0.92em;
+	}
+
+	.CalendarEvent-result .link {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		text-decoration: underline;
+		cursor: pointer;
+		font: inherit;
 	}
 
 	.CalendarEvent-notes {

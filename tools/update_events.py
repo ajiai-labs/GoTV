@@ -805,6 +805,50 @@ def fetch_egf_calendar_html(year, timeout=20):
         return res.read().decode("utf-8")
 
 
+_EGF_CALENDAR_PAST_ROW_RE = re.compile(
+    r'<tr\s+class="egf-gp-satir\s+egf-gp-past"[^>]*>(.*?)</tr>', re.S
+)
+
+
+def parse_egf_calendar_winners(html_text):
+    """{entry id: winner text} of the past (.egf-gp-past) rows - the page
+    names the winner of each finished Grand Prix tournament, sometimes with
+    the best European ("EGF 1st: ..."). Only the winner is taken, nothing
+    else from a past row (28.11.2026: results of calendar tournaments)."""
+    winners = {}
+    for row_match in _EGF_CALENDAR_PAST_ROW_RE.finditer(html_text):
+        cells = _EGF_CALENDAR_CELLS_RE.search(row_match.group(1))
+        if not cells:
+            continue
+        name_cell, date_cell, _level_cell, winner_cell = cells.groups()
+        name_href = _EGF_CALENDAR_NAME_HREF_RE.search(name_cell)
+        date_range = _egf_calendar_parse_date_range(date_cell)
+        if not name_href or not date_range:
+            continue
+        text = re.sub(r"<br\s*/?>|\|", " · ", winner_cell)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", text))
+        text = re.sub(r"\s+", " ", text).strip(" ·")
+        text = re.sub(r"(\s*·\s*)+", " · ", text)
+        if not text:
+            continue
+        name = html.unescape(name_href.group(2)).strip()
+        winners[stable_id(name + "-" + date_range[0], source=EGF_CALENDAR_SOURCE)] = text
+    return winners
+
+
+def apply_egf_winners(merged, updated, winners):
+    """Adds the winner to the kept entries of finished tournaments; changed
+    entries count as updated (so the file is written)."""
+    result = []
+    for event in merged:
+        winner = winners.get(event.get("id")) if event.get("source") == EGF_CALENDAR_SOURCE else None
+        if winner and event.get("winner") != winner:
+            event = dict(event, winner=winner)
+            updated = [e for e in updated if e.get("id") != event["id"]] + [event]
+        result.append(event)
+    return result, updated
+
+
 def merge_egf_bt_events(existing_events, fresh_tv_events, today_date):
     """Same kept/added/updated contract as _merge_source_events, with the
     same retention-window removal rule as merge_dgob_events (see
@@ -1107,6 +1151,9 @@ def main(argv=None):
         today_date = datetime.date.today()
         merged, added, updated, removed = merge_egf_bt_events(
             data.get("events", []), fresh_tv_events, today_date
+        )
+        merged, updated = apply_egf_winners(
+            merged, updated, parse_egf_calendar_winners(html_text)
         )
 
         old_egf_count = len(

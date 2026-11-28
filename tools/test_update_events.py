@@ -102,6 +102,40 @@ class OtherTwitchChannelTest(unittest.TestCase):
         self.assertEqual(update_events.TWITCH_CHANNELS["usgoweb"]["broadcaster_id"], "105720862")
 
 
+class EgfWinnerTest(unittest.TestCase):
+    """The winner of a finished Grand Prix tournament (28.11.2026)."""
+
+    def setUp(self):
+        self.html = (Path(__file__).resolve().parent / "testdata" / "egf-bt-sample.html").read_text(
+            encoding="utf-8"
+        )
+
+    def test_reads_the_winners_of_past_rows_only(self):
+        winners = update_events.parse_egf_calendar_winners(self.html)
+        self.assertEqual(
+            winners,
+            {"egf-calendar-sample-past-open-2026-2026-09-05": "Someone 7d (XX)"},
+        )
+
+    def test_adds_the_winner_to_the_kept_entry(self):
+        kept = {
+            "id": "egf-calendar-sample-past-open-2026-2026-09-05",
+            "name": "Sample Past Open 2026",
+            "date_start": "2026-09-05",
+            "source": "egf-calendar",
+        }
+        hand = {"id": "egf-calendar-sample-past-open-2026-2026-09-05-hand", "name": "x"}
+        merged, updated = update_events.apply_egf_winners(
+            [kept, hand], [], update_events.parse_egf_calendar_winners(self.html)
+        )
+        self.assertEqual(merged[0]["winner"], "Someone 7d (XX)")
+        self.assertNotIn("winner", merged[1])
+        self.assertEqual([e["id"] for e in updated], [kept["id"]])
+        # Unchanged on the next run.
+        again, updated_again = update_events.apply_egf_winners(merged, [], {kept["id"]: "Someone 7d (XX)"})
+        self.assertEqual((again, updated_again), (merged, []))
+
+
 class MergeEventsTest(unittest.TestCase):
     def setUp(self):
         self.ics_events = update_events.parse_ics(

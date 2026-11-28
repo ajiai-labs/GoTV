@@ -42,6 +42,11 @@ export type TvEvent = {
 	video_id?: string;
 	sgf_url?: string;
 	notes?: string;
+	// After the tournament (28.11.2026): its winner (EGF Grand Prix page,
+	// shown only on request - no spoiler) and a page with its results (by
+	// hand, e.g. the tournament card in the European Go Database).
+	winner?: string;
+	results_url?: string;
 	channel?: {
 		platform: 'youtube' | 'twitch';
 		id: string;
@@ -111,7 +116,7 @@ export function validateTvEvent(value: Record<string, any>): TvEvent | null | un
 		return null;
 	}
 
-	for (const key of ['video_id', 'sgf_url', 'notes', 'source']) {
+	for (const key of ['video_id', 'sgf_url', 'notes', 'source', 'winner', 'results_url']) {
 		if (value[key] !== undefined && value[key] !== null && typeof value[key] !== 'string') {
 			return null;
 		}
@@ -229,6 +234,14 @@ export function validateTvEvent(value: Record<string, any>): TvEvent | null | un
 
 	if (value.notes) {
 		event.notes = value.notes;
+	}
+
+	if (value.winner && value.winner.trim()) {
+		event.winner = value.winner.trim();
+	}
+
+	if (value.results_url && /^https:\/\//.test(value.results_url)) {
+		event.results_url = value.results_url;
 	}
 
 	if (channel) {
