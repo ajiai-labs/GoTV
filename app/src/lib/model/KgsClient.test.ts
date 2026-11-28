@@ -146,3 +146,62 @@ describe('KgsClient.poll', () => {
 		vi.unstubAllGlobals();
 	});
 });
+
+// Requests one after the other (28.11.2026: an UNJOIN_REQUEST overtook the
+// profile change for that channel, KGS ended the session).
+describe('KgsClient.sendMessage', () => {
+	function hold(client: KgsClient) {
+		const sent: Array<string> = [];
+		const answers: Array<{ ok: () => void; fail: (err: unknown) => void }> = [];
+		vi.spyOn(client, '_sendMessage').mockImplementation(
+			(msg) =>
+				new Promise((ok, fail) => {
+					sent.push(msg.type);
+					answers.push({ ok: () => ok(undefined), fail });
+				})
+		);
+		return { sent, answers };
+	}
+
+	it('sends the next request only when KGS answered the one before', async () => {
+		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		const { sent, answers } = hold(client);
+		const change = client.sendMessage({ type: 'DETAILS_CHANGE', channelId: 7 });
+		const leave = client.sendMessage({ type: 'UNJOIN_REQUEST', channelId: 7 });
+		// The first goes at once, the second waits.
+		expect(sent).toEqual(['DETAILS_CHANGE']);
+		answers[0].ok();
+		await change;
+		await vi.waitFor(() => expect(sent).toEqual(['DETAILS_CHANGE', 'UNJOIN_REQUEST']));
+		answers[1].ok();
+		await leave;
+	});
+
+	it('goes on after a request that failed', async () => {
+		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		const { sent, answers } = hold(client);
+		const chat = client.sendMessage({ type: 'CHAT', channelId: 1, text: 'hi' });
+		const move = client.sendMessage({ type: 'GAME_MOVE', channelId: 2 });
+		answers[0].fail({ type: 'networkError' });
+		await chat.catch(() => {});
+		await vi.waitFor(() => expect(sent).toEqual(['CHAT', 'GAME_MOVE']));
+		answers[1].ok();
+		await move;
+	});
+
+	it('never sends what an old session still had queued into a new one', async () => {
+		const client = new KgsClient({ status: 'loggedIn', network: 'online', retryTimes: 0 });
+		const { sent, answers } = hold(client);
+		vi.spyOn(client, 'poll').mockResolvedValue(undefined);
+		void client.sendMessage({ type: 'CHAT', channelId: 1, text: 'eins' });
+		const old = client.sendMessage({ type: 'GAME_MOVE', channelId: 2 }); // queued
+		const login = client.login('andy1975', 'secret');
+		// The login does not wait for the old session's requests.
+		await vi.waitFor(() => expect(sent).toEqual(['CHAT', 'LOGIN']));
+		answers[1].ok();
+		await login;
+		answers[0].ok();
+		await old;
+		expect(sent).toEqual(['CHAT', 'LOGIN']);
+	});
+});

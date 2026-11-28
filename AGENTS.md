@@ -1092,6 +1092,17 @@ Die Doku nennt das Feld fürs Ändern `emailPrivate`, beim Lesen `privateEmail`;
 GoUniverse `privateEmail`. Ob der Haken „E-Mail verbergen“ damit bei KGS ankommt, ist an einer echten
 Sitzung NOCH NICHT geprüft. Übungs-KGS: prüft `DETAILS_CHANGE` streng und merkt das Profil.
 
+## Anfragen nacheinander, Kanal-Schranke für alles (28.11.2026)
+
+Nach dem Profil-Befund (Abmeldung überholte die Änderung) als ganze Fehlerklasse behoben:
+`KgsClient.sendMessage` schickt Anfragen strikt nacheinander (jede erst nach der Antwort auf die
+vorige; bei leerer Schlange sofort). Eine neue Anmeldung beginnt eine neue Schlange, Reste der alten
+Sitzung werden verworfen, nie in die neue geschickt; POST-Frist 30 s, damit nichts ewig blockiert.
+`channelGuard.allow` hält jetzt auch alle anderen Nachrichten mit `channelId` zurück, wenn KGS den
+Kanal geschlossen hat oder GoTV ihn verlässt/verlassen hat (`left`, übersteht F5); ein Kanal, dessen
+Anmeldung läuft, nimmt Anfragen wie bisher. Geprüft: Rundgang (Profil, Beobachten + Chat,
+Brettübersicht, eigene Partie mit Zug und Chat) gegen das Übungs-KGS `--strict` ohne Warnung.
+
 ## Übungs-KGS (27.11.2026)
 
 Wunsch des Nutzers: ausprobieren, wie eine eigene Partie mit drei laufenden Partien daneben

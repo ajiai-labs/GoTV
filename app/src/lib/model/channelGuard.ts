@@ -10,7 +10,12 @@
 //   gone without a CLOSE reaching us);
 // - a join is sent once until KGS answers, an unjoin once and only for a
 //   channel we are in (or are joining);
-// - a new login starts from nothing (no request of the old session).
+// - a new login starts from nothing (no request of the old session);
+// - nothing else goes to a channel KGS closed, or one we are leaving or
+//   left (28.11.2026: a profile change reached KGS after the leave of its
+//   channel, and KGS ended the session) - a move, a chat line, a review
+//   change for such a channel is dropped. A channel still being joined
+//   takes requests as before.
 import type { KgsMessage } from './types';
 
 // A request KGS has not answered after this long no longer blocks a retry.
@@ -26,6 +31,7 @@ export type ChannelGuardState = {
 	joining: Array<[number, number]>;
 	leaving: Array<[number, number]>;
 	closed: Array<number>;
+	left?: Array<number>;
 	listedIn: Array<[number, Array<number>]>;
 };
 
@@ -73,6 +79,8 @@ export class ChannelGuard {
 	private joining = new Map<number, number>();
 	private leaving = new Map<number, number>();
 	private closed = new Set<number>();
+	// Channels we left (UNJOIN) and did not join again.
+	private left = new Set<number>();
 	// The lists (global list, rooms) each game is in: a game KGS took off all
 	// lists it was in is not joined again.
 	private listedIn = new Map<number, Set<number>>();
@@ -88,6 +96,7 @@ export class ChannelGuard {
 		this.joining.clear();
 		this.leaving.clear();
 		this.closed.clear();
+		this.left.clear();
 		this.listedIn.clear();
 		this.onChange?.();
 	}
@@ -100,6 +109,7 @@ export class ChannelGuard {
 		this.joining = new Map(state?.joining ?? []);
 		this.leaving = new Map(state?.leaving ?? []);
 		this.closed = new Set(state?.closed ?? []);
+		this.left = new Set(isIdList(state?.left) ? state.left : []);
 		this.listedIn = new Map((state?.listedIn ?? []).map(([id, lists]) => [id, new Set(lists)]));
 		for (const id of this.closed) this.joined.delete(id);
 		this.onChange?.();
@@ -111,6 +121,7 @@ export class ChannelGuard {
 			joining: [...this.joining],
 			leaving: [...this.leaving],
 			closed: [...this.closed],
+			left: [...this.left],
 			listedIn: [...this.listedIn].map(([id, lists]) => [id, [...lists]])
 		};
 	}
@@ -132,10 +143,12 @@ export class ChannelGuard {
 			this.joined.add(id);
 			this.joining.delete(id);
 			this.closed.delete(id);
+			this.left.delete(id);
 		} else if (id !== null && msg.type === 'UNJOIN') {
 			this.joined.delete(id);
 			this.joining.delete(id);
 			this.leaving.delete(id);
+			this.left.add(id);
 		} else if (id !== null && msg.type === 'CLOSE') {
 			this.joined.delete(id);
 			this.joining.delete(id);
@@ -198,6 +211,10 @@ export class ChannelGuard {
 			this.onChange?.();
 			return true;
 		}
-		return true;
+		// Anything else for a channel: not for one KGS closed, nor one we are
+		// leaving or left (unless a join is on its way again).
+		if (this.closed.has(id)) return false;
+		if (this.pending(this.joining, id)) return true;
+		return !this.left.has(id) && !this.pending(this.leaving, id);
 	}
 }

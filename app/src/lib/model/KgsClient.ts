@@ -23,6 +23,10 @@ const RETRY_MAX_MS = 30_000;
 // KGS answers a long poll well within this; longer means the line is dead.
 const POLL_TIMEOUT_MS = 120_000;
 
+// A POST to KGS that has no answer after this long counts as a broken
+// connection (the queue of requests goes on).
+const SEND_TIMEOUT_MS = 30_000;
+
 type SendMessageOptions = {
 	sync?: boolean;
 };
@@ -131,8 +135,30 @@ export class KgsClient {
 			opts
 		);
 	};
-	sendMessage = async (msg: KgsMessage, opts: SendMessageOptions = {}) => {
+	// Requests go to KGS one after the other, each when KGS answered the one
+	// before (28.11.2026). Sent at once, a later request could reach KGS first
+	// - an UNJOIN_REQUEST overtook the profile change for that channel, and
+	// KGS ended the whole session ("Unknown channel"). A new login starts a
+	// new queue; what an old session still had queued is dropped, never sent
+	// into the new one (its channels are not the new session's).
+	_sendTail: Promise<unknown> | null = null;
+
+	sendMessage = (msg: KgsMessage, opts: SendMessageOptions = {}): Promise<void> => {
+		if (msg.type === 'LOGIN') this._sendTail = null;
 		const session = this._session;
+		const start = () =>
+			session === this._session ? this._sendNow(msg, opts, session) : Promise.resolve();
+		// Nothing on its way: the request goes at once (not a moment later).
+		const run = this._sendTail ? this._sendTail.then(start, start) : start();
+		const tail = run.catch(() => {});
+		this._sendTail = tail;
+		void tail.then(() => {
+			if (this._sendTail === tail) this._sendTail = null;
+		});
+		return run;
+	};
+
+	_sendNow = async (msg: KgsMessage, opts: SendMessageOptions, session: number) => {
 		if (this._debug) {
 			console.log(
 				'[KGS Client] >> ' + msg.type,
@@ -349,7 +375,10 @@ export class KgsClient {
 			xhr.addEventListener('error', onError);
 			xhr.addEventListener('abort', onError);
 			xhr.addEventListener('timeout', onError);
-			xhr.open('POST', this._apiUrl, opts.sync === undefined ? true : opts.sync);
+			const async = opts.sync === undefined ? true : opts.sync;
+			xhr.open('POST', this._apiUrl, async);
+			// A request that hangs must not hold up the ones behind it.
+			if (async) xhr.timeout = SEND_TIMEOUT_MS;
 			xhr.withCredentials = true;
 			xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 			xhr.send(escapeUnicode(JSON.stringify(msg)));

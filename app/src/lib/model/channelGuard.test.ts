@@ -113,3 +113,42 @@ describe('a move that did not reach KGS', () => {
 		expect(state.gamesById[5].moveFailed).toBe(true);
 	});
 });
+
+// 28.11.2026: a profile change reached KGS after the leave of its channel.
+describe('ChannelGuard - other requests', () => {
+	it('lets nothing go to a channel we are leaving, left or KGS closed', () => {
+		const guard = new ChannelGuard(() => 0);
+		guard.observe({ type: 'DETAILS_JOIN', channelId: 7 });
+		guard.observe({ type: 'GAME_JOIN', channelId: 8 });
+		expect(guard.allow({ type: 'DETAILS_CHANGE', channelId: 7 })).toBe(true);
+		expect(guard.allow({ type: 'UNJOIN_REQUEST', channelId: 7 })).toBe(true);
+		// Leaving: a late change for it is dropped.
+		expect(guard.allow({ type: 'DETAILS_CHANGE', channelId: 7 })).toBe(false);
+		guard.observe({ type: 'UNJOIN', channelId: 7 });
+		expect(guard.allow({ type: 'DETAILS_CHANGE', channelId: 7 })).toBe(false);
+		guard.observe({ type: 'CLOSE', channelId: 8 });
+		expect(guard.allow({ type: 'GAME_MOVE', channelId: 8 })).toBe(false);
+		// Requests without a channel are not the gate's business.
+		expect(guard.allow({ type: 'DETAILS_JOIN_REQUEST', name: 'andy1975' })).toBe(true);
+	});
+
+	it('lets requests go again once the channel is joined again, or being joined', () => {
+		const guard = new ChannelGuard(() => 0);
+		guard.observe({ type: 'GAME_JOIN', channelId: 9 });
+		guard.observe({ type: 'UNJOIN', channelId: 9 });
+		expect(guard.allow({ type: 'CHAT', channelId: 9 })).toBe(false);
+		expect(guard.allow({ type: 'JOIN_REQUEST', channelId: 9 })).toBe(true);
+		expect(guard.allow({ type: 'CHAT', channelId: 9 })).toBe(true);
+		guard.observe({ type: 'GAME_JOIN', channelId: 9 });
+		expect(guard.allow({ type: 'GAME_MOVE', channelId: 9 })).toBe(true);
+	});
+
+	it('keeps what was left across a reload of the window', () => {
+		const guard = new ChannelGuard(() => 0);
+		guard.observe({ type: 'GAME_JOIN', channelId: 9 });
+		guard.observe({ type: 'UNJOIN', channelId: 9 });
+		const again = new ChannelGuard(() => 0);
+		again.restore(guard.toJSON());
+		expect(again.allow({ type: 'CHAT', channelId: 9 })).toBe(false);
+	});
+});
