@@ -17,12 +17,20 @@
 	import {
 		loadBoardsMode,
 		loadGameWindows,
+		isBoardsWindowOpen,
 		openBoardsWindow,
 		saveBoardsMode
 	} from '#lib/gameWindows.ts';
 
 	let tvEvents: Array<TvEvent> = $state([]);
 	let boardsRefused = $state(false);
+	// The button shows only while an overview is open (it closes itself with
+	// its last board); a closed window sends no event, so look once a second.
+	let boardsOpen = $state(isBoardsWindowOpen());
+	$effect(() => {
+		const timer = setInterval(() => (boardsOpen = isBoardsWindowOpen()), 1000);
+		return () => clearInterval(timer);
+	});
 	let boardsMode = $state(loadBoardsMode());
 	let boardsFull = $state(false);
 
@@ -70,7 +78,7 @@
 		<section class="WatchScreen-list panel" aria-labelledby="watch-title">
 			<div class="WatchScreen-head">
 				<h1 id="watch-title" class="panel-title">{t('app.watch.title')}</h1>
-				{#if loadGameWindows()}
+				{#if loadGameWindows() && boardsOpen}
 					<button
 						type="button"
 						class="button"

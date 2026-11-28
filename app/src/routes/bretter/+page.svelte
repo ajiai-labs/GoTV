@@ -94,14 +94,17 @@
 		closeWhenEmpty();
 	}
 
-	// The last board taken off (× or "Alle entfernen"): the window goes, as
-	// it came with the first board - the window behind it shows again (user,
-	// 28.11.2026). Your own game's preview alone is no reason to stay: it has
-	// its own window. Opened empty with the button, it stays open.
+	// The overview exists only while it has a board (user, 28.11.2026): it
+	// opens with the first game clicked and goes with the last one (× or
+	// "Alle entfernen"), so the window behind shows again. If your own game
+	// is still shown as a preview, it asks first - not closed by accident.
+	let askClose = $state(false);
 	function closeWhenEmpty() {
-		const left = boards.some((id) => id != null && !ownRunning(app.state.gamesById[id]));
-		if (!left) window.close();
+		if (!boards.some((id) => id != null) && ownGame) askClose = true;
 	}
+	$effect(() => {
+		if (!boards.some((id) => id != null) && !ownGame) window.close();
+	});
 
 	// Boards with their game (a list entry before joining has no moves yet).
 	// Your own running game is never a board here (it would be playable): it
@@ -132,7 +135,14 @@
 		if (n <= 6) return tall ? { cols: 2, rows: 3 } : { cols: 3, rows: 2 };
 		return tall ? { cols: 2, rows: 4 } : { cols: 4, rows: 2 };
 	});
-	let bigEntry = $derived(big ? (shown.find((entry) => entry.board === big) ?? null) : null);
+	// One game only: shown large with chat at once - small boards to click
+	// make sense from two games on (user, 28.11.2026).
+	// (Until KGS has sent the game, its tile says it is loading.)
+	// Your own game shown as a preview counts as a game.
+	let single = $derived(shown.length === 1 && !!shown[0].game && !ownGame);
+	let bigEntry = $derived(
+		single ? shown[0] : big ? (shown.find((entry) => entry.board === big) ?? null) : null
+	);
 
 	// Logged out at KGS (in any window): this window has nothing to show any
 	// more and closes, instead of offering a login of its own.
@@ -241,7 +251,7 @@
 			playing={isMine(game) && isGamePlaying(game)}
 			inWindow
 			overview
-			onBack={() => show(null)}
+			onBack={single ? undefined : () => show(null)}
 		/>
 	{:else}
 		<div class="boards">
@@ -264,6 +274,17 @@
 					<button type="button" class="button" onclick={clearAll}>{t('app.boards.clear')}</button>
 				{/if}
 			</header>
+			{#if askClose && ownGame}
+				<div class="ask-close" role="alertdialog" aria-labelledby="ask-close-text">
+					<p id="ask-close-text">{t('app.boards.askClose')}</p>
+					<button type="button" class="button button-primary" onclick={() => window.close()}>
+						{t('app.boards.close')}
+					</button>
+					<button type="button" class="button" onclick={() => (askClose = false)}>
+						{t('app.boards.keepOpen')}
+					</button>
+				</div>
+			{/if}
 			{#if refused}
 				<p class="muted" role="status">{t('game.screen.ownWindowRefused')}</p>
 			{/if}
@@ -491,6 +512,23 @@
 		display: flex;
 		gap: 8px;
 		flex-wrap: wrap;
+	}
+
+	.ask-close {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2, 0.5rem);
+		margin-bottom: var(--space-3, 0.75rem);
+		padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+		border: 1px solid var(--accent);
+		border-radius: var(--radius, 8px);
+		background: var(--surface);
+	}
+
+	.ask-close p {
+		flex: 1 1 16rem;
+		margin: 0;
 	}
 
 	.empty {

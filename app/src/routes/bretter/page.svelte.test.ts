@@ -29,8 +29,12 @@ function game(id: number, white: User, black: User, extra: Partial<GameChannel> 
 
 describe('Brettübersicht', () => {
 	let actions: Record<string, ReturnType<typeof vi.fn>>;
+	let close: ReturnType<typeof vi.fn<() => void>>;
 
 	beforeEach(() => {
+		// The overview closes itself without boards - never the test page.
+		close = vi.fn<() => void>();
+		vi.spyOn(window, 'close').mockImplementation(close);
 		actions = { onViewGame: vi.fn(), onUnviewGame: vi.fn() };
 		app._actions = actions as unknown as AppActions;
 		app.state = {
@@ -47,33 +51,81 @@ describe('Brettübersicht', () => {
 	});
 
 	afterEach(() => {
+		vi.restoreAllMocks();
 		app._actions = null;
 		localStorage.removeItem('gotv.team');
 		localStorage.removeItem('gotv.teamView');
 	});
 
-	it('closes itself when the last board is taken off', async () => {
-		const close = vi.spyOn(window, 'close').mockImplementation(() => {});
+	it('shows the game that is left large when the second last board goes', async () => {
 		await render(Page);
 		await page
 			.getByRole('region', { name: 'Brett 1' })
 			.getByRole('button', { name: 'Vom Brett nehmen' })
 			.click();
 		expect(close).not.toHaveBeenCalled();
-		await page
-			.getByRole('region', { name: 'Brett 3' })
-			.getByRole('button', { name: 'Vom Brett nehmen' })
-			.click();
-		expect(close).toHaveBeenCalledOnce();
-		close.mockRestore();
+		await expect.element(page.getByRole('region', { name: 'Brett 3' })).not.toBeInTheDocument();
+		await expect.element(page.getByText('siasio', { exact: false }).first()).toBeVisible();
 	});
 
 	it('closes itself after "Alle entfernen"', async () => {
-		const close = vi.spyOn(window, 'close').mockImplementation(() => {});
 		await render(Page);
 		await page.getByRole('button', { name: 'Alle entfernen' }).click();
 		expect(close).toHaveBeenCalledOnce();
-		close.mockRestore();
+	});
+
+	it('shows a single game large with its chat, small boards from two games on', async () => {
+		localStorage.setItem('gotv.team', JSON.stringify([90, null, null, null, null, null]));
+		await render(Page);
+		// The game screen at once: players, chat - no tile to click first.
+		await expect.element(page.getByRole('region', { name: 'Brett 1' })).not.toBeInTheDocument();
+		await expect.element(page.getByText('Lukan', { exact: false }).first()).toBeVisible();
+		await expect
+			.element(page.getByRole('button', { name: /Alle Bretter/ }))
+			.not.toBeInTheDocument();
+		// A second game comes in (Beobachten writes the boards): small boards.
+		localStorage.setItem('gotv.team', JSON.stringify([90, 91, null, null, null, null]));
+		window.dispatchEvent(new StorageEvent('storage', { key: 'gotv.team' }));
+		await expect.element(page.getByRole('region', { name: 'Brett 1' })).toBeVisible();
+		await expect.element(page.getByRole('region', { name: 'Brett 2' })).toBeVisible();
+	});
+
+	it('closes itself when opened without boards', async () => {
+		localStorage.setItem('gotv.team', JSON.stringify([null, null, null, null, null, null]));
+		await render(Page);
+		expect(close).toHaveBeenCalled();
+	});
+
+	it('asks before closing when only your own game is left', async () => {
+		app.state = {
+			...app.state,
+			gamesById: { ...app.state.gamesById, 95: game(95, me, anna) },
+			channelMembership: { 95: { type: 'game', complete: true, stale: false } }
+		};
+		await render(Page);
+		await page.getByRole('button', { name: 'Alle entfernen' }).click();
+		const ask = page.getByRole('alertdialog');
+		await expect
+			.element(ask.getByText('Brettübersicht schließen?', { exact: false }))
+			.toBeVisible();
+		expect(close).not.toHaveBeenCalled();
+		await ask.getByRole('button', { name: 'Offen lassen' }).click();
+		await expect.element(ask).not.toBeInTheDocument();
+		await expect.element(page.getByRole('region', { name: 'Deine Partie' })).toBeVisible();
+		expect(close).not.toHaveBeenCalled();
+		localStorage.removeItem('gotv.boardsOwnGame');
+	});
+
+	it('closes after asking when you say so', async () => {
+		app.state = {
+			...app.state,
+			gamesById: { ...app.state.gamesById, 95: game(95, me, anna) },
+			channelMembership: { 95: { type: 'game', complete: true, stale: false } }
+		};
+		await render(Page);
+		await page.getByRole('button', { name: 'Alle entfernen' }).click();
+		await page.getByRole('alertdialog').getByRole('button', { name: 'Schließen' }).click();
+		expect(close).toHaveBeenCalledOnce();
 	});
 
 	it('says that a private game has no board instead of loading for ever', async () => {

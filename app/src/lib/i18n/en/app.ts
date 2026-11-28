@@ -111,6 +111,10 @@ export const app: Translation<typeof de> = {
 	'app.boards.all': 'All boards',
 	'app.boards.remove': 'Take off the board',
 	'app.boards.clear': 'Remove all',
+	'app.boards.askClose':
+		'No boards left – only your own game. Close the board overview? Your game goes on in its own window.',
+	'app.boards.close': 'Close',
+	'app.boards.keepOpen': 'Keep open',
 	'app.boards.empty':
 		'No boards yet. Bring games here from Watch or a player’s profile with "To the board overview" – for example your team’s games.',
 	'app.gameWindow.missing': 'This game does not exist (any more).',

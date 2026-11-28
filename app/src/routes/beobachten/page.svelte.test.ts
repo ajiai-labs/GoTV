@@ -184,6 +184,30 @@ describe('Beobachten', () => {
 		localStorage.removeItem('gotv.gameWindows');
 	});
 
+	it('shows the Brettübersicht button only while an overview is open', async () => {
+		localStorage.setItem('gotv.gameWindows', 'on');
+		localStorage.setItem('gotv.boardsMode', 'on');
+		localStorage.removeItem('gotv.team');
+		const popup = newPopup();
+		vi.stubGlobal(
+			'open',
+			vi.fn(() => popup)
+		);
+		setState();
+		await render(Page);
+		const button = page.getByRole('button', { name: 'Brettübersicht', exact: true });
+		await expect.element(button).not.toBeInTheDocument();
+		// The first game clicked opens the overview - and the button appears.
+		await page.getByRole('button', { name: /Zweite Partie/ }).click();
+		await expect.element(button).toBeVisible();
+		// The overview closed itself with its last board: the button goes.
+		popup.closed = true;
+		await expect.element(button).not.toBeInTheDocument();
+		localStorage.removeItem('gotv.boardsMode');
+		localStorage.removeItem('gotv.team');
+		localStorage.removeItem('gotv.gameWindows');
+	});
+
 	it('keeps both games on two fast clicks while the overview is still loading', async () => {
 		localStorage.setItem('gotv.gameWindows', 'on');
 		localStorage.setItem('gotv.boardsMode', 'on');

@@ -115,6 +115,10 @@ export const app = {
 	'app.boards.all': 'Alle Bretter',
 	'app.boards.remove': 'Vom Brett nehmen',
 	'app.boards.clear': 'Alle entfernen',
+	'app.boards.askClose':
+		'Kein Brett mehr – nur noch deine eigene Partie. Brettübersicht schließen? Deine Partie läuft in ihrem Fenster weiter.',
+	'app.boards.close': 'Schließen',
+	'app.boards.keepOpen': 'Offen lassen',
 	'app.boards.empty':
 		'Noch keine Bretter. Hol dir Partien über „Beobachten“ oder das Spielerprofil mit „Zur Brettübersicht“ hierher – zum Beispiel die Partien deiner Mannschaft.',
 	'app.gameWindow.missing': 'Diese Partie gibt es nicht (mehr).',

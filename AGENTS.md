@@ -1013,9 +1013,14 @@ die schon offen sind, kommen nach vorn statt doppelt.
   "gibt es nicht (mehr)"; im einspaltigen Layout (≤ 900 px) passt das Brett in die Höhe.
   Speed-Go-Importer: Konten werden in mehreren Durchgängen gelernt (Reihenfolge egal),
   `ogs_players` nur für einen Eintrag am selben Tag.
-- Letztes Brett weg (× oder „Alle entfernen“) → die Brettübersicht schließt sich selbst
-  (`closeWhenEmpty`, Nutzer 28.11.2026: sie geht, wie sie mit dem ersten Brett kam; die eigene
-  Partie als Vorschau allein hält sie nicht offen). Leer über den Knopf geöffnet bleibt sie offen.
+- Die Brettübersicht gibt es nur mit mindestens einem Brett (Nutzer 28.11.2026): sie öffnet sich
+  mit der ersten angeklickten Partie und schließt sich ohne Bretter selbst (× / „Alle entfernen“,
+  auch beim Öffnen ohne Bretter). Ist dann nur noch die eigene laufende Partie als Vorschau da,
+  fragt sie erst („Schließen“ / „Offen lassen“, wie KGS beim Verlassen der eigenen Partie). Der
+  Knopf „Brettübersicht“ unter Beobachten erscheint nur, solange eine von diesem Fenster geöffnete
+  Übersicht offen ist (`isBoardsWindowOpen`, Fensterbezug, sekündlich geprüft - ein geschlossenes
+  Fenster meldet sich nicht). Eine einzige Partie (ohne eigene Partie daneben) zeigt die
+  Übersicht gleich groß mit Chat (`single`), Kacheln erst ab zwei Partien.
   Private Partien zeigen „Private Partie – nur für eingeladene Zuschauer“ statt „Brett lädt …“
   (`accessNoticeDe` in `ui/game/gameText.ts`, auch im Partiefenster und an TV-Brettern).
 - README-Bilder (28.11.2026) aufgenommen per Playwright gegen `tools/fake_kgs.py` (Port 8797, Kopie

@@ -105,18 +105,28 @@ function isBlank(win: Window): boolean {
 	}
 }
 
-// "Brettübersicht" button: open, or bring to the front (closed and opened
-// afresh, see openNamed - its boards stay).
+// The overview this window opened (or found open): the "Brettübersicht"
+// button is only shown while it is open - an empty overview does not exist
+// (user, 28.11.2026: it opens with the first board, goes with the last).
+let boardsWindow: Window | null = null;
+
+export function isBoardsWindowOpen(): boolean {
+	return !!boardsWindow && !boardsWindow.closed;
+}
+
+// "Brettübersicht" button: bring the open overview to the front (closed and
+// opened afresh, see openNamed - its boards stay). None open any more: the
+// empty window the browser made is closed again at once.
 export function openBoardsWindow(): boolean {
 	const win = window.open('', BOARDS_NAME, FEATURES);
 	if (!win) return false;
 	if (isBlank(win) && !loading.has(win)) {
-		saveBoards(emptyBoards());
-		clearBoardsZoom();
-		startLoading(win, resolve('/bretter'));
+		win.close();
+		boardsWindow = null;
 		return true;
 	}
-	return !!openNamed(resolve('/bretter'), BOARDS_NAME);
+	boardsWindow = openNamed(resolve('/bretter'), BOARDS_NAME);
+	return !!boardsWindow;
 }
 
 // "Zur Brettübersicht" (Beobachten, player profile): the game goes on the
@@ -131,6 +141,7 @@ export function bringToBoards(
 	const win = window.open('', BOARDS_NAME, FEATURES);
 	if (!win) return 'refused';
 	// Still loading from a click a moment ago counts as open (its boards).
+	boardsWindow = win;
 	const fresh = isBlank(win) && !loading.has(win);
 	const boards = addBoard(fresh ? emptyBoards() : loadBoards(), gameId, isKnown);
 	if (!boards) return 'full'; // only an open overview can be full
