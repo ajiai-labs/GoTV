@@ -51,7 +51,6 @@ export const game = {
 
 	// GameMoreMenu
 	'game.moreMenu.downloadSgf': 'SGF herunterladen',
-	'game.moreMenu.openGoKibitz': 'In GoKibitz öffnen',
 	'game.moreMenu.openEidoGo': 'In EidoGo öffnen',
 	'game.moreMenu.gameInfo': 'Partieinfo',
 	'game.estimate.title': 'Ergebnis schätzen',

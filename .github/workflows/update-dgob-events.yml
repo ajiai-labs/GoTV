@@ -144,6 +144,10 @@ jobs:
           steps.import_youtube.outcome == 'success' &&
           steps.commit.outcome == 'success'
         run: |
+          if [ "$(gh repo view "$GITHUB_REPOSITORY" --json hasIssuesEnabled --jq .hasIssuesEnabled)" != "true" ]; then
+            echo "Issues sind im Repository aus - nichts zu schließen."
+            exit 0
+          fi
           issue_number=$(gh issue list --search '"DGoB-Import fehlgeschlagen" in:title' --state open --json number --jq '.[0].number // empty')
           if [ -n "$issue_number" ]; then
             gh issue comment "$issue_number" --body "wieder erfolgreich: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -162,6 +166,13 @@ jobs:
            steps.import_youtube.outcome == 'failure' ||
            steps.commit.outcome == 'failure')
         run: |
+          # Issues switched off in the repository (28.11.2026): the red run
+          # (GitHub's mail about a failed workflow) is the alarm.
+          if [ "$(gh repo view "$GITHUB_REPOSITORY" --json hasIssuesEnabled --jq .hasIssuesEnabled)" != "true" ]; then
+            echo "Import fehlgeschlagen - Issues sind aus, der rote Lauf ist der Alarm."
+            tail -n 60 /tmp/dgob-workflow.log 2>/dev/null || true
+            exit 1
+          fi
           gh label create tv-import --color ededed --description "DGoB-Import-Alarm" 2>/dev/null || true
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           error_tail=$(tail -n 60 /tmp/dgob-workflow.log 2>/dev/null || echo "(kein Log verfügbar)")

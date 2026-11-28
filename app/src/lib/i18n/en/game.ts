@@ -50,7 +50,6 @@ export const game: Translation<typeof de> = {
 
 	// GameMoreMenu
 	'game.moreMenu.downloadSgf': 'Download SGF',
-	'game.moreMenu.openGoKibitz': 'Open in GoKibitz',
 	'game.moreMenu.openEidoGo': 'Open in EidoGo',
 	'game.moreMenu.gameInfo': 'Game info',
 	'game.estimate.title': 'Estimate score',

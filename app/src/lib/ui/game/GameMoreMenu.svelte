@@ -1,5 +1,6 @@
 <script lang="ts">
-	// "Mehr" above a game: download the SGF, open it in GoKibitz or EidoGo,
+	// "Mehr" above a game: download the SGF, open it in EidoGo (GoKibitz
+	// removed 28.11.2026 - user: not needed),
 	// and the full game info (size, ID, date, result and the SGF details
 	// such as event, round and place) in a dialog. A click elsewhere closes
 	// the menu.
@@ -101,7 +102,6 @@
 
 	let sgfUrl = $derived(game.sgfUrl || (game.summary ? getKgsSgfUrl(game.summary) : '#'));
 	let eidogoUrl = $derived('http://eidogo.com/#url:' + sgfUrl);
-	let gokibitzUrl = $derived('https://gokibitz.com/fetch#' + sgfUrl);
 
 	function moreInfoRows(root: GameNode | undefined) {
 		if (!root) return [];
@@ -162,15 +162,6 @@
 				onclick={() => (moreShowing = false)}
 			>
 				{t('game.moreMenu.downloadSgf')}
-			</a>
-			<a
-				class="GameMoreMenu-dropdown-item"
-				target="_blank"
-				rel="noopener noreferrer"
-				href={gokibitzUrl}
-				onclick={() => (moreShowing = false)}
-			>
-				{t('game.moreMenu.openGoKibitz')}
 			</a>
 			<a
 				class="GameMoreMenu-dropdown-item"
