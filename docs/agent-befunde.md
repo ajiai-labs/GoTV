@@ -18,3 +18,10 @@ Partiebaum fehlt. Zwei offene Fragen: (1) Verhält sich der echte KGS bei einem 
 Long-Poll genauso (Nachrichten weg) - dann betrifft es F5 auch dort. (2) Baut `parseGameChannel`
 aus einem `GAME_UPDATE` ohne vorheriges `GAME_JOIN` einen Baum, der wie eine echte Stellung
 aussieht. Nicht untersucht, nichts geändert.
+
+## 28.11.2026 – wackelnder Test in der CI
+
+`app/src/lib/model/KgsClient.test.ts` „keeps trying while logged in, also after many failures“ lief
+in der GitHub-CI (Lauf 46140104574, Commit d0aa26e) in die 5-s-Grenze; lokal grün, KgsClient war
+nicht geändert. Lauf neu gestartet. Ursache nicht untersucht (vermutlich Zeitgrenze unter Last,
+wie `ScriptUpdate` und `UserDetailsModal`).
