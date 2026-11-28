@@ -39,6 +39,9 @@ fi
 (cd "$ROOT_DIR/app" && VITE_API_URL=/json/access npm run build) || exit 1
 rm -rf build-desktop
 cp -rL app/build build-desktop
+# Which commit this build is: "Nach Updates suchen" compares it with GitHub
+# (the GoTV folder may already be newer than what is installed).
+git -C "$ROOT_DIR" rev-parse HEAD > build-desktop/gotv-commit.txt 2>/dev/null || rm -f build-desktop/gotv-commit.txt
 
 echo "2/4 Launcher, Icon und Desktop-Datei..."
 mkdir -p "$HOME_DIR/.local/bin" \

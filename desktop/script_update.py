@@ -3,8 +3,12 @@
 GoTV installed with desktop/install.sh runs from a git checkout. The local
 server (goTV_local.py) offers the settings page two fixed actions:
 
-  check: git fetch, then how many commits the checkout is behind its
-         upstream branch (and whether it has own changes).
+  check: git fetch, then how many commits the INSTALLED build is behind
+         the upstream branch (and whether the checkout has own changes).
+         The installed build is the commit install.sh wrote to
+         build-desktop/gotv-commit.txt - the GoTV folder itself may be newer
+         (it is also where GoTV is developed and pushed from); without that
+         file the checkout's HEAD counts.
   run:   git pull --ff-only and sh desktop/install.sh, in the background;
          the page polls the state and reloads when it is done.
   restart: after an update that changed the server or launcher, the
@@ -26,6 +30,7 @@ with the local Origin and the header X-GoTV-Update (wish of the user,
 """
 
 import os
+import re
 import subprocess
 import threading
 import time
@@ -34,6 +39,7 @@ FETCH_TIMEOUT = 90
 PULL_TIMEOUT = 180
 INSTALL_TIMEOUT = 20 * 60
 LOG_LINES = 40
+INSTALLED_FILE = "gotv-commit.txt"
 CHANGE_LINES = 30
 # Files of the running server and launcher: changed -> GoTV must restart.
 RESTART_FILES = ("desktop/goTV_local.py", "desktop/script_update.py", "desktop/launch-gotv")
@@ -62,8 +68,9 @@ RESTART_DELAY = 2.0
 
 
 class ScriptUpdater:
-    def __init__(self, repo_dir, on_restart=None):
+    def __init__(self, repo_dir, on_restart=None, build_dir=None):
         self.repo_dir = repo_dir
+        self.build_dir = build_dir
         # Called on request after an update that changed the server or
         # launcher (the server starts itself again; closing the window does
         # not stop it).
@@ -102,6 +109,20 @@ class ScriptUpdater:
     def status(self):
         with self.lock:
             return self.status_unlocked()
+
+    def _installed(self):
+        """The commit of the installed build, or HEAD if unknown."""
+        if not self.build_dir:
+            return "HEAD"
+        try:
+            with open(os.path.join(self.build_dir, INSTALLED_FILE), encoding="ascii") as fh:
+                commit = fh.read().strip()
+        except (OSError, UnicodeDecodeError):
+            return "HEAD"
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            return "HEAD"
+        known = self._git("cat-file", "-e", commit + "^{commit}")
+        return commit if known.returncode == 0 else "HEAD"
 
     # -- check -----------------------------------------------------------
     def check(self):
@@ -171,12 +192,14 @@ class ScriptUpdater:
             return None
 
     def _versions(self):
-        return (self._version("HEAD"), self._version("@{upstream}"))
+        return (self._version(self._installed()), self._version("@{upstream}"))
 
     def _changes(self):
         """Subjects of the commits on GitHub that are not here yet."""
         try:
-            log = self._git("log", "--format=%s", "-n", str(CHANGE_LINES), "HEAD..@{upstream}")
+            log = self._git(
+                "log", "--format=%s", "-n", str(CHANGE_LINES), self._installed() + "..@{upstream}"
+            )
             if log.returncode != 0:
                 return []
             return [line.strip() for line in log.stdout.splitlines() if line.strip()]
@@ -193,7 +216,7 @@ class ScriptUpdater:
             fetch = self._git("fetch", "--quiet", timeout=FETCH_TIMEOUT)
             if fetch.returncode != 0:
                 return ("fetchFailed", None, False)
-            count = self._git("rev-list", "--count", "HEAD..@{upstream}")
+            count = self._git("rev-list", "--count", self._installed() + "..@{upstream}")
             behind = int(count.stdout.strip() or 0) if count.returncode == 0 else None
             changes = self._git("status", "--porcelain", "--untracked-files=no")
             dirty = bool(changes.stdout.strip())
@@ -227,7 +250,8 @@ class ScriptUpdater:
 
     def _run(self):
         try:
-            before = self._git("rev-parse", "HEAD").stdout.strip()
+            # Server files changed since what is installed (and running)?
+            before = self._git("rev-parse", self._installed()).stdout.strip()
             pull = self._git("pull", "--ff-only", timeout=PULL_TIMEOUT)
             with self.lock:
                 self._add_log(pull.stdout + pull.stderr)

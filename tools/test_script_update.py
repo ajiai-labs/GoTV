@@ -110,6 +110,30 @@ class UpdaterTest(unittest.TestCase):
         self.assertEqual(status["current"], status["target"])
         self.assertIsNone(status["phase"])
 
+    def test_compares_the_installed_build_not_the_folder(self):
+        # The GoTV folder is already on GitHub's state (developed and pushed
+        # from there), the installed build is older.
+        old = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=self.repos.work, capture_output=True, text=True
+        ).stdout.strip()
+        self.repos.push_new()
+        git(self.repos.work, "pull", "--ff-only")
+        build = os.path.join(self.repos.work, "build-desktop")
+        os.makedirs(build)
+        with open(os.path.join(build, "gotv-commit.txt"), "w") as fh:
+            fh.write(old + "\n")
+        updater = ScriptUpdater(self.repos.work, build_dir=build)
+        status = updater.check()
+        self.assertEqual(status["behind"], 1)
+        self.assertEqual(status["changes"], ["zwei"])
+        self.assertEqual(status["current"]["commit"], old[:7])
+        self.assertEqual(updater.start()["state"], "running")
+        self.assertEqual(wait_done(updater)["state"], "done")
+        # Without the file (or with nonsense in it) the folder counts.
+        with open(os.path.join(build, "gotv-commit.txt"), "w") as fh:
+            fh.write("kaputt")
+        self.assertEqual(updater.check()["behind"], 0)
+
     def test_names_the_new_changes(self):
         self.repos.push_new()
         self.repos.push_new("README", "drei\n")

@@ -372,7 +372,9 @@ def main(argv=None):
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
     GoTvHandler.updater = ScriptUpdater(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), on_restart=restart
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        on_restart=restart,
+        build_dir=build_dir,
     )
     server = ThreadingServer(("127.0.0.1", args.port), GoTvHandler)
     sys.stderr.write(

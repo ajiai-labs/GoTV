@@ -891,6 +891,11 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   minütlich nur dessen letzte Antwort; während der eigenen Partie nur eine Zeile „aktualisiere nach
   deiner Partie“. Der bis dahin installierte Dienst startet sich nach dem Update noch selbst neu
   (alte Logik) - dieses eine Update zwischen zwei Partien.
+  Verglichen wird der INSTALLIERTE Stand mit GitHub, nicht der Ordner: `install.sh` schreibt den
+  gebauten Commit nach `build-desktop/gotv-commit.txt`, `ScriptUpdater(build_dir=…)` zählt
+  `<installiert>..@{upstream}` (Befund 28.11.2026: der GoTV-Ordner des Nutzers ist zugleich der
+  Entwicklungsordner, von dem gepusht wird - er war immer „aktuell“, die App nicht). Ohne die Datei
+  zählt HEAD wie vorher.
   **Claude installiert die Desktop-App nicht mehr selbst** (`install.sh`, Dienst-Neustart) - der
   Nutzer aktualisiert nur über den Knopf (unterbricht sonst seine Partie).
 
