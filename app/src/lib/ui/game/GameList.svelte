@@ -1,11 +1,12 @@
 <script lang="ts">
 	// A list of games or challenges (Beobachten, Spielen, Live). Each row shows
 	// the type, the players (winner marked), result or move number, observers,
-	// rules, name and room. The filter (room, bots) is applied here, as in the
+	// rules, name and room. The filter (game/filter.ts) is applied here, as in the
 	// old app. Long lists show the first 20 at once and the rest a moment
 	// later, so the page opens without a pause.
 	import { onMount } from 'svelte';
 	import { getWinningColor } from '#lib/model/game/display.ts';
+	import { filterGames, gameRules } from '#lib/model/game/filter.ts';
 	import type { GameChannel, GameFilter, Index, Room } from '#lib/model/types.ts';
 	import GamePlayersList from './GamePlayersList.svelte';
 	import GameRulesDisplay from './GameRulesDisplay.svelte';
@@ -39,34 +40,19 @@
 		return () => clearTimeout(timer);
 	});
 
-	function hasBot(game: GameChannel): boolean {
-		return Object.values(game.players).some((user) => !!user?.flags?.robot);
-	}
-
-	let filtered = $derived.by(() => {
-		if (!filter || !Object.keys(filter).length) return games;
-		return games.filter((game) => {
-			if (filter.roomId && game.roomId !== filter.roomId) return false;
-			if (filter.excludeBots) return !hasBot(game);
-			return true;
-		});
-	});
+	let filtered = $derived(filterGames(games, filter, roomsById));
 
 	let shown = $derived(fullRender ? filtered : filtered.slice(0, FIRST_RENDER));
 
 	function typeOf(game: GameChannel) {
 		return game.initialProposal ? game.initialProposal.gameType : game.type;
 	}
-
-	function rulesOf(game: GameChannel) {
-		return game.initialProposal ? game.initialProposal.rules : game.rules;
-	}
 </script>
 
 <div class="GameList">
 	{#each shown as game ((game.tvSource || 'kgs') + '-' + game.id)}
 		{@const room = roomsById ? roomsById[game.roomId] : null}
-		{@const rules = rulesOf(game)}
+		{@const rules = gameRules(game)}
 		{@const isChallenge = game.type === 'challenge'}
 		<button
 			type="button"

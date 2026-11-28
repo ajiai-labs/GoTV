@@ -376,10 +376,19 @@ export type GameChannel = {
 	named?: boolean;
 	saved?: boolean;
 };
+export type GameSort = 'default' | 'strength' | 'observers' | 'new';
+export type GameSpeedFilter = 'veryFast' | 'fast' | 'normal' | 'slow';
 export type GameFilter = {
 	type?: 'game' | 'challenge';
 	roomId?: number | null | undefined;
 	excludeBots?: boolean;
+	// Beobachten filters (28.11.2026), all from the game lists KGS sends:
+	size?: 9 | 13 | 19 | null;
+	speed?: GameSpeedFilter | null;
+	tournamentOnly?: boolean;
+	// A player, room or game name, any part of it, any case.
+	query?: string;
+	sort?: GameSort;
 };
 export type GameChatSection = {
 	nodeId: number;

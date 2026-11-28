@@ -30,6 +30,9 @@ Feste Grenzen, an denen viele Vorschläge scheitern:
 | QR-Code für den Link einer Übertragung / Partie | Klein, möglich. | Für Vereinsabende am Beamer; braucht eine kleine Bibliothek. |
 | Turnier-Themes (Farben/Logos je Veranstaltung) | Eher nicht. | Branding fremder Veranstalter – heikel (keine Logos ohne Erlaubnis). |
 
+Gebaut 28.11.2026 außerdem: Filter und Sortierung unter Beobachten (Größe, Tempo, nur Turniere,
+Spielersuche, Stärke/Zuschauer/gerade begonnen) - siehe AGENTS.md.
+
 ## Turnierbetrieb – zurückgestellt
 
 | Vorschlag | Bewertung |

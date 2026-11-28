@@ -1,8 +1,18 @@
 <script lang="ts">
 	// Filter above a game or challenge list: one room (rooms with the most
-	// games first) and whether games with bots are shown. Changes go to
-	// `onChange` as a new filter; the app remembers it (watchFilter/playFilter).
-	import type { GameChannel, GameFilter, Index, Room } from '#lib/model/types.ts';
+	// games first) and whether games with bots are shown; for running games
+	// also (28.11.2026) a search for players/rooms, board size, pace, only
+	// tournament games and the order. Changes go to `onChange` as a new
+	// filter; the app remembers it (watchFilter/playFilter).
+	import type {
+		GameChannel,
+		GameFilter,
+		GameSort,
+		GameSpeedFilter,
+		Index,
+		Room
+	} from '#lib/model/types.ts';
+	import { filterGames, hasKnownSpeed } from '#lib/model/game/filter.ts';
 
 	import { t } from '#lib/i18n/index.svelte.ts';
 
@@ -49,6 +59,24 @@
 	function onClearRoom() {
 		onChange({ ...filter, roomId: null });
 	}
+
+	function update(change: Partial<GameFilter>) {
+		onChange({ ...filter, type, ...change });
+	}
+
+	const SIZES = [19, 13, 9] as const;
+	const SPEEDS: Array<GameSpeedFilter> = ['veryFast', 'fast', 'normal', 'slow'];
+	const SORTS: Array<GameSort> = ['default', 'strength', 'observers', 'new'];
+
+	let showSpeed = $derived(hasKnownSpeed(games) || !!filter.speed);
+	let narrowed = $derived(
+		!!(filter.query?.trim() || filter.size || filter.speed || filter.tournamentOnly)
+	);
+	let shownCount = $derived(filterGames(games, filter, roomsById).length);
+
+	function onReset() {
+		update({ query: '', size: null, speed: null, tournamentOnly: false });
+	}
 </script>
 
 <div class="GameListFilter">
@@ -82,6 +110,67 @@
 		<input type="checkbox" checked={!filter.excludeBots} onchange={onChangeBots} />
 		{t('play.filter.bots')}
 	</label>
+	{#if !isChallenges}
+		<input
+			type="search"
+			class="GameListFilter-query"
+			value={filter.query ?? ''}
+			placeholder={t('play.filter.queryPlaceholder')}
+			aria-label={t('play.filter.query')}
+			oninput={(event) => update({ query: event.currentTarget.value })}
+		/>
+		<select
+			aria-label={t('play.filter.size')}
+			value={filter.size ? String(filter.size) : ''}
+			onchange={(event) => {
+				const size = Number(event.currentTarget.value);
+				update({ size: size === 9 || size === 13 || size === 19 ? size : null });
+			}}
+		>
+			<option value="">{t('play.filter.allSizes')}</option>
+			{#each SIZES as size (size)}
+				<option value={String(size)}>{size}×{size}</option>
+			{/each}
+		</select>
+		{#if showSpeed}
+			<select
+				aria-label={t('play.filter.speed')}
+				value={filter.speed ?? ''}
+				onchange={(event) =>
+					update({ speed: (event.currentTarget.value || null) as GameSpeedFilter | null })}
+			>
+				<option value="">{t('play.filter.allSpeeds')}</option>
+				{#each SPEEDS as speed (speed)}
+					<option value={speed}>{t(`play.filter.speed.${speed}`)}</option>
+				{/each}
+			</select>
+		{/if}
+		<label class="GameListFilter-bots">
+			<input
+				type="checkbox"
+				checked={!!filter.tournamentOnly}
+				onchange={(event) => update({ tournamentOnly: event.currentTarget.checked })}
+			/>
+			{t('play.filter.tournamentOnly')}
+		</label>
+		<select
+			aria-label={t('play.filter.sort')}
+			value={filter.sort ?? 'default'}
+			onchange={(event) => update({ sort: event.currentTarget.value as GameSort })}
+		>
+			{#each SORTS as sort (sort)}
+				<option value={sort}>{t(`play.filter.sort.${sort}`)}</option>
+			{/each}
+		</select>
+		{#if narrowed}
+			<span class="GameListFilter-count" role="status">
+				{t('play.filter.count', { shown: shownCount, total: games.length })}
+			</span>
+			<button type="button" class="GameListFilter-reset" onclick={onReset}>
+				{t('play.filter.reset')}
+			</button>
+		{/if}
+	{/if}
 </div>
 
 <style>
@@ -99,7 +188,7 @@
 		align-items: center;
 		gap: 4px;
 		min-width: 0;
-		flex: 0 1 22rem;
+		flex: 0 1 16rem;
 	}
 
 	select {
@@ -117,6 +206,37 @@
 	.GameListFilter-room-active select {
 		border-color: var(--accent);
 		background: var(--accent-soft);
+	}
+
+	.GameListFilter-query {
+		flex: 0 1 14rem;
+		min-width: 9rem;
+		min-height: 36px;
+		padding: 4px 12px;
+		border: var(--button-border);
+		border-radius: var(--radius-pill);
+		background: var(--surface);
+		color: var(--ink);
+		font: inherit;
+	}
+
+	.GameListFilter > select {
+		flex: 0 0 auto;
+	}
+
+	.GameListFilter-count {
+		color: var(--ink-soft);
+		font-size: 0.9em;
+	}
+
+	.GameListFilter-reset {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		text-decoration: underline;
+		cursor: pointer;
+		font: inherit;
 	}
 
 	.GameListFilter-room-clear {

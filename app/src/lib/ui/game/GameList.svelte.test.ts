@@ -111,6 +111,50 @@ describe('GameListFilter', () => {
 		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', roomId: null });
 	});
 
+	it('searches, filters by size, pace and tournaments, and sorts', async () => {
+		const onChange = vi.fn();
+		const games = [
+			game(1),
+			game(2, { type: 'tournament', rules: { size: 13, komi: 6.5 } }),
+			game(3, { rules: { size: 9, komi: 6.5 } })
+		];
+		const screen = await render(GameListFilter, { games, roomsById, filter: {}, onChange });
+		await page.getByRole('searchbox', { name: /Spieler, Raum oder Partie/ }).fill('anna');
+		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', query: 'anna' });
+		await page.getByRole('combobox', { name: 'Brettgröße' }).selectOptions('13×13');
+		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', size: 13 });
+		// The game() fixture knows its time system, so the pace is offered.
+		await page.getByRole('combobox', { name: 'Tempo' }).selectOptions('Normal');
+		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', speed: 'normal' });
+		await page.getByRole('checkbox', { name: 'Nur Turniere' }).click();
+		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', tournamentOnly: true });
+		await page.getByRole('combobox', { name: 'Sortierung' }).selectOptions('Meiste Zuschauer');
+		expect(onChange).toHaveBeenLastCalledWith({ type: 'game', sort: 'observers' });
+
+		// A narrowed list says how many games are left, and resets.
+		await screen.rerender({ filter: { type: 'game', size: 13 } });
+		await expect.element(page.getByText('1 von 3 Partien')).toBeVisible();
+		await page.getByRole('button', { name: 'Filter zurücksetzen' }).click();
+		expect(onChange).toHaveBeenLastCalledWith({
+			type: 'game',
+			query: '',
+			size: null,
+			speed: null,
+			tournamentOnly: false
+		});
+	});
+
+	it('offers no pace while KGS sends no time systems', async () => {
+		await render(GameListFilter, {
+			games: [game(1, { rules: { size: 19, komi: 6.5 } })],
+			roomsById,
+			filter: {},
+			onChange: () => {}
+		});
+		await expect.element(page.getByRole('combobox', { name: 'Brettgröße' })).toBeVisible();
+		await expect.element(page.getByRole('combobox', { name: 'Tempo' })).not.toBeInTheDocument();
+	});
+
 	it('speaks of challenges in a challenge list', async () => {
 		await render(GameListFilter, {
 			games: [game(1, { type: 'challenge' })],

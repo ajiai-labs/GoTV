@@ -489,6 +489,16 @@ nicht auf jeder Seite (Nutzer): Einstellungen → „Über GoTV“ → „Daten 
 robots.txt wirkt bei GitHub Pages nicht (Projektseite unter /GoTV/, robots.txt gilt nur für die
 Domainwurzel). Die MIT-Lizenz gilt für den Code, nicht für Daten Dritter.
 
+## Filter unter Beobachten (28.11.2026)
+
+Über der Partieliste (`GameListFilter`, für laufende Partien): Suche nach Spieler, Raum oder
+Partiename, Brettgröße (19/13/9), Tempo (Blitz/Schnell/Normal/Langsam nach `getGameTimeSpeed` -
+nur angeboten, wenn KGS in den Listen Zeitsysteme schickt), „Nur Turniere“ (Typ `tournament` oder
+`event`), Sortierung (wie bei KGS / Stärkste zuerst / Meiste Zuschauer / Gerade begonnen), dazu
+„N von M Partien“ und „Filter zurücksetzen“. Alles aus den KGS-Partielisten, keine Anfragen;
+gemerkt im `watchFilter` wie Raum und Bots. Logik `model/game/filter.ts` (`filterGames`), von
+`GameList` angewandt (auch Spielen/Herausforderungen: Raum, Bots, Größe, Suche, Sortierung).
+
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 
 Policy, von dir als "Stufe 1" bezeichnet:
