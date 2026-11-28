@@ -26,6 +26,20 @@ describe('BackupPanel', () => {
 		window.localStorage.clear();
 	});
 
+	it('names the settings it knows', () => {
+		expect(
+			formatSummary({
+				favoriteChannels: 0,
+				favoriteEvents: 0,
+				games: 0,
+				bookmarks: 0,
+				variationMoves: 0,
+				settings: 5,
+				settingNames: ['design', 'tone', 'countdownSound']
+			})
+		).toBe('5 Einstellungen (Design, Farbton, Klang der letzten Sekunden)');
+	});
+
 	it('summarises a backup in words', () => {
 		expect(
 			formatSummary({

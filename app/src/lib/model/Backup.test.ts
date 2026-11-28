@@ -86,8 +86,35 @@ describe('collectBackup', () => {
 			games: 1,
 			bookmarks: 1,
 			variationMoves: 2,
-			settings: 1
+			settings: 1,
+			settingNames: ['katago']
 		});
+	});
+
+	it('carries design, tone and sounds and plays them back in (28.11.2026)', () => {
+		const desktop = storageFrom({
+			'gotv.design': 'oldschool-dark',
+			'gotv.tone': 'blue',
+			'gotv.sounds': JSON.stringify({
+				stones: true,
+				gameStart: false,
+				countdown: true,
+				messages: true
+			}),
+			'gotv.countdownSound': 'bowl'
+		});
+		const backup = collectBackup(desktop, NOW);
+		expect(describeBackup(backup).settingNames).toEqual([
+			'design',
+			'tone',
+			'sounds',
+			'countdownSound'
+		]);
+		const tablet = storageFrom({ 'gotv.design': 'modern', 'gotv.tone': 'paper' });
+		restoreBackup(tablet, backup);
+		expect(tablet.getItem('gotv.design')).toBe('oldschool-dark');
+		expect(tablet.getItem('gotv.tone')).toBe('blue');
+		expect(tablet.getItem('gotv.countdownSound')).toBe('bowl');
 	});
 });
 describe('parseBackup', () => {

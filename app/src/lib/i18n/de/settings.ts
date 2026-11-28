@@ -48,6 +48,11 @@ export const settings = {
 	'settings.sounds.messages.name': 'Chatnachricht',
 	'settings.sounds.messages.description':
 		'Wenn dir jemand schreibt: private Nachricht oder Chat in deiner laufenden Partie.',
+	'settings.sounds.countdownSound': 'Klang für die letzten Sekunden',
+	'settings.sounds.countdownSound.ebowl': 'Elektronische Schale',
+	'settings.sounds.countdownSound.bowl': 'Klangschale',
+	'settings.sounds.countdownSound.pulse': 'Tiefer Puls',
+	'settings.sounds.countdownSound.katrain': 'Uhr (KaTrain)',
 	'settings.sounds.sample': 'Anhören',
 	'settings.gameWindows': 'Partiefenster',
 	'settings.gameWindows.name': 'Partien in eigenem Fenster öffnen',

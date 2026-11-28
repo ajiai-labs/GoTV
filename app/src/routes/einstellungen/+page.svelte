@@ -10,12 +10,16 @@
 		playCountdown,
 		playGameStart,
 		playMessage,
-		playStoneClick
+		playStoneClick,
+		loadCountdownSound,
+		saveCountdownSound,
+		COUNTDOWN_SOUNDS,
+		DEFAULT_COUNTDOWN_SOUND
 	} from '#lib/sound/gameSounds.ts';
-	import type { GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
+	import type { CountdownSound, GameSoundKind, GameSoundPrefs } from '#lib/sound/gameSounds.ts';
 	import { navOrder } from '#lib/ui/navOrder.svelte.ts';
 	import type { NavOrder } from '#lib/ui/navOrder.svelte.ts';
-	import { LANGUAGES, language, t } from '#lib/i18n/index.svelte.ts';
+	import { LANGUAGES, language, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import BackupPanel from '#lib/ui/tv/BackupPanel.svelte';
 	import DesktopDownloads from '#lib/ui/DesktopDownloads.svelte';
 	import AboutGoTv from '#lib/ui/update/AboutGoTv.svelte';
@@ -58,6 +62,21 @@
 	function setSound(kind: GameSoundKind, on: boolean) {
 		soundPrefs = { ...soundPrefs, [kind]: on };
 		saveSoundPrefs(soundPrefs);
+	}
+	const COUNTDOWN_SOUND_NAMES: Record<CountdownSound, MessageKey> = {
+		ebowl: 'settings.sounds.countdownSound.ebowl',
+		bowl: 'settings.sounds.countdownSound.bowl',
+		pulse: 'settings.sounds.countdownSound.pulse',
+		katrain: 'settings.sounds.countdownSound.katrain'
+	};
+	// Which sound the countdown uses; choosing one plays its last seconds.
+	let countdownSound: CountdownSound = $state(
+		typeof localStorage === 'undefined' ? DEFAULT_COUNTDOWN_SOUND : loadCountdownSound()
+	);
+	function setCountdownSound(sound: CountdownSound) {
+		countdownSound = sound;
+		saveCountdownSound(sound);
+		sample('countdown');
 	}
 	function sample(kind: GameSoundKind) {
 		if (kind === 'stones') playStoneClick();
@@ -135,14 +154,28 @@
 						<span class="muted">{t(`settings.sounds.${kind}.description`)}</span>
 					</span>
 				</label>
-				<button
-					type="button"
-					class="button"
-					disabled={!soundPrefs[kind]}
-					onclick={() => sample(kind)}
-				>
-					{t('settings.sounds.sample')}
-				</button>
+				<span class="sound-actions">
+					{#if kind === 'countdown'}
+						<select
+							aria-label={t('settings.sounds.countdownSound')}
+							disabled={!soundPrefs.countdown}
+							value={countdownSound}
+							onchange={(event) => setCountdownSound(event.currentTarget.value as CountdownSound)}
+						>
+							{#each COUNTDOWN_SOUNDS as sound (sound)}
+								<option value={sound}>{t(COUNTDOWN_SOUND_NAMES[sound])}</option>
+							{/each}
+						</select>
+					{/if}
+					<button
+						type="button"
+						class="button"
+						disabled={!soundPrefs[kind]}
+						onclick={() => sample(kind)}
+					>
+						{t('settings.sounds.sample')}
+					</button>
+				</span>
 			</div>
 		{/each}
 	</fieldset>
@@ -239,6 +272,24 @@
 		gap: 12px;
 		padding: 8px 0;
 		border-top: 1px solid var(--rule);
+	}
+
+	.sound-actions {
+		display: flex;
+		flex: none;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 6px;
+	}
+
+	.sound-actions select {
+		min-height: 36px;
+		padding: 4px 10px;
+		border: var(--button-border);
+		border-radius: var(--radius-pill);
+		background: var(--button-bg);
+		color: var(--ink);
+		font: inherit;
 	}
 
 	.sound-switch {

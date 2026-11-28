@@ -32,7 +32,21 @@ export type BackupSummary = {
 	bookmarks: number;
 	variationMoves: number;
 	settings: number;
+	// The settings a viewer recognises, by name (BACKUP_SETTING_NAMES), so
+	// the file says what it brings (28.11.2026: design, tone, sounds …).
+	settingNames?: Array<BackupSettingName>;
 };
+export const BACKUP_SETTING_NAMES = {
+	'gotv.design': 'design',
+	'gotv.tone': 'tone',
+	'gotv.language': 'language',
+	'gotv.navOrder': 'navOrder',
+	'gotv.sounds': 'sounds',
+	'gotv.countdownSound': 'countdownSound',
+	'gotv.gameWindows': 'gameWindows',
+	'gotv.katago': 'katago'
+} as const;
+export type BackupSettingName = (typeof BACKUP_SETTING_NAMES)[keyof typeof BACKUP_SETTING_NAMES];
 type Storage = {
 	length: number;
 	key: (index: number) => string | null | undefined;
@@ -278,6 +292,9 @@ export function describeBackup(backup: Backup): BackupSummary {
 		games: games.length,
 		bookmarks: count('bookmarks'),
 		variationMoves: count('variations'),
-		settings: Object.keys(backup.data).filter((key) => !known.includes(key)).length
+		settings: Object.keys(backup.data).filter((key) => !known.includes(key)).length,
+		settingNames: Object.entries(BACKUP_SETTING_NAMES)
+			.filter(([key]) => key in backup.data)
+			.map(([, name]) => name)
 	};
 }

@@ -1,6 +1,17 @@
 <script module lang="ts">
-	import type { BackupSummary } from '#lib/model/Backup.ts';
-	import { locale, t } from '#lib/i18n/index.svelte.ts';
+	import type { BackupSettingName, BackupSummary } from '#lib/model/Backup.ts';
+	import { locale, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+
+	const SETTING_LABELS: Record<BackupSettingName, MessageKey> = {
+		design: 'replay.backup.setting.design',
+		tone: 'replay.backup.setting.tone',
+		language: 'replay.backup.setting.language',
+		navOrder: 'replay.backup.setting.navOrder',
+		sounds: 'replay.backup.setting.sounds',
+		countdownSound: 'replay.backup.setting.countdownSound',
+		gameWindows: 'replay.backup.setting.gameWindows',
+		katago: 'replay.backup.setting.katago'
+	};
 
 	export function formatSummary(summary: BackupSummary): string {
 		const parts: Array<string> = [];
@@ -22,7 +33,11 @@
 			parts.push(game + (extras.length ? ' (' + extras.join(', ') + ')' : ''));
 		}
 		if (summary.settings) {
-			parts.push(t('replay.backup.settings', { count: summary.settings }));
+			const names = (summary.settingNames ?? []).map((name) => t(SETTING_LABELS[name]));
+			parts.push(
+				t('replay.backup.settings', { count: summary.settings }) +
+					(names.length ? ' (' + names.join(', ') + ')' : '')
+			);
 		}
 		return parts.length ? parts.join(', ') : t('replay.backup.noData');
 	}

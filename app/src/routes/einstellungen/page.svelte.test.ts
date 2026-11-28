@@ -83,6 +83,14 @@ describe('Einstellungen', () => {
 		await page.getByText('Modern', { exact: true }).click();
 	});
 
+	it('lets the countdown sound be chosen, the electronic bowl first', async () => {
+		await render(Page);
+		const select = page.getByRole('combobox', { name: 'Klang für die letzten Sekunden' });
+		await expect.element(select).toHaveValue('ebowl');
+		await select.selectOptions('Klangschale');
+		expect(localStorage.getItem('gotv.countdownSound')).toBe('bowl');
+	});
+
 	it('switches the sounds of an own game and remembers them', async () => {
 		localStorage.removeItem('gotv.sounds');
 		const view = await render(Page);

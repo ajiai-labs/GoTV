@@ -49,6 +49,11 @@ export const settings: Translation<typeof de> = {
 	'settings.sounds.messages.name': 'Chat message',
 	'settings.sounds.messages.description':
 		'When someone writes to you: a private message or the chat of your running game.',
+	'settings.sounds.countdownSound': 'Sound of the last seconds',
+	'settings.sounds.countdownSound.ebowl': 'Electronic bowl',
+	'settings.sounds.countdownSound.bowl': 'Singing bowl',
+	'settings.sounds.countdownSound.pulse': 'Low pulse',
+	'settings.sounds.countdownSound.katrain': 'Clock (KaTrain)',
 	'settings.sounds.sample': 'Listen',
 	'settings.gameWindows': 'Game windows',
 	'settings.gameWindows.name': 'Open games in their own window',

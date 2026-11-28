@@ -366,7 +366,9 @@ Kleiner offener Rest (kosmetisch, keine Funktion): die Fehlermeldung in
   Worten und führt erst nach "Einspielen" zusammen, ohne etwas zu löschen: Favoriten
   vereinigt, `gotv.replays` pro Partie der neuere Stand (`updatedAt`, max. 30 Partien),
   `ogsLinks`/`boardDelays` pro Eintrag aus der Datei, einfache Einstellungen aus der Datei.
-  Danach lädt GoTV neu, damit alle Teile die Daten neu lesen. Kein Konto, kein Server: die
+  Danach lädt GoTV neu, damit alle Teile die Daten neu lesen. Seit 28.11.2026 nennt die Sicherung
+die bekannten Einstellungen beim Namen („5 Einstellungen (Design, Farbton, Töne, Klang der
+letzten Sekunden)“, `BACKUP_SETTING_NAMES`) - Design, Farbton und Klänge reisen mit. Kein Konto, kein Server: die
   Datei trägt man selbst (z. B. per Cloud-Ordner aufs Tablet). Geprüft mit zwei getrennten
   Browser-Profilen (Stern + Variante kommen an).
 - "Mein GoTV" (`src/model/TvFavorites.js`, `src/model/MyGoTv.js`, `src/ui/tv/MyGoTv.js`,
@@ -805,7 +807,11 @@ wie eine angenommene Herausforderung. NOCH NICHT an einer echten Sitzung geprüf
   eigenen Partie (`GameScreen`) - seit 28.11.2026 echte Aufnahmen eines Steins auf Holz (fünf,
   zufällig eine; aus KaTrain, MIT, Herkunft und Lizenz in `app/src/lib/sound/stones/NOTICE.txt`;
   ebenso seit 28.11.2026 der Countdown: KaTrains Uhr-Töne, tiefer Ton für 10-4 s, der höhere für
-  die letzten 3, `sound/clock/` - vorher Sinus 800/1200 Hz, Nutzer: „zu piepsig“; und der
+  die letzten 3, `sound/clock/` - vorher Sinus 800/1200 Hz, Nutzer: „zu piepsig“. Seit dem
+  Nachmittag wählbar (Nutzer mochte alle drei neuen Proben): Einstellungen → „Zeit läuft ab“ →
+  Elektronische Schale (Vorgabe), Klangschale, Tiefer Puls (eigene Klänge aus
+  `tools/sounds/make_countdown.py`) oder Uhr (KaTrain); `gotv.countdownSound`. Weitere
+  Auswahlen (Steinklick, Partiebeginn) bewusst nicht - nur ein guter Steinklick vorhanden; und der
   Partiebeginn: tiefer elektronischer Gong mit warmem D-Dur-Akkord darunter, vom Nutzer aus
   Klangproben gemischt gewünscht, eigener Klang aus `tools/sounds/make_game_start.py`,
   `sound/start/game-start.wav` - vorher drei helle Sinustöne),

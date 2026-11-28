@@ -1,7 +1,7 @@
 // Sounds of an own KGS game, played with the Web Audio API from sound files:
 // a stone click for every move (stones/), a gong with a low chord when the
 // game starts (start/), a tick for each of the last ten seconds on our clock,
-// higher for the last three (clock/) - so you hear it from the kitchen. Plus
+// higher for the last three, in a sound of the user's choice (clock/) - so you hear it from the kitchen. Plus
 // a generated ding-dong when someone writes to you (chatSound.ts decides
 // when). Each one can be switched off in
 // Einstellungen (gotv.sounds); the switches are read at every sound.
@@ -13,6 +13,12 @@ import stone4 from './stones/stone4.wav';
 import stone5 from './stones/stone5.wav';
 import clockTick from './clock/tick.wav';
 import clockLast from './clock/last.wav';
+import bowlTick from './clock/bowl-tick.wav';
+import bowlLast from './clock/bowl-last.wav';
+import ebowlTick from './clock/ebowl-tick.wav';
+import ebowlLast from './clock/ebowl-last.wav';
+import pulseTick from './clock/pulse-tick.wav';
+import pulseLast from './clock/pulse-last.wav';
 import gameStart from './start/game-start.wav';
 
 export type GameSoundKind = 'stones' | 'gameStart' | 'countdown' | 'messages';
@@ -129,10 +135,42 @@ function click(ctx: AudioContext) {
 	playRecording(ctx, STONE_URLS, (count) => Math.floor(Math.random() * count));
 }
 
-// The countdown: KaTrain's clock beeps (MIT - clock/NOTICE.txt), a low
-// electronic tick and a higher one for the last three seconds. Replaces a
-// sine beep of 800/1200 Hz the user found too shrill (28.11.2026).
-const CLOCK_URLS = [clockTick, clockLast];
+// The countdown, chosen in the settings (28.11.2026: the user liked all
+// three new sounds and wanted to pick): an electronic singing bowl (default),
+// a singing bowl, a low electronic pulse - GoTV's own, made by
+// tools/sounds/make_countdown.py - or KaTrain's clock beep (MIT,
+// clock/NOTICE.txt). Each has a tick for 10-4 s and a higher one for the
+// last three seconds.
+export type CountdownSound = 'ebowl' | 'bowl' | 'pulse' | 'katrain';
+export const COUNTDOWN_SOUNDS: Array<CountdownSound> = ['ebowl', 'bowl', 'pulse', 'katrain'];
+export const COUNTDOWN_SOUND_KEY = 'gotv.countdownSound';
+export const DEFAULT_COUNTDOWN_SOUND: CountdownSound = 'ebowl';
+
+const CLOCK_URLS: Record<CountdownSound, [string, string]> = {
+	ebowl: [ebowlTick, ebowlLast],
+	bowl: [bowlTick, bowlLast],
+	pulse: [pulseTick, pulseLast],
+	katrain: [clockTick, clockLast]
+};
+
+export function loadCountdownSound(): CountdownSound {
+	try {
+		const saved = localStorage.getItem(COUNTDOWN_SOUND_KEY);
+		return COUNTDOWN_SOUNDS.includes(saved as CountdownSound)
+			? (saved as CountdownSound)
+			: DEFAULT_COUNTDOWN_SOUND;
+	} catch {
+		return DEFAULT_COUNTDOWN_SOUND;
+	}
+}
+
+export function saveCountdownSound(sound: CountdownSound) {
+	try {
+		localStorage.setItem(COUNTDOWN_SOUND_KEY, sound);
+	} catch {
+		// not remembered without storage
+	}
+}
 
 // A window opened by GoTV itself (a game window) may not play sound before
 // someone clicks in it (browser rule): such a window hands its sounds to the
@@ -199,6 +237,6 @@ export function playCountdown(seconds: number) {
 	if (relayed('countdown', seconds)) return;
 	play('countdown', (ctx) => {
 		const urgent = seconds <= URGENT_SECONDS;
-		playRecording(ctx, CLOCK_URLS, () => (urgent ? 1 : 0));
+		playRecording(ctx, CLOCK_URLS[loadCountdownSound()], () => (urgent ? 1 : 0));
 	});
 }
