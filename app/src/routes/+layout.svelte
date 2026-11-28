@@ -165,11 +165,16 @@
 	});
 
 	// Chat, Beobachten and Spielen fill the window height (iPad, no scrolling):
-	// no footer there.
-	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen', '/partie', '/bretter'];
+	// no footer there - but only when they do: in the web version and before
+	// logging in they show a short note, and the GitHub line belongs under it
+	// (user, 28.11.2026). Game windows and the board overview never have it.
+	const WINDOW_PAGES = ['/partie', '/bretter'];
+	const FULL_HEIGHT_PAGES = ['/chat', '/beobachten', '/spielen'];
 	let showFooter = $derived.by(() => {
 		void page.url.pathname;
-		return !FULL_HEIGHT_PAGES.some((path) => isCurrent(path));
+		if (WINDOW_PAGES.some((path) => isCurrent(path))) return false;
+		const fillsWindow = !config.guestOnly && app.loggedIn;
+		return !(fillsWindow && FULL_HEIGHT_PAGES.some((path) => isCurrent(path)));
 	});
 
 	let offline = $derived(
