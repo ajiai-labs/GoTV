@@ -130,6 +130,11 @@ export const game: Translation<typeof de> = {
 
 	// GameRulesDisplay, GameTimeSystem
 	'game.rules.komi': 'Komi {komi}',
+	'game.time.seconds': '{n} s',
+	'game.time.minutes': '{n} min',
+	'game.time.minutesSeconds': '{m}:{s} min',
+	'game.time.hours': '{n} h',
+	'game.time.canadian': '{stones} stones in {time}',
 	'game.time.none': 'No time limit',
 	'game.time.absolute': 'absolute',
 	'game.time.veryFast': 'very fast',

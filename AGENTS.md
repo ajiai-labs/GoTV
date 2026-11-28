@@ -499,6 +499,20 @@ nur angeboten, wenn KGS in den Listen Zeitsysteme schickt), „Nur Turniere“ (
 gemerkt im `watchFilter` wie Raum und Bots. Logik `model/game/filter.ts` (`filterGames`), von
 `GameList` angewandt (auch Spielen/Herausforderungen: Raum, Bots, Größe, Suche, Sortierung).
 
+## Partieliste in Spalten, Zeitregel in Worten (28.11.2026, nach Mockups)
+
+Mockups `~/Downloads/GoTV-Mockup-Beobachten.png`/`-Partiefenster.png` (aus einem Designvorschlag),
+vom Nutzer übernommen: Partieliste (`GameList`) mit Kopfzeile und festen Spalten Spieler · Zug ·
+Zuschauer · Brett und Zeit (`--game-list-columns`, letzte Spalte fest breit, sonst verrutschen
+Zeilen mit Raumnamen; unter 700 px ohne Kopf, Werte in einer Zeile unter den Spielern). Raum nur
+noch bei Turnierpartien (Typ `tournament` oder `event`) - Nutzer: zwei Spieler aus verschiedenen
+Ländern spielen in irgendeinem Raum, der Raum sagt nur bei Turnieren etwas; der Raumfilter bleibt.
+Zeitregel überall in Worten (`formatTimeSystemDe` in `GameTimeSystem.svelte`): „30 Min. + 5×30
+Sek.“, „20 Min. absolut“, „10 Min. + 25 Steine in 5 Min.“ (statt „30:00 + 5×0:30“). Partiefenster:
+grüner Balken links an der Zeile des Spielers, dessen Uhr läuft (`GamePlayersInfo-toMove`).
+Schrift Noto Sans nur als Bildvergleich gezeigt (Bricolage Grotesque bleibt, bis der Nutzer
+entscheidet).
+
 ## TV-Quellen-Grundsatz (Live / Watch / TV-Kalender)
 
 Policy, von dir als "Stufe 1" bezeichnet:

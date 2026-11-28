@@ -44,9 +44,28 @@ describe('GameList', () => {
 		await expect.element(page.getByText('Zug 42')).toBeVisible();
 		await expect.element(page.getByText('S+Aufgabe')).toBeVisible();
 		await expect.element(page.getByText('Finale')).toBeVisible();
-		await expect.element(page.getByText('Englischer Raum').first()).toBeVisible();
+		// The room only for tournament games (user, 28.11.2026).
+		await expect.element(page.getByText('Englischer Raum')).not.toBeInTheDocument();
 		await page.getByRole('button', { name: /Finale/ }).click();
 		expect(onSelect).toHaveBeenCalledWith(2, games[1]);
+	});
+
+	it('shows column heads on a wide screen, not on a phone', async () => {
+		await page.viewport(1000, 700);
+		await render(GameList, { games: [game(1)], roomsById, onSelect: vi.fn() });
+		await expect.element(page.getByText('Brett und Zeit', { exact: true })).toBeVisible();
+		await page.viewport(414, 896);
+		await expect.element(page.getByText('Brett und Zeit', { exact: true })).not.toBeVisible();
+	});
+
+	it('names the room of tournament games only', async () => {
+		await render(GameList, {
+			games: [game(1), game(2, { type: 'tournament', roomId: 2 })],
+			roomsById,
+			onSelect: vi.fn()
+		});
+		await expect.element(page.getByText('Deutscher Raum')).toBeVisible();
+		await expect.element(page.getByText('Englischer Raum')).not.toBeInTheDocument();
 	});
 
 	it('shows board size, time and rule set of each game', async () => {
@@ -57,7 +76,7 @@ describe('GameList', () => {
 		await render(GameList, { games, roomsById, onSelect: vi.fn() });
 		const first = page.getByRole('button', { name: /anna/ }).first();
 		await expect.element(first.getByText('19×19')).toBeVisible();
-		await expect.element(first.getByText(/10:00/)).toBeVisible();
+		await expect.element(first.getByText('10 Min. + 5×30 Sek.')).toBeVisible();
 		await expect.element(first.getByText('Japanisch')).toBeVisible();
 		await expect.element(page.getByText('9×9 H2')).toBeVisible();
 	});

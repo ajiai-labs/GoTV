@@ -131,6 +131,11 @@ export const game = {
 
 	// GameRulesDisplay, GameTimeSystem
 	'game.rules.komi': 'Komi {komi}',
+	'game.time.seconds': '{n} Sek.',
+	'game.time.minutes': '{n} Min.',
+	'game.time.minutesSeconds': '{m}:{s} Min.',
+	'game.time.hours': '{n} Std.',
+	'game.time.canadian': '{stones} Steine in {time}',
 	'game.time.none': 'Ohne Zeitlimit',
 	'game.time.absolute': 'absolut',
 	'game.time.veryFast': 'sehr schnell',

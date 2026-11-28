@@ -81,6 +81,7 @@
 				<div
 					class="GamePlayersInfo-color GamePlayersInfo-{side.color}"
 					class:GamePlayersInfo-winner={side.winner}
+					class:GamePlayersInfo-toMove={gameActive && !!side.clock?.running && !side.clock?.paused}
 				>
 					<button
 						type="button"
@@ -166,6 +167,11 @@
 		gap: 8px;
 		padding: 6px 8px;
 		border-radius: var(--radius-s);
+	}
+
+	/* Whose clock runs: a bar on the left of the row (28.11.2026, mockup). */
+	.GamePlayersInfo-toMove {
+		box-shadow: inset 3px 0 0 var(--accent);
 	}
 
 	.GamePlayersInfo-winner {

@@ -52,7 +52,7 @@ describe('ProposalForm', () => {
 		await expect.element(page.getByText('English Game Room')).toBeVisible();
 		await expect.element(page.getByText('Freie Partie')).toBeVisible();
 		await expect.element(page.getByText('– Gern mit Besprechung')).toBeVisible();
-		await expect.element(page.getByText('20:00 + 5×0:30')).toBeVisible();
+		await expect.element(page.getByText('20 Min. + 5×30 Sek.')).toBeVisible();
 		await expect.element(page.getByText('Japanische Regeln')).toBeVisible();
 		await expect.element(page.getByText('19×19')).toBeVisible();
 		await expect

@@ -98,6 +98,10 @@ export const play = {
 	'play.automatch.ok': 'OK',
 	'play.automatch.cancel': 'Abbrechen',
 	// GameList
+	'play.list.headPlayers': 'Spieler',
+	'play.list.headMove': 'Zug',
+	'play.list.headObservers': 'Zuschauer',
+	'play.list.headRules': 'Brett und Zeit',
 	'play.list.move': 'Zug {move}',
 	'play.list.observers': { one: '{count} Zuschauer', other: '{count} Zuschauer' },
 	'play.list.automatch': 'Automatch',

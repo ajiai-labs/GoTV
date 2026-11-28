@@ -97,6 +97,10 @@ export const play: Translation<typeof de> = {
 	'play.automatch.ok': 'OK',
 	'play.automatch.cancel': 'Cancel',
 	// GameList
+	'play.list.headPlayers': 'Players',
+	'play.list.headMove': 'Move',
+	'play.list.headObservers': 'Observers',
+	'play.list.headRules': 'Board and time',
 	'play.list.move': 'Move {move}',
 	'play.list.observers': { one: '{count} observer', other: '{count} observers' },
 	'play.list.automatch': 'Automatch',
